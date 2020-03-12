@@ -1,0 +1,24 @@
+version: "3"
+services:
+  notebook:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        user_id: 1005
+    entrypoint: /bin/bash /home/jovyan/work/start-notebook.sh
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    volumes:
+      - ./:/home/jovyan/work
+      - ~/.gitconfig:/etc/gitconfig
+    ports:
+      - "7878:8888" # Jupyter
+      - "8866:8866" # Voila
+    expose:
+      - "8888"
+      - "8866"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure

@@ -1,0 +1,26 @@
+{
+    "root": "/home/jovyan/work",
+    "program": "<python with no main file>",
+    "git": {
+        "remote": null,
+        "commit": null
+    },
+    "email": "victor.rodriguezf@uam.es",
+    "startedAt": "2020-03-05T15:45:16.960331",
+    "host": "ac7e4aa4b28f",
+    "username": "jovyan",
+    "executable": "/opt/conda/bin/python",
+    "os": "Linux-3.10.0-862.14.4.el7.x86_64-x86_64-with-debian-buster-sid",
+    "python": "3.7.6",
+    "cpu_count": 20,
+    "args": [
+        "-f",
+        "/home/jovyan/.local/share/jupyter/runtime/kernel-b55a8969-6300-465d-a7fd-f162db5cb3b8.json"
+    ],
+    "state": "running",
+    "jobType": null,
+    "mode": "run",
+    "name": "eager-brook-1",
+    "project": "timecluster-extension",
+    "heartbeatAt": "2020-03-05T15:45:22.321185"
+}

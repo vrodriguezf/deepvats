@@ -1,0 +1,35 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.8.28
+    is_jupyter_run: true
+    python_version: 3.7.6
+batch_size:
+  desc: null
+  value: 10
+cuda:
+  desc: null
+  value: false
+errortype:
+  desc: null
+  value: mse
+grad_eval_num:
+  desc: null
+  value: 50
+grad_step_num:
+  desc: null
+  value: 100
+it_num:
+  desc: null
+  value: 10
+learning_rate:
+  desc: null
+  value: 0.01
+optimizer:
+  desc: null
+  value: nadam
+train_test_split:
+  desc: null
+  value: 0.8

@@ -7,24 +7,18 @@ entries:
 - folders:
   - folderitems:
     - output: web,pdf
-      title: Export to modules
-      url: /export.html
+      title: Overview
+      url: /
     - output: web,pdf
-      title: Convert to html
-      url: /export2html.html
+      title: Load data from the longwall
+      url: /load
     - output: web,pdf
-      title: Show doc
-      url: /showdoc.html
+      title: Detect and explain outliers for high dimensional time series data
+      url: /Timecluster_replication
     - output: web,pdf
-      title: Test functions
-      url: /test.html
-    - output: web,pdf
-      title: Core functions
-      url: /core.html
-    - output: web,pdf
-      title: Command line functions
-      url: /cli.html
+      title: 'GUI '
+      url: /GUI
     output: web
-    title: Notebook
+    title: pacmel_mining_use_case
   output: web
   title: Sidebar

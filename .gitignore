@@ -1,3 +1,7 @@
+.virtual_documents/
+.workspace/
+nbs/wandb/
+wandb/
 test_settings.ini
 .gitconfig
 *.tgz

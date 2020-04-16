@@ -20,7 +20,8 @@ RUN pip install ipyvuetify
 RUN pip install ipympl
 RUN pip install voila-vuetify
 RUN pip install papermill
-RUN pip install --upgrade wandb
+RUN pip install --upgrade https://github.com/wandb/client/archive/pilot/artifacts.zip
+RUN pip install plotly
 
 # R PACKAGES
 RUN Rscript -e "install.packages(c('xts'), repo = 'http://cran.rstudio.com/')"
@@ -47,8 +48,21 @@ RUN jupyter contrib nbextension install --user
 RUN jupyter nbextensions_configurator enable --user
 RUN jupyter nbextension enable collapsible_headings/main --user
 
-# Enable juyterlab extensions
+#####
+# jupyterlab extensions
+####
 RUN pip install --upgrade jupyterlab-git
+RUN pip install --upgrade jupyterlab-quickopen
 RUN jupyter lab build
 RUN jupyter labextension install @jupyter-voila/jupyterlab-preview
+RUN jupyter labextension install @parente/jupyterlab-quickopen
+RUN jupyter labextension install @ijmbarr/jupyterlab_spellchecker
+RUN jupyter labextension install @krassowski/jupyterlab_go_to_definition@0.7.1
+# Code formatter
+RUN jupyter labextension install @ryantam626/jupyterlab_code_formatter
+RUN pip install jupyterlab_code_formatter
+RUN jupyter serverextension enable --py jupyterlab_code_formatter
+RUN pip install black
+
+
 

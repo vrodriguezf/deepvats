@@ -2,14 +2,22 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"load_numeric_vars": "00_load.ipynb",
-         "fslicer": "01_Timecluster_replication.ipynb",
-         "createDCAE": "01_Timecluster_replication.ipynb",
-         "slices2array": "01_Timecluster_replication.ipynb",
-         "train_surrogate_model": "01_Timecluster_replication.ipynb"}
+index = {"fpreprocess_numeric_vars": "00_load.ipynb",
+         "fread_and_concat": "00_load.ipynb",
+         "fread_mining_monitoring_files": "00_load.ipynb",
+         "fslicer": "01_DCAE.ipynb",
+         "createDCAE": "01_DCAE.ipynb",
+         "slices2array": "01_DCAE.ipynb",
+         "fmultiTSloader": "01_DCAE.ipynb",
+         "get_latent_features": "02_dimensionality_reduction.ipynb",
+         "fget_UMAP_embeddings": "02_dimensionality_reduction.ipynb",
+         "fplot_embeddings": "02_dimensionality_reduction.ipynb",
+         "fget_time_interval_of_window": "02_dimensionality_reduction.ipynb",
+         "train_surrogate_model": "02_dimensionality_reduction.ipynb"}
 
 modules = ["load.py",
-           "timecluster.py"]
+           "dcae.py",
+           "dr.py"]
 
 doc_url = "https://vrodriguezf.github.io/pacmel_mining_use_case/"
 

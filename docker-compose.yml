@@ -12,12 +12,11 @@ services:
     volumes:
       - ./:/home/jovyan/work
       - ~/.gitconfig:/etc/gitconfig
+      - ~/data:/data
     ports:
-      - "7878:8888" # Jupyter
-      - "8866:8866" # Voila
+      - "8801:8888" # Jupyter
     expose:
       - "8888"
-      - "8866"
     deploy:
       replicas: 1
       restart_policy:

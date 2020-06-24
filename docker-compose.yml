@@ -1,16 +1,13 @@
 version: "3"
 services:
-  notebook:
+  jupyter:
     build:
       context: ./
       dockerfile: Dockerfile
       args:
         user_id: 1005
-    entrypoint: /bin/bash /home/jovyan/work/start-notebook.sh
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
     volumes:
-      - ./:/home/jovyan/work
+      - ./:/home/user
       - ~/.gitconfig:/etc/gitconfig
       - ~/data:/data
     ports:
@@ -21,3 +18,18 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+  rstudio-server:
+      image: 'rocker/tidyverse:latest'
+      ports:
+          - "8802:8787"
+          - "8838:3838"
+      environment:
+          - USER=victor # *
+          - USERID=1005 # *
+          - GROUPID=1005 # *
+          - PASSWORD=asd # *
+          - ROOT=TRUE
+          - ADD=shiny
+      volumes:
+         - ./r_shiny_app:/home/rstudio
+         - /home/victor/data:/data

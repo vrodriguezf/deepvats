@@ -1,3 +1,6 @@
+# Victor
+r_shiny_app/.*
+
 .virtual_documents/
 .workspace/
 nbs/wandb/

@@ -32,6 +32,6 @@ modules = ["load.py",
 
 doc_url = "https://vrodriguezf.github.io/pacmel_mining_use_case/"
 
-git_url = "https://github.com/vrodriguezf/pacmel_mining_use_case/tree/master/"
+git_url = "https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/"
 
 def custom_doc_links(name): return None

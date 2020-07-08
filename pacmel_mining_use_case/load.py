@@ -84,10 +84,12 @@ class TSArtifact(wandb.Artifact):
         obj = cls(name, sd=sd, ed=ed, **kwargs)
         df = df.query('index >= @obj.sd') if obj.sd is not None else df
         df = df.query('index <= @obj.ed') if obj.ed is not None else df
-        path = obj.default_storage_path/f'{hash(df.values.tobytes())}' if path is None else path
+        hash_code = hash(df.values.tobytes())
+        path = obj.default_storage_path/f'{hash_code}' if path is None else path
         df.to_pickle(path)
         obj.add_file(path)
         obj.metadata['TS']['created'] = 'from-df'
+        obj.metadata['TS']['hash'] = hash_code
         obj.metadata['TS']['n_vars'] = df.columns.__len__()
         obj.metadata['TS']['n_samples'] = len(df)
         obj.metadata['TS']['has_missing_values'] = np.any(df.isna().values).__str__()

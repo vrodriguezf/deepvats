@@ -9,4 +9,5 @@ RUN pip install tensorflow
 RUN pip install papermill
 RUN pip install wandb --upgrade
 RUN pip install seaborn
+RUN pip install plotly
 

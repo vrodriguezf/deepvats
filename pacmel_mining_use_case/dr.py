@@ -6,6 +6,7 @@ __all__ = ['fget_UMAP_embeddings', 'plot_embeddings']
 import umap
 import pandas as pd
 import numpy as np
+from fastcore.all import *
 
 # Cell
 import warnings

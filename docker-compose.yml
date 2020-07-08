@@ -19,7 +19,9 @@ services:
       restart_policy:
         condition: on-failure
   rstudio-server:
-      image: 'rocker/tidyverse:latest'
+      build:
+          context: ./
+          dockerfile: Dockerfile-rstudio
       ports:
           - "8802:8787"
           - "8838:3838"
@@ -31,5 +33,6 @@ services:
           - ROOT=TRUE
           - ADD=shiny
       volumes:
-         - ./r_shiny_app:/home/rstudio
+         - ./r_shiny_app:/home/victor
          - /home/victor/data:/data
+         - ./pacmel_mining_use_case:/project_lib

@@ -39,7 +39,7 @@ class ReferenceArtifact(wandb.Artifact):
     def __init__(self, obj, name, folder=None, **kwargs):
         super().__init__(type='object', name=name, **kwargs)
         # pickle dumps the object and then hash it
-        hash_code = hash(pickle.dumps(obj))
+        hash_code = str(hash(pickle.dumps(obj)))
         folder = Path(ifnone(folder, self.default_storage_path))
         with open(f'{folder}/{hash_code}', 'wb') as f:
             pickle.dump(obj, f)
@@ -47,6 +47,7 @@ class ReferenceArtifact(wandb.Artifact):
         if self.metadata is None:
             self.metadata = dict()
         self.metadata['ref'] = dict()
+        self.metadata['ref']['hash'] = hash_code
         self.metadata['ref']['type'] = str(type(obj))
 
 # Cell

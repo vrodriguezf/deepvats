@@ -31,9 +31,14 @@ shinyUI(fluidPage(
                 tabPanel(
                     "embeddings_tab",
                     h2("Embeddings"),
-                    plotOutput("embeddings_plot", click = "embeddings_click") %>% withSpinner(),
-                    plotOutput("ts_plot") %>% withSpinner(),
-                    verbatimTextOutput("click_info")
+                    plotOutput("embeddings_plot", 
+                               click = "embeddings_click",
+                               brush = "embeddings_brush") %>% withSpinner(),
+                    dygraphOutput("ts_plot") %>% withSpinner(),
+                    #plotOutput("ts_plot") %>% withSpinner(),
+                    verbatimTextOutput("embeddings_plot_interaction_info"),
+                    verbatimTextOutput("point")
+                    
                 )
             )
         )

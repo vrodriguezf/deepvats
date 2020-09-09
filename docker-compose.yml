@@ -5,11 +5,12 @@ services:
       context: ./
       dockerfile: Dockerfile
       args:
-        user_id: 1005
+        - USER_ID=1005 # * 
+        - GROUP_ID=1005 # *
     volumes:
-      - ./:/home/user
+      - ./:/home/user/work
       - ~/.gitconfig:/etc/gitconfig
-      - ~/data:/data
+      - ~/data/PACMEL-2019:/home/user/data/PACMEL-2019
     ports:
       - "8801:8888" # Jupyter
     expose:

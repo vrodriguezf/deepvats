@@ -1,5 +1,11 @@
 # Victor
+.npm
 r_shiny_app/.*
+.local
+.config
+.jupyter
+.bash_history
+artifacts
 
 .virtual_documents/
 .workspace/

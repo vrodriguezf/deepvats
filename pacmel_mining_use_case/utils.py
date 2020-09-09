@@ -23,7 +23,9 @@ def generate_TS_df(rows, cols):
 # Cell
 def normalize_columns(df:pd.DataFrame):
     "Normalize columns from `df` to have 0 mean and 1 standard deviation"
-    return (df-df.mean())/df.std()
+    mean = df.mean()
+    std = df.std() + 1e-7
+    return (df-mean)/std
 
 # Cell
 def remove_constant_columns(df:pd.DataFrame):

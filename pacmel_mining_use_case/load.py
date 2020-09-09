@@ -9,6 +9,7 @@ import numpy as np
 from fastcore.all import *
 import wandb
 from datetime import datetime, timedelta
+from .utils import *
 
 # Cell
 def fpreprocess_numeric_vars(data, cname_ts=None, normalize=True, nan_replacement=0):
@@ -76,7 +77,7 @@ class TSArtifact(wandb.Artifact):
 
     @classmethod
     @delegates(__init__)
-    def from_df(cls, df, name, path=None, sd=None, ed=None, **kwargs):
+    def from_df(cls, df, name, path=None, sd=None, ed=None, normalize=False, **kwargs):
         "Stores the dataframe `df` as a pickle file in the pat `path` and adds its reference \
         to the entries of the artifact."
         sd = df.index[0] if sd is None else sd
@@ -84,18 +85,26 @@ class TSArtifact(wandb.Artifact):
         obj = cls(name, sd=sd, ed=ed, **kwargs)
         df = df.query('index >= @obj.sd') if obj.sd is not None else df
         df = df.query('index <= @obj.ed') if obj.ed is not None else df
-        hash_code = hash(df.values.tobytes())
-        path = obj.default_storage_path/f'{hash_code}' if path is None else path
-        df.to_pickle(path)
-        obj.add_file(path)
+
         obj.metadata['TS']['created'] = 'from-df'
-        obj.metadata['TS']['hash'] = hash_code
+        obj.metadata['TS']['freq'] = str(df.index.freq)
         obj.metadata['TS']['n_vars'] = df.columns.__len__()
         obj.metadata['TS']['n_samples'] = len(df)
         obj.metadata['TS']['has_missing_values'] = np.any(df.isna().values).__str__()
         obj.metadata['TS']['vars'] = list(df.columns)
-        obj.metadata['TS']['means'] = df.describe().loc['mean'].to_dict()
-        obj.metadata['TS']['stds'] = df.describe().loc['std'].to_dict()
+        # Normalization - Save the previous means and stds
+        if normalize:
+            obj.metadata['TS']['normalization'] = dict(
+                means = df.describe().loc['mean'].to_dict(),
+                stds = df.describe().loc['std'].to_dict()
+            )
+            df = normalize_columns(df)
+        # Hash and save
+        hash_code = str(hash(df.values.tobytes()))
+        path = obj.default_storage_path/f'{hash_code}' if path is None else Path(path)/f'{hash_code}'
+        df.to_pickle(path)
+        obj.metadata['TS']['hash'] = hash_code
+        obj.add_file(path)
         return obj
 
 # Cell

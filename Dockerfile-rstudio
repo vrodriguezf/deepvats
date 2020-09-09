@@ -1,6 +1,6 @@
 FROM vrodriguezf/rstudio-server-shiny-development:latest
 
 # Install R packages
-RUN R -eesd
+RUN R -e "install.packages(c('dygraphs', 'shinycssloaders'))"
 
 RUN R -e "reticulate::py_install('wandb', pip = TRUE)"

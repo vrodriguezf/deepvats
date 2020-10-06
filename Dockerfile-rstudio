@@ -3,4 +3,7 @@ FROM vrodriguezf/rstudio-server-shiny-development:latest
 # Install R packages
 RUN R -e "install.packages(c('dygraphs', 'shinycssloaders'))"
 
-RUN R -e "reticulate::py_install('wandb', pip = TRUE)"
+ENV RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
+RUN R -e "reticulate::install_miniconda()"
+
+RUN R -e "reticulate::py_install(c('pandas','wandb'), pip = TRUE, pip_options=c('--upgrade'))"

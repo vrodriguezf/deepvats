@@ -5,11 +5,11 @@ services:
       context: ./
       dockerfile: Dockerfile
       args:
-        - USER_ID=1005 # * 
-        - GROUP_ID=1005 # *
+        - USER_ID=1013 # * 
+        - GROUP_ID=1013 # *
     volumes:
       - ./:/home/user/work
-      - ~/.gitconfig:/etc/gitconfig
+      - ~/.gitconfig:/etc/gitconfig # Need to create this file!
       - ~/data/PACMEL-2019:/home/user/data/PACMEL-2019
     ports:
       - "8801:8888" # Jupyter
@@ -27,13 +27,14 @@ services:
           - "8802:8787"
           - "8838:3838"
       environment:
-          - USER=victor # *
-          - USERID=1005 # *
-          - GROUPID=1005 # *
+          - USER=victor # * if you change this, change also the paths of the volumes
+          - USERID=1013 # *
+          - GROUPID=1013 # *
           - PASSWORD=asd # *
           - ROOT=TRUE
           - ADD=shiny
+          - RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
       volumes:
          - ./r_shiny_app:/home/victor
-         - /home/victor/data:/data
+         - /home/victor/data/PACMEL-2019:/data/PACMEL-2019
          - ./pacmel_mining_use_case:/project_lib

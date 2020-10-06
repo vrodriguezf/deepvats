@@ -11,6 +11,9 @@
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
     
+    ###
+    # Inputs
+    ###
     observe({
         req(exists("runs"))
         updateSelectInput(session=session,
@@ -18,17 +21,45 @@ shinyServer(function(input, output, session) {
                           choices = names(runs))
     })
     
+    ###
+    # Reactives
+    ###
     selected_run = reactive({
         req(exists("runs"))
         runs[[input$run_dr]]
     })
     
+    embeddings <- reactive({
+        req(selected_run())
+        logged_artifacts = selected_run()$logged_artifacts()
+        # NOTE: This assumes the run has only logged the embeddings artifacts, so it is located in the first position
+        embs_ar = iter_next(logged_artifacts)
+        embs = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, embs_ar$metadata$ref$hash)) %>% as.data.frame
+        colnames(embs) = c("xcoord", "ycoord")
+        embs
+    })
+    
+    tsdf <- reactive({
+        req(selected_run())
+        used_artifacts = selected_run()$used_artifacts()
+        # NOTE: This assumes the run has only used the tsdf artifact, so it is located in the first position
+        tsdf_ar = iter_next(used_artifacts)
+        last_data_index = get_window_indices(idxs = nrow(embeddings()), w = w, s = s)[[1]] %>% tail(1)
+        tsdf = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)) %>% 
+            rownames_to_column("timeindex") %>% 
+            slice(1:last_data_index) %>% 
+            column_to_rownames(var = "timeindex")
+    })
+    
     ###
     # Outputs
     ###
-    output$run_dr_info_title = renderText({
+    output$run_dr_info_title = renderUI({
         req(selected_run())
-        tags$h3(paste0("Configuration of run ", selected_run()$id, " (", selected_run()$name, ")"))
+        id = selected_run()$id
+        name =selected_run()$name
+        foo = paste0("Configuration of run ", selected_run()$id, " (", selected_run()$name, ")")
+        tags$h3(foo)
     })
     
     output$run_dr_info = renderDataTable({

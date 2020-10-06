@@ -24,7 +24,7 @@ shinyUI(fluidPage(
                 tabPanel(
                     "information_tab",
                     fluidRow(
-                        textOutput("run_dr_info_title"),
+                        uiOutput("run_dr_info_title"),
                         dataTableOutput("run_dr_info")
                     )
                 ),

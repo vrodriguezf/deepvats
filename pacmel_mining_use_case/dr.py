@@ -12,6 +12,8 @@ from .utils import *
 
 # Cell
 def check_compatibility(dr_ar:TSArtifact, dcae_ar:TSArtifact):
+    "TODO: Function to check that the artifact used by the DCAE and the artifact that is \
+    going to be passed through the DR are compatible"
     ret = dr_ar.metadata['TS']['vars'] == dcae_ar.metadata['TS']['vars']
     # Check that the dr artifact is not normalized
     return ret

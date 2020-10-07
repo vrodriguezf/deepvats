@@ -33,7 +33,7 @@ def remove_constant_columns(df:pd.DataFrame):
 
 # Cell
 class ReferenceArtifact(wandb.Artifact):
-    default_storage_path = Path('/data/PACMEL-2019/wandb_artifacts/') # *
+    default_storage_path = Path('data/PACMEL-2019/wandb_artifacts/') # * this path is relative to Path.home()
     "This class is meant to create an artifact with a single reference to an object \
     passed as argument in the contructor. The object will be pickled, hashed and stored \
     in a specified folder."
@@ -42,7 +42,7 @@ class ReferenceArtifact(wandb.Artifact):
         super().__init__(type='object', name=name, **kwargs)
         # pickle dumps the object and then hash it
         hash_code = str(hash(pickle.dumps(obj)))
-        folder = Path(ifnone(folder, self.default_storage_path))
+        folder = Path(ifnone(folder, Path.home()/self.default_storage_path))
         with open(f'{folder}/{hash_code}', 'wb') as f:
             pickle.dump(obj, f)
         self.add_reference(f'file://{folder}/{hash_code}')
@@ -72,7 +72,8 @@ def df_slicer(df, w, s=1, padding=False, padding_value=0, return_as='ndarray'):
     distance between each slice is given by the stride `s`. If `padding` is \
     equals to True, the last slices which have less than `w` points are filled \
     with the value marked in the argument `padding_value`. Otherwise, those \
-    slices are removed from the result."
+    slices are removed from the result. TODO: the argument `return_as` is currently \
+    not used"
     aux = [df.iloc[x:x+w] for x in range(0, len(df), s)]
     if padding:
         with_padding = [x.append(pd.DataFrame(

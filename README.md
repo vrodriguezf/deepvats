@@ -14,7 +14,7 @@ To run the notebooks, install `docker` and `docker-compose` in your system. Then
 
 ```docker-compose up -d```
 
-and go to `localhost:7878`. The default port `7878` can be changed editing the file `docker-compose.yml`
+and go to `localhost:7878`. The default port `7878` can be changed editing the file `docker-compose.yml`. There are several parameters (e.g., volume paths) that have to be adapted to your needs in the docker-compose file, marked as `#*`.
 
 ## Contribute
 

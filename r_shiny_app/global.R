@@ -19,6 +19,8 @@ pd = import("pandas")
 ###
 QUERY_RUNS_LIMIT = 1
 DEFAULT_PATH_WANDB_ARTIFACTS = "/data/PACMEL-2019/wandb_artifacts"
+#w = 36 # * TODO: This has to be dependant on the selected run! 
+#s = 1 # * TODO: This has to be dependant on the selected run!
 
 ###
 # HELPER FUNCTIONS
@@ -70,37 +72,30 @@ print(runs)
 ###
 # Debug: Load embeddings and data for testing
 ###
-foo = api$run("vrodriguezf/timecluster-extension/nh5x1jkn")
+foo = api$run("vrodriguezf/timecluster-extension/1cr4xkmp")
 runs = list(foo) %>% set_names(foo$name)
 
-w = 36
-s = 1
-
-
-embeddings = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, "5630535579917677987")) %>% as.data.frame
-colnames(embeddings) = c("xcoord", "ycoord")
+# embeddings = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, "5630535579917677987")) %>% as.data.frame
+# colnames(embeddings) = c("xcoord", "ycoord")
 # tsdf = py_load_object(filename = "/data/PACMEL-2019/wandb_artifacts/7087224962096418705") %>% 
 #   rownames_to_column("Time") %>% 
 #   mutate(Time=as.POSIXct(Time))
-last_data_index = get_window_indices(idxs = nrow(embeddings), w = w, s = s)[[1]] %>% tail(1)
-tsdf = py_load_object(filename = "/data/PACMEL-2019/wandb_artifacts/7087224962096418705") %>% 
-  rownames_to_column("timeindex") %>% 
-  slice(1:last_data_index) %>% 
-  column_to_rownames(var = "timeindex")
-
-# auxiliary object for the interaction ts->embeddings
-tsidxs_per_embedding_idx <- get_window_indices(1:nrow(embeddings), w=w, s=s)
+#last_data_index = get_window_indices(idxs = nrow(embeddings), w = w, s = s)[[1]] %>% tail(1)
+# tsdf = py_load_object(filename = "/data/PACMEL-2019/wandb_artifacts/7087224962096418705") %>% 
+#   rownames_to_column("timeindex") %>% 
+#   slice(1:last_data_index) %>% 
+#   column_to_rownames(var = "timeindex")
   
 #View(embeddings)
 
-default_tsplot <- dygraph(tsdf, main = "Original data (normalized)") %>%
-  dyRangeSelector() %>%   
-  dyHighlight(hideOnMouseOut = TRUE) %>% 
-  dyOptions(labelsUTC = TRUE) %>% 
-  dyLegend(show="follow", hideOnMouseOut = TRUE) %>% 
-  dyUnzoom() %>% 
-  dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
-  dyCSS(textConnection("
-     .dygraph-legend > span { display: none; }
-     .dygraph-legend > span.highlight { display: inline; }
-  "))
+# default_tsplot <- dygraph(tsdf, main = "Original data (normalized)") %>%
+#   dyRangeSelector() %>%   
+#   dyHighlight(hideOnMouseOut = TRUE) %>% 
+#   dyOptions(labelsUTC = TRUE) %>% 
+#   dyLegend(show="follow", hideOnMouseOut = TRUE) %>% 
+#   dyUnzoom() %>% 
+#   dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
+#   dyCSS(textConnection("
+#      .dygraph-legend > span { display: none; }
+#      .dygraph-legend > span.highlight { display: inline; }
+#   "))

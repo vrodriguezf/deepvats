@@ -24,10 +24,28 @@ shinyServer(function(input, output, session) {
     ###
     # Reactives
     ###
+    
+    # Selected run is the run_dr
     selected_run = reactive({
         req(exists("runs"))
         runs[[input$run_dr]]
     })
+    
+    run_dr_config = reactive({
+        req(selected_run())
+        fromJSON(selected_run()$json_config)
+    })
+    
+    run_dcae_config = reactive({
+        req(run_dr_config())
+        dcae_run_path = run_dr_config()$dcae_run_path$value
+        dcae_run = api$run(dcae_run_path)
+        fromJSON(dcae_run$json_config)
+    })
+    
+    w = reactive({run_dcae_config()$w$value})
+    
+    s = reactive({run_dcae_config()$stride$value})
     
     embeddings <- reactive({
         req(selected_run())
@@ -43,12 +61,57 @@ shinyServer(function(input, output, session) {
         req(selected_run())
         used_artifacts = selected_run()$used_artifacts()
         # NOTE: This assumes the run has only used the tsdf artifact, so it is located in the first position
-        tsdf_ar = iter_next(used_artifacts)
-        last_data_index = get_window_indices(idxs = nrow(embeddings()), w = w, s = s)[[1]] %>% tail(1)
+        ts_ar = iter_next(used_artifacts)
+        last_data_index = get_window_indices(idxs = nrow(embeddings()), w = w(), s = s())[[1]] %>% tail(1)
         tsdf = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)) %>% 
             rownames_to_column("timeindex") %>% 
             slice(1:last_data_index) %>% 
             column_to_rownames(var = "timeindex")
+    })
+    
+    # auxiliary object for the interaction ts->embeddings
+    tsidxs_per_embedding_idx <- reactive({
+        get_window_indices(1:nrow(embeddings()), w=w(), s=s())
+    })
+    
+    ts_plot <- reactive({
+        req(tsdf(), embeddings())
+        plt <- dygraph(tsdf(), main = "Original data (normalized)") %>%
+            dyRangeSelector() %>%
+            dyHighlight(hideOnMouseOut = TRUE) %>%
+            dyOptions(labelsUTC = TRUE) %>%
+            dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
+            dyUnzoom() %>%
+            dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
+            dyCSS(
+                textConnection(
+                    "
+                    .dygraph-legend > span { display: none; }
+                    .dygraph-legend > span.highlight { display: inline; }"
+                )
+            )
+        
+        if (!is.null(input$embeddings_brush)) {
+            bp = brushedPoints(embeddings(), input$embeddings_brush, allRows = TRUE)
+            embedding_idxs = bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
+            for(ts_idxs in get_window_indices(embedding_idxs, w(), s())) {
+                plt <- plt %>% dyShading(from = rownames(tsdf())[head(ts_idxs, 1)], 
+                                         to = rownames(tsdf())[tail(ts_idxs, 1)],
+                                         color = "#CCEBD6")
+            }
+            # plt <- plt %>% dyShading(from = rownames(tsdf)[1], 
+            #                          to = rownames(tsdf)[100],
+            #                          color = "#CCEBD6")
+            # get_window_indices(embedding_idxs, w=w, s=s) %>% 
+            #     walk(function(ts_idxs) {
+            #         print(paste0("from: ", rownames(tsdf)[head(ts_idxs, 1)], "\nto: ", rownames(tsdf)[tail(ts_idxs, 1)]))
+            #         plt <- plt %>% dyShading(from = rownames(tsdf)[head(ts_idxs, 1)], 
+            #                                  to = rownames(tsdf)[tail(ts_idxs, 1)],
+            #                                  color = "#CCEBD6")
+            #     })
+        }
+        
+        plt
     })
     
     ###
@@ -58,28 +121,36 @@ shinyServer(function(input, output, session) {
         req(selected_run())
         id = selected_run()$id
         name =selected_run()$name
-        foo = paste0("Configuration of run ", selected_run()$id, " (", selected_run()$name, ")")
+        foo = paste0("Configuration of dimensionality reduction run ", selected_run()$id, " (", selected_run()$name, ")")
         tags$h3(foo)
     })
     
     output$run_dr_info = renderDataTable({
-        req(selected_run())
-        fromJSON(selected_run()$json_config) %>%
+        run_dr_config() %>%
+            map(~ .$value) %>%
+            enframe()
+    })
+    
+    output$run_dcae_info = renderDataTable({
+            run_dcae_config() %>% 
             map(~ .$value) %>%
             enframe()
     })
     
     output$embeddings_plot <- renderPlot({
+        req(embeddings())
+        embs_ = embeddings()
         
-        if (!is.null(input$ts_plot_click)) {
-            selected_ts_idx = which(default_tsplot$x$data[[1]] == input$ts_plot_click$x_closest_point)
-            embeddings_idxs = tsidxs_per_embedding_idx %>% map_lgl(~ selected_ts_idx %in% .)
-            embeddings$highlight = embeddings_idxs
+        # highlighting
+        if (!is.null(input$ts_plot_dygraph_click)) {
+            selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
+            embeddings_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
+            embs_$highlight = embeddings_idxs
         } else {
-            embeddings$highlight = FALSE
+            embs_$highlight = FALSE
         }
         
-        plt <- ggplot(data = embeddings) + 
+        plt <- ggplot(data = embs_) + 
             aes(x = xcoord, y = ycoord, color = highlight) + 
             geom_point() + 
             geom_path() + 
@@ -90,13 +161,10 @@ shinyServer(function(input, output, session) {
     })
     
     output$point <- renderText({
-        print(default_tsplot$x$data[[1]])
-        print(input$ts_plot_click$x_closest_point)
-        ts_idx = which(default_tsplot$x$data[[1]] == input$ts_plot_click$x_closest_point)
-        print(ts_idx)
-        paste0('X = ', strftime(req(input$ts_plot_click$x_closest_point), "%F %H:%M:%S"), 
-               '; Y = ', req(input$ts_plot_click$y_closest_point),
-               '; X (raw) = ', req(input$ts_plot_click$x_closest_point))
+        ts_idx = which(ts_plot()$ts$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
+        paste0('X = ', strftime(req(input$ts_plot_dygraph_click$x_closest_point), "%F %H:%M:%S"), 
+               '; Y = ', req(input$ts_plot_dygraph_click$y_closest_point),
+               '; X (raw) = ', req(input$ts_plot_dygraph_click$x_closest_point))
     })
 
     output$embeddings_plot_interaction_info <- renderText({
@@ -127,40 +195,5 @@ shinyServer(function(input, output, session) {
         )
     })
     
-    # output$ts_plot <- renderPlot({
-    #     req(input$embeddings_click)
-    #     point = nearPoints(embeddings, input$embeddings_click, threshold = 10, maxpoints = 1)
-    #     print(point)
-    #     index = embeddings[which(embeddings$x == point$x & embeddings$y == point$y),] %>% rownames() %>% as.integer
-    #     window_df = tsdf %>% slice(get_window_indices(index, w, s)) %>% pivot_longer(-Time)
-    #     ggplot(data=window_df, aes(x=Time, y=value)) + 
-    #         facet_wrap(~name, ncol=1) + geom_line()    
-    # })
-    
-    output$ts_plot <- renderDygraph({
-        plt <- default_tsplot
-        
-        if (!is.null(input$embeddings_brush)) {
-            bp = brushedPoints(embeddings, input$embeddings_brush, allRows = TRUE)
-            embedding_idxs = bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
-            print(embedding_idxs)
-            for(ts_idxs in get_window_indices(embedding_idxs, w, s)) {
-                plt <- plt %>% dyShading(from = rownames(tsdf)[head(ts_idxs, 1)], 
-                                         to = rownames(tsdf)[tail(ts_idxs, 1)],
-                                         color = "#CCEBD6")
-            }
-            # plt <- plt %>% dyShading(from = rownames(tsdf)[1], 
-            #                          to = rownames(tsdf)[100],
-            #                          color = "#CCEBD6")
-            # get_window_indices(embedding_idxs, w=w, s=s) %>% 
-            #     walk(function(ts_idxs) {
-            #         print(paste0("from: ", rownames(tsdf)[head(ts_idxs, 1)], "\nto: ", rownames(tsdf)[tail(ts_idxs, 1)]))
-            #         plt <- plt %>% dyShading(from = rownames(tsdf)[head(ts_idxs, 1)], 
-            #                                  to = rownames(tsdf)[tail(ts_idxs, 1)],
-            #                                  color = "#CCEBD6")
-            #     })
-        }
-        
-        plt
-    })
+    output$ts_plot_dygraph <- renderDygraph({ts_plot()})
 })

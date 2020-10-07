@@ -25,7 +25,13 @@ shinyUI(fluidPage(
                     "information_tab",
                     fluidRow(
                         uiOutput("run_dr_info_title"),
-                        dataTableOutput("run_dr_info")
+                        dataTableOutput("run_dr_info"),
+                        h3("Embeddings artifact"),
+                        dataTableOutput("embs_ar_info"),
+                        h3("Time series artifact"),
+                        dataTableOutput("ts_ar_info"),
+                        h3("Configuration of the associated DCAE run"),
+                        dataTableOutput("run_dcae_info"),
                     )
                 ),
                 tabPanel(
@@ -34,7 +40,7 @@ shinyUI(fluidPage(
                     plotOutput("embeddings_plot", 
                                click = "embeddings_click",
                                brush = "embeddings_brush") %>% withSpinner(),
-                    dygraphOutput("ts_plot") %>% withSpinner(),
+                    dygraphOutput("ts_plot_dygraph") %>% withSpinner(),
                     #plotOutput("ts_plot") %>% withSpinner(),
                     verbatimTextOutput("embeddings_plot_interaction_info"),
                     verbatimTextOutput("point")

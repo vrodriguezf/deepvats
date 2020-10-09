@@ -24,8 +24,8 @@ services:
           context: ./
           dockerfile: Dockerfile-rstudio
       ports:
-          - "8802:8787"
-          - "8838:3838"
+          - "8802:8787" # *
+          - "8838:3838" # *
       environment:
           - USER=victor # * if you change this, change also the paths of the volumes
           - USERID=1013 # *
@@ -35,6 +35,6 @@ services:
           - ADD=shiny
           - RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
       volumes:
-         - ./r_shiny_app:/home/victor
+         - ./r_shiny_app:/home/victor # *
          - /home/victor/data/PACMEL-2019:/data/PACMEL-2019
-         - ./pacmel_mining_use_case:/project_lib
+         - ./pacmel_mining_use_case:/project_lib # No se usa aun

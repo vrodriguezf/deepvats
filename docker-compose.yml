@@ -10,15 +10,11 @@ services:
     volumes:
       - ./:/home/user/work
       - ~/.gitconfig:/etc/gitconfig # Need to create this file!
-      - ~/data/PACMEL-2019:/home/user/data/PACMEL-2019
+      - /home/pacmel-shared-folder/data/PACMEL-2019:/home/user/data/PACMEL-2019
     ports:
       - "8801:8888" # Jupyter
     expose:
       - "8888"
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
   rstudio-server:
       build:
           context: ./
@@ -36,5 +32,5 @@ services:
           - RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
       volumes:
          - ./r_shiny_app:/home/victor # *
-         - /home/victor/data/PACMEL-2019:/data/PACMEL-2019
+         - /home/pacmel-shared-folder/data/PACMEL-2019:/data/PACMEL-2019
          - ./pacmel_mining_use_case:/project_lib # No se usa aun

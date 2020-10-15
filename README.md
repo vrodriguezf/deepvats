@@ -10,7 +10,26 @@ domain expert to analyse and cluster the behaviour of the process.
 
 ## Run notebooks
 
-To run the notebooks, install `docker` and `docker-compose` in your system. Then run:
+To run the notebooks, install `docker` and `docker-compose` in your system. 
+Then, create a new *.env* file in the root of the project following the structure:
+```
+# The name of the docker-compose project
+COMPOSE_PROJECT_NAME=your_project_name
+# The user ID you are using to run docker-compose
+USER_ID=your_numeric_id
+# The user name assigned to the user id
+USER_NAME=your_user_name
+# The port from which you want to access Jupyter lab
+JUPYTER_PORT=XXXX
+# The port from which you want to access RStudio server
+RSTUDIO_PORT=XXXX
+# The port from which you want to access Shiny
+SHINY_PORT=XXXX
+# The path to your data files to train/test the models
+DATA_PATH = /path/to/your/data
+```
+
+Then run:
 
 ```docker-compose up -d```
 

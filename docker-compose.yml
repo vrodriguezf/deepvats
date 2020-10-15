@@ -5,14 +5,14 @@ services:
       context: ./
       dockerfile: Dockerfile
       args:
-        - USER_ID=1013 # * Change to the id of the user running the docker-compose
-        - GROUP_ID=1017 # This is the group id of the user in which the folder where pacmel data is shared is located 
+        - USER_ID=${USER_ID} # * Change to the id of the user running the docker-compose
+        - GROUP_ID=1017 # Important to define it to work with Pacmel Data hosted in UPM servers (This is the group id of the user in which the folder where pacmel data is shared is located) 
     volumes:
       - ./:/home/user/work
       - ~/.gitconfig:/etc/gitconfig # Need to create this file!
-      - /home/pacmel-shared-folder/data/PACMEL-2019:/home/user/data/PACMEL-2019
+      - ${LOCAL_DATA_PATH}:/home/user/data/PACMEL-2019 # Change if the data is in other folder.
     ports:
-      - "8801:8888" # Jupyter
+      - "${JUPYTER_PORT}:8888" # Jupyter
     expose:
       - "8888"
   rstudio-server:
@@ -20,17 +20,17 @@ services:
           context: ./
           dockerfile: Dockerfile-rstudio
       ports:
-          - "8802:8787" # *
-          - "8838:3838" # *
+          - "${RSTUDIO_PORT}:8787" # *
+          - "${SHINY_PORT}:3838" # *
       environment:
-          - USER=victor # * If you change this, change also the paths of the volumes
-          - USERID=1013 # * Change to the id of the user running the docker-compose
-          - GROUPID=1017 # This is the group id of the user in which the folder where pacmel data is shared is located 
+          - USER=${USER_NAME} 
+          - USERID=${USER_ID} 
+          - GROUPID=1017 # Important to define it to work with Pacmel Data hosted in UPM servers
           - PASSWORD=asd # *
           - ROOT=TRUE
           - ADD=shiny
           - RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
       volumes:
-         - ./r_shiny_app:/home/victor # *
-         - /home/pacmel-shared-folder/data/PACMEL-2019:/data/PACMEL-2019
+         - ./r_shiny_app:/home/${USER_NAME} # *
+         - ${LOCAL_DATA_PATH}:/data/PACMEL-2019
          - ./pacmel_mining_use_case:/project_lib # No se usa aun

@@ -5,8 +5,8 @@ services:
       context: ./
       dockerfile: Dockerfile
       args:
-        - USER_ID=1013 # * 
-        - GROUP_ID=1013 # *
+        - USER_ID=1013 # * Change to the id of the user running the docker-compose
+        - GROUP_ID=1017 # This is the group id of the user in which the folder where pacmel data is shared is located 
     volumes:
       - ./:/home/user/work
       - ~/.gitconfig:/etc/gitconfig # Need to create this file!
@@ -24,8 +24,8 @@ services:
           - "8838:3838" # *
       environment:
           - USER=victor # * if you change this, change also the paths of the volumes
-          - USERID=1013 # *
-          - GROUPID=1013 # *
+          - USERID=1013 # * Change to the id of the user running the docker-compose
+          - GROUPID=1017 # This is the group id of the user in which the folder where pacmel data is shared is located 
           - PASSWORD=asd # *
           - ROOT=TRUE
           - ADD=shiny

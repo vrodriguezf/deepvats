@@ -26,7 +26,7 @@ RSTUDIO_PORT=XXXX
 # The port from which you want to access Shiny
 SHINY_PORT=XXXX
 # The path to your data files to train/test the models
-DATA_PATH = /path/to/your/data
+LOCAL_DATA_PATH=/path/to/your/data
 ```
 
 Then run:

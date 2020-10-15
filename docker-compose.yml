@@ -23,7 +23,7 @@ services:
           - "8802:8787" # *
           - "8838:3838" # *
       environment:
-          - USER=victor # * if you change this, change also the paths of the volumes
+          - USER=victor # * If you change this, change also the paths of the volumes
           - USERID=1013 # * Change to the id of the user running the docker-compose
           - GROUPID=1017 # This is the group id of the user in which the folder where pacmel data is shared is located 
           - PASSWORD=asd # *

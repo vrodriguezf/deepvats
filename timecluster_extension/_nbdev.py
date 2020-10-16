@@ -8,7 +8,6 @@ index = {"df_slicer": "02_DCAE.ipynb",
          "get_latent_features": "03_dimensionality_reduction.ipynb",
          "fget_UMAP_embeddings": "03_dimensionality_reduction.ipynb",
          "plot_embeddings": "03_dimensionality_reduction.ipynb",
-         "plot_TS": "04_visualization.ipynb",
          "fpreprocess_numeric_vars": "load.ipynb",
          "fread_and_concat": "load.ipynb",
          "fread_mining_monitoring_files": "load.ipynb",
@@ -21,13 +20,14 @@ index = {"df_slicer": "02_DCAE.ipynb",
          "normalize_columns": "utils.ipynb",
          "remove_constant_columns": "utils.ipynb",
          "ReferenceArtifact": "utils.ipynb",
-         "wandb.apis.public.Artifact.to_obj": "utils.ipynb"}
+         "wandb.apis.public.Artifact.to_obj": "utils.ipynb",
+         "plot_TS": "visualization.ipynb"}
 
 modules = ["dcae.py",
            "utils.py",
            "dr.py",
-           "visualization.py",
-           "load.py"]
+           "load.py",
+           "visualization.py"]
 
 doc_url = "https://vrodriguezf.github.io/timecluster_extension/"
 

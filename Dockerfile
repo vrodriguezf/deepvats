@@ -3,13 +3,14 @@ FROM vrodriguezf/jupyterlab-cuda:latest
 # PYTHON PACKAGES with pip
 RUN pip install nbdev
 RUN pip install umap-learn
-RUN pip install fastcore
 RUN pip install tensorflow
 RUN pip install keras
 RUN pip install papermill
-RUN pip install --upgrade wandb
 RUN pip install seaborn
 RUN pip install plotly
+
+## Python packages that need to be upgraded
+RUN pip install --upgrade wandb fastcore
 
 # Environmental variables for wandb
 ENV LC_ALL=C.UTF-8

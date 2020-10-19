@@ -12,11 +12,27 @@ from .utils import *
 
 # Cell
 def check_compatibility(dr_ar:TSArtifact, dcae_ar:TSArtifact):
-    "TODO: Function to check that the artifact used by the DCAE and the artifact that is \
+    "Function to check that the artifact used by the DCAE and the artifact that is \
     going to be passed through the DR are compatible"
-    ret = dr_ar.metadata['TS']['vars'] == dcae_ar.metadata['TS']['vars']
-    # Check that the dr artifact is not normalized
-    return ret
+    try:
+        # Check that both artifacts have the same variables
+        chk_vars = dr_ar.metadata['TS']['vars'] == dcae_ar.metadata['TS']['vars']
+        # Check that both artifacts have the same freq
+        chk_freq = dr_ar.metadata['TS']['freq'] == dcae_ar.metadata['TS']['freq']
+        # Check that the dr artifact is not normalized (not normalized data has not the key normalization)
+        chk_norm = dr_ar.metadata['TS'].get('normalization') is None
+        # Check that the dr artifact has not missing values
+        chk_miss = dr_ar.metadata['TS']['has_missing_values'] == "False"
+        # Check all logical vars.
+        if chk_vars and chk_freq and chk_norm and chk_miss:
+            print("Artifacts are compatible.")
+        else:
+            raise Exception
+    except Exception as e:
+        print("Artifacts are not complatible.")
+        raise e
+    return None
+
 
 # Cell
 import warnings

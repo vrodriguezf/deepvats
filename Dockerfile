@@ -24,6 +24,8 @@ RUN addgroup --gid $GROUP_ID $USER
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USER
 # Create non root user home folder
 WORKDIR /home/$USER
+# setup share data folder before switching to user
+#RUN mkdir /home/$USER/data
+#RUN mkdir /home/$USER/data/PACMEL-2019
+#RUN chown -R $USER:$USER /home/$USER/data
 USER $USER
-
-

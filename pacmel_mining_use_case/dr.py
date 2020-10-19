@@ -28,9 +28,9 @@ def check_compatibility(dr_ar:TSArtifact, dcae_ar:TSArtifact):
             print("Artifacts are compatible.")
         else:
             raise Exception
-    except Exception:
+    except Exception as e:
         print("Artifacts are not complatible.")
-
+        raise e
     return None
 
 

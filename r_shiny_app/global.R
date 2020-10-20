@@ -46,7 +46,7 @@ dyUnzoom <-function(dygraph) {
 api = wandb$Api()
 
 print(paste0("Querying ", QUERY_RUNS_LIMIT, "runs..."))
-runs_it = api$runs("vrodriguezf/timecluster-extension")
+runs_it = api$runs("pacmel/timecluster-extension")
 print("Processing runs...")
 runs = purrr::rerun(QUERY_RUNS_LIMIT, iter_next(runs_it))
 
@@ -72,7 +72,7 @@ print(runs)
 ###
 # Debug: Load embeddings and data for testing
 ###
-foo = api$run("vrodriguezf/timecluster-extension/1cr4xkmp")
+foo = api$run("pacmel/timecluster-extension/3jvuv2s3")
 runs = list(foo) %>% set_names(foo$name)
 
 # embeddings = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, "5630535579917677987")) %>% as.data.frame

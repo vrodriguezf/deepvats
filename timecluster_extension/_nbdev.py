@@ -5,6 +5,7 @@ __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 index = {"df_slicer": "02_DCAE.ipynb",
          "createDCAE": "02_DCAE.ipynb",
          "check_compatibility": "03_dimensionality_reduction.ipynb",
+         "normalize_dr_artifact": "03_dimensionality_reduction.ipynb",
          "get_latent_features": "03_dimensionality_reduction.ipynb",
          "fget_UMAP_embeddings": "03_dimensionality_reduction.ipynb",
          "plot_embeddings": "03_dimensionality_reduction.ipynb",

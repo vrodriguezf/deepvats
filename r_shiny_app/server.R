@@ -152,10 +152,12 @@ shinyServer(function(input, output, session) {
         
         plt <- ggplot(data = embs_) + 
             aes(x = xcoord, y = ycoord, color = highlight) + 
-            geom_point() + 
-            geom_path() + 
+            geom_point(shape = 21, colour = "#2F3B65") + 
+            scale_shape(solid = FALSE) +
+            geom_path(size=0.08, colour = "#2F3B65") + 
             guides() + 
-            theme(legend.position = "none")
+            theme(legend.position = "none",
+                  panel.background = element_rect(fill = "white", colour = "black"))
 
         plt
     })

@@ -47,25 +47,27 @@ We recommend using the following procedure to resolve issues in the repository:
     ``` 
     git commit -m "Fix issue #XX"
     ```
-4.  Push your local branch to a branch in the gitlab repository with an identiffying name:
+4. Test that there are not merging problems in the Jupyter Notebooks with the function [**nbdev_fix_merge**](https://nbdev.fast.ai/cli#nbdev_fix_merge)
+
+5.  Push your local branch to a branch in the gitlab repository with an identiffying name:
     ```
     git push -u origin issueXX_solved
     ```
-5. When the push is made, a link will appear in the terminal to create a merge request. Click on it.
+6. When the push is made, a link will appear in the terminal to create a merge request. Click on it.
     ```
     remote:
     remote: To create a merge request for test_branch, visit:
     remote:   https://gitlab.geist.re/pml/x_timecluster_extension/-/merge_requests/new?merge_request%5Bsource_branch%5D=issueXX_solved
     remote:
     ```
-6. In the gitlab website:
+7. In the gitlab website:
     * Write in the description what is the problem to solve with your branch using a hyperlink to the issue (just use the hashtag symbol "#" followed by the issue number) 
     * Click on the option "Delete source branch when merge request is accepted" and assign the merge to your profile.
     * Click on the button "Create merge request"
 ![image](/uploads/da18a985a69973ad62a60bc6564304b9/image.png)
 
-7. Wait to the merge to be accepted. We recommend to move the issue to the field "In review" (in the Issue Board).
-8. If there are no problems, the merge request will be accepted and the issue will be closed.
+8. Wait to the merge to be accepted. We recommend to move the issue to the field "In review" (in the Issue Board).
+9. If there are no problems, the merge request will be accepted and the issue will be closed.
 
 
 ## Contribute

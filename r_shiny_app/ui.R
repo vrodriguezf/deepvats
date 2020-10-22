@@ -16,7 +16,12 @@ shinyUI(fluidPage(
     # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(
-            selectInput("run_dr", label = "Select a run", choices = NULL)
+            selectInput("run_dr", label = "Select a run", choices = NULL),
+            hr(),
+            numericInput("minPts_hdbscan", label = "Define value of minPts in HDBSCAN",value =100),
+            checkboxInput("show_clusters", label = "Calculate and show clusters", value = FALSE),
+            actionButton("update_clust", label = "Update clusters")
+            
         ),
         # Show a plot of the generated distribution
         mainPanel(

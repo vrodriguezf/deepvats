@@ -47,13 +47,19 @@ shinyServer(function(input, output, session) {
     
     s = reactive({run_dcae_config()$stride$value})
     
-    embeddings <- reactive({
+    # Reactive when show_clusters is clicked or when update_clust button is clicked (i.e. after changing the parameter minPts)
+    embeddings <- eventReactive(c(input$show_clusters, input$update_clust),{
         req(selected_run())
         logged_artifacts = selected_run()$logged_artifacts()
         # NOTE: This assumes the run has only logged the embeddings artifacts, so it is located in the first position
         embs_ar = iter_next(logged_artifacts)
-        embs = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, embs_ar$metadata$ref$hash)) %>% as.data.frame
+        embs <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, embs_ar$metadata$ref$hash)) %>% as.data.frame
         colnames(embs) = c("xcoord", "ycoord")
+        # Calculate clusters when checkbox is clicked (TRUE)
+        if(input$show_clusters){
+            cl2 <- hdbscan(embs, minPts = input$minPts_hdbscan)
+            embs$cluster <- cl2$cluster
+        }
         embs
     })
     
@@ -114,6 +120,37 @@ shinyServer(function(input, output, session) {
         plt
     })
     
+    # Reactive emb_plot
+    emb_plot <- reactive({
+        req(embeddings())
+        embs_ <- embeddings()
+        
+        # Prepare the column highlight to color data
+        if (!is.null(input$ts_plot_dygraph_click)) {
+            selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
+            embeddings_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
+            embs_$highlight = embeddings_idxs
+        } else {
+            embs_$highlight = FALSE
+        }
+        # Prepare the column highlight to color data. If input$generate_cluster has not been clicked
+        # the column cluster will not exist in the dataframe, so we create with the value FALSE
+        if(!("cluster" %in% names(embs_))){
+            embs_$cluster = FALSE
+        }
+
+        plt <- ggplot(data = embs_) + 
+            aes(x = xcoord, y = ycoord, fill = highlight, color = cluster) + 
+            geom_point(shape = 21) + 
+            scale_shape(solid = FALSE) +
+            geom_path(size=0.08, colour = "#2F3B65") + 
+            guides() + 
+            scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA"))+
+            theme(legend.position = "none",
+                  panel.background = element_rect(fill = "white", colour = "black"))
+        
+        plt
+    })
     ###
     # Outputs
     ###
@@ -137,30 +174,7 @@ shinyServer(function(input, output, session) {
             enframe()
     })
     
-    output$embeddings_plot <- renderPlot({
-        req(embeddings())
-        embs_ = embeddings()
-        
-        # highlighting
-        if (!is.null(input$ts_plot_dygraph_click)) {
-            selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
-            embeddings_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
-            embs_$highlight = embeddings_idxs
-        } else {
-            embs_$highlight = FALSE
-        }
-        
-        plt <- ggplot(data = embs_) + 
-            aes(x = xcoord, y = ycoord, color = highlight) + 
-            geom_point(shape = 21, colour = "#2F3B65") + 
-            scale_shape(solid = FALSE) +
-            geom_path(size=0.08, colour = "#2F3B65") + 
-            guides() + 
-            theme(legend.position = "none",
-                  panel.background = element_rect(fill = "white", colour = "black"))
-
-        plt
-    })
+    output$embeddings_plot <- renderPlot({emb_plot()})
     
     output$point <- renderText({
         ts_idx = which(ts_plot()$ts$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)

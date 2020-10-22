@@ -9,6 +9,7 @@ library(shinycssloaders)
 library(tidyr)
 library(dplyr)
 library(dygraphs)
+library(dbscan)
 
 # Python dependencies
 wandb = import("wandb")
@@ -17,7 +18,7 @@ pd = import("pandas")
 ###
 # CONSTANTS
 ###
-QUERY_RUNS_LIMIT = 1
+QUERY_RUNS_LIMIT = 45
 DEFAULT_PATH_WANDB_ARTIFACTS = "/data/PACMEL-2019/wandb_artifacts"
 #w = 36 # * TODO: This has to be dependant on the selected run! 
 #s = 1 # * TODO: This has to be dependant on the selected run!
@@ -56,24 +57,26 @@ print("Filtering runs...")
 runs = runs %>%
   keep(function(run) {
     # config = fromJSON(run$json_config)
+    print(run)
     logged_artifacts = run$logged_artifacts()
+    print(logged_artifacts)
     print(run$state)
-    print(run$config$ds_artifact_name)
+    print(run$config$emb_artifact_name)
     return(
       run$state == "finished" &&
-      !is.null(run$config$ds_artifact_name) && 
-        !is.null(iter_next(logged_artifacts))
+      !is.null(run$config$emb_artifact_name) 
     )
   })
 
 runs = runs %>% set_names(runs %>% map(~ .$name))
+
 print(runs)
 
 ###
 # Debug: Load embeddings and data for testing
 ###
-foo = api$run("pacmel/timecluster-extension/3jvuv2s3")
-runs = list(foo) %>% set_names(foo$name)
+# foo = api$run("pacmel/timecluster-extension/3jvuv2s3")
+# runs = list(foo) %>% set_names(foo$name)
 
 # embeddings = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, "5630535579917677987")) %>% as.data.frame
 # colnames(embeddings) = c("xcoord", "ycoord")

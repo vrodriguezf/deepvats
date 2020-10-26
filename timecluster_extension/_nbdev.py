@@ -22,7 +22,8 @@ index = {"df_slicer": "02_DCAE.ipynb",
          "remove_constant_columns": "utils.ipynb",
          "ReferenceArtifact": "utils.ipynb",
          "wandb.apis.public.Artifact.to_obj": "utils.ipynb",
-         "plot_TS": "visualization.ipynb"}
+         "plot_TS": "visualization.ipynb",
+         "plot_validation_ts_ae": "visualization.ipynb"}
 
 modules = ["dcae.py",
            "utils.py",

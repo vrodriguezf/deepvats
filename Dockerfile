@@ -5,12 +5,12 @@ RUN pip install nbdev
 RUN pip install umap-learn
 RUN pip install tensorflow
 RUN pip install keras
-RUN pip install papermill
+# RUN pip install papermill
 RUN pip install seaborn
 RUN pip install plotly
 
 ## Python packages that need to be upgraded
-RUN pip install --upgrade wandb fastcore
+RUN pip install --upgrade wandb fastcore papermill
 
 # Environmental variables for wandb
 ENV LC_ALL=C.UTF-8

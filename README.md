@@ -51,7 +51,7 @@ We recommend using the following procedure to resolve issues in the repository:
 
 5.  Push your local branch to a branch in the gitlab repository with an identiffying name:
     ```
-    git push -u origin issueXX_solved
+    git push -u origin HEAD:issueXX_solved
     ```
 6. When the push is made, a link will appear in the terminal to create a merge request. Click on it.
     ```

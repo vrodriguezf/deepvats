@@ -35,6 +35,14 @@ Then run:
 
 and go to `localhost:7878`. The default port `7878` can be changed editing the file `docker-compose.yml`. There are several parameters (e.g., volume paths) that have to be adapted to your needs in the docker-compose file, marked as `#*`.
 
+## Incorporate useful customization to Jupyter Lab
+
+- [**Gist to Jupyter Lab for a quick open**](https://gist.githubusercontent.com/vrodriguezf/2a761ff00d3baf07e4722eeed74c3a86/raw/a1408885af6357e707547f1b7aa304aa18133737/jupyterlab-quickopen-configuration.json):  Put it on Settings -> Advance Settings Editor -> Quick Open-> User Preferences
+- [**Gist to have better shortcuts**](https://gist.githubusercontent.com/vrodriguezf/4908100482b6c96ef9d7df944fe0b345/raw): Put it on Settings -> Advance Settings Editor -> Keyboard Shortcuts -> User Preferences
+- [**Gist to reload module and submodules**](https://gist.githubusercontent.com/vrodriguezf/1c1d35d04948c78bb4ed26a24ce8ba4a/raw/fb5191019331a0b8f082f60887559ba071ae72e5/reload%2520module%2520and%2520submodules): Use it in an interactive Jupyter Lab console.
+
+
+
 ## Standard working procedure for resolving gitlab issues
 We recommend using the following procedure to resolve issues in the repository:
 1. Create a local branch in your development environment to solve the issue XX:

@@ -15,15 +15,15 @@ def plot_TS(df:pd.core.frame.DataFrame, **kwargs):
     plt.show()
 
 # Cell
-def plot_validation_ts_ae(prediction:np.array, original:np.array,fig_size = (15,15),anchor = (0, 0.85)):
+def plot_validation_ts_ae(prediction:np.array, original:np.array,fig_size = (15,15),anchor = (0, 0.85),window_num = 0):
     # Create the figure
     fig = plt.figure(figsize=(fig_size[0],fig_size[1]))
     # Create the subplot axes
     axes = fig.subplots(nrows=original.shape[2], ncols=1)
     # We iterate over the sensor data and plot both the original and the prediction
     for i,ax in zip(range(original.shape[2]),fig.axes):
-        ax.plot(original[:,0,i], label='Original Data')
-        ax.plot(prediction[:,0,i], label='Prediction')
+        ax.plot(original[window_num,:,i], label='Original Data')
+        ax.plot(prediction[window_num,:,i], label='Prediction')
     # Handle the legend configuration and position
     lines, labels = fig.axes[-1].get_legend_handles_labels()
     fig.legend(lines, labels,bbox_to_anchor=(anchor[0], anchor[1]),loc='upper left')

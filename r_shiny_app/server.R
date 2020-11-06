@@ -120,6 +120,49 @@ shinyServer(function(input, output, session) {
         plt
     })
     
+    # Observe the events related to zoom the embedding graph:
+    ranges <- reactiveValues(x = NULL, y = NULL)
+    observeEvent(input$update_coord_graph,{
+        # Take input values
+        zoom_values <- list(xmin = input$x_min,
+                            xmax = input$x_max,
+                            ymin = input$y_min,
+                            ymax = input$y_max)
+        if (!is.null(zoom_values)) {
+            ranges$x <- c(zoom_values$xmin, zoom_values$xmax)
+            ranges$y <- c(zoom_values$ymin, zoom_values$ymax)
+            
+        } else {
+            ranges$x <- NULL
+            ranges$y <- NULL
+        }
+    })
+    
+    # Observe the events related to change the appearance of the embedding graph:
+    config_style <- reactiveValues(path_line_size = 0.08,
+                                   path_alpha = 5/10,
+                                   point_alpha = 1/10,
+                                   point_size = 1)
+    
+    observeEvent(input$update_emb_graph,{
+        style_values <- list(path_line_size = input$path_line_size ,
+                             path_alpha = input$path_alpha,
+                             point_alpha = input$point_alpha,
+                             point_size = input$point_size )
+        
+        if (!is.null(style_values)) {
+            config_style$path_line_size <- style_values$path_line_size
+            config_style$path_alpha <- style_values$path_alpha
+            config_style$point_alpha <- style_values$point_alpha
+            config_style$point_size <- style_values$point_size
+        } else {
+            config_style$path_line_size <- NULL
+            config_style$path_alpha <- NULL
+            config_style$point_alpha <- NULL
+            config_style$point_size <- NULL 
+        }
+    })
+    
     # Reactive emb_plot
     emb_plot <- reactive({
         req(embeddings())
@@ -141,15 +184,24 @@ shinyServer(function(input, output, session) {
 
         plt <- ggplot(data = embs_) + 
             aes(x = xcoord, y = ycoord, fill = highlight, color = cluster) + 
-            geom_point(shape = 21) + 
+            geom_point(shape = 21,alpha = config_style$point_alpha, size = config_style$point_size) + 
             scale_shape(solid = FALSE) +
-            geom_path(size=0.08, colour = "#2F3B65") + 
+            geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha) + 
             guides() + 
             scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA"))+
+            coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE)+
             theme(legend.position = "none",
                   panel.background = element_rect(fill = "white", colour = "black"))
         
         plt
+        # svgPanZoom(
+        #     svglite:::inlineSVG(
+        #         #will put on separate line but also need show
+        #         show(
+        #             plt
+        #         )
+        #     )
+        # )
     })
     ###
     # Outputs

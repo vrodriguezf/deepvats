@@ -66,10 +66,10 @@ def fget_UMAP_embeddings(input_data, **kwargs):
     return (embeddings, reducer)
 
 # Cell
-def plot_embeddings(embeddings, umap_params):
+def plot_embeddings(embeddings, umap_params, fig_size = (25,25)):
     "Plot 2D embeddings thorugh a connected scatter plot"
     df_embeddings = pd.DataFrame(embeddings, columns = ['x1', 'x2'])
-    fig = plt.figure(figsize=(10,10))
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1]))
     ax = fig.add_subplot(111)
     ax.scatter(df_embeddings['x1'], df_embeddings['x2'], marker='o', facecolors='none', edgecolors='b', alpha=0.1)
     ax.plot(df_embeddings['x1'], df_embeddings['x2'], alpha=0.5, picker=1)

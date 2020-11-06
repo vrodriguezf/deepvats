@@ -104,7 +104,7 @@ class TSArtifact(wandb.Artifact):
         path = obj.default_storage_path/f'{hash_code}' if path is None else Path(path)/f'{hash_code}'
         df.to_pickle(path)
         obj.metadata['TS']['hash'] = hash_code
-        obj.add_file(path)
+        obj.add_file(str(path))
         return obj
 
 # Cell

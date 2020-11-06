@@ -10,6 +10,7 @@ library(tidyr)
 library(dplyr)
 library(dygraphs)
 library(dbscan)
+library(shinyWidgets)
 
 # Python dependencies
 wandb = import("wandb")

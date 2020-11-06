@@ -15,7 +15,7 @@ def plot_TS(df:pd.core.frame.DataFrame, **kwargs):
     plt.show()
 
 # Cell
-def plot_validation_ts_ae(prediction:np.array, original:np.array,fig_size = (15,15),anchor = (0, 0.85),window_num = 0):
+def plot_validation_ts_ae(prediction:np.array, original:np.array, title_str = "Validation plot", fig_size = (15,15), anchor = (-0.01, 0.89), window_num = 0, return_fig=True, title_pos = 0.9):
     # Create the figure
     fig = plt.figure(figsize=(fig_size[0],fig_size[1]))
     # Create the subplot axes
@@ -26,5 +26,13 @@ def plot_validation_ts_ae(prediction:np.array, original:np.array,fig_size = (15,
         ax.plot(prediction[window_num,:,i], label='Prediction')
     # Handle the legend configuration and position
     lines, labels = fig.axes[-1].get_legend_handles_labels()
-    fig.legend(lines, labels,bbox_to_anchor=(anchor[0], anchor[1]),loc='upper left')
-    return fig
+    fig.legend(lines, labels,loc='upper left', ncol=2)
+    # Write the plot title (and position it closer to the top of the graph)
+    fig.suptitle(title_str, y = title_pos)
+    # Tight results:
+    fig.tight_layout()
+    # Returns
+    if return_fig:
+        return fig
+    fig
+    return None

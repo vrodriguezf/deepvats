@@ -10,6 +10,7 @@
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
+
     
     ###
     # Inputs
@@ -43,47 +44,102 @@ shinyServer(function(input, output, session) {
         fromJSON(dcae_run$json_config)
     })
     
+    ts_ar_config = reactive({
+        req(selected_run())
+        used_arts = selected_run()$used_artifacts()
+        # Creo lista vacia y añado a los metadatos el nombre.
+        # used_arts = mi_run$used_artifacts()
+        # Take the first item of the iterable (that is the used by the software)
+        artifact = iter_next(used_arts)
+        list_used_arts = artifact$metadata$TS
+        list_used_arts$name = artifact$name
+        list_used_arts$aliases = artifact$aliases
+        list_used_arts$artifact_name = artifact$artifact_name
+        list_used_arts$id = artifact$id
+        list_used_arts$created_at = artifact$created_at
+        list_used_arts
+    })
+    
+    embs_ar_config = reactive({
+        req(selected_run())
+        logged_arts = selected_run()$logged_artifacts()
+        # Take the first item of the iterable (that is the used by the software)
+        artifact = iter_next(logged_arts)
+        list_used_arts = artifact$metadata$ref
+        list_used_arts$name = artifact$name
+        list_used_arts$aliases = artifact$aliases
+        list_used_arts$artifact_name = artifact$artifact_name
+        list_used_arts$id = artifact$id
+        list_used_arts$created_at = artifact$created_at
+        list_used_arts
+    })
+    
     w = reactive({run_dcae_config()$w$value})
     
     s = reactive({run_dcae_config()$stride$value})
     
-    # Reactive when show_clusters is clicked or when update_clust button is clicked (i.e. after changing the parameter minPts)
-    embeddings <- eventReactive(c(input$show_clusters, input$update_clust),{
+    emb_object <- reactive({
         req(selected_run())
         logged_artifacts = selected_run()$logged_artifacts()
         # NOTE: This assumes the run has only logged the embeddings artifacts, so it is located in the first position
         embs_ar = iter_next(logged_artifacts)
         embs <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, embs_ar$metadata$ref$hash)) %>% as.data.frame
         colnames(embs) = c("xcoord", "ycoord")
-        # Calculate clusters when checkbox is clicked (TRUE)
-        if(input$show_clusters){
-            cl2 <- hdbscan(embs, minPts = input$minPts_hdbscan)
-            embs$cluster <- cl2$cluster
-        }
         embs
+    })
+    
+    
+    
+    
+    # Reactive when show_clusters is clicked or when update_clust button is clicked (i.e. after changing the parameter minPts)
+    embeddings <- reactive({
+        req(selected_run(),emb_object())
+        embs <- emb_object()
+        # embs2 <<-  slice(embs, input$points_emb[1]:input$points_emb[2])
+        # Calculate clusters when checkbox is clicked (TRUE)
+        # if(input$show_clusters){
+        #     cl2 <- hdbscan$HDBSCAN(min_cluster_size = as.integer(input$min_cluster_size_hdbscan),
+        #                            min_samples=as.integer(input$min_samples_hdbscan),
+        #                            cluster_selection_epsilon =input$cluster_selection_epsilon_hdbscan,
+        #                            metric = input$metric_hdbscan)$fit(embs)
+        #     embs$cluster <- cl2$labels_
+        #     # IF the value "-1" exists, assign the first element of mycolors to #000000, if not, assign the normal colorRampPalette
+        #     myColors <<-append("#000000",colorRampPalette(brewer.pal(12,"Paired"))(length(unique(embs$cluster))-1))
+        #     
+        # }
+        # print(nrow(embs2))
+        embs
+    })
+    
+    clustering_event <- eventReactive(c(input$show_clusters, input$update_clust),{
+        
     })
     
     tsdf <- reactive({
         req(selected_run())
-        used_artifacts = selected_run()$used_artifacts()
+        used_artifacts <- selected_run()$used_artifacts()
         # NOTE: This assumes the run has only used the tsdf artifact, so it is located in the first position
         ts_ar = iter_next(used_artifacts)
-        last_data_index = get_window_indices(idxs = nrow(embeddings()), w = w(), s = s())[[1]] %>% tail(1)
-        tsdf = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)) %>% 
+        # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
+        # first_data_index <- get_window_indices(idxs = input$points_emb[1], w = w(), s = s())[[1]] %>% head(1)
+        last_data_index <- get_window_indices(idxs = nrow(embeddings()), w = w(), s = s())[[1]] %>% tail(1)
+        tsdf <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)) %>% 
             rownames_to_column("timeindex") %>% 
             slice(1:last_data_index) %>% 
+            # slice(first_data_index:last_data_index) %>% 
             column_to_rownames(var = "timeindex")
     })
     
     # auxiliary object for the interaction ts->embeddings
     tsidxs_per_embedding_idx <- reactive({
         get_window_indices(1:nrow(embeddings()), w=w(), s=s())
+        # get_window_indices(input$points_emb[1]:input$points_emb[2], w=w(), s=s())
     })
     
-    ts_plot <- reactive({
-        req(tsdf(), embeddings())
-        plt <- dygraph(tsdf(), main = "Original data (normalized)") %>%
-            dyRangeSelector() %>%
+    
+    make_individual_dygraph <- function(i){
+        plt <- dygraph(tsdf()[i],height= "170",group = "timeseries", ylab = names(tsdf())[i],width="100%") %>%
+            dySeries(color=color_scale_dygraph[i]) %>%
             dyHighlight(hideOnMouseOut = TRUE) %>%
             dyOptions(labelsUTC = TRUE) %>%
             dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
@@ -92,45 +148,79 @@ shinyServer(function(input, output, session) {
             dyCSS(
                 textConnection(
                     "
-                    .dygraph-legend > span { display: none; }
-                    .dygraph-legend > span.highlight { display: inline; }"
+                        .dygraph-ylabel {font-size: 9px; width: 80%;text-align: center;float: right} 
+                        .dygraph-legend > span { display: none; }
+                        .dygraph-legend > span.highlight { display: inline; }"
                 )
             )
-        
-        if (!is.null(input$embeddings_brush)) {
-            bp = brushedPoints(embeddings(), input$embeddings_brush, allRows = TRUE)
-            embedding_idxs = bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
-            for(ts_idxs in get_window_indices(embedding_idxs, w(), s())) {
-                plt <- plt %>% dyShading(from = rownames(tsdf())[head(ts_idxs, 1)], 
-                                         to = rownames(tsdf())[tail(ts_idxs, 1)],
-                                         color = "#CCEBD6")
-            }
-            # plt <- plt %>% dyShading(from = rownames(tsdf)[1], 
-            #                          to = rownames(tsdf)[100],
-            #                          color = "#CCEBD6")
-            # get_window_indices(embedding_idxs, w=w, s=s) %>% 
-            #     walk(function(ts_idxs) {
-            #         print(paste0("from: ", rownames(tsdf)[head(ts_idxs, 1)], "\nto: ", rownames(tsdf)[tail(ts_idxs, 1)]))
-            #         plt <- plt %>% dyShading(from = rownames(tsdf)[head(ts_idxs, 1)], 
-            #                                  to = rownames(tsdf)[tail(ts_idxs, 1)],
-            #                                  color = "#CCEBD6")
-            #     })
+        if(i==1){
+            plt <-plt %>%
+                dyRangeSelector(height = 20, strokeColor = "")
         }
-        
         plt
+    }
+    
+    ts_plot <- reactive({
+        req(tsdf(), embeddings())
+        datos <<- tsdf()
+        embs_prueba <<- embeddings()
+        col_names_tsdf <<- setNames(names(datos), names(datos))
+        # If dygraph_sel is TRUE, show individual dygraphs.
+        if(input$dygraph_sel){
+            # TODO
+        }else{
+            ts_plt <- dygraph(datos %>% select(input$select_variables), width="100%", height = "400px") %>%
+                        dyRangeSelector() %>%
+                        dyHighlight(hideOnMouseOut = TRUE) %>%
+                        dyOptions(labelsUTC = TRUE) %>%
+                        dyCrosshair(direction = "vertical")%>%
+                        dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
+                        dyUnzoom() %>%
+                        dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
+                        dyCSS(
+                            textConnection(
+                                "
+                            .dygraph-legend > span { display: none; }
+                            .dygraph-legend > span.highlight { display: inline; }"
+                            )
+                        )
+            # SACAR EL IF DEL REACTIVE PARA AL MODIFICAR EL BRUSH NO SE REPLOTEE TODO
+            #  Al sacarlo hay que quitar los rectángulos previos.
+            if (!is.null(input$embeddings_brush)) {
+                bp <<- brushedPoints(embeddings(), input$embeddings_brush, allRows = TRUE)
+                embedding_idxs <<- bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
+                
+                for(ts_idxs in get_window_indices(embedding_idxs, w(), s())) {
+                    ts_plt <- ts_plt %>% dyShading(from = rownames(tsdf())[head(ts_idxs, 1)],
+                                             to = rownames(tsdf())[tail(ts_idxs, 1)],
+                                             color = "red")
+                }
+                
+                
+                # rects<-get_window_indices(embedding_idxs, w(), s())
+                # num_rects <- length(rects)
+                # rects_ini <- vector(mode = "list", length = num_rects)
+                # rects_fin <- vector(mode = "list", length = num_rects)
+                # for(i in 1:num_rects) {
+                #     rects_ini[[i]] <- head(rects[[i]],1)
+                #     rects_fin[[i]] <- tail(rects[[i]],1)
+                # }
+                # 
+                # ts_plt <- vec_dyShading(ts_plt,rects_ini, rects_fin,"red",rownames(datos))
+
+            }
+        }
+        ts_plt
     })
+    
     
     # Observe the events related to zoom the embedding graph:
     ranges <- reactiveValues(x = NULL, y = NULL)
-    observeEvent(input$update_coord_graph,{
-        # Take input values
-        zoom_values <- list(xmin = input$x_min,
-                            xmax = input$x_max,
-                            ymin = input$y_min,
-                            ymax = input$y_max)
-        if (!is.null(zoom_values)) {
-            ranges$x <- c(zoom_values$xmin, zoom_values$xmax)
-            ranges$y <- c(zoom_values$ymin, zoom_values$ymax)
+    observeEvent(input$embeddings_dblclick,{
+        brush <- input$embeddings_brush
+        if (!is.null(brush)) {
+            ranges$x <- c(brush$xmin, brush$xmax)
+            ranges$y <- c(brush$ymin, brush$ymax)
             
         } else {
             ranges$x <- NULL
@@ -167,7 +257,6 @@ shinyServer(function(input, output, session) {
     emb_plot <- reactive({
         req(embeddings())
         embs_ <- embeddings()
-        
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
             selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
@@ -180,10 +269,12 @@ shinyServer(function(input, output, session) {
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
         if(!("cluster" %in% names(embs_))){
             embs_$cluster = FALSE
+            myColors <-"red"
         }
-
+        
         plt <- ggplot(data = embs_) + 
-            aes(x = xcoord, y = ycoord, fill = highlight, color = cluster) + 
+            aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
+            scale_colour_manual(name = "clusters",values = myColors) +
             geom_point(shape = 21,alpha = config_style$point_alpha, size = config_style$point_size) + 
             scale_shape(solid = FALSE) +
             geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha) + 
@@ -194,14 +285,6 @@ shinyServer(function(input, output, session) {
                   panel.background = element_rect(fill = "white", colour = "black"))
         
         plt
-        # svgPanZoom(
-        #     svglite:::inlineSVG(
-        #         #will put on separate line but also need show
-        #         show(
-        #             plt
-        #         )
-        #     )
-        # )
     })
     ###
     # Outputs
@@ -223,6 +306,16 @@ shinyServer(function(input, output, session) {
     output$run_dcae_info = renderDataTable({
             run_dcae_config() %>% 
             map(~ .$value) %>%
+            enframe()
+    })
+    
+    output$ts_ar_info = renderDataTable({
+        ts_ar_config() %>% 
+            enframe()
+    })
+    
+    output$embs_ar_info = renderDataTable({
+        embs_ar_config() %>% 
             enframe()
     })
     
@@ -248,20 +341,68 @@ shinyServer(function(input, output, session) {
                    " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
         }
         
-        
-        
-        #Brushed points
-        # bp = brushedPoints(embeddings, input$embeddings_brush, allRows = TRUE)
-        # #indices = embeddings[which(embeddings$xcoord == bp$xcoord & embeddings$ycoord == bp$ycoord),] %>% rownames() %>% as.integer
-        # indices = bp %>% rownames_to_column("index") %>%  dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
-        # print(bp$selected_ %>% any)
-        # print(indices)
-        
         paste0(
             "click: ", xy_str(input$embeddings_click),
             "brush: ", xy_range_str(input$embeddings_brush)
         )
     })
     
-    output$ts_plot_dygraph <- renderDygraph({ts_plot()})
+    output$ts_plot_dygraph <- renderDygraph({
+        # brush <- input$embeddings_brush
+        # if (!is.null(brush)) {
+        #     ranges$x <- NULL
+        #     ranges$y <- NULL
+        # }
+        ts_plot()
+    })
+    
+    # Get variable names to be shown in a checkboxGroupInput when select_variables dropdown is clicked
+    output$select_variables <-renderUI({
+        req(selected_run())
+        tags$div(style= 'height:200px; overflow-y: scroll',
+            checkboxGroupInput(
+                inputId = "select_variables",
+                label=NULL,
+                choices = col_names_tsdf,
+                selected = col_names_tsdf
+                )
+        )
+    })
+    # Observe to check/uncheck all variables
+    observeEvent(input$selectall,{
+        if(input$selectall %%2 == 0){
+            updateCheckboxGroupInput(session = session, inputId = "select_variables",
+                                     choices = col_names_tsdf, selected = col_names_tsdf)
+        } else {
+            updateCheckboxGroupInput(session = session, inputId = "select_variables",
+                                     choices = col_names_tsdf, selected = NULL)
+        }
+        
+    })
+    # Open the dropdown button to load the series
+    observeEvent(input$tabs,{
+        if(input$tabs == "Embeddings"){
+            toggleDropdownButton(inputId = "ts_config")
+        }
+    })
+    
+    
+    
+
+    
+    output$points_emb_controls <- renderUI({
+        req(selected_run(),emb_object())
+        embs <- emb_object()
+        max_value <- nrow(embs)
+        sliderInput("points_emb", "Select range of points to plot in the embedding", min = 1, max = max_value,value = c(0,2000), ticks = FALSE)
+    })
+    
+    output$embeddings_plot_ui <- renderUI({
+        plotOutput("embeddings_plot", 
+                   click = "embeddings_click",
+                   brush = "embeddings_brush",
+                   dblclick = "embeddings_dblclick",
+                   height = input$embedding_plot_height) %>% withSpinner()
+    })
+    
 })

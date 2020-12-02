@@ -7,20 +7,25 @@ library(tibble)
 library(ggplot2)
 library(shinycssloaders)
 library(tidyr)
-library(dplyr)
+library(data.table)
+library(dtplyr)
+library(dplyr, warn.conflicts = FALSE)
 library(dygraphs)
 library(dbscan)
 library(shinyWidgets)
-
+library(RColorBrewer)
+library(pals)
 # Python dependencies
 wandb = import("wandb")
 pd = import("pandas")
-
+hdbscan = import("hdbscan")
 ###
 # CONSTANTS
 ###
-QUERY_RUNS_LIMIT = 45
+QUERY_RUNS_LIMIT = 150
 DEFAULT_PATH_WANDB_ARTIFACTS = "/data/PACMEL-2019/wandb_artifacts"
+hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
+
 #w = 36 # * TODO: This has to be dependant on the selected run! 
 #s = 1 # * TODO: This has to be dependant on the selected run!
 
@@ -40,6 +45,23 @@ dyUnzoom <-function(dygraph) {
     name = "Unzoom",
     path = system.file("plugins/unzoom.js", package = "dygraphs")
   )
+}
+
+vec_dyShading <- function(dyg, from, to, color, data_rownames) {
+  
+  # assuming that from, to, and color have all same length
+  n <- length(from)
+  if (n == 0) return(dyg)
+  
+  new_shades <- vector(mode = "list", length = n)
+  for (i in 1:n) {
+    new_shades[[i]] <- list(from = data_rownames[from[[i]]],
+                            to = data_rownames[to[[i]]],
+                            color = color,
+                            axis = "x")
+  }
+  dyg$x$shadings <- c(dyg$x$shadings, new_shades)
+  dyg
 }
 
 ###

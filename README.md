@@ -33,7 +33,7 @@ Then run:
 
 ```docker-compose up -d```
 
-and go to `localhost:{{JUPYTER_PORT}}`. There are several parameters (e.g., volume paths) that have to be adapted to your needs in the docker-compose file, marked as `#*`.
+and go to `localhost:{{JUPYTER_PORT}}`. There are several parameters that can optionally be adapted to your needs in the docker-compose file, marked as `#*`.
 
 ## Incorporate useful customization to Jupyter Lab
 

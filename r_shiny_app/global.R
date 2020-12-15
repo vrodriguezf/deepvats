@@ -8,10 +8,8 @@ library(ggplot2)
 library(shinycssloaders)
 library(tidyr)
 library(data.table)
-library(dtplyr)
-library(dplyr, warn.conflicts = FALSE)
+library(dplyr)
 library(dygraphs)
-library(dbscan)
 library(shinyWidgets)
 library(RColorBrewer)
 library(pals)
@@ -25,7 +23,7 @@ hdbscan = import("hdbscan")
 QUERY_RUNS_LIMIT = 150
 DEFAULT_PATH_WANDB_ARTIFACTS = "/data/PACMEL-2019/wandb_artifacts"
 hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
-
+Sys.setenv("TZ"="UTC")
 #w = 36 # * TODO: This has to be dependant on the selected run! 
 #s = 1 # * TODO: This has to be dependant on the selected run!
 
@@ -62,6 +60,30 @@ vec_dyShading <- function(dyg, from, to, color, data_rownames) {
   }
   dyg$x$shadings <- c(dyg$x$shadings, new_shades)
   dyg
+}
+
+# Not used yet (it is likely to be used in the future)
+make_individual_dygraph <- function(i){
+  plt <- dygraph(tsdf()[i],height= "170",group = "timeseries", ylab = names(tsdf())[i],width="100%") %>%
+    dySeries(color=color_scale_dygraph[i]) %>%
+    dyHighlight(hideOnMouseOut = TRUE) %>%
+    dyOptions(labelsUTC = TRUE) %>%
+    dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
+    dyUnzoom() %>%
+    dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
+    dyCSS(
+      textConnection(
+        "
+                        .dygraph-ylabel {font-size: 9px; width: 80%;text-align: center;float: right} 
+                        .dygraph-legend > span { display: none; }
+                        .dygraph-legend > span.highlight { display: inline; }"
+      )
+    )
+  if(i==1){
+    plt <-plt %>%
+      dyRangeSelector(height = 20, strokeColor = "")
+  }
+  plt
 }
 
 ###

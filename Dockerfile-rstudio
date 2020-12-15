@@ -6,4 +6,4 @@ RUN R -e "install.packages(c('dygraphs', 'shinycssloaders'))"
 ENV RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
 RUN R -e "reticulate::install_miniconda()"
 
-RUN R -e "reticulate::py_install(c('pandas','wandb'), pip = TRUE, pip_options=c('--upgrade'))"
+RUN R -e "reticulate::py_install(c('pandas','wandb','hdbscan'), pip = TRUE, pip_options=c('--upgrade'))"

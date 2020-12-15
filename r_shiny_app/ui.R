@@ -18,46 +18,21 @@ shinyUI(fluidPage(
         sidebarPanel(
             selectInput("run_dr", label = "Select a run", choices = NULL),
             hr(),
-            numericInput("minPts_hdbscan", label = "Define value of minPts in HDBSCAN",value =100),
-            checkboxInput("show_clusters", label = "Calculate and show clusters", value = FALSE),
-            actionButton("update_clust", label = "Update clusters"),
+            uiOutput("points_emb_controls"),
             hr(),
-            dropdownButton(
-                tags$b("Set new coordinates to zoom"),
-                splitLayout(cellWidths ="25%",
-                    knobInput(inputId = "x_min",label = "x_min",value = NA,min = -100,max = 100,
-                            width = "50",height = "50",displayPrevious = TRUE,lineCap = "round",
-                            fgColor = "#1d89ff",inputColor = "#428BCA"),
-                    knobInput(inputId = "x_max",label = "x_max",value = NA,min = -100,max = 100,
-                              width = "50",height = "50",displayPrevious = TRUE,lineCap = "round",
-                              fgColor = "#1d89ff",inputColor = "#428BCA"),
-                    knobInput(inputId = "y_min",label = "y_min",value = NA,min = -100,max = 100,
-                              width = "50",height = "50",displayPrevious = TRUE,lineCap = "round",
-                              fgColor = "#1d89ff",inputColor = "#428BCA"),
-                    knobInput(inputId = "y_max",label = "y_max",value = NA,min = -100,max = 100,
-                              width = "50",height = "50",displayPrevious = TRUE,lineCap = "round",
-                              fgColor = "#1d89ff",inputColor = "#428BCA")
-                    ),
-                actionBttn(inputId = "update_coord_graph",label = "Update coords.",style = "simple",
-                           color = "primary",icon = icon("binoculars"),size = "xs", block = TRUE),
-                hr(),
-                tags$b("Configure aestethics"),
-                sliderInput("path_line_size", label = "path_line_size", value = 0.08, min=0, max=5, step = 0.01),
-                sliderInput("path_alpha", label = "path_alpha", value = 5/10, min=0, max=1, step = 0.01),
-                sliderInput("point_alpha", label = "point_alpha", value = 1/10, min=0, max=1, step = 0.01),
-                sliderInput("point_size", label = "point_size", value = 1, min=0, max=10, step = 0.5),
-                actionBttn(inputId = "update_emb_graph",label = "Update aestethics",style = "simple",
-                           color = "primary",icon = icon("bar-chart"),size = "xs", block = TRUE),
-                circle = TRUE, status = "primary",
-                icon = icon("gear"), width = "300px",
-                tooltip = tooltipOptions(title = "Click to configure the appearance !")
-            )
+            numericInput("min_cluster_size_hdbscan", label = "min_cluster_size",value =100),
+            numericInput("min_samples_hdbscan", label = "min_samples",value =15),
+            sliderInput("cluster_selection_epsilon_hdbscan", label = "cluster_selection_epsilon", value = 0.08, min=0, max=5, step = 0.01),
+            pickerInput("metric_hdbscan",label = "Metric", choices = hdbscan_metrics, selected = "euclidean",options = list(`live-search` = TRUE)),
+            checkboxInput("show_clusters", label = "Calculate and show clusters", value = FALSE),
+            hr(),
         ),
         # Show a plot of the generated distribution
         mainPanel(
             tabsetPanel(
+                id = "tabs",
                 tabPanel(
-                    "information_tab",
+                    "Information",
                     fluidRow(
                         uiOutput("run_dr_info_title"),
                         dataTableOutput("run_dr_info"),
@@ -70,13 +45,79 @@ shinyUI(fluidPage(
                     )
                 ),
                 tabPanel(
-                    "embeddings_tab",
-                    h2("Embeddings"),
-                    plotOutput("embeddings_plot", 
-                               click = "embeddings_click",
-                               brush = "embeddings_brush") %>% withSpinner(),
-                    dygraphOutput("ts_plot_dygraph") %>% withSpinner(),
-                    #plotOutput("ts_plot") %>% withSpinner(),
+                    "Embeddings",
+                    fluidRow(
+                        h3("Embeddings"),
+                        fluidRow(
+                            column(1,
+                                dropdownButton(
+                                    tags$b("Set height of the embeddings plot (px):"),
+                                    numericInput("embedding_plot_height", label = "Height",value =400),
+                                    hr(),
+                                    tags$b("Configure aestethics"),
+                                    sliderInput("path_line_size", label = "path_line_size", value = 0.08, min=0, max=5, step = 0.01),
+                                    sliderInput("path_alpha", label = "path_alpha", value = 5/10, min=0, max=1, step = 0.01),
+                                    sliderInput("point_alpha", label = "point_alpha", value = 1/10, min=0, max=1, step = 0.01),
+                                    sliderInput("point_size", label = "point_size", value = 1, min=0, max=10, step = 0.5),
+                                    actionBttn(inputId = "update_emb_graph",label = "Update aestethics",style = "simple",
+                                               color = "primary",icon = icon("bar-chart"),size = "xs", block = TRUE),
+                                    circle = FALSE, status = "primary",
+                                    icon = icon("gear"), width = "300px",size = "xs",
+                                    tooltip = tooltipOptions(title = "Configure the embedding appearance"),
+                                    inputId = "embeddings_config"
+                                )
+                            ),
+                            column(8,
+                                prettyToggle(
+                                    inputId = "zoom_btn",
+                                    label_on = "Zoom out",
+                                    label_off = "Zoom in",
+                                    shape = "square",
+                                    outline = TRUE,
+                                    plain = TRUE,
+                                    inline = TRUE,
+                                    icon_on = icon("search-minus"), 
+                                    icon_off = icon("search-plus"),
+                                    status_on = "danger",
+                                    status_off = "primary"
+                                ),
+                                materialSwitch(
+                                    inputId = "plot_windows",
+                                    label = "Plot windows",
+                                    status = "info",
+                                    value = TRUE,
+                                    inline = TRUE
+                                )
+                            ),
+                            column(7,
+                                   
+                            ),
+                        ),
+                        column(2,),
+                        column(8,align="center",
+                               uiOutput("embeddings_plot_ui"),
+                        ),
+                        column(2,"")
+                    ),
+                    fluidRow(
+                        h3("Original data"),
+                        dropdownButton(
+                            tags$b("Select/deselect variables"),
+                            uiOutput("select_variables"),
+                            actionBttn(inputId = "selectall",label = "Select/Deselect all",style = "simple",
+                                       color = "primary",icon = icon("check-double"),size = "xs", block = TRUE),
+                            hr(),
+                            prettySwitch(inputId = "dygraph_sel",label = "Show stacked graphs (Not available yet)", status = "success",fill = TRUE),
+                            circle = FALSE, status = "primary", size = "xs",
+                            icon = icon("gear"), width = "300px",
+                            tooltip = tooltipOptions(title = "Configure the TS appearance"),
+                            inputId = "ts_config"
+                            ),
+                        column(10,dygraphOutput("ts_plot_dygraph") %>% withSpinner()),
+                        # uiOutput("ts_plot_dygraph") %>% withSpinner()),
+                        #plotOutput("ts_plot") %>% withSpinner(),
+                    ),
+                    
                     verbatimTextOutput("embeddings_plot_interaction_info"),
                     verbatimTextOutput("point")
                     

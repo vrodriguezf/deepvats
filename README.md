@@ -33,7 +33,7 @@ Then run:
 
 ```docker-compose up -d```
 
-and go to `localhost:7878`. The default port `7878` can be changed editing the file `docker-compose.yml`. There are several parameters (e.g., volume paths) that have to be adapted to your needs in the docker-compose file, marked as `#*`.
+and go to `localhost:{{JUPYTER_PORT}}`. There are several parameters (e.g., volume paths) that have to be adapted to your needs in the docker-compose file, marked as `#*`.
 
 ## Incorporate useful customization to Jupyter Lab
 

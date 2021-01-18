@@ -26,7 +26,7 @@ services:
           - USER=${USER_NAME} 
           - USERID=${USER_ID} 
           - GROUPID=1017 # Important to define it to work with Pacmel Data hosted in UPM servers
-          - PASSWORD=asd # *
+          - PASSWORD=${RSTUDIO_PASSWD} # *
           - ROOT=TRUE
           - ADD=shiny
           - RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda

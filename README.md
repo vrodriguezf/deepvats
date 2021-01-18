@@ -25,24 +25,25 @@ USER_NAME=your_user_name
 JUPYTER_PORT=XXXX
 # The port from which you want to access RStudio server
 RSTUDIO_PORT=XXXX
+# The password you want to access RStudio server (user is given by USER_NAME)
+RSTUDIO_PASSWD=XXXX
 # The port from which you want to access Shiny
 SHINY_PORT=XXXX
 # The path to your data files to train/test the models
 LOCAL_DATA_PATH=/path/to/your/data
 ```
 
-Then run:
+You'll also need to have a `.gitconfig` file in your home folder. It can be an empty file that you create manually, or it can contain your git global configuration. For the latter case, run:
+- `git config --global user.name "YOUR NAME IN THIS GITLAB INSTANCE"
+- `git config --global user.email "YOUR EMAIL IN THIS GITLAB INSTANCE"
+
+This will automatically create the `~/.gitconfig` file in your home folder.
+
+Finally, in a terminal located in the root of this repository, run:
 
 ```docker-compose up -d```
 
-and go to `localhost:{{JUPYTER_PORT}}`. There are several parameters that can optionally be adapted to your needs in the docker-compose file, marked as `#*`.
-
-## Incorporate useful customization to Jupyter Lab
-
-- [**Gist to Jupyter Lab for a quick open**](https://gist.githubusercontent.com/vrodriguezf/2a761ff00d3baf07e4722eeed74c3a86/raw/a1408885af6357e707547f1b7aa304aa18133737/jupyterlab-quickopen-configuration.json):  Put it on Settings -> Advance Settings Editor -> Quick Open-> User Preferences
-- [**Gist to have better shortcuts**](https://gist.githubusercontent.com/vrodriguezf/4908100482b6c96ef9d7df944fe0b345/raw): Put it on Settings -> Advance Settings Editor -> Keyboard Shortcuts -> User Preferences
-- [**Gist to reload module and submodules**](https://gist.githubusercontent.com/vrodriguezf/1c1d35d04948c78bb4ed26a24ce8ba4a/raw/fb5191019331a0b8f082f60887559ba071ae72e5/reload%2520module%2520and%2520submodules): Use it in an interactive Jupyter Lab console.
-
+and go to `localhost:{{JUPYTER_PORT}}`. There are several parameters that can optionally be adapted to your needs in the docker-compose file, marked as `#*`. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
 
 
 ## Standard working procedure for resolving gitlab issues

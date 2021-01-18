@@ -46,23 +46,30 @@ Finally, in a terminal located in the root of this repository, run:
 and go to `localhost:{{JUPYTER_PORT}}`. There are several parameters that can optionally be adapted to your needs in the docker-compose file, marked as `#*`. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
 
 
-## Standard working procedure for resolving gitlab issues
-We recommend using the following procedure to resolve issues in the repository:
-1. Create a local branch in your development environment to solve the issue XX:
+## Contribute
+This project has been created using [nbdev](https://github.com/fastai/nbdev), a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.
+
+We recommend using the following procedure to contribute and resolve issues in the repository:
+
+1. Because the project uses nbdev, we need to run `nbdev_install_git_hooks` the first time after the repo is cloned and deployed; this ensures that our notebooks are automatically cleaned and trusted whenever we push to Github/Gitlab. The command has to be run from within the container. 
+
+1. Create a local branch in your development environment to solve the issue XX (or add a new functionality), with the name you want to give your merge request (use something that will be easy for you to remember in the future if you need to update your request):
     ```
     git checkout -b issueXX
     ```
 
-2. Add/make changes to the code to resolve the issue
+2. Make whatever changes you want to make in the code and notebooks, and remember to run nbdev_build_lib when you're done to ensure that the libraries are built from your notebook changes (unless you only changed markdown, in which case that's not needed). It's also a good idea to check the output of git diff to ensure that you haven't accidentally made more changes than you planned.
+
 3. Make a commit of the changes made
     ``` 
-    git commit -m "Fix issue #XX"
+    git commit -am "Fix issue #XX"
     ```
+
 4. Test that there are not merging problems in the Jupyter Notebooks with the function [**nbdev_fix_merge**](https://nbdev.fast.ai/cli#nbdev_fix_merge)
 
 5.  Push your local branch to a branch in the gitlab repository with an identiffying name:
     ```
-    git push -u origin HEAD:issueXX_solved
+    git push -u origin HEAD
     ```
 6. When the push is made, a link will appear in the terminal to create a merge request. Click on it.
     ```
@@ -77,10 +84,12 @@ We recommend using the following procedure to resolve issues in the repository:
     * Click on the button "Create merge request"
 ![image](/uploads/da18a985a69973ad62a60bc6564304b9/image.png)
 
-8. Wait to the merge to be accepted. We recommend to move the issue to the field "In review" (in the Issue Board).
-9. If there are no problems, the merge request will be accepted and the issue will be closed.
+8. Wait to the merge to be accepted. In case you're solving an issue, we recommend to move the issue to the field "In review" (in the Issue Board). To keep your branch up to date with the changes to the main repo, run:
+```
+git pull upstream master
+```
 
-
-## Contribute
-
-This project has been created using [nbdev](https://github.com/fastai/nbdev), a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.
+9. If there are no problems, the merge request will be accepted and the issue will be closed. Once your PR has been merged or rejected, you can delete your branch if you don't need it any more:
+```
+git branch -d issueXX
+```

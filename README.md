@@ -34,8 +34,8 @@ LOCAL_DATA_PATH=/path/to/your/data
 ```
 
 You'll also need to have a `.gitconfig` file in your home folder. It can be an empty file that you create manually, or it can contain your git global configuration. For the latter case, run:
-- `git config --global user.name "YOUR NAME IN THIS GITLAB INSTANCE"
-- `git config --global user.email "YOUR EMAIL IN THIS GITLAB INSTANCE"
+- `git config --global user.name "YOUR NAME IN THIS GITLAB INSTANCE"`
+- `git config --global user.email "YOUR EMAIL IN THIS GITLAB INSTANCE"`
 
 This will automatically create the `~/.gitconfig` file in your home folder.
 

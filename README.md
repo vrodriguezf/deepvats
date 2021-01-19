@@ -10,8 +10,8 @@ domain expert to analyse and cluster the behaviour of the process.
 
 ## Run notebooks
 
-To run the notebooks, install `docker` and `docker-compose` in your system. 
-Then, create a new *.env* file in the root of the project following the structure:
+To run the notebooks, install `docker` and `docker-compose` in your system.
+Then, create a new *.env* file in the root of the project following the structure: 
 ```
 # The name of the docker-compose project
 COMPOSE_PROJECT_NAME=your_project_name

@@ -1,4 +1,4 @@
-# Timecluster extension
+# Timecluster hub
 > Extending the paper ["Timecluster: dimension reduction applied to temporal data for visual analytics"](https://link.springer.com/article/10.1007/s00371-019-01673-y) 
 
 

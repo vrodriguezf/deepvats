@@ -1,12 +1,14 @@
 # Timecluster hub
-> Extending the paper ["Timecluster: dimension reduction applied to temporal data for visual analytics"](https://link.springer.com/article/10.1007/s00371-019-01673-y) 
+> Hub for different visual analytics approaches for high-dimensional time series. Inspired by the paper ["Timecluster: dimension reduction applied to temporal data for visual analytics"](https://link.springer.com/article/10.1007/s00371-019-01673-y) 
 
 
-The intention of this repo is twofold:
+The main intention of this repo is twofold:
 1. Replicate the ideas of the Timecluster paper, and apply them to the data from PACMEL.
 2. Extend the ideas of the paper for high-dimensional time series. The idea is to find the most important variables that make that a time window from
 the original space (high-dimensional time series) is mapped to a specific point of the final 2D space, and focus only on them, to make it easier for the
 domain expert to analyse and cluster the behaviour of the process.
+
+The visual part of this repo can also be used as a testbed to validate different approaches to unsupervised learning for time series data. This includes clustering, anomaly detection, segmentation, annotation...
 
 ## Run notebooks
 

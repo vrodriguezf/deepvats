@@ -10,7 +10,7 @@ domain expert to analyse and cluster the behaviour of the process.
 
 The visual part of this repo can also be used as a testbed to validate different approaches to unsupervised learning for time series data. This includes clustering, anomaly detection, segmentation, annotation...
 
-## Run notebooks
+## Deploy
 
 To run the notebooks, install `docker` and `docker-compose` in your system. 
 Then, create a new *.env* file in the root of the project following the structure:

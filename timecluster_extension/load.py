@@ -111,7 +111,7 @@ class TSArtifact(wandb.Artifact):
 @patch
 def to_df(self:wandb.apis.public.Artifact):
     "Download the files of a saved wandb artifact and process them as a single dataframe. The artifact must \
-    come from a call to `run.use_artifact` with a proper wand run."
+    come from a call to `run.use_artifact` with a proper wandb run."
     # The way we have to ensure that the argument comes from a TS arfitact is the metadata
     if self.metadata.get('TS') is None:
         print(f'ERROR:{self} does not come from a logged TSArtifact')

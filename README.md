@@ -45,7 +45,7 @@ Finally, in a terminal located in the root of this repository, run:
 
 ```docker-compose up -d```
 
-and go to `localhost:{{JUPYTER_PORT}}`. There are several parameters that can optionally be adapted to your needs in the docker-compose file, marked as `#*`. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
+then go to `localhost:{{JUPYTER_PORT}}`. There are several parameters that can optionally be adapted to your needs in the docker-compose file, marked as `#*`. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
 
 
 ## Contribute

@@ -12,7 +12,7 @@ The visual part of this repo can also be used as a testbed to validate different
 
 ## Deploy
 
-To run the notebooks, install `docker` and `docker-compose` in your system. 
+To run the notebooks and the app, install `docker` and `docker-compose` in your system. 
 Then, create a new *.env* file in the root of the project following the structure:
 ```
 # The name of the docker-compose project
@@ -29,10 +29,10 @@ JUPYTER_PORT=XXXX
 RSTUDIO_PORT=XXXX
 # The password you want to access RStudio server (user is given by USER_NAME)
 RSTUDIO_PASSWD=XXXX
-# The port from which you want to access Shiny
-SHINY_PORT=XXXX
 # The path to your data files to train/test the models
 LOCAL_DATA_PATH=/path/to/your/data
+# The W&B personal API key (see https://wandb.ai/authorize)
+WANDB_API_KEY=your_wandb_api_key
 ```
 
 You'll also need to have a `.gitconfig` file in your home folder. It can be an empty file that you create manually, or it can contain your git global configuration. For the latter case, run:
@@ -43,9 +43,9 @@ This will automatically create the `~/.gitconfig` file in your home folder.
 
 Finally, in a terminal located in the root of this repository, run:
 
-```docker-compose up -d```
+```docker-compose up -d --build```
 
-then go to `localhost:{{JUPYTER_PORT}}`. There are several parameters that can optionally be adapted to your needs in the docker-compose file, marked as `#*`. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
+then go to `localhost:{{JUPYTER_PORT}}` to run the notebooks or go to `localhost:{{RSTUDIO_PORT}}` to run the app. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
 
 
 ## Contribute

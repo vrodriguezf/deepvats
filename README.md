@@ -1,4 +1,4 @@
-# Timecluster hub
+# Timecluster hub (test mirroring)
 > Hub for different visual analytics approaches for high-dimensional time series. Inspired by the paper ["Timecluster: dimension reduction applied to temporal data for visual analytics"](https://link.springer.com/article/10.1007/s00371-019-01673-y) 
 
 

@@ -1,9 +1,28 @@
-FROM vrodriguezf/rstudio-server-shiny-development:latest
+FROM vrodriguezf/rstudio-server-shiny-development:backup
 
-# Install R packages
-RUN R -e "install.packages(c('dygraphs', 'shinycssloaders'))"
 
-ENV RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
-RUN R -e "reticulate::install_miniconda()"
+## Install reticulate, miniconda and Python packages
+
+RUN R -e "install.packages('reticulate')"
+
+ARG RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
+ARG RETICULATE_PYTHON_ENV=${RETICULATE_MINICONDA_PATH}/envs/r-reticulate
+ARG RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python
+
+RUN R -e "reticulate::install_miniconda(path = '${RETICULATE_MINICONDA_PATH}')"
+RUN echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> /${R_HOME}/etc/Renviron.site
+RUN echo "RETICULATE_PYTHON_ENV=${RETICULATE_PYTHON_ENV}" >> /${R_HOME}/etc/Renviron.site
+RUN echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> /${R_HOME}/etc/Renviron.site
 
 RUN R -e "reticulate::py_install(c('pandas','wandb','hdbscan'), pip = TRUE, pip_options=c('--upgrade'))"
+
+
+## Install R packages
+
+RUN R -e "install.packages(c('pals', 'shinyWidgets', 'dygraphs', 'shinycssloaders'))"
+
+
+## Export W&B environment variable to Rstudio
+
+ARG WANDB_API_KEY
+RUN echo "WANDB_API_KEY=${WANDB_API_KEY}" >> /${R_HOME}/etc/Renviron.site

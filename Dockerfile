@@ -23,6 +23,11 @@ ARG USER=user
 
 RUN addgroup --gid $GROUP_ID $USER
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USER
+
+# Copy the default jupyterlab settings user settings to the new user folder
+RUN cp -r /.jupyter /home/$USER/.jupyter
+RUN chown -R $USER_ID:$GROUP_ID /home/$USER/.jupyter
+
 # Create non root user home folder
 WORKDIR /home/$USER
 # setup share data folder before switching to user

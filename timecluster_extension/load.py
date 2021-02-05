@@ -10,7 +10,6 @@ from fastcore.all import *
 import wandb
 from datetime import datetime, timedelta
 from .utils import *
-from typing import Callable
 
 # Cell
 def fpreprocess_numeric_vars(data, cname_ts=None, normalize=True, nan_replacement=0):
@@ -56,6 +55,11 @@ class TSArtifact(wandb.Artifact):
 
     default_storage_path = Path('/home/user/data/PACMEL-2019/wandb_artifacts/')
     date_format = '%Y-%m-%d %H:%M:%S' # TODO add milliseconds
+    handle_missing_values_techniques = {
+        'linear_interpolation': lambda df : df.interpolate(method='linear', limit_direction='both'),
+        'overall_mean': lambda x: df.fillna(df.mean()),
+        'overall_median': lambda x: df.fillna(df.median())
+    }
 
     "Class that represents a wandb artifact containing time series data. sd stands for start_date \
     and ed for end_date. Both should be pd.Timestamps"
@@ -106,7 +110,7 @@ class TSArtifact(wandb.Artifact):
             normalize: (bool, optional) If the dataset values should be normalized. Default\
                 False.
             missing_values_technique: (str, optional) The technique used to handle missing \
-                values. Options: "lineal_iterpolation", "overall_mean", "overall_median" or \
+                values. Options: "linear_iterpolation", "overall_mean", "overall_median" or \
                 None. Default None.
             resampling_freq: (str, optional) The offset string or object representing \
                 frequency conversion for time series resampling. Default None.
@@ -123,12 +127,7 @@ class TSArtifact(wandb.Artifact):
         obj.metadata['TS']['n_vars'] = df.columns.__len__()
 
         # Handle Missing Values
-        handle_missing_values_techniques = {
-            'linear_interpolation': lambda df : df.interpolate(method='linear', limit_direction='both'),
-            'overall_mean': lambda x: df.fillna(df.mean()),
-            'overall_median': lambda x: df.fillna(df.median())
-        }
-        df = handle_missing_values_techniques[missing_values_technique](df) if missing_values_technique is not None else df
+        df = self.handle_missing_values_techniques[missing_values_technique](df) if missing_values_technique is not None else df
         obj.metadata['TS']['handle_missing_values_technique'] = missing_values_technique.__str__()
         obj.metadata['TS']['has_missing_values'] = np.any(df.isna().values).__str__()
 

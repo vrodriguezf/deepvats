@@ -52,13 +52,20 @@ def fread_mining_monitoring_files(paths, **kwargs):
 
 # Cell
 class TSArtifact(wandb.Artifact):
+
     default_storage_path = Path('/home/user/data/PACMEL-2019/wandb_artifacts/')
     date_format = '%Y-%m-%d %H:%M:%S' # TODO add milliseconds
+    handle_missing_values_techniques = {
+        'linear_interpolation': lambda df : df.interpolate(method='linear', limit_direction='both'),
+        'overall_mean': lambda df : df.fillna(df.mean()),
+        'overall_median': lambda df : df.fillna(df.median())
+    }
 
     "Class that represents a wandb artifact containing time series data. sd stands for start_date \
     and ed for end_date. Both should be pd.Timestamps"
+
     @delegates(wandb.Artifact.__init__)
-    def __init__(self, name, sd:pd.Timestamp=None, ed:pd.Timestamp=None, **kwargs):
+    def __init__(self, name, sd:pd.Timestamp, ed:pd.Timestamp, **kwargs):
         super().__init__(type='dataset', name=name, **kwargs)
         self.sd = sd
         self.ed = ed
@@ -67,44 +74,84 @@ class TSArtifact(wandb.Artifact):
         self.metadata['TS'] = dict(sd = self.sd.strftime(self.date_format),
                                    ed = self.ed.strftime(self.date_format))
 
+
     @classmethod
     def from_daily_csv_files(cls, root_path, fread=pd.read_csv, start_date=None, end_date=None, metadata=None, **kwargs):
+
         "Create a wandb artifact of type `dataset`, containing the CSV files from `start_date` \
         to `end_date`. Dates must be pased as `datetime.datetime` objects. If a `wandb_run` is \
         defined, the created artifact will be logged to that run, using the longwall name as \
         artifact name, and the date range as version."
+
         return None
+
 
     @classmethod
     @delegates(__init__)
-    def from_df(cls, df, name, path=None, sd=None, ed=None, normalize=False, **kwargs):
-        "Stores the dataframe `df` as a pickle file in the pat `path` and adds its reference \
-        to the entries of the artifact."
+    def from_df(cls, df:pd.DataFrame, name:str, path:str=None, sd:pd.Timestamp=None, ed:pd.Timestamp=None,
+                normalize:bool=False, missing_values_technique:str=None, resampling_freq:str=None, **kwargs):
+
+        """
+        Create a TSArtifact of type `dataset`, using the DataFrame `df` samples from \
+        `sd` (start date) to `ed` (end date). Dates must be passed as `datetime.datetime` \
+        objects. The transformed DataFrame is stored as a pickle file in the path `path` \
+        and its reference is added to the artifact entries. Additionally, the dataset can \
+        be normalized (see `normalize` argument) or transformed using missing values \
+        handling techniques (see `missing_values_technique` argument) or resampling (see \
+        `resampling_freq` argument).
+
+        Arguments:
+            df: (DataFrame) The dataframe you want to convert into an artifact.
+            name: (str) The artifact name.
+            path: (str, optional) The path where the file, containing the new transformed \
+                dataframe, is saved. Default None.
+            sd: (sd, optional) Start date. By default, the first index of `df` is taken.
+            ed: (ed, optional) End date. By default, the last index of `df` is taken.
+            normalize: (bool, optional) If the dataset values should be normalized. Default\
+                False.
+            missing_values_technique: (str, optional) The technique used to handle missing \
+                values. Options: "linear_iterpolation", "overall_mean", "overall_median" or \
+                None. Default None.
+            resampling_freq: (str, optional) The offset string or object representing \
+                frequency conversion for time series resampling. Default None.
+
+        Returns:
+            TSArtifact object.
+        """
+
         sd = df.index[0] if sd is None else sd
         ed = df.index[-1] if ed is None else ed
         obj = cls(name, sd=sd, ed=ed, **kwargs)
-        df = df.query('index >= @obj.sd') if obj.sd is not None else df
-        df = df.query('index <= @obj.ed') if obj.ed is not None else df
-
+        df = df.query('@obj.sd <= index <= @obj.ed')
         obj.metadata['TS']['created'] = 'from-df'
-        obj.metadata['TS']['freq'] = str(df.index.freq)
         obj.metadata['TS']['n_vars'] = df.columns.__len__()
-        obj.metadata['TS']['n_samples'] = len(df)
+
+        # Handle Missing Values
+        df = obj.handle_missing_values_techniques[missing_values_technique](df) if missing_values_technique is not None else df
+        obj.metadata['TS']['handle_missing_values_technique'] = missing_values_technique.__str__()
         obj.metadata['TS']['has_missing_values'] = np.any(df.isna().values).__str__()
+
+        # Resample
+        df = df.resample(resampling_freq).mean()
+        obj.metadata['TS']['n_samples'] = len(df)
+        obj.metadata['TS']['freq'] = str(df.index.freq)
+
+        # Time Series Variables
         obj.metadata['TS']['vars'] = list(df.columns)
+
         # Normalization - Save the previous means and stds
         if normalize:
-            obj.metadata['TS']['normalization'] = dict(
-                means = df.describe().loc['mean'].to_dict(),
-                stds = df.describe().loc['std'].to_dict()
-            )
+            obj.metadata['TS']['normalization'] = dict(means = df.describe().loc['mean'].to_dict(),
+                                                       stds = df.describe().loc['std'].to_dict())
             df = normalize_columns(df)
+
         # Hash and save
         hash_code = str(hash(df.values.tobytes()))
         path = obj.default_storage_path/f'{hash_code}' if path is None else Path(path)/f'{hash_code}'
         df.to_pickle(path)
         obj.metadata['TS']['hash'] = hash_code
         obj.add_file(str(path))
+
         return obj
 
 # Cell

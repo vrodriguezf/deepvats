@@ -57,8 +57,8 @@ class TSArtifact(wandb.Artifact):
     date_format = '%Y-%m-%d %H:%M:%S' # TODO add milliseconds
     handle_missing_values_techniques = {
         'linear_interpolation': lambda df : df.interpolate(method='linear', limit_direction='both'),
-        'overall_mean': lambda x: df.fillna(df.mean()),
-        'overall_median': lambda x: df.fillna(df.median())
+        'overall_mean': lambda df : df.fillna(df.mean()),
+        'overall_median': lambda df : df.fillna(df.median())
     }
 
     "Class that represents a wandb artifact containing time series data. sd stands for start_date \
@@ -127,7 +127,7 @@ class TSArtifact(wandb.Artifact):
         obj.metadata['TS']['n_vars'] = df.columns.__len__()
 
         # Handle Missing Values
-        df = self.handle_missing_values_techniques[missing_values_technique](df) if missing_values_technique is not None else df
+        df = obj.handle_missing_values_techniques[missing_values_technique](df) if missing_values_technique is not None else df
         obj.metadata['TS']['handle_missing_values_technique'] = missing_values_technique.__str__()
         obj.metadata['TS']['has_missing_values'] = np.any(df.isna().values).__str__()
 

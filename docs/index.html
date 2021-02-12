@@ -2,10 +2,13 @@
 
 title: Timecluster extension
 
+
 keywords: fastai
 sidebar: home_sidebar
 
-summary: "Extending the paper ["Timecluster: dimension reduction applied to temporal data for visual analytics"](https://link.springer.com/article/10.1007/s00371-019-01673-y) "
+summary: "Extending the paper <a href='https://link.springer.com/article/10.1007/s00371-019-01673-y'>"Timecluster: dimension reduction applied to temporal data for visual analytics"</a> "
+description: "Extending the paper <a href='https://link.springer.com/article/10.1007/s00371-019-01673-y'>"Timecluster: dimension reduction applied to temporal data for visual analytics"</a> "
+nb_path: "nbs/index.ipynb"
 ---
 <!--
 
@@ -18,11 +21,14 @@ summary: "Extending the paper ["Timecluster: dimension reduction applied to temp
 -->
 
 <div class="container" id="notebook-container">
-    {% raw %}
         
+    {% raw %}
+    
 <div class="cell border-box-sizing code_cell rendered">
 
 </div>
+    {% endraw %}
+
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>The intention of this repo is twofold:</p>
@@ -32,27 +38,57 @@ summary: "Extending the paper ["Timecluster: dimension reduction applied to temp
 the original space (high-dimensional time series) is mapped to a specific point of the final 2D space, and focus only on them, to make it easier for the
 domain expert to analyse and cluster the behaviour of the process.</li>
 </ol>
+<p>The process consists in the following steps:</p>
+<ol>
+<li>Normalize the data</li>
+<li>Extract features from the time series. We will use a rolling window strategy</li>
+<li>2D projection of the data through UMAP</li>
+<li>Link points in the 2d projection to the corresponding sliding window, highlighting not only the time window but also the morst important variables that contributed in the point being in that place of the projection.</li>
+</ol>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Run-notebooks">Run notebooks<a class="anchor-link" href="#Run-notebooks">&#182;</a></h2><p>To run the notebooks, install <code>docker</code> and <code>docker-compose</code> in your system. Then run:</p>
+<h2 id="Run-notebooks">Run notebooks<a class="anchor-link" href="#Run-notebooks"> </a></h2><p>To run the notebooks, install <code>docker</code> and <code>docker-compose</code> in your system. Then run:</p>
 <p><code>docker-compose up -d</code></p>
-<p>and go to <code>localhost:7878</code>. The default port <code>7878</code> can be changed editing the file <code>docker-compose.yml</code></p>
+<p>and go to <code>localhost:[PORT_NUMBER]</code>, where port number is specified in the file <code>docker-compose.yml</code></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Contribute">Contribute<a class="anchor-link" href="#Contribute">&#182;</a></h2><p>This project has been created using <a href="https://github.com/fastai/nbdev">nbdev</a>, a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.</p>
+<h2 id="How-to-use">How to use<a class="anchor-link" href="#How-to-use"> </a></h2>
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
 
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
 </div>
 </div>
+
 </div>
     {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Contribute">Contribute<a class="anchor-link" href="#Contribute"> </a></h2><p>This project has been created using <a href="https://github.com/fastai/nbdev">nbdev</a>, a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.</p>
+<p>The experiment tracking and hyperparameter tuning has been carried out using the library <a href="https://app.wandb.ai/">Weights &amp; Biases</a>. Please login to this system if you want to run these experiments.</p>
+
+</div>
+</div>
+</div>
 </div>
  
 

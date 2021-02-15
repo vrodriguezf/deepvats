@@ -7,6 +7,7 @@ services:
       args:
         - USER_ID=${USER_ID} #* 
         - GROUP_ID=${GROUP_ID} #* Important to define it to work with Pacmel Data hosted in UPM servers (This is the group id of the user in which the folder where pacmel data is shared is located) 
+        - USER=${USER_NAME} #*
     ports:
       - "${JUPYTER_PORT}:8888" #*
     expose:
@@ -14,9 +15,9 @@ services:
     environment:
       - WANDB_API_KEY=${WANDB_API_KEY} #*
     volumes:
-      - ./:/home/user/work
+      - ./:/home/${USER_NAME}/work #*
       - ~/.gitconfig:/etc/gitconfig # Need to create this file!
-      - ${LOCAL_DATA_PATH}:/home/user/data/PACMEL-2019 #*
+      - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/PACMEL-2019 #*
   rstudio-server:
       build:
           context: ./

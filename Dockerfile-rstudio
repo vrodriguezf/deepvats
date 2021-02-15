@@ -1,20 +1,23 @@
 FROM vrodriguezf/rstudio-server-shiny-development:backup
 
+RUN apt-get update
+RUN apt-get install -y python3-pip
+RUN python3 -m pip install --upgrade pip
+RUN apt-get install -y python3-venv libxt-dev
 
-## Install reticulate, miniconda and Python packages
+
+## Install reticulate and create virtual environment using default Ubuntu installed Python
 
 RUN R -e "install.packages('reticulate')"
 
-ARG RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
-ARG RETICULATE_PYTHON_ENV=${RETICULATE_MINICONDA_PATH}/envs/r-reticulate
-ARG RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python
+ARG RETICULATE_PYTHON_ENV=/usr/virtualenvs/venv_shiny_app
+ARG RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/
 
-RUN R -e "reticulate::install_miniconda(path = '${RETICULATE_MINICONDA_PATH}')"
-RUN echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> /${R_HOME}/etc/Renviron.site
+RUN R -e "reticulate::virtualenv_create(envname='${RETICULATE_PYTHON_ENV}', python='/usr/bin/python3')"
+RUN R -e "reticulate::virtualenv_install(c('numpy', 'pandas', 'wandb', 'hdbscan'), envname='${RETICULATE_PYTHON_ENV}')"
+
 RUN echo "RETICULATE_PYTHON_ENV=${RETICULATE_PYTHON_ENV}" >> /${R_HOME}/etc/Renviron.site
 RUN echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> /${R_HOME}/etc/Renviron.site
-
-RUN R -e "reticulate::py_install(c('pandas','wandb','hdbscan'), pip = TRUE, pip_options=c('--upgrade'))"
 
 
 ## Install R packages

@@ -13,13 +13,17 @@ library(dygraphs)
 library(shinyWidgets)
 library(RColorBrewer)
 library(pals)
+
 # Python dependencies
 wandb = import("wandb")
 pd = import("pandas")
 hdbscan = import("hdbscan")
-###
-# CONSTANTS
-###
+
+
+#############
+# CONSTANTS #
+#############
+
 QUERY_RUNS_LIMIT = 150
 DEFAULT_PATH_WANDB_ARTIFACTS = "/data/PACMEL-2019/wandb_artifacts"
 hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
@@ -27,9 +31,11 @@ Sys.setenv("TZ"="UTC")
 #w = 36 # * TODO: This has to be dependant on the selected run! 
 #s = 1 # * TODO: This has to be dependant on the selected run!
 
-###
-# HELPER FUNCTIONS
-###
+
+####################
+# HELPER FUNCTIONS #
+####################
+
 get_window_indices = function(idxs, w, s) {
   idxs %>% map(function (i) {
     start_index = ((i-1)*s + 1)
@@ -86,40 +92,29 @@ make_individual_dygraph <- function(i){
   plt
 }
 
-###
-# Retrieve wandb runs
-###
-api = wandb$Api()
 
-print(paste0("Querying ", QUERY_RUNS_LIMIT, "runs..."))
-runs_it = api$runs("pacmel/timecluster-extension")
+#######################
+# RETRIEVE WANDB RUNS #
+#######################
+
+api <- wandb$Api()
+
+embeddings_filter = dict("$and"=list(dict("jobType"="dimensionality_reduction",
+                                          "config.emb_artifact_name"="embeddings",
+                                          "state"="finished")))
+
+print("Querying runs...")
+runs_it <- api$runs("pacmel/timecluster-extension", filters=embeddings_filter)
+
 print("Processing runs...")
-runs = purrr::rerun(QUERY_RUNS_LIMIT, iter_next(runs_it))
+runs <- purrr::rerun(QUERY_RUNS_LIMIT, iter_next(runs_it))
+runs <- runs %>% set_names(runs %>% map(~.$name)) %>% compact()
 
-# Filter to keep only the dimensionality reduction runs, those that have a config parameter
-# called "dcae_run_path" and whose state is "finished"
-print("Filtering runs...")
-runs = runs %>%
-  keep(function(run) {
-    # config = fromJSON(run$json_config)
-    print(run)
-    logged_artifacts = run$logged_artifacts()
-    print(logged_artifacts)
-    print(run$state)
-    print(run$config$emb_artifact_name)
-    return(
-      run$state == "finished" &&
-      !is.null(run$config$emb_artifact_name) 
-    )
-  })
 
-runs = runs %>% set_names(runs %>% map(~ .$name))
+###############################################
+# DEBUG: Load embeddings and data for testing #
+###############################################
 
-print(runs)
-
-###
-# Debug: Load embeddings and data for testing
-###
 # foo = api$run("pacmel/timecluster-extension/3jvuv2s3")
 # runs = list(foo) %>% set_names(foo$name)
 

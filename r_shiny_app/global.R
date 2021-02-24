@@ -13,6 +13,7 @@ library(dygraphs)
 library(shinyWidgets)
 library(RColorBrewer)
 library(pals)
+library(stringr)
 
 # Python dependencies
 wandb = import("wandb")
@@ -26,10 +27,17 @@ hdbscan = import("hdbscan")
 
 QUERY_RUNS_LIMIT = 150
 DEFAULT_PATH_WANDB_ARTIFACTS = "/data/PACMEL-2019/wandb_artifacts"
-hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
+hdbscan_metrics <- hdbscan$dist_metrics$METRIC_MAPPING
+#hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
 Sys.setenv("TZ"="UTC")
-#w = 36 # * TODO: This has to be dependant on the selected run! 
-#s = 1 # * TODO: This has to be dependant on the selected run!
+DEFAULT_VALUES = list(metric_hdbscan = "euclidean",
+                      min_cluster_size_hdbscan = 100,
+                      min_samples_hdbscan = 15,
+                      cluster_selection_epsilon_hdbscan = 0.08,
+                      path_line_size = 0.08,
+                      path_alpha = 5/10,
+                      point_alpha = 1/10,
+                      point_size = 1)
 
 
 ####################

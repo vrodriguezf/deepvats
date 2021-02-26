@@ -1,5 +1,6 @@
 # R dependencies
 library(shiny)
+library(shinyjs)
 library(reticulate)
 library(purrr)
 library(jsonlite)

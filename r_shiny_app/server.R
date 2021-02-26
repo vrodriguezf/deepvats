@@ -340,12 +340,10 @@ shinyServer(function(input, output, session) {
         # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
         first_data_index <- get_window_indices(idxs = slider_range$min_value, w = w(), s = s())[[1]] %>% head(1)
         last_data_index <- get_window_indices(idxs = slider_range$max_value, w = w(), s = s())[[1]] %>% tail(1)
-        tsdf <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, dr_ar$metadata$TS$hash)) %>% 
+        py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, dr_ar$metadata$TS$hash)) %>% 
             rownames_to_column("timeindex") %>% 
             slice(first_data_index:last_data_index) %>%
             column_to_rownames(var = "timeindex")
-        #col_names_tsdf <<- setNames(names(tsdf), names(tsdf))
-        tsdf
     })
     
     

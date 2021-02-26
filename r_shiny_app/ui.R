@@ -7,32 +7,35 @@
 #    http://shiny.rstudio.com/
 #
 
-# Define UI for application that draws a histogram
 shinyUI(fluidPage(
 
     # Application title
     titlePanel("Timecluster extension visualizer"),
+    
+    # Load Shinyjs
+    shinyjs::useShinyjs(),
 
     # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(
             selectInput("run_dr", label = "Select a run", choices = NULL),
             br(),
-            uiOutput("points_emb_controls"),
+            sliderInput("points_emb", "Select range of points to plot in the embedding", min = 1, max = 2, value = c(1,2), step = 1, ticks = FALSE),
+            #uiOutput("points_emb_controls"),
             br(),
-            radioButtons("cluster_options", label = "Select a clustering option", selected = "no_clusters",
+            radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
                          choices = c("No clusters" = "no_clusters",
                                      "Show precomputed clusters" = "precomputed_clusters",
                                      "Calculate and show clusters" = "calculate_clusters")),
             conditionalPanel(
-                condition = "input.cluster_options == 'precomputed_clusters'",
+                condition = "input.clustering_options == 'precomputed_clusters'",
                 selectInput("clusters_labels_name", label = "Select a clusters_labels artifact", choices = NULL),
                 tags$b("Selected 'clusters_labels' artifact description:"),
                 textOutput("clusters_labels_ar_desc")
             ),
             conditionalPanel(
-              condition = "input.cluster_options == 'calculate_clusters'",
-              selectInput("metric_hdbscan", label = "Metric", choices = NULL),
+              condition = "input.clustering_options == 'calculate_clusters'",
+              selectInput("metric_hdbscan", label = "Metric", choices = DEFAULT_VALUES$metric_hdbscan),
               sliderInput("min_cluster_size_hdbscan", label = "min_cluster_size_hdbscan", 
                           value = DEFAULT_VALUES$min_cluster_size_hdbscan, min=0, max=200, step = 1),
               sliderInput("min_samples_hdbscan", label = "min_samples_hdbscan", 
@@ -123,7 +126,10 @@ shinyUI(fluidPage(
                         h3("Original data"),
                         dropdownButton(
                             tags$b("Select/deselect variables"),
-                            uiOutput("select_variables"),
+                            tags$div(style= 'height:200px; overflow-y: scroll', 
+                                     checkboxGroupInput(inputId = "select_variables",
+                                                        label=NULL, choices = NULL, selected = NULL)
+                                     ),
                             actionBttn(inputId = "selectall",label = "Select/Deselect all",style = "simple",
                                        color = "primary",icon = icon("check-double"),size = "xs", block = TRUE),
                             hr(),
@@ -135,8 +141,6 @@ shinyUI(fluidPage(
                             inputId = "ts_config"
                             ),
                         column(10,dygraphOutput("ts_plot_dygraph") %>% withSpinner()),
-                        # uiOutput("ts_plot_dygraph") %>% withSpinner()),
-                        #plotOutput("ts_plot") %>% withSpinner(),
                     ),
                     
                     verbatimTextOutput("embeddings_plot_interaction_info"),

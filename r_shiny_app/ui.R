@@ -7,25 +7,44 @@
 #    http://shiny.rstudio.com/
 #
 
-# Define UI for application that draws a histogram
 shinyUI(fluidPage(
 
     # Application title
     titlePanel("Timecluster extension visualizer"),
+    
+    # Load Shinyjs
+    shinyjs::useShinyjs(),
 
     # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(
             selectInput("run_dr", label = "Select a run", choices = NULL),
-            hr(),
-            uiOutput("points_emb_controls"),
-            hr(),
-            numericInput("min_cluster_size_hdbscan", label = "min_cluster_size",value =100),
-            numericInput("min_samples_hdbscan", label = "min_samples",value =15),
-            sliderInput("cluster_selection_epsilon_hdbscan", label = "cluster_selection_epsilon", value = 0.08, min=0, max=5, step = 0.01),
-            pickerInput("metric_hdbscan",label = "Metric", choices = hdbscan_metrics, selected = "euclidean",options = list(`live-search` = TRUE)),
-            checkboxInput("show_clusters", label = "Calculate and show clusters", value = FALSE),
-            hr(),
+            br(),
+            sliderInput("points_emb", "Select range of points to plot in the embedding", min = 1, max = 2, value = c(1,2), step = 1, ticks = FALSE),
+            #uiOutput("points_emb_controls"),
+            br(),
+            radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
+                         choices = c("No clusters" = "no_clusters",
+                                     "Show precomputed clusters" = "precomputed_clusters",
+                                     "Calculate and show clusters" = "calculate_clusters")),
+            conditionalPanel(
+                condition = "input.clustering_options == 'precomputed_clusters'",
+                selectInput("clusters_labels_name", label = "Select a clusters_labels artifact", choices = NULL),
+                tags$b("Selected 'clusters_labels' artifact description:"),
+                textOutput("clusters_labels_ar_desc")
+            ),
+            conditionalPanel(
+              condition = "input.clustering_options == 'calculate_clusters'",
+              selectInput("metric_hdbscan", label = "Metric", choices = DEFAULT_VALUES$metric_hdbscan),
+              sliderInput("min_cluster_size_hdbscan", label = "min_cluster_size_hdbscan", 
+                          value = DEFAULT_VALUES$min_cluster_size_hdbscan, min=0, max=200, step = 1),
+              sliderInput("min_samples_hdbscan", label = "min_samples_hdbscan", 
+                          value = DEFAULT_VALUES$min_samples_hdbscan, min=0, max=50, step = 1),
+              sliderInput("cluster_selection_epsilon_hdbscan", label = "cluster_selection_epsilon", 
+                          value = DEFAULT_VALUES$cluster_selection_epsilon_hdbscan, min=0, max=5, step = 0.01),
+              actionBttn(inputId = "calculate_clusters", label = "Calculate and show clusters", style = "bordered",
+                         color = "primary", size = "sm", block = TRUE)
+            ),
         ),
         # Show a plot of the generated distribution
         mainPanel(
@@ -55,10 +74,14 @@ shinyUI(fluidPage(
                                     numericInput("embedding_plot_height", label = "Height",value =400),
                                     hr(),
                                     tags$b("Configure aestethics"),
-                                    sliderInput("path_line_size", label = "path_line_size", value = 0.08, min=0, max=5, step = 0.01),
-                                    sliderInput("path_alpha", label = "path_alpha", value = 5/10, min=0, max=1, step = 0.01),
-                                    sliderInput("point_alpha", label = "point_alpha", value = 1/10, min=0, max=1, step = 0.01),
-                                    sliderInput("point_size", label = "point_size", value = 1, min=0, max=10, step = 0.5),
+                                    sliderInput("path_line_size", label = "path_line_size", 
+                                                value = DEFAULT_VALUES$path_line_size, min=0, max=5, step = 0.01),
+                                    sliderInput("path_alpha", label = "path_alpha",
+                                                value = DEFAULT_VALUES$path_alpha, min=0, max=1, step = 0.01),
+                                    sliderInput("point_alpha", label = "point_alpha",
+                                                value = DEFAULT_VALUES$point_alpha, min=0, max=1, step = 0.01),
+                                    sliderInput("point_size", label = "point_size",
+                                                value = DEFAULT_VALUES$point_size, min=0, max=10, step = 0.5),
                                     actionBttn(inputId = "update_emb_graph",label = "Update aestethics",style = "simple",
                                                color = "primary",icon = icon("bar-chart"),size = "xs", block = TRUE),
                                     circle = FALSE, status = "primary",
@@ -103,19 +126,21 @@ shinyUI(fluidPage(
                         h3("Original data"),
                         dropdownButton(
                             tags$b("Select/deselect variables"),
-                            uiOutput("select_variables"),
+                            tags$div(style= 'height:200px; overflow-y: scroll', 
+                                     checkboxGroupInput(inputId = "select_variables",
+                                                        label=NULL, choices = NULL, selected = NULL)
+                                     ),
                             actionBttn(inputId = "selectall",label = "Select/Deselect all",style = "simple",
                                        color = "primary",icon = icon("check-double"),size = "xs", block = TRUE),
                             hr(),
-                            prettySwitch(inputId = "dygraph_sel",label = "Show stacked graphs (Not available yet)", status = "success",fill = TRUE),
+                            prettySwitch(inputId = "dygraph_sel",label = "Show stacked graphs (Not available yet)",
+                                         status = "success",fill = TRUE),
                             circle = FALSE, status = "primary", size = "xs",
                             icon = icon("gear"), width = "300px",
                             tooltip = tooltipOptions(title = "Configure the TS appearance"),
                             inputId = "ts_config"
                             ),
                         column(10,dygraphOutput("ts_plot_dygraph") %>% withSpinner()),
-                        # uiOutput("ts_plot_dygraph") %>% withSpinner()),
-                        #plotOutput("ts_plot") %>% withSpinner(),
                     ),
                     
                     verbatimTextOutput("embeddings_plot_interaction_info"),

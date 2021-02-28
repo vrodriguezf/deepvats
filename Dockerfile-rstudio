@@ -22,7 +22,7 @@ RUN echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> /${R_HOME}/etc/Renviron.sit
 
 ## Install R packages
 
-RUN R -e "install.packages(c('pals', 'shinyWidgets', 'dygraphs', 'shinycssloaders'))"
+RUN R -e "install.packages(c('pals', 'shinyWidgets', 'dygraphs', 'shinycssloaders', 'shinyjs'))"
 
 
 ## Export W&B environment variable to Rstudio

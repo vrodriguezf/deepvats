@@ -722,9 +722,41 @@ memory usage: 247.2+ MB
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="TSArtifact" class="doc_header"><code>class</code> <code>TSArtifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L54" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>TSArtifact</code>(<strong><code>name</code></strong>, <strong><code>sd</code></strong>:<code>Timestamp</code>, <strong><code>ed</code></strong>:<code>Timestamp</code>, <strong><code>description</code></strong>=<em><code>None</code></em>, <strong><code>metadata</code></strong>=<em><code>None</code></em>) :: <code>Artifact</code></p>
+<h2 id="TSArtifact" class="doc_header"><code>class</code> <code>TSArtifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L54" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>TSArtifact</code>(<strong><code>name</code></strong>, <strong><code>sd</code></strong>:<code>Timestamp</code>, <strong><code>ed</code></strong>:<code>Timestamp</code>, <strong><code>description</code></strong>:<code>Optional</code>[<code>str</code>]=<em><code>None</code></em>, <strong><code>metadata</code></strong>:<code>Optional</code>[<code>dict</code>]=<em><code>None</code></em>) :: <code>Artifact</code></p>
 </blockquote>
-<p>An artifact object you can write files into, and pass to log_artifact.</p>
+<p>Constructs an empty artifact whose contents can be populated using its
+<code>add</code> family of functions. Once the artifact has all the desired files,
+you can call <code>wandb.log_artifact()</code> to log it.</p>
+<p>Arguments:
+    name: (str) A human-readable name for this artifact, which is how you
+        can identify this artifact in the UI or reference it in <code>use_artifact</code>
+        calls. Names can contain letters, numbers, underscores, hyphens, and
+        dots. The name must be unique across a project.
+    type: (str) The type of the artifact, which is used to organize and differentiate
+        artifacts. Common types include <code>dataset</code> or <code>model</code>, but you can use any string
+        containing letters, numbers, underscores, hyphens, and dots.
+    description: (str, optional) Free text that offers a description of the artifact. The
+        description is markdown rendered in the UI, so this is a good place to place tables,
+        links, etc.
+    metadata: (dict, optional) Structured data associated with the artifact,
+        for example class distribution of a dataset. This will eventually be queryable
+        and plottable in the UI. There is a hard limit of 100 total keys.</p>
+<p>Examples:
+    Basic usage</p>
+
+<pre><code>```
+wandb.init()
+
+artifact = wandb.Artifact('mnist', type='dataset')
+artifact.add_dir('mnist/')
+wandb.log_artifact(artifact)
+```
+
+</code></pre>
+<p>Raises:
+    Exception: if problem.</p>
+<p>Returns:
+    An <code>Artifact</code> object.</p>
 
 </div>
 
@@ -750,14 +782,14 @@ memory usage: 247.2+ MB
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">wandb_artifacts_path</span> <span class="o">=</span> <span class="s1">&#39;data/PACMEL-2019/wandb_artifacts/tests&#39;</span>
-<span class="c1"># resampling frequency</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># resampling frequency</span>
 <span class="n">resampling_freq</span> <span class="o">=</span> <span class="s1">&#39;5s&#39;</span>
 <span class="c1"># handle missing values technique</span>
 <span class="n">missing_values_technique</span><span class="o">=</span><span class="s1">&#39;overall_median&#39;</span>
 
 <span class="c1"># testing dataframe</span>
-<span class="n">df_test</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">makeMissingDataframe</span><span class="p">()</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s1">&#39;2021-01-01&#39;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">df_test</span><span class="p">),</span> <span class="n">freq</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">))</span>
+<span class="n">df_test</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">makeMissingDataframe</span><span class="p">()</span>
+<span class="n">df_test</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s1">&#39;2021-01-01&#39;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">df_test</span><span class="p">),</span> <span class="n">freq</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
 
 <span class="n">artifact</span> <span class="o">=</span> <span class="n">TSArtifact</span><span class="o">.</span><span class="n">from_df</span><span class="p">(</span><span class="n">df_test</span><span class="p">,</span> 
                               <span class="n">name</span><span class="o">=</span><span class="s1">&#39;JNK&#39;</span><span class="p">,</span> 
@@ -788,15 +820,15 @@ memory usage: 247.2+ MB
   &#39;n_samples&#39;: 6,
   &#39;freq&#39;: &#39;&lt;5 * Seconds&gt;&#39;,
   &#39;vars&#39;: [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;],
-  &#39;normalization&#39;: {&#39;means&#39;: {&#39;A&#39;: 0.11820201611453725,
-    &#39;B&#39;: -0.07015761341953411,
-    &#39;C&#39;: -0.20148870181991052,
-    &#39;D&#39;: -0.322933590865338},
-   &#39;stds&#39;: {&#39;A&#39;: 0.3813099919920302,
-    &#39;B&#39;: 0.3186944297238045,
-    &#39;C&#39;: 0.4818877333910319,
-    &#39;D&#39;: 0.26631323168290905}},
-  &#39;hash&#39;: &#39;8576277538876253852&#39;}}</pre>
+  &#39;normalization&#39;: {&#39;means&#39;: {&#39;A&#39;: 0.3837807973595773,
+    &#39;B&#39;: -0.1702837787510083,
+    &#39;C&#39;: 0.0003015766713802802,
+    &#39;D&#39;: -0.18042534224509024},
+   &#39;stds&#39;: {&#39;A&#39;: 0.28755677338495317,
+    &#39;B&#39;: 0.29094157184208197,
+    &#39;C&#39;: 0.5287787048279057,
+    &#39;D&#39;: 0.5244784339968553}},
+  &#39;hash&#39;: &#39;7582266588543823729&#39;}}</pre>
 </div>
 
 </div>

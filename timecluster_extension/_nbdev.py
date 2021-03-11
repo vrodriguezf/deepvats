@@ -19,6 +19,7 @@ index = {"df_slicer": "02_DCAE.ipynb",
          "wandb.apis.public.Artifact.to_tsartifact": "load.ipynb",
          "create_longwall_data_artifact": "load.ipynb",
          "load_longwall_data_artifact": "load.ipynb",
+         "f": "test.ipynb",
          "generate_TS_df": "utils.ipynb",
          "normalize_columns": "utils.ipynb",
          "remove_constant_columns": "utils.ipynb",
@@ -32,6 +33,7 @@ modules = ["dcae.py",
            "utils.py",
            "dr.py",
            "load.py",
+           "test.py",
            "visualization.py"]
 
 doc_url = "https://vrodriguezf.github.io/timecluster_extension/"

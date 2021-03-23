@@ -25,9 +25,6 @@ entries:
       title: Load data from the longwall
       url: load.html
     - output: web,pdf
-      title: Test exercise
-      url: test.html
-    - output: web,pdf
       title: Utils
       url: utils.html
     - output: web,pdf

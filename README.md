@@ -53,7 +53,7 @@ This project has been created using [nbdev](https://github.com/fastai/nbdev), a 
 
 We recommend using the following procedure to contribute and resolve issues in the repository:
 
-1. Because the project uses nbdev, we need to run `nbdev_install_git_hooks` the first time after the repo is cloned and deployed; this ensures that our notebooks are automatically cleaned and trusted whenever we push to Github/Gitlab. The command has to be run from within the container. 
+1. Because the project uses nbdev, we need to run `nbdev_install_git_hooks` the first time after the repo is cloned and deployed; this ensures that our notebooks are automatically cleaned and trusted whenever we push to Github/Gitlab. The command has to be run from within the container. Also, it can be run from outside if you pip install nbdev in your local machine.
 
 1. Create a local branch in your development environment to solve the issue XX (or add a new functionality), with the name you want to give your merge request (use something that will be easy for you to remember in the future if you need to update your request):
     ```

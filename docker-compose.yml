@@ -14,10 +14,20 @@ services:
       - "8888"
     environment:
       - WANDB_API_KEY=${WANDB_API_KEY} #*
+      - GH_TOKEN=${GH_TOKEN}
     volumes:
       - ./:/home/${USER_NAME}/work #*
       - ~/.gitconfig:/etc/gitconfig # Need to create this file!
-      - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/PACMEL-2019 #*
+      - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        reservations:
+          devices:
+            - capabilities:
+              - gpu
   rstudio-server:
       build:
           context: ./
@@ -34,5 +44,5 @@ services:
           - ROOT=TRUE
       volumes:
          - ./r_shiny_app:/home/${USER_NAME} #*
-         - ${LOCAL_DATA_PATH}:/data/PACMEL-2019 #*
+         - ${LOCAL_DATA_PATH}:/data/ #*
          - ./pacmel_mining_use_case:/project_lib # No se usa aun

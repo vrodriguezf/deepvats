@@ -25,7 +25,10 @@ Finally, in a terminal located in the root of this repository, run:
 
 ```docker-compose up -d --build```
 
+> Note: This is meant to be deployed in a system with at least one GPU. If your system does not have any, you'll have to change the previous docker-compose command to: `docker-compose -f docker-compose-cpu.yml up -d --build`
+
 then go to `localhost:{{JUPYTER_PORT}}` to run the notebooks or go to `localhost:{{RSTUDIO_PORT}}` to run the app. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
+
 
 ## Contribute
 

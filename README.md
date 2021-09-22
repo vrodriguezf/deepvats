@@ -30,6 +30,9 @@ Finally, in a terminal located in the root of this repository, run:
 then go to `localhost:{{JUPYTER_PORT}}` to run the notebooks or go to `localhost:{{RSTUDIO_PORT}}` to run the app. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
 
 
+## Execute notebooks
+To execute the code in the notebooks, the library `timecluster_hub` must be installed in the container. To do so, go to a terminal in Jupyterlab, move to `/home/$USER/work` and execute `pip install -e .`
+
 ## Contribute
 
 This project has been created using [nbdev](https://github.com/fastai/nbdev), a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.

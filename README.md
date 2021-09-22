@@ -13,27 +13,7 @@ The visual part of this repo can also be used as a testbed to validate different
 ## Deploy
 
 To run the notebooks and the app, install `docker` and `docker-compose` in your system. 
-Then, create a new *.env* file in the root of the project following the structure:
-```
-# The name of the docker-compose project
-COMPOSE_PROJECT_NAME=your_project_name
-# The user ID you are using to run docker-compose
-USER_ID=your_numeric_id
-# The group ID you are using to run docker-compose (you can get it with id -g in a terminal)
-GROUP_ID=your_numeric_id
-# The user name assigned to the user id
-USER_NAME=your_user_name
-# The port from which you want to access Jupyter lab
-JUPYTER_PORT=XXXX
-# The port from which you want to access RStudio server
-RSTUDIO_PORT=XXXX
-# The password you want to access RStudio server (user is given by USER_NAME)
-RSTUDIO_PASSWD=XXXX
-# The path to your data files to train/test the models
-LOCAL_DATA_PATH=/path/to/your/data
-# The W&B personal API key (see https://wandb.ai/authorize)
-WANDB_API_KEY=your_wandb_api_key
-```
+Then, create a new *.env* file in the root of the project following the structure detailed in [this README file](https://github.com/vrodriguezf/dockerfiles).
 
 You'll also need to have a `.gitconfig` file in your home folder. It can be an empty file that you create manually, or it can contain your git global configuration. For the latter case, run:
 - `git config --global user.name "YOUR NAME IN THIS GITLAB INSTANCE"`

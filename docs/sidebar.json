@@ -1,12 +1,12 @@
 {
-  "timecluster_extension": {
+  "timecluster_hub": {
     "Overview": "/",
-    "Title": "dataset_artifact.html",
-    "DCAE: Deep Convolutional Autoencoder": "DCAE.html",
-    "Dimensionality reduction": "dimensionality_reduction.html",
-    "Baseline Models": "baseline_models.html",
-    "Load data from the longwall": "load.html",
-    "Utils": "utils.html",
-    "Visualization": "visualization.html"
+    "Title": "dataset_artifact",
+    "DCAE: Deep Convolutional Autoencoder": "DCAE",
+    "Dimensionality reduction": "dimensionality_reduction",
+    "Baseline Models": "baseline_models",
+    "Load data from the longwall": "load",
+    "Utils": "utils",
+    "Visualization": "visualization"
   }
 }

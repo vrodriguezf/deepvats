@@ -228,26 +228,29 @@ shinyServer(function(input, output, session) {
     
     
     # Get dcae run metadata
-    run_dcae_config = reactive({
-        dcae_run_path = req(run_dr_config())$dcae_run_path$value
-        dcae_run = api$run(dcae_run_path)
-        fromJSON(dcae_run$json_config)
+    run_enc_config = reactive({
+        run_dr_cfg <- req(run_dr_config())
+        enc_run_path = ifelse(!is.null(run_dr_cfg$enc_run_path), 
+                              run_dr_cfg$enc_run_path$value, 
+                              run_dr_cfg$dcae_run_path$value) # TODO: Deprecate, this is here for compatibility with old runs!
+        enc_run = api$run(enc_run_path)
+        fromJSON(enc_run$json_config)
     })
     
     
     # Get windows size value
     w = reactive({
-        req(run_dcae_config())$w$value
+        req(run_enc_config())$w$value
     })
     
     
     # Get stride value
     s = reactive({
-        req(run_dcae_config())$stride$value
+        req(run_enc_config())$stride$value
     })
     
     
-    # Get the dataset artifact that has been used to construct the embedding space
+    # Get the dataset artifact that has been used to train the encoder
     dr_artifact <- reactive({
         used_arts_it <- req(selected_run())$used_artifacts()
         used_arts <- purrr::rerun(QUERY_RUNS_LIMIT, iter_next(used_arts_it)) %>% compact()
@@ -263,11 +266,12 @@ shinyServer(function(input, output, session) {
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
         dr_ar <- req(dr_artifact())
+        print(dr_ar$name)
         list_used_arts = dr_ar$metadata$TS
         list_used_arts$vars = dr_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
         list_used_arts$name = dr_ar$name
         list_used_arts$aliases = dr_ar$aliases
-        list_used_arts$artifact_name = dr_ar$artifact_name
+        list_used_arts$artifact_name = dr_ar$name
         list_used_arts$id = dr_ar$id
         list_used_arts$created_at = dr_ar$created_at
         list_used_arts
@@ -285,7 +289,7 @@ shinyServer(function(input, output, session) {
     # Get embedding artifact
     embs_artifact <- reactive({
         logged_arts <- req(logged_artifacts())
-        emb_ar <- logged_arts %>% purrr::keep(stringr::str_detect(names(logged_arts), "^embeddings"))
+        emb_ar <- logged_arts %>% purrr::keep(stringr::str_detect(names(logged_arts), "^embeddings|projections"))
         emb_ar[[1]] # This assumes the run has only logged one embedding artifact 
     })
     
@@ -296,16 +300,15 @@ shinyServer(function(input, output, session) {
         list_used_arts = emb_ar$metadata$ref
         list_used_arts$name = emb_ar$name
         list_used_arts$aliases = emb_ar$aliases
-        list_used_arts$artifact_name = emb_ar$artifact_name
+        list_used_arts$artifact_name = emb_ar$name
         list_used_arts$id = emb_ar$id
         list_used_arts$created_at = emb_ar$created_at
         list_used_arts
     })
     
     
-    # Get embedding object (embeddings dataframe) from W&B
+    # Get projection object (projections dataframe) from W&B
     emb_object <- reactive({
-        print('emb_object()')
         embs_ar <- req(embs_artifact())
         embs <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, embs_ar$metadata$ref$hash)) %>% as.data.frame
         colnames(embs) = c("xcoord", "ycoord")
@@ -315,7 +318,6 @@ shinyServer(function(input, output, session) {
     
     # Get clusters_labels artifacts
     clusters_artifacts <- reactive({
-        print('clusters_artifacts()')
         logged_arts <- req(logged_artifacts())
         logged_arts %>% purrr::keep(stringr::str_detect(names(logged_arts), "^clusters_labels"))
     })
@@ -335,7 +337,6 @@ shinyServer(function(input, output, session) {
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
-        print('tsdf()')
         dr_ar <- req(dr_artifact())
         # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
         first_data_index <- get_window_indices(idxs = slider_range$min_value, w = w(), s = s())[[1]] %>% head(1)
@@ -489,8 +490,8 @@ shinyServer(function(input, output, session) {
     
     
     # Generate DCAE info table
-    output$run_dcae_info = renderDataTable({
-            run_dcae_config() %>% 
+    output$run_enc_info = renderDataTable({
+            run_enc_config() %>% 
             map(~ .$value) %>%
             enframe()
     })

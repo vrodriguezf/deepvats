@@ -11,26 +11,26 @@ entries:
       url: /
     - output: web,pdf
       title: Title
-      url: dataset_artifact.html
+      url: dataset_artifact
     - output: web,pdf
       title: 'DCAE: Deep Convolutional Autoencoder'
-      url: DCAE.html
+      url: DCAE
     - output: web,pdf
       title: Dimensionality reduction
-      url: dimensionality_reduction.html
+      url: dimensionality_reduction
     - output: web,pdf
       title: Baseline Models
-      url: baseline_models.html
+      url: baseline_models
     - output: web,pdf
       title: Load data from the longwall
-      url: load.html
+      url: load
     - output: web,pdf
       title: Utils
-      url: utils.html
+      url: utils
     - output: web,pdf
       title: Visualization
-      url: visualization.html
+      url: visualization
     output: web
-    title: timecluster_extension
+    title: timecluster_hub
   output: web
   title: Sidebar

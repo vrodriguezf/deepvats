@@ -45,4 +45,4 @@ services:
       volumes:
          - ./r_shiny_app:/home/${USER_NAME} #*
          - ${LOCAL_DATA_PATH}:/data/ #*
-         - ./pacmel_mining_use_case:/project_lib # No se usa aun
+         - ./timecluster_extension:/project_lib # No se usa aun

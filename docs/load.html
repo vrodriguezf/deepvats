@@ -445,7 +445,7 @@ memory usage: 247.2+ MB
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="fpreprocess_numeric_vars" class="doc_header"><code>fpreprocess_numeric_vars</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L15" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fpreprocess_numeric_vars</code>(<strong><code>data</code></strong>, <strong><code>cname_ts</code></strong>=<em><code>None</code></em>, <strong><code>normalize</code></strong>=<em><code>True</code></em>, <strong><code>nan_replacement</code></strong>=<em><code>0</code></em>)</p>
+<h4 id="fpreprocess_numeric_vars" class="doc_header"><code>fpreprocess_numeric_vars</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_hub/load.py#L15" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fpreprocess_numeric_vars</code>(<strong><code>data</code></strong>, <strong><code>cname_ts</code></strong>=<em><code>None</code></em>, <strong><code>normalize</code></strong>=<em><code>True</code></em>, <strong><code>nan_replacement</code></strong>=<em><code>0</code></em>)</p>
 </blockquote>
 <p>Preprocess a dataframe <code>data</code> containing the monitoring data from a mining longwall.     Non-numeric variables will be removed. Each column     is expected to have values of a variable in form of a time series, whose index will be described in the     column named <code>cname_ts</code>. If <code>cname_ts</code> is None (default), the index of the dataframe is assumed to contain the     timestamps. .NaN values will be     replaced by a constant value <code>nan_replacement</code></p>
 
@@ -572,7 +572,7 @@ memory usage: 247.2+ MB
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="fread_and_concat" class="doc_header"><code>fread_and_concat</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L35" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fread_and_concat</code>(<strong><code>paths</code></strong>, <strong>**<code>read_args</code></strong>)</p>
+<h4 id="fread_and_concat" class="doc_header"><code>fread_and_concat</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_hub/load.py#L35" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fread_and_concat</code>(<strong><code>paths</code></strong>, <strong>**<code>read_args</code></strong>)</p>
 </blockquote>
 <p>Read, from <code>paths</code>, a list of mining dataframes and concat them. All dataframes     must have the same columns.</p>
 
@@ -642,7 +642,7 @@ memory usage: 247.2+ MB
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="fread_mining_monitoring_files" class="doc_header"><code>fread_mining_monitoring_files</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L42" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fread_mining_monitoring_files</code>(<strong><code>paths</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
+<h4 id="fread_mining_monitoring_files" class="doc_header"><code>fread_mining_monitoring_files</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_hub/load.py#L42" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fread_mining_monitoring_files</code>(<strong><code>paths</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
 <p>Read monitoring files from the PACMEL mining use case.</p>
 
@@ -722,8 +722,9 @@ memory usage: 247.2+ MB
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="TSArtifact" class="doc_header"><code>class</code> <code>TSArtifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L54" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>TSArtifact</code>(<strong><code>name</code></strong>, <strong><code>sd</code></strong>:<code>Timestamp</code>, <strong><code>ed</code></strong>:<code>Timestamp</code>, <strong><code>description</code></strong>:<code>Optional</code>[<code>str</code>]=<em><code>None</code></em>, <strong><code>metadata</code></strong>:<code>Optional</code>[<code>dict</code>]=<em><code>None</code></em>) :: <code>Artifact</code></p>
+<h2 id="TSArtifact" class="doc_header"><code>class</code> <code>TSArtifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_hub/load.py#L54" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>TSArtifact</code>(<strong><code>name</code></strong>, <strong><code>sd</code></strong>:<code>Timestamp</code>, <strong><code>ed</code></strong>:<code>Timestamp</code>, <strong><code>description</code></strong>:<code>Optional</code>[<code>str</code>]=<em><code>None</code></em>, <strong><code>metadata</code></strong>:<code>Optional</code>[<code>dict</code>]=<em><code>None</code></em>, <strong><code>incremental</code></strong>:<code>Optional</code>[<code>bool</code>]=<em><code>None</code></em>) :: <code>Artifact</code></p>
 </blockquote>
+<p>Flexible and lightweight building block for dataset and model versioning.</p>
 <p>Constructs an empty artifact whose contents can be populated using its
 <code>add</code> family of functions. Once the artifact has all the desired files,
 you can call <code>wandb.log_artifact()</code> to log it.</p>
@@ -847,7 +848,7 @@ wandb.log_artifact(artifact)
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>At the end, we are interested in working with time series as a dataframe. So we need a function to download the files contained in a <code>wandb.apis.public.Artifact</code> object and process them into a TS dataframe. The process of passing from files to dataframe must be different depending on what type of creation method was used to generate the original <a href="/timecluster_extension/load.html#TSArtifact"><code>TSArtifact</code></a>.</p>
+<p>At the end, we are interested in working with time series as a dataframe. So we need a function to download the files contained in a <code>wandb.apis.public.Artifact</code> object and process them into a TS dataframe. The process of passing from files to dataframe must be different depending on what type of creation method was used to generate the original <a href="/timecluster_hub/load.html#TSArtifact"><code>TSArtifact</code></a>.</p>
 
 </div>
 </div>
@@ -863,7 +864,7 @@ wandb.log_artifact(artifact)
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="Artifact.to_df" class="doc_header"><code>Artifact.to_df</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L158" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Artifact.to_df</code>()</p>
+<h4 id="Artifact.to_df" class="doc_header"><code>Artifact.to_df</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_hub/load.py#L158" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Artifact.to_df</code>()</p>
 </blockquote>
 <p>Download the files of a saved wandb artifact and process them as a single dataframe. The artifact must     come from a call to <code>run.use_artifact</code> with a proper wandb run.</p>
 
@@ -902,9 +903,9 @@ wandb.log_artifact(artifact)
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="Artifact.to_tsartifact" class="doc_header"><code>Artifact.to_tsartifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L174" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Artifact.to_tsartifact</code>()</p>
+<h4 id="Artifact.to_tsartifact" class="doc_header"><code>Artifact.to_tsartifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_hub/load.py#L174" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Artifact.to_tsartifact</code>()</p>
 </blockquote>
-<p>Cast an artifact as a TS artifact. The artifact must have been created from one of the     class creation methods of the class <a href="/timecluster_extension/load.html#TSArtifact"><code>TSArtifact</code></a>. This is useful to go back to a TSArtifact     after downloading an artifact through the wand API</p>
+<p>Cast an artifact as a TS artifact. The artifact must have been created from one of the     class creation methods of the class <a href="/timecluster_hub/load.html#TSArtifact"><code>TSArtifact</code></a>. This is useful to go back to a TSArtifact     after downloading an artifact through the wand API</p>
 
 </div>
 
@@ -934,7 +935,7 @@ wandb.log_artifact(artifact)
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="create_longwall_data_artifact" class="doc_header"><code>create_longwall_data_artifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L186" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>create_longwall_data_artifact</code>(<strong><code>root_path</code></strong>, <strong><code>start_date</code></strong>, <strong><code>end_date</code></strong>, <strong><code>longwall_name</code></strong>=<em><code>'Unnamed_longwall'</code></em>, <strong><code>wandb_run</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="create_longwall_data_artifact" class="doc_header"><code>create_longwall_data_artifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_hub/load.py#L186" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>create_longwall_data_artifact</code>(<strong><code>root_path</code></strong>, <strong><code>start_date</code></strong>, <strong><code>end_date</code></strong>, <strong><code>longwall_name</code></strong>=<em><code>'Unnamed_longwall'</code></em>, <strong><code>wandb_run</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>Create a wandb artifact of type <code>dataset</code>, containing the CSV files from <code>start_date</code>     to <code>end_date</code>. Dates must be pased as <code>datetime.datetime</code> objects. If a <code>wandb_run</code> is     defined, the created artifact will be logged to that run, using the longwall name as     artifact name, and the date range as version.</p>
 
@@ -1115,7 +1116,7 @@ wandb.log_artifact(artifact)
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Load-longwall-data-artifact">Load longwall data artifact<a class="anchor-link" href="#Load-longwall-data-artifact"> </a></h3><p>This function is quite handy to turn the contents of a longwall artifact, created with the function <a href="/timecluster_extension/load.html#create_longwall_data_artifact"><code>create_longwall_data_artifact</code></a>. This is specially useful in the case where the monitoring files are given in a daily basis, but you are only interested in analysing a couple of hours of data. In that case, the artifact will link the whole day file, but using the metadata, this function will only read the corresponding</p>
+<h3 id="Load-longwall-data-artifact">Load longwall data artifact<a class="anchor-link" href="#Load-longwall-data-artifact"> </a></h3><p>This function is quite handy to turn the contents of a longwall artifact, created with the function <a href="/timecluster_hub/load.html#create_longwall_data_artifact"><code>create_longwall_data_artifact</code></a>. This is specially useful in the case where the monitoring files are given in a daily basis, but you are only interested in analysing a couple of hours of data. In that case, the artifact will link the whole day file, but using the metadata, this function will only read the corresponding</p>
 
 </div>
 </div>
@@ -1131,7 +1132,7 @@ wandb.log_artifact(artifact)
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="load_longwall_data_artifact" class="doc_header"><code>load_longwall_data_artifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_extension/load.py#L220" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>load_longwall_data_artifact</code>(<strong><code>a</code></strong>:<code>Artifact</code>)</p>
+<h4 id="load_longwall_data_artifact" class="doc_header"><code>load_longwall_data_artifact</code><a href="https://gitlab.geist.re/pml/x_timecluster_extension/tree/master/timecluster_hub/load.py#L220" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>load_longwall_data_artifact</code>(<strong><code>a</code></strong>:<code>Artifact</code>)</p>
 </blockquote>
 <p>Returns a dataframe with the longwall data, subsetted by the artifact metadata</p>
 

@@ -10,7 +10,7 @@
 shinyUI(fluidPage(
 
     # Application title
-    titlePanel("Timecluster extension visualizer"),
+    titlePanel("Timecluster hub"),
     
     # Load Shinyjs
     shinyjs::useShinyjs(),
@@ -55,18 +55,18 @@ shinyUI(fluidPage(
                     fluidRow(
                         uiOutput("run_dr_info_title"),
                         dataTableOutput("run_dr_info"),
-                        h3("Embeddings artifact"),
+                        h3("Projections"),
                         dataTableOutput("embs_ar_info"),
-                        h3("Time series artifact"),
+                        h3("Time series"),
                         dataTableOutput("ts_ar_info"),
-                        h3("Configuration of the associated DCAE run"),
-                        dataTableOutput("run_dcae_info"),
+                        h3("Configuration of the associated encoder"),
+                        dataTableOutput("run_enc_info"),
                     )
                 ),
                 tabPanel(
-                    "Embeddings",
+                    "Projections",
                     fluidRow(
-                        h3("Embeddings"),
+                        h3("Embedding projections"),
                         fluidRow(
                             column(1,
                                 dropdownButton(

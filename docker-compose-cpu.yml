@@ -19,6 +19,7 @@ services:
       - ./:/home/${USER_NAME}/work #*
       - ~/.gitconfig:/etc/gitconfig # Need to create this file!
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
+      - WANDB_DIR=/home/${USER_NAME}/work
   rstudio-server:
       build:
           context: ./

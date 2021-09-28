@@ -9,7 +9,7 @@ import numpy as np
 from fastcore.all import *
 import wandb
 from datetime import datetime, timedelta
-from timecluster_extension.utils import *
+from .utils import *
 
 # Cell
 def fpreprocess_numeric_vars(data, cname_ts=None, normalize=True, nan_replacement=0):
@@ -53,7 +53,7 @@ def fread_mining_monitoring_files(paths, **kwargs):
 # Cell
 class TSArtifact(wandb.Artifact):
 
-    default_storage_path = Path('/home/user/data/PACMEL-2019/wandb_artifacts/')
+    default_storage_path = Path(Path.home()/'data/wandb_artifacts/')
     date_format = '%Y-%m-%d %H:%M:%S' # TODO add milliseconds
     handle_missing_values_techniques = {
         'linear_interpolation': lambda df : df.interpolate(method='linear', limit_direction='both'),
@@ -217,6 +217,7 @@ def create_longwall_data_artifact(root_path, start_date, end_date, longwall_name
     return artifact
 
 # Cell
+# TODO: Tiene que haber un error si el start date pasado es menor que el inicio del primer fichero, y lo mismo con el end date final
 def load_longwall_data_artifact(a:wandb.Artifact):
     "Returns a dataframe with the longwall data, subsetted by the artifact metadata"
     a_refs = [x.ref for x in a.manifest.entries.values()]

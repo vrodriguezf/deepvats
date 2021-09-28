@@ -14,10 +14,12 @@ services:
       - "8888"
     environment:
       - WANDB_API_KEY=${WANDB_API_KEY} #*
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       - GH_TOKEN=${GH_TOKEN}
     volumes:
       - ./:/home/${USER_NAME}/work #*
       - ~/.gitconfig:/etc/gitconfig # Need to create this file!
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
       - WANDB_DIR=/home/${USER_NAME}/work
     deploy:

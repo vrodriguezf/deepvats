@@ -2,12 +2,13 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"createDCAE": "02_DCAE.ipynb",
+index = {"DCAE_torch": "02a_encoder_DCAE-torch.ipynb",
+         "createDCAE": "02a_encoder_DCAE.ipynb",
          "check_compatibility": "03_dimensionality_reduction.ipynb",
          "normalize_artifact": "03_dimensionality_reduction.ipynb",
          "get_latent_features": "03_dimensionality_reduction.ipynb",
          "fget_UMAP_projections": "03_dimensionality_reduction.ipynb",
-         "plot_embeddings": "03_dimensionality_reduction.ipynb",
+         "plot_projections": "03_dimensionality_reduction.ipynb",
          "baseline_model_predictor": "04_baseline_models.ipynb",
          "get_windows_mse": "04_baseline_models.ipynb",
          "fpreprocess_numeric_vars": "load.ipynb",

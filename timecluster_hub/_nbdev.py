@@ -25,6 +25,7 @@ index = {"DCAE_torch": "02a_encoder_DCAE-torch.ipynb",
          "ReferenceArtifact": "utils.ipynb",
          "wandb.apis.public.Artifact.to_obj": "utils.ipynb",
          "tf.keras.Sequential.plot_top_losses": "utils.ipynb",
+         "PrintLayer": "utils.ipynb",
          "plot_TS": "visualization.ipynb",
          "plot_validation_ts_ae": "visualization.ipynb"}
 

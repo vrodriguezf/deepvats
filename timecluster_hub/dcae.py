@@ -25,6 +25,7 @@ class DCAE_torch(nn.Sequential):
         layers = []
         for i in range_of(kss):
             layers += [Conv1d(ni=nfs[i-1] if i>0 else c_in, nf=nfs[i], ks=kss[i]),
+                       PrintLayer(),
                        nn.MaxPool1d(pool_szs[i])]
         layers += [nn.Flatten(),
                    nn.Linear(seq_len, delta),

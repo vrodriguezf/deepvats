@@ -118,6 +118,15 @@ class TSArtifact(wandb.Artifact):
         Returns:
             TSArtifact object.
         """
+        # Indexing and Resampling
+        if not isinstance(df.index, pd.DatetimeIndex):
+            # Create fake timestamps, keeping the resampling frequency if it has
+            # been established
+            timedelta = pd.to_timedelta(ifnone(resampling_freq, 1),
+                                        unit='s' if resampling_freq is None else None)
+            df.index = pd.to_datetime(0) + timedelta*df.index
+        if resampling_freq: df = df.resample(resampling_freq).mean()
+        else: df.index.freq = '1s'
 
         sd = df.index[0] if sd is None else sd
         ed = df.index[-1] if ed is None else ed
@@ -131,8 +140,7 @@ class TSArtifact(wandb.Artifact):
         obj.metadata['TS']['handle_missing_values_technique'] = missing_values_technique.__str__()
         obj.metadata['TS']['has_missing_values'] = np.any(df.isna().values).__str__()
 
-        # Resample
-        df = df.resample(resampling_freq).mean()
+        # Sampling
         obj.metadata['TS']['n_samples'] = len(df)
         obj.metadata['TS']['freq'] = str(df.index.freq)
 

@@ -44,6 +44,7 @@ import pickle
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+import torch.nn as nn
 
 # Cell
 def generate_TS_df(rows, cols):

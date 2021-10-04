@@ -23,7 +23,7 @@ hdbscan = import("hdbscan")
 
 
 #############
-# CONSTANTS #
+# CONFIG #
 #############
 
 QUERY_RUNS_LIMIT = 150
@@ -39,6 +39,7 @@ DEFAULT_VALUES = list(metric_hdbscan = "euclidean",
                       path_alpha = 5/10,
                       point_alpha = 1/10,
                       point_size = 1)
+WANDB_PROJECT = "vrodriguezf90/tchub"
 
 
 ####################
@@ -113,7 +114,7 @@ embeddings_filter = dict("$and"=list(dict("jobType"="dimensionality_reduction",
                                           "state"="finished")))
 
 print("Querying runs...")
-runs_it <- api$runs("pacmel/timecluster-extension", filters=embeddings_filter)
+runs_it <- api$runs(WANDB_PROJECT, filters=embeddings_filter)
 
 print("Processing runs...")
 runs <- purrr::rerun(QUERY_RUNS_LIMIT, iter_next(runs_it))

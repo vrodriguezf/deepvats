@@ -1,10 +1,5 @@
 FROM vrodriguezf/jupyterlab-cuda:latest
 
-# Install and update Python packages with pip
-#RUN python3 -m pip install --upgrade pip
-RUN pip install --upgrade nbdev wandb fastcore papermill umap-learn tensorflow keras seaborn plotly
-RUN pip install hdbscan --no-cache-dir --no-binary :all:
-
 # Add non-root user (call this with the specific UID and GID of the host, to share permissions)
 ARG USER_ID=1000
 ARG GROUP_ID=1000
@@ -15,6 +10,9 @@ RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USER
 ###
 # Python packages
 ###
+RUN pip install --upgrade nbdev wandb fastcore papermill umap-learn tensorflow keras seaborn plotly
+RUN pip install hdbscan --no-cache-dir --no-binary :all:
+RUN pip install tsnecuda==3.0.0+cu112 -f https://tsnecuda.isx.ai/tsnecuda_stable.html
 
 # Git packages
 ENV LANG C.UTF-8

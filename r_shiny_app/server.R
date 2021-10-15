@@ -205,7 +205,6 @@ shinyServer(function(input, output, session) {
                                      choices = ts_variables$selected, 
                                      selected = NULL)
         }
-        
     })
     
     
@@ -253,11 +252,11 @@ shinyServer(function(input, output, session) {
     # Get the dataset artifact that has been used to train the encoder
     dr_artifact <- reactive({
         used_arts_it <- req(selected_run())$used_artifacts()
-        used_arts <- purrr::rerun(QUERY_RUNS_LIMIT, iter_next(used_arts_it)) %>% compact() # Why QUERY_RUNS_LIMIT?
+        used_arts <- iterate(used_arts_it)
         # If only one dataset artifact has been used, it's assumed that this has been used to create the embedding space
-        # Otherwise, the artifact that has no normalization metadata is used.
+        # Otherwise, what to do?? TODO
         if (length(used_arts) != 1) {
-            used_arts <- used_arts %>% purrr::keep(~ .$type == "dataset" && is.null(.$metadata$TS$normalization))
+            used_arts <- used_arts %>% purrr::keep(~ .$type == "dataset")
         }
         used_arts[[1]]
     })
@@ -281,10 +280,9 @@ shinyServer(function(input, output, session) {
     # Get logged artifacts 
     logged_artifacts <- reactive({
         logged_arts_it <- req(selected_run())$logged_artifacts()
-        logged_arts <- purrr::rerun(QUERY_RUNS_LIMIT, iter_next(logged_arts_it)) %>% compact()
+        logged_arts <- iterate(logged_arts_it)
         logged_arts %>% set_names(logged_arts %>% map(~.$name))
     })
-    
     
     # Get embedding artifact
     embs_artifact <- reactive({

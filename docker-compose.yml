@@ -16,12 +16,11 @@ services:
       - WANDB_API_KEY=${WANDB_API_KEY} #*
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       - GH_TOKEN=${GH_TOKEN}
+      - WANDB_DIR=/home/${USER_NAME}/work
     volumes:
       - ./:/home/${USER_NAME}/work #*
-      - ~/.gitconfig:/etc/gitconfig # Need to create this file!
-      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+      - ~/.gitconfig:/etc/gitconfig # Need to create this file
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
-      - WANDB_DIR=/home/${USER_NAME}/work
     deploy:
       replicas: 1
       restart_policy:

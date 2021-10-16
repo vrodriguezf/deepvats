@@ -12,7 +12,6 @@ RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USER
 ###
 RUN pip install --upgrade nbdev wandb fastcore papermill umap-learn tensorflow keras seaborn plotly
 RUN pip install hdbscan --no-cache-dir --no-binary :all:
-RUN pip install tsnecuda==3.0.0+cu112 -f https://tsnecuda.isx.ai/tsnecuda_stable.html
 
 # Git packages
 ENV LANG C.UTF-8

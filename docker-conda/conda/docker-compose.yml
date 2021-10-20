@@ -1,0 +1,42 @@
+version: "3"
+services:
+  jupyter:
+    build:
+      args:
+        - username=${USER_NAME}
+        - uid=${USER_ID}
+        - gid=${GROUP_ID}
+      context: ../
+      dockerfile: Dockerfile-conda
+    ports:
+      - "${JUPYTER_PORT}:8888"
+    runtime: nvidia
+    environment:
+      - WANDB_API_KEY=${WANDB_API_KEY} #*
+      - GH_TOKEN=${GH_TOKEN} #*
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+      - WANDB_DIR=/home/${USER_NAME}/work
+    volumes:
+      - ../../:/home/${USER}/work
+      - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
+    init: true
+    stdin_open: true
+    tty: true    
+  rstudio-server:
+      build:
+          context: ../../
+          dockerfile: Dockerfile-rstudio
+          args:
+              - WANDB_API_KEY=${WANDB_API_KEY} #*
+      ports:
+          - "${RSTUDIO_PORT}:8787" #*
+      environment:
+          - USER=${USER_NAME} #* 
+          - USERID=${USER_ID} #*
+          - GROUPID=${GROUP_ID} #*
+          - PASSWORD=${RSTUDIO_PASSWD} #*
+          - ROOT=TRUE
+      volumes:
+         - ./r_shiny_app:/home/${USER_NAME} #*
+         - ${LOCAL_DATA_PATH}:/data/ #*
+         - ./timecluster_extension:/project_lib # No se usa aun

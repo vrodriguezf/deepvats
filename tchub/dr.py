@@ -34,7 +34,6 @@ def check_compatibility(dr_ar:TSArtifact, enc_ar:TSArtifact):
 
 
 # Cell
-# TODO: Move this to the encoder notebook, and log the resulting artifact
 import warnings
 from numba.core.errors import NumbaPerformanceWarning
 @delegates(umap.umap_.UMAP)

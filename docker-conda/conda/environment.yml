@@ -1,0 +1,46 @@
+name: python-gpu-env
+
+channels:
+  - defaults
+  - conda-forge
+  - nvidia
+  - rapidsai
+  - fastai
+
+dependencies:
+  - cudatoolkit=11.2
+  - cudf=21.10
+  - cuml=21.10
+  - fastgpu
+  - git
+  - gh
+  - hdbscan
+  - ipywidgets
+  - jupyterlab
+  - jupyterlab-git
+  - jupyterlab-nvdashboard
+  - jupyterlab-lsp
+  - keyrings.alt
+  - libprotobuf==3.18.1 # This has to be aligned with pip protobuf
+  - matplotlib
+  - nano
+  - nbclassic>=0.2.8
+  - nbdev
+  - nodejs
+  - numpy
+  - pip==20.2
+  - pip:
+     - jupyterlab-quickopen
+     - aquirdturtle_collapsible_headings
+     - git+https://github.com/krassowski/python-language-server.git@main
+     - git+https://github.com/timeseriesAI/tsai.git
+     - protobuf==3.18.1 #  This has to be aligned with conda libprotobuf
+   # - -r file:/tmp/requirements.txt	
+  - plotly
+  - python=3.8
+  #- python-language-server
+  - seaborn
+  - twine
+  - xeus-python
+  - umap-learn
+  - wandb

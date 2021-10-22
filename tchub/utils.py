@@ -70,9 +70,6 @@ def to_obj(self:wandb.apis.public.Artifact):
     return obj
 
 # Cell
-from timecluster_hub.visualization import *
-
-# Cell
 import torch.nn as nn
 class PrintLayer(nn.Module):
     def __init__(self):

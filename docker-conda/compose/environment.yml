@@ -21,22 +21,22 @@ dependencies:
   - jupyterlab-nvdashboard
   - jupyterlab-lsp
   - keyrings.alt
-  - libprotobuf==3.18.1 # This has to be aligned with pip protobuf
+  - libprotobuf # This has to be aligned with protobuf
   - matplotlib
   - nano
   - nbclassic>=0.2.8
   - nbdev
   - nodejs
   - numpy
-  - pip==20.2
+  - pip
   - pip:
      - jupyterlab-quickopen
      - aquirdturtle_collapsible_headings
      - git+https://github.com/krassowski/python-language-server.git@main
-     - git+https://github.com/timeseriesAI/tsai.git
-     - protobuf==3.18.1 #  This has to be aligned with conda libprotobuf
+     - git+https://github.com/vrodriguezf/tsai.git
    # - -r file:/tmp/requirements.txt	
   - plotly
+  - protobuf
   - python=3.8
   #- python-language-server
   - seaborn

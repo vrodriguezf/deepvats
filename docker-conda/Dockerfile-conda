@@ -14,9 +14,9 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
 # Create a non-root user
-ARG username=al-khawarizmi
+ARG username=user
 ARG uid=1000
-ARG gid=100
+ARG gid=1000
 ENV USER $username
 ENV UID $uid
 ENV GID $gid
@@ -64,19 +64,19 @@ RUN conda install --name base --channel conda-forge mamba
 RUN mamba update --name base --channel defaults conda
 
 # build the mamba environment
-COPY --chown=$UID:$GID conda/environment.yml conda/requirements.txt /tmp/
+COPY --chown=$UID:$GID compose/environment.yml compose/requirements.txt /tmp/
 RUN mamba env create --prefix $ENV_PREFIX --file /tmp/environment.yml --force
 RUN conda clean --all --yes
 
 # run the postBuild script to install the JupyterLab extensions
-COPY --chown=$UID:$GID conda/postBuild /usr/local/bin
+COPY --chown=$UID:$GID compose/postBuild /usr/local/bin
 RUN chmod u+x /usr/local/bin/postBuild
 RUN conda activate $ENV_PREFIX && \
     /usr/local/bin/postBuild && \
     conda deactivate
 
 # use an entrypoint script to insure conda environment is properly activated at runtime
-COPY --chown=$UID:$GID conda/entrypoint.sh /usr/local/bin
+COPY --chown=$UID:$GID compose/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 

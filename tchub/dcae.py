@@ -3,8 +3,8 @@
 __all__ = ['DCAE_torch']
 
 # Cell
-from fastcore import test
-from tsai.all import *
+import torch
+from tsai.imports import *
 
 # Cell
 class DCAE_torch(Module):

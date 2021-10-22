@@ -4,6 +4,12 @@ import numpy as np
 import time
 import sys
 
+##
+# Constants
+##
+WANDB_ARTIFACTS_DIR = 'data/wandb_artifacts'
+
+# General purpose functions
 def beep(inp=1, duration=.1, n=1):
     rate = 10000
     mult = 1.6 * inp if inp else .08

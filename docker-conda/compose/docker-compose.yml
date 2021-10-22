@@ -1,4 +1,3 @@
-version: "3"
 services:
   jupyter:
     build:
@@ -19,15 +18,22 @@ services:
     volumes:
       - ../../:/home/${USER}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
+      - conda-env:/home/${USER_NAME}/env
+      - miniconda:/home/${USER_NAME}/miniconda3
     init: true
     stdin_open: true
     tty: true    
   rstudio-server:
       build:
           context: ../../
-          dockerfile: Dockerfile-rstudio
+          dockerfile: Dockerfile-rstudio-conda
           args:
-              - WANDB_API_KEY=${WANDB_API_KEY} #*
+              - WANDB_API_KEY=${WANDB_API_KEY} #
+              - RETICULATE_PYTHON_ENV=/home/${USER_NAME}/env
+              - RETICULATE_MINICONDA_PATH=/home/${USER_NAME}/miniconda3
+              - USER=${USER_NAME} #* 
+              - UID=${USER_ID} #*
+              - GID=${GROUP_ID} #*
       ports:
           - "${RSTUDIO_PORT}:8787" #*
       environment:
@@ -35,8 +41,16 @@ services:
           - USERID=${USER_ID} #*
           - GROUPID=${GROUP_ID} #*
           - PASSWORD=${RSTUDIO_PASSWD} #*
-          - ROOT=TRUE
+          - ROOT=FALSE
+          - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+      runtime: nvidia
       volumes:
-         - ./r_shiny_app:/home/${USER_NAME} #*
-         - ${LOCAL_DATA_PATH}:/data/ #*
-         - ./timecluster_extension:/project_lib # No se usa aun
+         - ../../r_shiny_app:/home/${USER_NAME}/app #*
+         - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
+         - ../../tchub:/home/${USER_NAME}/tchub # No se usa aun
+         - conda-env:/home/${USER_NAME}/env:ro
+         - miniconda:/home/${USER_NAME}/miniconda3:ro
+
+volumes:
+  conda-env:
+  miniconda:

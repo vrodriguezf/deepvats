@@ -20,7 +20,7 @@ shinyUI(fluidPage(
         sidebarPanel(
             selectInput("run_dr", label = "Select a run", choices = NULL),
             br(),
-            sliderInput("points_emb", "Select range of points to plot in the embedding", min = 1, max = 2, value = c(1,2), step = 1, ticks = FALSE),
+            sliderInput("points_emb", "Select range of points to plot in the projections", min = 1, max = 2, value = c(1,2), step = 1, ticks = FALSE),
             #uiOutput("points_emb_controls"),
             br(),
             radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
@@ -56,7 +56,7 @@ shinyUI(fluidPage(
                         uiOutput("run_dr_info_title"),
                         dataTableOutput("run_dr_info"),
                         h3("Projections"),
-                        dataTableOutput("embs_ar_info"),
+                        dataTableOutput("prjs_ar_info"),
                         h3("Time series"),
                         dataTableOutput("ts_ar_info"),
                         h3("Configuration of the associated encoder"),
@@ -70,7 +70,7 @@ shinyUI(fluidPage(
                         fluidRow(
                             column(1,
                                 dropdownButton(
-                                    tags$b("Set height of the embeddings plot (px):"),
+                                    tags$b("Set height of the projections plot (px):"),
                                     numericInput("embedding_plot_height", label = "Height",value =400),
                                     hr(),
                                     tags$b("Configure aestethics"),
@@ -87,7 +87,7 @@ shinyUI(fluidPage(
                                     circle = FALSE, status = "primary",
                                     icon = icon("gear"), width = "300px",size = "xs",
                                     tooltip = tooltipOptions(title = "Configure the embedding appearance"),
-                                    inputId = "embeddings_config"
+                                    inputId = "projections_config"
                                 )
                             ),
                             column(8,
@@ -118,7 +118,7 @@ shinyUI(fluidPage(
                         ),
                         column(2,),
                         column(8,align="center",
-                               uiOutput("embeddings_plot_ui"),
+                               uiOutput("projections_plot_ui"),
                         ),
                         column(2,"")
                     ),
@@ -143,7 +143,7 @@ shinyUI(fluidPage(
                         column(10,dygraphOutput("ts_plot_dygraph") %>% withSpinner()),
                     ),
                     
-                    verbatimTextOutput("embeddings_plot_interaction_info"),
+                    verbatimTextOutput("projections_plot_interaction_info"),
                     verbatimTextOutput("point")
                     
                 )

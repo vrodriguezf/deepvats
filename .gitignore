@@ -6,6 +6,7 @@ r_shiny_app/.*
 .jupyter
 .bash_history
 artifacts
+nbs/models
 
 .virtual_documents/
 .workspace/

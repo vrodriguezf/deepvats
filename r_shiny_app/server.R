@@ -74,7 +74,7 @@ shinyServer(function(input, output, session) {
     # Update global config when input$run_dr is changed
     observeEvent(input$run_dr, {
         # Get the embeddings number of points and update the sliderInput
-        embs<- req(emb_object())
+        embs <- req(emb_object())
         slider_range$min_value <- as.integer(1)
         slider_range$max_value <- as.integer(nrow(embs))
         updateSliderInput(session = session, inputId = "points_emb",
@@ -216,6 +216,7 @@ shinyServer(function(input, output, session) {
     # Get selected dimensionality-reduction run in "run_dr" selectInput
     selected_run = reactive({
         req(exists("runs"))
+        print(runs[[input$run_dr]])
         runs[[input$run_dr]]
     })
     

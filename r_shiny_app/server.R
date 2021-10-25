@@ -38,7 +38,7 @@ shinyServer(function(input, output, session) {
                                       cluster_selection_epsilon_hdbscan = DEFAULT_VALUES$cluster_selection_epsilon_hdbscan)
     
     
-    # Reactive values created to configure the appearance of the embeddings graph.
+    # Reactive values created to configure the appearance of the projections graph.
     config_style <- reactiveValues(path_line_size = DEFAULT_VALUES$path_line_size,
                                    path_alpha = DEFAULT_VALUES$path_alpha,
                                    point_alpha = DEFAULT_VALUES$point_alpha,
@@ -73,7 +73,7 @@ shinyServer(function(input, output, session) {
 
     # Update global config when input$run_dr is changed
     observeEvent(input$run_dr, {
-        # Get the embeddings number of points and update the sliderInput
+        # Get the projections number of points and update the sliderInput
         embs <- req(emb_object())
         slider_range$min_value <- as.integer(1)
         slider_range$max_value <- as.integer(nrow(embs))
@@ -145,9 +145,9 @@ shinyServer(function(input, output, session) {
     })
     
     
-    # Observe the events related to zoom the embeddings graph
+    # Observe the events related to zoom the projections graph
     observeEvent(input$zoom_btn,{
-        brush <- input$embeddings_brush
+        brush <- input$projections_brush
         if (!is.null(brush)) {
             if(isTRUE(input$zoom_btn)){
                 ranges$x <- c(brush$xmin, brush$xmax)
@@ -164,7 +164,7 @@ shinyServer(function(input, output, session) {
     })
     
     
-    # Observe the events related to change the appearance of the embeddings graph
+    # Observe the events related to change the appearance of the projections graph
     observeEvent(input$update_emb_graph,{
         style_values <- list(path_line_size = input$path_line_size ,
                              path_alpha = input$path_alpha,
@@ -286,30 +286,30 @@ shinyServer(function(input, output, session) {
     })
     
     # Get embedding artifact
-    embs_artifact <- reactive({
+    prjs_artifact <- reactive({
         logged_arts <- req(logged_artifacts())
-        emb_ar <- logged_arts %>% purrr::keep(stringr::str_detect(names(logged_arts), "^embeddings|projections"))
-        emb_ar[[1]] # This assumes the run has only logged one embedding artifact 
+        prj_ar <- logged_arts %>% purrr::keep(stringr::str_detect(names(logged_arts), "^embeddings|projections"))
+        prj_ar[[1]] # This assumes the run has only logged one embedding artifact 
     })
     
     
     # Get embedding artifact metadata
-    embs_ar_config = reactive({
-        emb_ar <- req(embs_artifact())
-        list_used_arts = emb_ar$metadata$ref
-        list_used_arts$name = emb_ar$name
-        list_used_arts$aliases = emb_ar$aliases
-        list_used_arts$artifact_name = emb_ar$name
-        list_used_arts$id = emb_ar$id
-        list_used_arts$created_at = emb_ar$created_at
+    prjs_ar_config = reactive({
+        prj_ar <- req(prjs_artifact())
+        list_used_arts = prj_ar$metadata$ref
+        list_used_arts$name = prj_ar$name
+        list_used_arts$aliases = prj_ar$aliases
+        list_used_arts$artifact_name = prj_ar$name
+        list_used_arts$id = prj_ar$id
+        list_used_arts$created_at = prj_ar$created_at
         list_used_arts
     })
     
     
     # Get projection object (projections dataframe) from W&B
     emb_object <- reactive({
-        embs_ar <- req(embs_artifact())
-        embs <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, embs_ar$metadata$ref$hash)) %>% as.data.frame
+        prjs_ar <- req(prjs_artifact())
+        embs <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, prjs_ar$metadata$ref$hash)) %>% as.data.frame
         colnames(embs) = c("xcoord", "ycoord")
         embs
     })
@@ -347,16 +347,16 @@ shinyServer(function(input, output, session) {
     })
     
     
-    # Auxiliary object for the interaction ts->embeddings
+    # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
         print('tsidxs_per_embedding_idx()')
-        get_window_indices(1:nrow(req(embeddings())), w = w(), s = s())
+        get_window_indices(1:nrow(req(projections())), w = w(), s = s())
     })
     
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
-    embeddings <- reactive({
-        print('embeddings()')
+    projections <- reactive({
+        print('projections()')
         embs <- req(emb_object()) %>% slice(slider_range$min_value:slider_range$max_value)
         switch(clustering_options$selected,
                precomputed_clusters={
@@ -378,7 +378,7 @@ shinyServer(function(input, output, session) {
     # Update the colour palette for the clusters
     update_palette <- reactive({
         print('update_palette()')
-        embs <- req(embeddings())
+        embs <- req(projections())
         if ("cluster" %in% names(embs)) {
             unique_labels <- unique(embs$cluster)
             ## IF the value "-1" exists, assign the first element of mycolors to #000000, if not, assign the normal colorRampPalette
@@ -414,7 +414,7 @@ shinyServer(function(input, output, session) {
                         )
                     )
         
-        bp <- brushedPoints(emb_object(), input$embeddings_brush, allRows = TRUE)
+        bp <- brushedPoints(emb_object(), input$projections_brush, allRows = TRUE)
         embedding_idxs <- bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
@@ -503,9 +503,9 @@ shinyServer(function(input, output, session) {
     })
     
     
-    # Generate embeddings artifact info table
-    output$embs_ar_info = renderDataTable({
-        embs_ar_config() %>% 
+    # Generate projections artifact info table
+    output$prjs_ar_info = renderDataTable({
+        prjs_ar_config() %>% 
             enframe()
     })
     
@@ -516,24 +516,24 @@ shinyServer(function(input, output, session) {
     })
     
     
-    # Generate embeddings plot
-    output$embeddings_plot <- renderPlot({
+    # Generate projections plot
+    output$projections_plot <- renderPlot({
         print('emb_plot()')
-        embs_ <- req(embeddings())
+        prjs_ <- req(projections())
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
             selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
-            embeddings_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
-            embs_$highlight = embeddings_idxs
+            projections_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
+            prjs_$highlight = projections_idxs
         } else {
-            embs_$highlight = FALSE
+            prjs_$highlight = FALSE
         }
         # Prepare the column highlight to color data. If input$generate_cluster has not been clicked
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
-        if(!("cluster" %in% names(embs_)))
-            embs_$cluster = FALSE
+        if(!("cluster" %in% names(prjs_)))
+            prjs_$cluster = FALSE
         
-        plt <- ggplot(data = embs_) + 
+        plt <- ggplot(data = prjs_) + 
             aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
             scale_colour_manual(name = "clusters", values = req(update_palette())) +
             geom_point(shape = 21,alpha = config_style$point_alpha, size = config_style$point_size) + 
@@ -548,11 +548,11 @@ shinyServer(function(input, output, session) {
     })
     
     
-    # Render embeddings plot
-    output$embeddings_plot_ui <- renderUI({
-        plotOutput("embeddings_plot", 
-                   click = "embeddings_click",
-                   brush = "embeddings_brush",
+    # Render projections plot
+    output$projections_plot_ui <- renderUI({
+        plotOutput("projections_plot", 
+                   click = "projections_click",
+                   brush = "projections_brush",
                    height = input$embedding_plot_height) %>% withSpinner()
     })
     
@@ -566,8 +566,8 @@ shinyServer(function(input, output, session) {
     })
 
     
-    # Render information about the selected point and brush in the embeddings graph
-    output$embeddings_plot_interaction_info <- renderText({
+    # Render information about the selected point and brush in the projections graph
+    output$projections_plot_interaction_info <- renderText({
         xy_str <- function(e) {
             if(is.null(e)) return("NULL\n")
             paste0("x=", round(e$x, 1), " y=", round(e$y, 1), "\n")
@@ -578,8 +578,8 @@ shinyServer(function(input, output, session) {
                    " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
         }
         paste0(
-            "click: ", xy_str(input$embeddings_click),
-            "brush: ", xy_range_str(input$embeddings_brush)
+            "click: ", xy_str(input$projections_click),
+            "brush: ", xy_range_str(input$projections_brush)
         )
     })
     

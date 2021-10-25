@@ -26,8 +26,8 @@ hdbscan = import("hdbscan")
 # CONFIG #
 #############
 
-QUERY_RUNS_LIMIT = 150
-DEFAULT_PATH_WANDB_ARTIFACTS = "/data/wandb_artifacts"
+QUERY_RUNS_LIMIT = 5
+DEFAULT_PATH_WANDB_ARTIFACTS = paste0(Sys.getenv("HOME"), "/data/wandb_artifacts")
 hdbscan_metrics <- hdbscan$dist_metrics$METRIC_MAPPING
 #hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
 Sys.setenv("TZ"="UTC")

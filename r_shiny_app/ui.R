@@ -18,10 +18,11 @@ shinyUI(fluidPage(
     # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(
-            selectInput("run_dr", label = "Select a run", choices = NULL),
+            shinyjs::hidden(selectInput("run_dr", label = "Select a run", choices = NULL)),
+            selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
             br(),
             sliderInput("points_emb", "Select range of points to plot in the projections", min = 1, max = 2, value = c(1,2), step = 1, ticks = FALSE),
-            #uiOutput("points_emb_controls"),
+            #uiOutput("points_prj_controls"),
             br(),
             radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
                          choices = c("No clusters" = "no_clusters",
@@ -51,19 +52,6 @@ shinyUI(fluidPage(
             tabsetPanel(
                 id = "tabs",
                 tabPanel(
-                    "Information",
-                    fluidRow(
-                        uiOutput("run_dr_info_title"),
-                        dataTableOutput("run_dr_info"),
-                        h3("Projections"),
-                        dataTableOutput("prjs_ar_info"),
-                        h3("Time series"),
-                        dataTableOutput("ts_ar_info"),
-                        h3("Configuration of the associated encoder"),
-                        dataTableOutput("run_enc_info"),
-                    )
-                ),
-                tabPanel(
                     "Projections",
                     fluidRow(
                         h3("Embedding projections"),
@@ -82,7 +70,7 @@ shinyUI(fluidPage(
                                                 value = DEFAULT_VALUES$point_alpha, min=0, max=1, step = 0.01),
                                     sliderInput("point_size", label = "point_size",
                                                 value = DEFAULT_VALUES$point_size, min=0, max=10, step = 0.5),
-                                    actionBttn(inputId = "update_emb_graph",label = "Update aestethics",style = "simple",
+                                    actionBttn(inputId = "update_prj_graph",label = "Update aestethics",style = "simple",
                                                color = "primary",icon = icon("bar-chart"),size = "xs", block = TRUE),
                                     circle = FALSE, status = "primary",
                                     icon = icon("gear"), width = "300px",size = "xs",
@@ -146,7 +134,20 @@ shinyUI(fluidPage(
                     verbatimTextOutput("projections_plot_interaction_info"),
                     verbatimTextOutput("point")
                     
-                )
+                ),
+                tabPanel(
+                  "Information",
+                  fluidRow(
+                    uiOutput("run_dr_info_title"),
+                    dataTableOutput("run_dr_info"),
+                    h3("Projections"),
+                    dataTableOutput("prjs_ar_info"),
+                    h3("Time series"),
+                    dataTableOutput("ts_ar_info"),
+                    h3("Configuration of the associated encoder"),
+                    dataTableOutput("run_enc_info"),
+                  )
+                ),
             )
         )
     )

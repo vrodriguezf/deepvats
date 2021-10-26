@@ -43,6 +43,7 @@ services:
           - PASSWORD=${RSTUDIO_PASSWD} #*
           - ROOT=FALSE
           - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+          - GH_TOKEN=${GH_TOKEN} #*
       runtime: nvidia
       volumes:
          - ../../r_shiny_app:/home/${USER_NAME}/app #*

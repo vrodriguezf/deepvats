@@ -53,7 +53,7 @@ shinyServer(function(input, output, session) {
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
-    
+
     # Update "run_dr" selectInput when the app is loaded
     observe({
         req(exists("runs"))
@@ -74,9 +74,9 @@ shinyServer(function(input, output, session) {
     # Update global config when input$run_dr is changed
     observeEvent(input$run_dr, {
         # Get the projections number of points and update the sliderInput
-        embs <- req(emb_object())
+        prjs <- req(prj_object())
         slider_range$min_value <- as.integer(1)
-        slider_range$max_value <- as.integer(nrow(embs))
+        slider_range$max_value <- as.integer(nrow(prjs))
         updateSliderInput(session = session, inputId = "points_emb",
                           min = slider_range$min_value, max = slider_range$max_value,
                           value = c(slider_range$min_value, slider_range$max_value))
@@ -123,7 +123,6 @@ shinyServer(function(input, output, session) {
         slider_range$max_value <- input$points_emb[2]
     })
     
-    
     # Update precomputed_clusters reactive value when the input changes
     observe({
         precomputed_clusters$selected <- req(input$clusters_labels_name)
@@ -165,7 +164,7 @@ shinyServer(function(input, output, session) {
     
     
     # Observe the events related to change the appearance of the projections graph
-    observeEvent(input$update_emb_graph,{
+    observeEvent(input$update_prj_graph,{
         style_values <- list(path_line_size = input$path_line_size ,
                              path_alpha = input$path_alpha,
                              point_alpha = input$point_alpha,
@@ -216,10 +215,18 @@ shinyServer(function(input, output, session) {
     # Get selected dimensionality-reduction run in "run_dr" selectInput
     selected_run = reactive({
         req(exists("runs"))
-        print(runs[[input$run_dr]])
         runs[[input$run_dr]]
     })
     
+    selected_embs_ar = reactive({
+      req(exists("embs_l"))
+      embs_l[[input$embs_ar]]
+    })
+    
+    embs = reactive({
+      selected_embs_ar = req(selected_embs_ar())
+      selected_embs_ar$to_obj()
+    })
     
     # Get dimensionality reduction (dr) run metadata
     run_dr_config = reactive({
@@ -229,24 +236,23 @@ shinyServer(function(input, output, session) {
     
     # Get dcae run metadata
     run_enc_config = reactive({
-        run_dr_cfg <- req(run_dr_config())
-        enc_run_path = ifelse(!is.null(run_dr_cfg$enc_run_path), 
-                              run_dr_cfg$enc_run_path$value, 
-                              run_dr_cfg$dcae_run_path$value) # TODO: Deprecate, this is here for compatibility with old runs!
-        enc_run = api$run(enc_run_path)
-        fromJSON(enc_run$json_config)
+        selected_embs_ar <- req(selected_embs_ar())
+        embs_logger_run = selected_embs_ar$logged_by()
+        enc_ar = api$artifact(embs_logger_run$config$enc_artifact, type = 'learner')
+        enc_logger_run = enc_ar$logged_by()
+        enc_logger_run$config
     })
     
     
     # Get windows size value
+    # TODO: it would be easier if this was part of the encoder artifact metadata
     w = reactive({
-        req(run_enc_config())$w$value
+        req(run_enc_config())$w
     })
-    
     
     # Get stride value
     s = reactive({
-        req(run_enc_config())$stride$value
+        req(run_enc_config())$stride
     })
     
     
@@ -262,30 +268,36 @@ shinyServer(function(input, output, session) {
         used_arts[[1]]
     })
     
+    # Time series artifact, logged by the selected embeddings artifact
+    ts_ar = reactive({
+      selected_embs_ar <- req(selected_embs_ar())
+      embs_logger_run = selected_embs_ar$logged_by()
+      api$artifact(embs_logger_run$config$input_ar, type='dataset')
+    })
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
-        dr_ar <- req(dr_artifact())
-        print(dr_ar$name)
-        list_used_arts = dr_ar$metadata$TS
-        list_used_arts$vars = dr_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
-        list_used_arts$name = dr_ar$name
-        list_used_arts$aliases = dr_ar$aliases
-        list_used_arts$artifact_name = dr_ar$name
-        list_used_arts$id = dr_ar$id
-        list_used_arts$created_at = dr_ar$created_at
+        ts_ar <- req(ts_ar())
+        print(ts_ar$name)
+        list_used_arts = ts_ar$metadata$TS
+        list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
+        list_used_arts$name = ts_ar$name
+        list_used_arts$aliases = ts_ar$aliases
+        list_used_arts$artifact_name = ts_ar$name
+        list_used_arts$id = ts_ar$id
+        list_used_arts$created_at = ts_ar$created_at
         list_used_arts
     })
     
     
-    # Get logged artifacts 
+    # Get logged artifacts (deprecated?)
     logged_artifacts <- reactive({
         logged_arts_it <- req(selected_run())$logged_artifacts()
         logged_arts <- iterate(logged_arts_it)
         logged_arts %>% set_names(logged_arts %>% map(~.$name))
     })
     
-    # Get embedding artifact
+    # Get embedding artifact (deprecated?)
     prjs_artifact <- reactive({
         logged_arts <- req(logged_artifacts())
         prj_ar <- logged_arts %>% purrr::keep(stringr::str_detect(names(logged_arts), "^embeddings|projections"))
@@ -307,11 +319,17 @@ shinyServer(function(input, output, session) {
     
     
     # Get projection object (projections dataframe) from W&B
-    emb_object <- reactive({
-        prjs_ar <- req(prjs_artifact())
-        embs <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, prjs_ar$metadata$ref$hash)) %>% as.data.frame
-        colnames(embs) = c("xcoord", "ycoord")
-        embs
+    # prj_object <- reactive({
+    #     prjs_ar <- req(prjs_artifact())
+    #     prjs <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, prjs_ar$metadata$ref$hash)) %>% as.data.frame
+    #     colnames(prjs) = c("xcoord", "ycoord")
+    #     prjs
+    # })
+    prj_object <- reactive({
+      embs = req(embs())
+      res = tchub$get_UMAP_prjs(input_data = embs, cpu=F) %>% as.data.frame # TODO: This should be a matrix for improved efficiency
+      colnames(res) = c("xcoord", "ycoord")
+      res
     })
     
     
@@ -336,14 +354,14 @@ shinyServer(function(input, output, session) {
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
-        dr_ar <- req(dr_artifact())
-        # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
-        first_data_index <- get_window_indices(idxs = slider_range$min_value, w = w(), s = s())[[1]] %>% head(1)
-        last_data_index <- get_window_indices(idxs = slider_range$max_value, w = w(), s = s())[[1]] %>% tail(1)
-        py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, dr_ar$metadata$TS$hash)) %>% 
-            rownames_to_column("timeindex") %>% 
-            slice(first_data_index:last_data_index) %>%
-            column_to_rownames(var = "timeindex")
+      ts_ar = req(ts_ar())
+      # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
+      first_data_index <- get_window_indices(idxs = slider_range$min_value, w = w(), s = s())[[1]] %>% head(1)
+      last_data_index <- get_window_indices(idxs = slider_range$max_value, w = w(), s = s())[[1]] %>% tail(1)
+      py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)) %>% 
+        rownames_to_column("timeindex") %>% 
+        slice(first_data_index:last_data_index) %>%
+        column_to_rownames(var = "timeindex")
     })
     
     
@@ -357,30 +375,30 @@ shinyServer(function(input, output, session) {
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
         print('projections()')
-        embs <- req(emb_object()) %>% slice(slider_range$min_value:slider_range$max_value)
+        prjs <- req(prj_object()) %>% slice(slider_range$min_value:slider_range$max_value)
         switch(clustering_options$selected,
                precomputed_clusters={
                    filename <- req(selected_clusters_labels_ar())$metadata$ref$hash
                    clusters_labels <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, filename))
-                   embs$cluster <- clusters_labels[slider_range$min_value:slider_range$max_value]
+                   prjs$cluster <- clusters_labels[slider_range$min_value:slider_range$max_value]
                },
                calculate_clusters={
                    clusters <- hdbscan$HDBSCAN(min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
                                                min_samples = as.integer(clusters_config$min_samples_hdbscan),
                                                cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
-                                               metric = clusters_config$metric_hdbscan)$fit(embs)
-                   embs$cluster <- clusters$labels_
+                                               metric = clusters_config$metric_hdbscan)$fit(prjs)
+                   prjs$cluster <- clusters$labels_
                })
-        embs
+        prjs
     })
     
     
     # Update the colour palette for the clusters
     update_palette <- reactive({
         print('update_palette()')
-        embs <- req(projections())
-        if ("cluster" %in% names(embs)) {
-            unique_labels <- unique(embs$cluster)
+        prjs <- req(projections())
+        if ("cluster" %in% names(prjs)) {
+            unique_labels <- unique(prjs$cluster)
             ## IF the value "-1" exists, assign the first element of mycolors to #000000, if not, assign the normal colorRampPalette
             if (as.integer(-1) %in% unique_labels) 
                 colour_palette <- append("#000000", colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels)-1))
@@ -397,7 +415,7 @@ shinyServer(function(input, output, session) {
     # Generate timeseries dygraph
     ts_plot <- reactive({
         print('ts_plot()')
-        req(tsdf(), emb_object())
+        req(tsdf(), prj_object())
         tsdf_data <- tsdf()
         ts_plt <- dygraph(tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px") %>%
                     dyRangeSelector() %>%
@@ -414,7 +432,7 @@ shinyServer(function(input, output, session) {
                         )
                     )
         
-        bp <- brushedPoints(emb_object(), input$projections_brush, allRows = TRUE)
+        bp <- brushedPoints(prj_object(), input$projections_brush, allRows = TRUE)
         embedding_idxs <- bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
@@ -491,7 +509,7 @@ shinyServer(function(input, output, session) {
     # Generate DCAE info table
     output$run_enc_info = renderDataTable({
             run_enc_config() %>% 
-            map(~ .$value) %>%
+            #map(~ .$value) %>%
             enframe()
     })
     
@@ -501,7 +519,6 @@ shinyServer(function(input, output, session) {
         ts_ar_config() %>% 
             enframe()
     })
-    
     
     # Generate projections artifact info table
     output$prjs_ar_info = renderDataTable({
@@ -518,7 +535,6 @@ shinyServer(function(input, output, session) {
     
     # Generate projections plot
     output$projections_plot <- renderPlot({
-        print('emb_plot()')
         prjs_ <- req(projections())
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {

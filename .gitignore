@@ -1,4 +1,5 @@
 # Victor
+nbs/models
 .npm
 r_shiny_app/.*
 .local

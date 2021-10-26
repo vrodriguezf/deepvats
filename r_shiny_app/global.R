@@ -20,13 +20,13 @@ library(stringr)
 wandb = import("wandb")
 pd = import("pandas")
 hdbscan = import("hdbscan")
-
+tchub = import_from_path("tchub.all", path=paste0(Sys.getenv("HOME")))
 
 #############
 # CONFIG #
 #############
 
-QUERY_RUNS_LIMIT = 5
+QUERY_RUNS_LIMIT = 1
 DEFAULT_PATH_WANDB_ARTIFACTS = paste0(Sys.getenv("HOME"), "/data/wandb_artifacts")
 hdbscan_metrics <- hdbscan$dist_metrics$METRIC_MAPPING
 #hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
@@ -103,9 +103,9 @@ make_individual_dygraph <- function(i){
 }
 
 
-#######################
-# RETRIEVE WANDB RUNS #
-#######################
+##############################################
+# RETRIEVE WANDB RUNS & ARTIFACTS #
+##############################################
 
 api <- wandb$Api()
 
@@ -120,35 +120,8 @@ print("Processing runs...")
 runs <- purrr::rerun(QUERY_RUNS_LIMIT, iter_next(runs_it))
 runs <- runs %>% set_names(runs %>% map(~.$name)) %>% compact()
 
-
-###############################################
-# DEBUG: Load embeddings and data for testing #
-###############################################
-
-# foo = api$run("pacmel/timecluster-extension/3jvuv2s3")
-# runs = list(foo) %>% set_names(foo$name)
-
-# embeddings = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, "5630535579917677987")) %>% as.data.frame
-# colnames(embeddings) = c("xcoord", "ycoord")
-# tsdf = py_load_object(filename = "/data/PACMEL-2019/wandb_artifacts/7087224962096418705") %>% 
-#   rownames_to_column("Time") %>% 
-#   mutate(Time=as.POSIXct(Time))
-#last_data_index = get_window_indices(idxs = nrow(embeddings), w = w, s = s)[[1]] %>% tail(1)
-# tsdf = py_load_object(filename = "/data/PACMEL-2019/wandb_artifacts/7087224962096418705") %>% 
-#   rownames_to_column("timeindex") %>% 
-#   slice(1:last_data_index) %>% 
-#   column_to_rownames(var = "timeindex")
-  
-#View(embeddings)
-
-# default_tsplot <- dygraph(tsdf, main = "Original data (normalized)") %>%
-#   dyRangeSelector() %>%   
-#   dyHighlight(hideOnMouseOut = TRUE) %>% 
-#   dyOptions(labelsUTC = TRUE) %>% 
-#   dyLegend(show="follow", hideOnMouseOut = TRUE) %>% 
-#   dyUnzoom() %>% 
-#   dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
-#   dyCSS(textConnection("
-#      .dygraph-legend > span { display: none; }
-#      .dygraph-legend > span.highlight { display: inline; }
-#   "))
+print("Querying embeddings")
+embs_l <- tchub$get_wandb_artifacts(project_path = "tchub", type = "object", 
+                                    name="embeddings", last_version=F)
+embs_l <- embs_l %>% set_names(embs_l %>% map(~.$aliases)) 
+print("Done!")

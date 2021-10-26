@@ -18,8 +18,6 @@ dependencies:
   - ipywidgets
   - jupyterlab
   - jupyterlab-git
-  - jupyterlab-nvdashboard
-  - jupyterlab-lsp
   - keyrings.alt
   - libprotobuf # This has to be aligned with protobuf
   - matplotlib
@@ -32,7 +30,6 @@ dependencies:
   - pip:
      - jupyterlab-quickopen
      - aquirdturtle_collapsible_headings
-     - git+https://github.com/krassowski/python-language-server.git@main
      - git+https://github.com/vrodriguezf/tsai.git
    # - -r file:/tmp/requirements.txt	
   - plotly

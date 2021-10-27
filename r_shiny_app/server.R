@@ -558,8 +558,8 @@ shinyServer(function(input, output, session) {
             guides() + 
             scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA"))+
             coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE)+
-            theme(legend.position = "none",
-                  panel.background = element_rect(fill = "white", colour = "black"))
+            theme_void() + 
+            theme(legend.position = "none")
         plt
     })
     

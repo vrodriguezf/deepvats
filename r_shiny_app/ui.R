@@ -100,39 +100,38 @@ shinyUI(fluidPage(
                                     inline = TRUE
                                 )
                             ),
-                            column(7,
-                                   
-                            ),
+                            column(3)
                         ),
-                        column(2,),
-                        column(8,align="center",
-                               uiOutput("projections_plot_ui"),
+                        fluidRow(
+                          uiOutput("projections_plot_ui")
+                        )
+                    ),
+                    fluidRow(h3("Original data")),
+                    fluidRow(
+                      dropdownButton(
+                        tags$b("Select/deselect variables"),
+                        tags$div(style= 'height:200px; overflow-y: scroll', 
+                                 checkboxGroupInput(inputId = "select_variables",
+                                                    label=NULL, choices = NULL, selected = NULL)
                         ),
-                        column(2,"")
+                        actionBttn(inputId = "selectall",label = "Select/Deselect all",style = "simple",
+                                   color = "primary",icon = icon("check-double"),size = "xs", block = TRUE),
+                        hr(),
+                        prettySwitch(inputId = "dygraph_sel",label = "Show stacked graphs (Not available yet)",
+                                     status = "success",fill = TRUE),
+                        circle = FALSE, status = "primary", size = "xs",
+                        icon = icon("gear"), width = "300px",
+                        tooltip = tooltipOptions(title = "Configure the TS appearance"),
+                        inputId = "ts_config"
+                      )
                     ),
                     fluidRow(
-                        h3("Original data"),
-                        dropdownButton(
-                            tags$b("Select/deselect variables"),
-                            tags$div(style= 'height:200px; overflow-y: scroll', 
-                                     checkboxGroupInput(inputId = "select_variables",
-                                                        label=NULL, choices = NULL, selected = NULL)
-                                     ),
-                            actionBttn(inputId = "selectall",label = "Select/Deselect all",style = "simple",
-                                       color = "primary",icon = icon("check-double"),size = "xs", block = TRUE),
-                            hr(),
-                            prettySwitch(inputId = "dygraph_sel",label = "Show stacked graphs (Not available yet)",
-                                         status = "success",fill = TRUE),
-                            circle = FALSE, status = "primary", size = "xs",
-                            icon = icon("gear"), width = "300px",
-                            tooltip = tooltipOptions(title = "Configure the TS appearance"),
-                            inputId = "ts_config"
-                            ),
-                        column(10,dygraphOutput("ts_plot_dygraph") %>% withSpinner()),
-                    ),
-                    
-                    verbatimTextOutput("projections_plot_interaction_info"),
-                    verbatimTextOutput("point")
+                      column(12,
+                        dygraphOutput("ts_plot_dygraph") %>% withSpinner()
+                      )
+                    )
+                    #verbatimTextOutput("projections_plot_interaction_info"),
+                    #verbatimTextOutput("point")
                     
                 ),
                 tabPanel(

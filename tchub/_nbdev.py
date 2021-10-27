@@ -2,8 +2,7 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"infer_or_inject_freq": "01_dataset_artifact.ipynb",
-         "DCAE_torch": "02a_encoder_DCAE-torch.ipynb",
+index = {"DCAE_torch": "02a_encoder_DCAE-torch.ipynb",
          "check_compatibility": "04_dimensionality_reduction.ipynb",
          "get_UMAP_prjs": "04_dimensionality_reduction.ipynb",
          "plot_projections": "04_dimensionality_reduction.ipynb",
@@ -12,6 +11,7 @@ index = {"infer_or_inject_freq": "01_dataset_artifact.ipynb",
          "TSArtifact": "load.ipynb",
          "wandb.apis.public.Artifact.to_df": "load.ipynb",
          "wandb.apis.public.Artifact.to_tsartifact": "load.ipynb",
+         "infer_or_inject_freq": "load.ipynb",
          "generate_TS_df": "utils.ipynb",
          "normalize_columns": "utils.ipynb",
          "remove_constant_columns": "utils.ipynb",
@@ -23,8 +23,7 @@ index = {"infer_or_inject_freq": "01_dataset_artifact.ipynb",
          "plot_TS": "visualization.ipynb",
          "plot_validation_ts_ae": "visualization.ipynb"}
 
-modules = ["data.py",
-           "dcae.py",
+modules = ["dcae.py",
            "dr.py",
            "encoder.py",
            "load.py",

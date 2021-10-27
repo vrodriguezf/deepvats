@@ -69,7 +69,6 @@ shinyServer(function(input, output, session) {
                           inputId = "metric_hdbscan",
                           choices = names(req(hdbscan_metrics)))
     })
-    
 
     # Update global config when input$run_dr is changed
     observeEvent(input$run_dr, {
@@ -106,15 +105,16 @@ shinyServer(function(input, output, session) {
         reset("min_samples_hdbscan")
         clusters_config$cluster_selection_epsilon_hdbscan <- DEFAULT_VALUES$cluster_selection_epsilon_hdbscan
         reset("cluster_selection_epsilon_hdbscan")
-        
-        # Update selected time series variables and update interface config
-        ts_variables$selected <- names(req(tsdf()))
-        updateCheckboxGroupInput(session = session,
-                                 inputId = "select_variables",
-                                 choices = ts_variables$selected,
-                                 selected = ts_variables$selected)
     })
     
+    # Update selected time series variables and update interface config
+    observeEvent(tsdf(), {
+      ts_variables$selected <- names(tsdf())
+      updateCheckboxGroupInput(session = session,
+                               inputId = "select_variables",
+                               choices = ts_variables$selected,
+                               selected = ts_variables$selected)
+    })
     
     # Update slider_range reactive values with current samples range
     observe({
@@ -238,6 +238,8 @@ shinyServer(function(input, output, session) {
     run_enc_config = reactive({
         selected_embs_ar <- req(selected_embs_ar())
         embs_logger_run = selected_embs_ar$logged_by()
+        print(embs_logger_run$id)
+        print(embs_logger_run$config$enc_artifact)
         enc_ar = api$artifact(embs_logger_run$config$enc_artifact, type = 'learner')
         enc_logger_run = enc_ar$logged_by()
         enc_logger_run$config
@@ -272,6 +274,7 @@ shinyServer(function(input, output, session) {
     ts_ar = reactive({
       selected_embs_ar <- req(selected_embs_ar())
       embs_logger_run = selected_embs_ar$logged_by()
+      print(embs_logger_run$config$input_ar)
       api$artifact(embs_logger_run$config$input_ar, type='dataset')
     })
     
@@ -358,6 +361,7 @@ shinyServer(function(input, output, session) {
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
       first_data_index <- get_window_indices(idxs = slider_range$min_value, w = w(), s = s())[[1]] %>% head(1)
       last_data_index <- get_window_indices(idxs = slider_range$max_value, w = w(), s = s())[[1]] %>% tail(1)
+      print(ts_ar$metadata$TS$hash)
       py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)) %>% 
         rownames_to_column("timeindex") %>% 
         slice(first_data_index:last_data_index) %>%
@@ -371,10 +375,8 @@ shinyServer(function(input, output, session) {
         get_window_indices(1:nrow(req(projections())), w = w(), s = s())
     })
     
-    
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-        print('projections()')
         prjs <- req(prj_object()) %>% slice(slider_range$min_value:slider_range$max_value)
         switch(clustering_options$selected,
                precomputed_clusters={
@@ -395,7 +397,6 @@ shinyServer(function(input, output, session) {
     
     # Update the colour palette for the clusters
     update_palette <- reactive({
-        print('update_palette()')
         prjs <- req(projections())
         if ("cluster" %in% names(prjs)) {
             unique_labels <- unique(prjs$cluster)
@@ -414,7 +415,6 @@ shinyServer(function(input, output, session) {
     
     # Generate timeseries dygraph
     ts_plot <- reactive({
-        print('ts_plot()')
         req(tsdf(), prj_object())
         tsdf_data <- tsdf()
         ts_plt <- dygraph(tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px") %>%

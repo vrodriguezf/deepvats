@@ -39,7 +39,7 @@ DEFAULT_VALUES = list(metric_hdbscan = "euclidean",
                       path_alpha = 5/10,
                       point_alpha = 1/10,
                       point_size = 1)
-WANDB_PROJECT = "vrodriguezf90/tchub"
+WANDB_PROJECT = "pacmel/tchub"
 
 
 ####################
@@ -121,7 +121,7 @@ runs <- purrr::rerun(QUERY_RUNS_LIMIT, iter_next(runs_it))
 runs <- runs %>% set_names(runs %>% map(~.$name)) %>% compact()
 
 print("Querying embeddings")
-embs_l <- tchub$get_wandb_artifacts(project_path = "tchub", type = "object", 
+embs_l <- tchub$get_wandb_artifacts(project_path = "pacmel/tchub", type = "object", 
                                     name="embeddings", last_version=F)
 embs_l <- embs_l %>% set_names(embs_l %>% map(~.$aliases)) 
 print("Done!")

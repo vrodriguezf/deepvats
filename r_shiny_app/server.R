@@ -9,8 +9,7 @@
 
 
 shinyServer(function(input, output, session) {
-
-    
+  
     ######################
     #  REACTIVES VALUES  #
     ######################
@@ -53,6 +52,23 @@ shinyServer(function(input, output, session) {
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
+    
+    observe({
+      req(exists("embs_l"))
+      updateSelectizeInput(session = session,
+                           inputId = "encoder",
+                           choices = embs_l %>% 
+                             keep(~ .$metadata$input_ar == input$dataset) %>% 
+                             map(~ .$metadata$enc_artifact) %>% set_names())
+    })
+    
+    observe({
+      req(exists("embs_l"), input$encoder)
+      updateSelectizeInput(session = session, inputId = "embs_ar",
+                           choices = embs_l %>%
+                             keep(~ .$metadata$enc_artifact == input$encoder)
+                           %>% names)
+    })
 
     # Update "run_dr" selectInput when the app is loaded
     observe({
@@ -238,8 +254,8 @@ shinyServer(function(input, output, session) {
     run_enc_config = reactive({
         selected_embs_ar <- req(selected_embs_ar())
         embs_logger_run = selected_embs_ar$logged_by()
-        print(embs_logger_run$id)
-        print(embs_logger_run$config$enc_artifact)
+        print(paste("Embs. run ID: ", embs_logger_run$id))
+        print(paste("Enc. Artifact: ", embs_logger_run$config$enc_artifact))
         enc_ar = api$artifact(embs_logger_run$config$enc_artifact, type = 'learner')
         enc_logger_run = enc_ar$logged_by()
         enc_logger_run$config
@@ -274,14 +290,14 @@ shinyServer(function(input, output, session) {
     ts_ar = reactive({
       selected_embs_ar <- req(selected_embs_ar())
       embs_logger_run = selected_embs_ar$logged_by()
-      print(embs_logger_run$config$input_ar)
+      print(paste("Embs. dataset: ", embs_logger_run$config$input_ar))
       api$artifact(embs_logger_run$config$input_ar, type='dataset')
     })
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
         ts_ar <- req(ts_ar())
-        print(ts_ar$name)
+        print(paste("ts_ar_name; ", ts_ar$name))
         list_used_arts = ts_ar$metadata$TS
         list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
         list_used_arts$name = ts_ar$name
@@ -306,7 +322,6 @@ shinyServer(function(input, output, session) {
         prj_ar <- logged_arts %>% purrr::keep(stringr::str_detect(names(logged_arts), "^embeddings|projections"))
         prj_ar[[1]] # This assumes the run has only logged one embedding artifact 
     })
-    
     
     # Get embedding artifact metadata
     prjs_ar_config = reactive({
@@ -361,7 +376,7 @@ shinyServer(function(input, output, session) {
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
       first_data_index <- get_window_indices(idxs = slider_range$min_value, w = w(), s = s())[[1]] %>% head(1)
       last_data_index <- get_window_indices(idxs = slider_range$max_value, w = w(), s = s())[[1]] %>% tail(1)
-      print(ts_ar$metadata$TS$hash)
+      print(paste("ts_ar hash:", ts_ar$metadata$TS$hash))
       py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)) %>% 
         rownames_to_column("timeindex") %>% 
         slice(first_data_index:last_data_index) %>%
@@ -371,7 +386,6 @@ shinyServer(function(input, output, session) {
     
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
-        print('tsidxs_per_embedding_idx()')
         get_window_indices(1:nrow(req(projections())), w = w(), s = s())
     })
     

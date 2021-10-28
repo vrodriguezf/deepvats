@@ -10,7 +10,7 @@
 shinyUI(fluidPage(
 
     # Application title
-    titlePanel("Timecluster hub"),
+    titlePanel("DeepVATS"),
     
     # Load Shinyjs
     shinyjs::useShinyjs(),
@@ -19,6 +19,8 @@ shinyUI(fluidPage(
     sidebarLayout(
         sidebarPanel(
             shinyjs::hidden(selectInput("run_dr", label = "Select a run", choices = NULL)),
+            selectizeInput("dataset", label = "Dataset", choices = embs_l %>% map(~.$metadata$input_ar) %>% set_names()),
+            selectizeInput("encoder", label = "Encoder", choices = NULL),
             selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
             br(),
             sliderInput("points_emb", "Select range of points to plot in the projections", min = 1, max = 2, value = c(1,2), step = 1, ticks = FALSE),

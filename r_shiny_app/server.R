@@ -15,8 +15,7 @@ shinyServer(function(input, output, session) {
     ######################
     
     # Reactive values created to update the current range of the main slider input
-    slider_range <- reactiveValues(min_value = 1, max_value = 2)
-    
+    #slider_range <- reactiveValues(min_value = 1, max_value = 2)
     
     # Reactive value created to keep updated the selected precomputed clusters_labels artifact
     precomputed_clusters <- reactiveValues(selected = NULL)
@@ -54,7 +53,7 @@ shinyServer(function(input, output, session) {
     #################################
     
     observe({
-      req(exists("embs_l"))
+      req(input$dataset)
       updateSelectizeInput(session = session,
                            inputId = "encoder",
                            choices = embs_l %>% 
@@ -77,27 +76,30 @@ shinyServer(function(input, output, session) {
                           inputId = "run_dr",
                           choices = names(runs))
     })
-    
-    
     # Update "metric_hdbscan" selectInput when the app is loaded
     observe({
         updateSelectInput(session = session,
                           inputId = "metric_hdbscan",
                           choices = names(req(hdbscan_metrics)))
     })
+    # Update the range of point selection when there is new data
+    observeEvent(ts_ar(), {
+      max_ = ts_ar()$metadata$TS$n_samples
+      updateSliderInput(session = session, inputId = "points_emb",
+                        min = 1, max = max_,
+                        value = c(1, max_))
+    })
 
-    # Update global config when input$run_dr is changed
-    observeEvent(input$run_dr, {
+    # Update global config when the selected embedding is changed
+    observe({
         # Get the projections number of points and update the sliderInput
         prjs <- req(prj_object())
-        slider_range$min_value <- as.integer(1)
-        slider_range$max_value <- as.integer(nrow(prjs))
-        updateSliderInput(session = session, inputId = "points_emb",
-                          min = slider_range$min_value, max = slider_range$max_value,
-                          value = c(slider_range$min_value, slider_range$max_value))
+        cluster_artifacts <- req(clusters_artifacts())
+        #slider_range$min_value <- as.integer(1)
+        #slider_range$max_value <- as.integer(nrow(prjs))
         
         # Update precomputed clusters_labels artifacts list
-        clusters_ar_names <- names(req(clusters_artifacts()))
+        clusters_ar_names <- names(clusters_artifacts)
         precomputed_clusters$selected <- if (length(clusters_ar_names) == 0) NULL else clusters_ar_names[1]
         updateSelectInput(session = session, 
                           inputId = "clusters_labels_name",
@@ -133,11 +135,11 @@ shinyServer(function(input, output, session) {
     })
     
     # Update slider_range reactive values with current samples range
-    observe({
-        req(input$points_emb)
-        slider_range$min_value <- input$points_emb[1]
-        slider_range$max_value <- input$points_emb[2]
-    })
+    # observe({
+    #     req(input$points_emb)
+    #     slider_range$min_value <- input$points_emb[1]
+    #     slider_range$max_value <- input$points_emb[2]
+    # })
     
     # Update precomputed_clusters reactive value when the input changes
     observe({
@@ -251,28 +253,22 @@ shinyServer(function(input, output, session) {
     
     
     # Get dcae run metadata
-    run_enc_config = reactive({
-        selected_embs_ar <- req(selected_embs_ar())
-        embs_logger_run = selected_embs_ar$logged_by()
-        print(paste("Embs. run ID: ", embs_logger_run$id))
-        print(paste("Enc. Artifact: ", embs_logger_run$config$enc_artifact))
-        enc_ar = api$artifact(embs_logger_run$config$enc_artifact, type = 'learner')
-        enc_logger_run = enc_ar$logged_by()
-        enc_logger_run$config
+    enc_ar = reactive({
+        req(input$encoder)
+        print(paste("Enc. Artifact: ", input$encoder))
+        api$artifact(input$encoder, type = 'learner')
     })
-    
     
     # Get windows size value
-    # TODO: it would be easier if this was part of the encoder artifact metadata
     w = reactive({
-        req(run_enc_config())$w
+        print("w")
+        req(enc_ar())$metadata$w
     })
-    
     # Get stride value
     s = reactive({
-        req(run_enc_config())$stride
+        print("s")
+        req(enc_ar())$metadata$stride
     })
-    
     
     # Get the dataset artifact that has been used to train the encoder
     dr_artifact <- reactive({
@@ -288,10 +284,8 @@ shinyServer(function(input, output, session) {
     
     # Time series artifact, logged by the selected embeddings artifact
     ts_ar = reactive({
-      selected_embs_ar <- req(selected_embs_ar())
-      embs_logger_run = selected_embs_ar$logged_by()
-      print(paste("Embs. dataset: ", embs_logger_run$config$input_ar))
-      api$artifact(embs_logger_run$config$input_ar, type='dataset')
+      print(paste("Embs. dataset: ", input$dataset))
+      api$artifact(input$dataset, type='dataset')
     })
     
     # Get timeseries artifact metadata
@@ -372,12 +366,12 @@ shinyServer(function(input, output, session) {
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
-      ts_ar = req(ts_ar())
+      req(ts_ar(), input$points_emb, w(), s())
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
-      first_data_index <- get_window_indices(idxs = slider_range$min_value, w = w(), s = s())[[1]] %>% head(1)
-      last_data_index <- get_window_indices(idxs = slider_range$max_value, w = w(), s = s())[[1]] %>% tail(1)
-      print(paste("ts_ar hash:", ts_ar$metadata$TS$hash))
-      py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)) %>% 
+      first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = w(), s = s())[[1]] %>% head(1)
+      last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = w(), s = s())[[1]] %>% tail(1)
+      print(paste("ts_ar hash:", ts_ar()$metadata$TS$hash))
+      py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
         rownames_to_column("timeindex") %>% 
         slice(first_data_index:last_data_index) %>%
         column_to_rownames(var = "timeindex")
@@ -391,12 +385,12 @@ shinyServer(function(input, output, session) {
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-        prjs <- req(prj_object()) %>% slice(slider_range$min_value:slider_range$max_value)
+        prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
         switch(clustering_options$selected,
                precomputed_clusters={
                    filename <- req(selected_clusters_labels_ar())$metadata$ref$hash
                    clusters_labels <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, filename))
-                   prjs$cluster <- clusters_labels[slider_range$min_value:slider_range$max_value]
+                   prjs$cluster <- clusters_labels[input$points_emb[[1]]:input$points_emb[[2]]]
                },
                calculate_clusters={
                    clusters <- hdbscan$HDBSCAN(min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
@@ -520,13 +514,12 @@ shinyServer(function(input, output, session) {
     })
     
     
-    # Generate DCAE info table
-    output$run_enc_info = renderDataTable({
-            run_enc_config() %>% 
-            #map(~ .$value) %>%
-            enframe()
+    # Generate encoder info table
+    output$enc_info = renderDataTable({
+      req(enc_ar())$metadata %>% 
+        #map(~ .$value) %>%
+        enframe()
     })
-    
     
     # Generate time series info table
     output$ts_ar_info = renderDataTable({

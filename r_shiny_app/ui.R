@@ -146,7 +146,7 @@ shinyUI(fluidPage(
                     h3("Time series"),
                     dataTableOutput("ts_ar_info"),
                     h3("Configuration of the associated encoder"),
-                    dataTableOutput("run_enc_info"),
+                    dataTableOutput("enc_info"),
                   )
                 ),
             )

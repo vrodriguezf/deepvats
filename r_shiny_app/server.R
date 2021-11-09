@@ -69,13 +69,6 @@ shinyServer(function(input, output, session) {
                            %>% names)
     })
 
-    # Update "run_dr" selectInput when the app is loaded
-    observe({
-        req(exists("runs"))
-        updateSelectInput(session = session,
-                          inputId = "run_dr",
-                          choices = names(runs))
-    })
     # Update "metric_hdbscan" selectInput when the app is loaded
     observe({
         updateSelectInput(session = session,
@@ -91,39 +84,38 @@ shinyServer(function(input, output, session) {
     })
 
     # Update global config when the selected embedding is changed
-    observe({
-        # Get the projections number of points and update the sliderInput
-        prjs <- req(prj_object())
-        cluster_artifacts <- req(clusters_artifacts())
-        #slider_range$min_value <- as.integer(1)
-        #slider_range$max_value <- as.integer(nrow(prjs))
-        
-        # Update precomputed clusters_labels artifacts list
-        clusters_ar_names <- names(clusters_artifacts)
-        precomputed_clusters$selected <- if (length(clusters_ar_names) == 0) NULL else clusters_ar_names[1]
-        updateSelectInput(session = session, 
-                          inputId = "clusters_labels_name",
-                          choices = clusters_ar_names, 
-                          selected = precomputed_clusters$selected)
-        
-        # Enable/disable "precomputed_clusters" option depending on clusters_ar_names length
-        shinyjs::toggleState(selector = "[type=radio][value=precomputed_clusters]", 
-                             condition = length(clusters_ar_names) > 0)
-
-        # Update clustering option, by default "no_clusters"
-        clustering_options$selected <- "no_clusters"
-        reset("clustering_options")
-        
-        # Update cluster parameters to default values and update interface config
-        clusters_config$metric_hdbscan <- DEFAULT_VALUES$metric_hdbscan
-        reset("metric_hdbscan")
-        clusters_config$min_cluster_size_hdbscan <- DEFAULT_VALUES$min_cluster_size_hdbscan
-        reset("min_cluster_size_hdbscan")
-        clusters_config$min_samples_hdbscan <- DEFAULT_VALUES$min_samples_hdbscan
-        reset("min_samples_hdbscan")
-        clusters_config$cluster_selection_epsilon_hdbscan <- DEFAULT_VALUES$cluster_selection_epsilon_hdbscan
-        reset("cluster_selection_epsilon_hdbscan")
-    })
+    # observe({
+    #     # Get the projections number of points and update the sliderInput
+    #     prjs <- req(prj_object())
+    #     #slider_range$min_value <- as.integer(1)
+    #     #slider_range$max_value <- as.integer(nrow(prjs))
+    #     
+    #     # Update precomputed clusters_labels artifacts list
+    #     clusters_ar_names <- names(clusters_artifacts)
+    #     precomputed_clusters$selected <- if (length(clusters_ar_names) == 0) NULL else clusters_ar_names[1]
+    #     updateSelectInput(session = session, 
+    #                       inputId = "clusters_labels_name",
+    #                       choices = clusters_ar_names, 
+    #                       selected = precomputed_clusters$selected)
+    #     
+    #     # Enable/disable "precomputed_clusters" option depending on clusters_ar_names length
+    #     shinyjs::toggleState(selector = "[type=radio][value=precomputed_clusters]", 
+    #                          condition = length(clusters_ar_names) > 0)
+    # 
+    #     # Update clustering option, by default "no_clusters"
+    #     clustering_options$selected <- "no_clusters"
+    #     reset("clustering_options")
+    #     
+    #     # Update cluster parameters to default values and update interface config
+    #     clusters_config$metric_hdbscan <- DEFAULT_VALUES$metric_hdbscan
+    #     reset("metric_hdbscan")
+    #     clusters_config$min_cluster_size_hdbscan <- DEFAULT_VALUES$min_cluster_size_hdbscan
+    #     reset("min_cluster_size_hdbscan")
+    #     clusters_config$min_samples_hdbscan <- DEFAULT_VALUES$min_samples_hdbscan
+    #     reset("min_samples_hdbscan")
+    #     clusters_config$cluster_selection_epsilon_hdbscan <- DEFAULT_VALUES$cluster_selection_epsilon_hdbscan
+    #     reset("cluster_selection_epsilon_hdbscan")
+    # })
     
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
@@ -229,13 +221,6 @@ shinyServer(function(input, output, session) {
     ###############
     #  REACTIVES  #
     ###############
-    
-    # Get selected dimensionality-reduction run in "run_dr" selectInput
-    selected_run = reactive({
-        req(exists("runs"))
-        runs[[input$run_dr]]
-    })
-    
     selected_embs_ar = reactive({
       req(exists("embs_l"))
       embs_l[[input$embs_ar]]
@@ -246,12 +231,6 @@ shinyServer(function(input, output, session) {
       selected_embs_ar$to_obj()
     })
     
-    # Get dimensionality reduction (dr) run metadata
-    run_dr_config = reactive({
-        fromJSON(req(selected_run())$json_config)
-    })
-    
-    
     # Get dcae run metadata
     enc_ar = reactive({
         req(input$encoder)
@@ -261,25 +240,21 @@ shinyServer(function(input, output, session) {
     
     # Get windows size value
     w = reactive({
-        print("w")
         req(enc_ar())$metadata$w
     })
     # Get stride value
     s = reactive({
-        print("s")
         req(enc_ar())$metadata$stride
     })
     
     # Time series artifact, logged by the selected embeddings artifact
     ts_ar = reactive({
-      print(paste("Embs. dataset: ", input$dataset))
       api$artifact(input$dataset, type='dataset')
     })
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
         ts_ar <- req(ts_ar())
-        print(paste("ts_ar_name; ", ts_ar$name))
         list_used_arts = ts_ar$metadata$TS
         list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
         list_used_arts$name = ts_ar$name
@@ -290,41 +265,6 @@ shinyServer(function(input, output, session) {
         list_used_arts
     })
     
-    
-    # Get logged artifacts (deprecated?)
-    logged_artifacts <- reactive({
-        logged_arts_it <- req(selected_run())$logged_artifacts()
-        logged_arts <- iterate(logged_arts_it)
-        logged_arts %>% set_names(logged_arts %>% map(~.$name))
-    })
-    
-    # Get embedding artifact (deprecated?)
-    prjs_artifact <- reactive({
-        logged_arts <- req(logged_artifacts())
-        prj_ar <- logged_arts %>% purrr::keep(stringr::str_detect(names(logged_arts), "^embeddings|projections"))
-        prj_ar[[1]] # This assumes the run has only logged one embedding artifact 
-    })
-    
-    # Get embedding artifact metadata
-    prjs_ar_config = reactive({
-        prj_ar <- req(prjs_artifact())
-        list_used_arts = prj_ar$metadata$ref
-        list_used_arts$name = prj_ar$name
-        list_used_arts$aliases = prj_ar$aliases
-        list_used_arts$artifact_name = prj_ar$name
-        list_used_arts$id = prj_ar$id
-        list_used_arts$created_at = prj_ar$created_at
-        list_used_arts
-    })
-    
-    
-    # Get projection object (projections dataframe) from W&B
-    # prj_object <- reactive({
-    #     prjs_ar <- req(prjs_artifact())
-    #     prjs <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, prjs_ar$metadata$ref$hash)) %>% as.data.frame
-    #     colnames(prjs) = c("xcoord", "ycoord")
-    #     prjs
-    # })
     prj_object <- reactive({
       embs = req(embs())
       res = tchub$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)) %>% 
@@ -332,26 +272,6 @@ shinyServer(function(input, output, session) {
       colnames(res) = c("xcoord", "ycoord")
       res
     })
-    
-    
-    # Get clusters_labels artifacts
-    clusters_artifacts <- reactive({
-        logged_arts <- req(logged_artifacts())
-        logged_arts %>% purrr::keep(stringr::str_detect(names(logged_arts), "^clusters_labels"))
-    })
-    
-    
-    # Get selected clusters_labels artifact
-    selected_clusters_labels_ar <- reactive({
-        req(clusters_artifacts())[[req(precomputed_clusters$selected)]]
-    })
-    
-    
-    # Get clusters_labels artifact description
-    clusters_artifact_description <- reactive({
-        req(selected_clusters_labels_ar())$description
-    })
-    
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
@@ -365,7 +285,6 @@ shinyServer(function(input, output, session) {
         slice(first_data_index:last_data_index) %>%
         column_to_rownames(var = "timeindex")
     })
-    
     
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
@@ -487,22 +406,6 @@ shinyServer(function(input, output, session) {
     #  OUTPUTS  #
     #############
     
-    # Generate dimensionality-reduction run title
-    output$run_dr_info_title = renderUI({
-        req(selected_run())
-        text <- paste0("Configuration of dimensionality reduction run ", selected_run()$id, " (", selected_run()$name, ")")
-        tags$h3(text)
-    })
-    
-    
-    # Generate dimensionality-reduction run info table
-    output$run_dr_info = renderDataTable({
-        run_dr_config() %>%
-            map(~ .$value) %>%
-            enframe()
-    })
-    
-    
     # Generate encoder info table
     output$enc_info = renderDataTable({
       req(enc_ar())$metadata %>% 
@@ -515,19 +418,6 @@ shinyServer(function(input, output, session) {
         ts_ar_config() %>% 
             enframe()
     })
-    
-    # Generate projections artifact info table
-    output$prjs_ar_info = renderDataTable({
-        prjs_ar_config() %>% 
-            enframe()
-    })
-    
-    
-    # Render selected clusters_labels artifact description
-    output$clusters_labels_ar_desc = renderText({
-        req(clusters_artifact_description())
-    })
-    
     
     # Generate projections plot
     output$projections_plot <- renderPlot({

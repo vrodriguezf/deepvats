@@ -28,14 +28,14 @@ shinyUI(fluidPage(
             br(),
             radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
                          choices = c("No clusters" = "no_clusters",
-                                     "Show precomputed clusters" = "precomputed_clusters",
+                                     #"Show precomputed clusters" = "precomputed_clusters",
                                      "Calculate and show clusters" = "calculate_clusters")),
-            conditionalPanel(
-                condition = "input.clustering_options == 'precomputed_clusters'",
-                selectInput("clusters_labels_name", label = "Select a clusters_labels artifact", choices = NULL),
-                tags$b("Selected 'clusters_labels' artifact description:"),
-                textOutput("clusters_labels_ar_desc")
-            ),
+            # conditionalPanel(
+            #     condition = "input.clustering_options == 'precomputed_clusters'",
+            #     selectInput("clusters_labels_name", label = "Select a clusters_labels artifact", choices = NULL),
+            #     tags$b("Selected 'clusters_labels' artifact description:"),
+            #     textOutput("clusters_labels_ar_desc")
+            # ),
             conditionalPanel(
               condition = "input.clustering_options == 'calculate_clusters'",
               selectInput("metric_hdbscan", label = "Metric", choices = DEFAULT_VALUES$metric_hdbscan),
@@ -139,14 +139,10 @@ shinyUI(fluidPage(
                 tabPanel(
                   "Information",
                   fluidRow(
-                    uiOutput("run_dr_info_title"),
-                    dataTableOutput("run_dr_info"),
-                    h3("Projections"),
-                    dataTableOutput("prjs_ar_info"),
                     h3("Time series"),
                     dataTableOutput("ts_ar_info"),
                     h3("Configuration of the associated encoder"),
-                    dataTableOutput("enc_info"),
+                    dataTableOutput("enc_info")
                   )
                 ),
             )

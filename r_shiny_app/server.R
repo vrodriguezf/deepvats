@@ -270,18 +270,6 @@ shinyServer(function(input, output, session) {
         req(enc_ar())$metadata$stride
     })
     
-    # Get the dataset artifact that has been used to train the encoder
-    dr_artifact <- reactive({
-        used_arts_it <- req(selected_run())$used_artifacts()
-        used_arts <- iterate(used_arts_it)
-        # If only one dataset artifact has been used, it's assumed that this has been used to create the embedding space
-        # Otherwise, what to do?? TODO
-        if (length(used_arts) != 1) {
-            used_arts <- used_arts %>% purrr::keep(~ .$type == "dataset")
-        }
-        used_arts[[1]]
-    })
-    
     # Time series artifact, logged by the selected embeddings artifact
     ts_ar = reactive({
       print(paste("Embs. dataset: ", input$dataset))

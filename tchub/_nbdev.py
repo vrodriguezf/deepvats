@@ -2,9 +2,9 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"DCAE_torch": "02a_encoder_DCAE-torch.ipynb",
-         "check_compatibility": "dr.ipynb",
+index = {"check_compatibility": "dr.ipynb",
          "get_UMAP_prjs": "dr.ipynb",
+         "DCAE_torch": "encoder.ipynb",
          "ENCODER_EMBS_MODULE_NAME": "encoder.ipynb",
          "get_enc_embs": "encoder.ipynb",
          "TSArtifact": "load.ipynb",
@@ -22,11 +22,11 @@ index = {"DCAE_torch": "02a_encoder_DCAE-torch.ipynb",
          "plot_TS": "visualization.ipynb",
          "plot_validation_ts_ae": "visualization.ipynb"}
 
-modules = ["dcae.py",
-           "visualization.py",
+modules = ["dr.py",
            "encoder.py",
            "load.py",
-           "utils.py"]
+           "utils.py",
+           "visualization.py"]
 
 doc_url = "https://vrodriguezf.github.io/tchub/"
 

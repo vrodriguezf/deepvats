@@ -52,17 +52,18 @@ shinyServer(function(input, output, session) {
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
     
-    observe({
-      req(input$dataset)
+    observeEvent(input$dataset, {
+      freezeReactiveValue(input, "encoder")
       updateSelectizeInput(session = session,
                            inputId = "encoder",
                            choices = embs_l %>% 
                              keep(~ .$metadata$input_ar == input$dataset) %>% 
-                             map(~ .$metadata$enc_artifact) %>% set_names())
+                             map(~ .$metadata$enc_artifact) %>% 
+                             set_names())
     })
     
-    observe({
-      req(exists("embs_l"), input$encoder)
+    observeEvent(input$encoder, {
+      freezeReactiveValue(input, "embs_ar")
       updateSelectizeInput(session = session, inputId = "embs_ar",
                            choices = embs_l %>%
                              keep(~ .$metadata$enc_artifact == input$encoder)
@@ -77,6 +78,7 @@ shinyServer(function(input, output, session) {
     })
     # Update the range of point selection when there is new data
     observeEvent(ts_ar(), {
+      freezeReactiveValue(input, "points_emb")
       max_ = ts_ar()$metadata$TS$n_samples
       updateSliderInput(session = session, inputId = "points_emb",
                         min = 1, max = max_,
@@ -119,6 +121,7 @@ shinyServer(function(input, output, session) {
     
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
+      freezeReactiveValue(input, "select_variables")
       ts_variables$selected <- names(tsdf())
       updateCheckboxGroupInput(session = session,
                                inputId = "select_variables",
@@ -221,14 +224,20 @@ shinyServer(function(input, output, session) {
     ###############
     #  REACTIVES  #
     ###############
-    selected_embs_ar = reactive({
-      req(exists("embs_l"))
+    selected_embs_ar = eventReactive(input$embs_ar, {
       embs_l[[input$embs_ar]]
     })
     
+    # embeddings object. Get it from local if it is there, otherwise download
     embs = reactive({
       selected_embs_ar = req(selected_embs_ar())
-      selected_embs_ar$to_obj()
+      print("embs")
+      fname = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, 
+                        selected_embs_ar$metadata$ref$hash)
+      if (file.exists(fname))
+        py_load_object(filename = fname)
+      else
+        selected_embs_ar$to_obj()
     })
     
     # Get dcae run metadata
@@ -249,6 +258,7 @@ shinyServer(function(input, output, session) {
     
     # Time series artifact, logged by the selected embeddings artifact
     ts_ar = reactive({
+      print("ts_ar hash")
       api$artifact(input$dataset, type='dataset')
     })
     
@@ -275,11 +285,11 @@ shinyServer(function(input, output, session) {
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
-      req(ts_ar(), input$points_emb, w(), s())
+      req(input$points_emb, w(), s())
+      print("tsdf")
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
       first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = w(), s = s())[[1]] %>% head(1)
       last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = w(), s = s())[[1]] %>% tail(1)
-      print(paste("ts_ar hash:", ts_ar()$metadata$TS$hash))
       py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
         rownames_to_column("timeindex") %>% 
         slice(first_data_index:last_data_index) %>%
@@ -331,7 +341,8 @@ shinyServer(function(input, output, session) {
     
     # Generate timeseries dygraph
     ts_plot <- reactive({
-        req(tsdf(), prj_object())
+        req(tsdf(), prj_object(), w(), s(), ts_variables)
+        print("ts_plot")
         tsdf_data <- tsdf()
         ts_plt <- dygraph(tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px") %>%
                     dyRangeSelector() %>%
@@ -422,6 +433,7 @@ shinyServer(function(input, output, session) {
     # Generate projections plot
     output$projections_plot <- renderPlot({
         prjs_ <- req(projections())
+        print("projections_plot")
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
             selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)

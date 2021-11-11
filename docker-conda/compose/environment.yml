@@ -30,7 +30,7 @@ dependencies:
   - pip:
      - jupyterlab-quickopen
      - aquirdturtle_collapsible_headings
-     - git+https://github.com/vrodriguezf/tsai.git
+     #- git+https://github.com/vrodriguezf/tsai.git
    # - -r file:/tmp/requirements.txt	
   - plotly
   - protobuf

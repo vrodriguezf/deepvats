@@ -86,5 +86,12 @@ RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 # Ipython config
 #COPY --chown=$UID:$GID ./ipython_config.py $HOME
 
+# Editable packages (pip)
+RUN mkdir /home/$USER/lib
+RUN cd /home/$USER/lib \
+    && git clone https://github.com/timeseriesAI/tsai.git \
+    && cd tsai \ 
+    && pip install -e .
+
 # default command will be to launch JupyterLab server for development
 CMD [ "jupyter", "lab", "--no-browser", "--ip", "0.0.0.0", "--ContentsManager.allow_hidden=True"]

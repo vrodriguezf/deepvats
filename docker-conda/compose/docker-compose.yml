@@ -20,6 +20,7 @@ services:
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
       - conda-env:/home/${USER_NAME}/env
       - miniconda:/home/${USER_NAME}/miniconda3
+      - lib:/home/${USER_NAME}/lib
     init: true
     stdin_open: true
     tty: true    
@@ -51,7 +52,9 @@ services:
          - ../../tchub:/home/${USER_NAME}/tchub # No se usa aun
          - conda-env:/home/${USER_NAME}/env:ro
          - miniconda:/home/${USER_NAME}/miniconda3:ro
+         - lib:/home/${USER_NAME}/lib:ro
 
 volumes:
   conda-env:
   miniconda:
+  lib:

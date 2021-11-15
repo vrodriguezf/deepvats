@@ -6,6 +6,7 @@ library(purrr)
 library(jsonlite)
 library(tibble)
 library(ggplot2)
+library(glue)
 library(shinycssloaders)
 library(tidyr)
 library(data.table)
@@ -17,6 +18,7 @@ library(pals)
 library(stringr)
 
 # Python dependencies
+tsai_data = import("tsai.data.all")
 wandb = import("wandb")
 pd = import("pandas")
 hdbscan = import("hdbscan")
@@ -109,22 +111,16 @@ make_individual_dygraph <- function(i){
 
 api <- wandb$Api()
 
-embeddings_filter = dict("$and"=list(dict("jobType"="dimensionality_reduction",
-                                          #"config.emb_artifact_name"="embeddings",
-                                          "state"="finished")))
+print("Querying encoders")
+encs_l <- tchub$get_wandb_artifacts(project_path = "pacmel/tchub", type = "learner", 
+                                 last_version=F) %>% 
+  discard(~ is_empty(.$aliases) | is_empty(.$metadata$valid_artifact))
+encs_l <- encs_l %>% set_names(encs_l %>% map(~ glue("pacmel/tchub/", .$name)))
 
-print("Querying runs...")
-runs_it <- api$runs(WANDB_PROJECT, filters=embeddings_filter)
-
-print("Processing runs...")
-runs <- purrr::rerun(QUERY_RUNS_LIMIT, iter_next(runs_it))
-runs <- runs %>% set_names(runs %>% map(~.$name)) %>% compact()
-
-print("Querying embeddings")
-embs_l <- tchub$get_wandb_artifacts(project_path = "pacmel/tchub", type = "object", 
-                                    name="embeddings", last_version=F) %>% 
-  discard(~is_empty(.$aliases))
-embs_l <- embs_l %>% set_names(embs_l %>% map(~.$aliases)) 
+# embs_l <- tchub$get_wandb_artifacts(project_path = "pacmel/tchub", type = "object",
+#                                     name="embeddings", last_version=F) %>%
+#   discard(~ is_empty(.$aliases))
+# embs_l <- embs_l %>% set_names(embs_l %>% map(~.$aliases))
 #encs_l <- embs_l %>% map(~.$metadata$enc_artifact) %>% str_split("/") %>% map(pluck(3))
 #dsets_l <- embs_l %>% map(~.$metadata$input_ar) %>% str_split("/") %>% map(pluck(3))
 print("Done!")

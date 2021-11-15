@@ -51,23 +51,47 @@ shinyServer(function(input, output, session) {
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
+    observe({
+      req(exists("encs_l"))
+      print("input_dataset")
+      freezeReactiveValue(input, "dataset")
+      updateSelectizeInput(session = session,
+                           inputId = "dataset",
+                           choices = encs_l %>% 
+                             map(~.$metadata$valid_artifact) %>% 
+                             set_names())
+    }, label = "input_dataset")
     
     observeEvent(input$dataset, {
+      req(exists("encs_l"))
+      print("input_encoder")
+      print(input$dataset)
       freezeReactiveValue(input, "encoder")
       updateSelectizeInput(session = session,
                            inputId = "encoder",
-                           choices = embs_l %>% 
-                             keep(~ .$metadata$input_ar == input$dataset) %>% 
-                             map(~ .$metadata$enc_artifact) %>% 
-                             set_names())
-    })
+                           choices = encs_l %>% 
+                             keep(~ .$metadata$valid_artifact == input$dataset) %>% 
+                             #map(~ .$metadata$enc_artifact) %>% 
+                             names)
+    }, label = "input_encoder")
+    
+    # observeEvent(input$encoder, {
+    #   freezeReactiveValue(input, "embs_ar")
+    #   updateSelectizeInput(session = session, inputId = "embs_ar",
+    #                        choices = embs_l %>%
+    #                          keep(~ .$metadata$enc_artifact == input$encoder)
+    #                        %>% names)
+    # })
     
     observeEvent(input$encoder, {
-      freezeReactiveValue(input, "embs_ar")
-      updateSelectizeInput(session = session, inputId = "embs_ar",
-                           choices = embs_l %>%
-                             keep(~ .$metadata$enc_artifact == input$encoder)
-                           %>% names)
+      enc_ar = req(enc_ar())
+      freezeReactiveValue(input, "wlen")
+      if (is.null(enc_ar$metadata$mvp_ws)) 
+        enc_ar$metadata$mvp_ws = c(enc_ar$metadata$w, enc_ar$metadata$w)
+      updateSliderInput(session = session, inputId = "wlen",
+                        min = enc_ar$metadata$mvp_ws[1],
+                        max = enc_ar$metadata$mvp_ws[2],
+                        value = enc_ar$metadata$w)
     })
 
     # Update "metric_hdbscan" selectInput when the app is loaded
@@ -224,55 +248,63 @@ shinyServer(function(input, output, session) {
     ###############
     #  REACTIVES  #
     ###############
-    selected_embs_ar = eventReactive(input$embs_ar, {
-      embs_l[[input$embs_ar]]
+    X <- reactive({
+      req(input$wlen, s(), tsdf())
+      tsai_data$SlidingWindow(window_len = input$wlen, stride = s(), get_y = list())(tsdf())[[1]]
     })
     
-    # embeddings object. Get it from local if it is there, otherwise download
-    embs = reactive({
-      selected_embs_ar = req(selected_embs_ar())
-      print("embs")
-      fname = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, 
-                        selected_embs_ar$metadata$ref$hash)
-      if (file.exists(fname))
-        py_load_object(filename = fname)
-      else
-        selected_embs_ar$to_obj()
-    })
-    
-    # Get dcae run metadata
-    enc_ar = reactive({
-        req(input$encoder)
-        print(paste("Enc. Artifact: ", input$encoder))
-        api$artifact(input$encoder, type = 'learner')
-    })
-    
-    # Get windows size value
-    w = reactive({
-        req(enc_ar())$metadata$w
-    })
-    # Get stride value
-    s = reactive({
-        req(enc_ar())$metadata$stride
-    })
-    
-    # Time series artifact, logged by the selected embeddings artifact
-    ts_ar = reactive({
+    # Time series artifact
+    ts_ar = eventReactive(input$dataset, {
       print("ts_ar hash")
-      api$artifact(input$dataset, type='dataset')
+      api$artifact(req(input$dataset), type='dataset')
     })
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
-        ts_ar <- req(ts_ar())
-        list_used_arts = ts_ar$metadata$TS
-        list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
-        list_used_arts$name = ts_ar$name
-        list_used_arts$aliases = ts_ar$aliases
-        list_used_arts$artifact_name = ts_ar$name
-        list_used_arts$id = ts_ar$id
-        list_used_arts$created_at = ts_ar$created_at
-        list_used_arts
+      ts_ar <- req(ts_ar())
+      list_used_arts = ts_ar$metadata$TS
+      list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
+      list_used_arts$name = ts_ar$name
+      list_used_arts$aliases = ts_ar$aliases
+      list_used_arts$artifact_name = ts_ar$name
+      list_used_arts$id = ts_ar$id
+      list_used_arts$created_at = ts_ar$created_at
+      list_used_arts
+    })
+    
+    # selected_embs_ar = eventReactive(input$embs_ar, {
+    #   embs_l[[input$embs_ar]]
+    # })
+    
+    # embeddings object. Get it from local if it is there, otherwise download
+    # embs = reactive({
+    #   selected_embs_ar = req(selected_embs_ar())
+    #   print("embs")
+    #   fname = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, 
+    #                     selected_embs_ar$metadata$ref$hash)
+    #   if (file.exists(fname))
+    #     py_load_object(filename = fname)
+    #   else
+    #     selected_embs_ar$to_obj()
+    # })
+    embs = reactive({
+      tchub$get_enc_embs(X = req(X()), enc_learn = req(enc()), cpu = F)
+    })
+    
+    # Get encoder artifact
+    enc_ar = eventReactive(input$encoder, {
+        print(paste("Enc. Artifact: ", input$encoder))
+        api$artifact(input$encoder, type = 'learner')
+    }, ignoreInit = T)
+    
+    # Encoder
+    enc = eventReactive(enc_ar(), {
+      py_load_object(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, enc_ar()$metadata$ref$hash))
+    })
+    
+    # Get stride value
+    s = reactive({
+        req(enc_ar())$metadata$stride
     })
     
     prj_object <- reactive({
@@ -285,11 +317,10 @@ shinyServer(function(input, output, session) {
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
-      req(input$points_emb, w(), s())
-      print("tsdf")
+      req(input$points_emb, input$wlen, s())
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
-      first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = w(), s = s())[[1]] %>% head(1)
-      last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = w(), s = s())[[1]] %>% tail(1)
+      first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = s())[[1]] %>% head(1)
+      last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = s())[[1]] %>% tail(1)
       py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
         rownames_to_column("timeindex") %>% 
         slice(first_data_index:last_data_index) %>%
@@ -298,7 +329,7 @@ shinyServer(function(input, output, session) {
     
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
-        get_window_indices(1:nrow(req(projections())), w = w(), s = s())
+        get_window_indices(1:nrow(req(projections())), w = input$wlen, s = s())
     })
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
@@ -320,7 +351,6 @@ shinyServer(function(input, output, session) {
         prjs
     })
     
-    
     # Update the colour palette for the clusters
     update_palette <- reactive({
         prjs <- req(projections())
@@ -338,10 +368,9 @@ shinyServer(function(input, output, session) {
         colour_palette
     })
     
-    
     # Generate timeseries dygraph
     ts_plot <- reactive({
-        req(tsdf(), prj_object(), w(), s(), ts_variables)
+        req(tsdf(), prj_object(), input$wlen, s(), ts_variables)
         print("ts_plot")
         tsdf_data <- tsdf()
         ts_plt <- dygraph(tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px") %>%
@@ -364,7 +393,7 @@ shinyServer(function(input, output, session) {
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
             # Get the window indices
-            window_indices <- get_window_indices(embedding_idxs, w(), s())
+            window_indices <- get_window_indices(embedding_idxs, input$wlen, s())
             # Put all the indices in one list and remove duplicates
             unlist_window_indices <- unique(unlist(window_indices))
             # Calculate a vector of differences to detect idx where a new window should be created 

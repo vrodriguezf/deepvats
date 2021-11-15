@@ -19,10 +19,11 @@ shinyUI(fluidPage(
     sidebarLayout(
         sidebarPanel(
             shinyjs::hidden(selectInput("run_dr", label = "Select a run", choices = NULL)),
-            selectizeInput("dataset", label = "Dataset", choices = embs_l %>% map(~.$metadata$input_ar) %>% set_names()),
+            selectizeInput("dataset", label = "Dataset", choices = NULL),
             selectizeInput("encoder", label = "Encoder", choices = NULL),
-            selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
+            #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
             br(),
+            sliderInput("wlen", "Select window size", min = 0, max = 0, value = 0, step = 1),
             sliderInput("points_emb", "Select range of points to plot in the projections", min = 1, max = 2, value = c(1,2), step = 1, ticks = FALSE),
             #uiOutput("points_prj_controls"),
             br(),

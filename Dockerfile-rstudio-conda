@@ -48,14 +48,16 @@ RUN echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> ${HOME}/.Renviron
 ARG WANDB_API_KEY
 RUN echo "WANDB_API_KEY=${WANDB_API_KEY}" >> /${HOME}/.Renviron
 
+# use an entrypoint script to insure conda environment is properly activated at runtime
+COPY --chown=$UID:$GID docker-conda/compose/entrypoint-rstudio.sh /usr/local/bin
+RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
+ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]
+
 # Rewrite the miniconda path environment in case it has been redefined in the compose file
 RUN echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> ${HOME}/.Renviron
 
 # make non-activate conda commands available
 ENV PATH=$RETICULATE_MINICONDA_PATH/bin:$PATH
 
-# make conda activate command available from /bin/bash --login shells
-RUN echo ". $RETICULATE_MINICONDA_PATH/etc/profile.d/conda.sh" >> $HOME/.profile
-
 # Make bash automatically activate the conda environment
-#RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc
+RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc

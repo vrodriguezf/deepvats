@@ -51,8 +51,7 @@ shinyServer(function(input, output, session) {
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
-    observe({
-      req(exists("encs_l"))
+    observeEvent(req(exists("encs_l")), {
       print("input_dataset")
       freezeReactiveValue(input, "dataset")
       updateSelectizeInput(session = session,
@@ -93,6 +92,15 @@ shinyServer(function(input, output, session) {
                         max = enc_ar$metadata$mvp_ws[2],
                         value = enc_ar$metadata$w)
     })
+    
+    observeEvent(input$wlen, {
+      req(input$wlen != 0)
+      old_value = input$stride
+      freezeReactiveValue(input, "stride")
+      updateSliderInput(session = session, inputId = "stride", 
+                        min = 1, max = input$wlen, 
+                        value = ifelse(old_value <= input$wlen, old_value, 1))
+    })
 
     # Update "metric_hdbscan" selectInput when the app is loaded
     observe({
@@ -101,57 +109,23 @@ shinyServer(function(input, output, session) {
                           choices = names(req(hdbscan_metrics)))
     })
     # Update the range of point selection when there is new data
-    observeEvent(ts_ar(), {
-      freezeReactiveValue(input, "points_emb")
-      max_ = ts_ar()$metadata$TS$n_samples
-      updateSliderInput(session = session, inputId = "points_emb",
-                        min = 1, max = max_,
-                        value = c(1, max_))
-    })
-
-    # Update global config when the selected embedding is changed
-    # observe({
-    #     # Get the projections number of points and update the sliderInput
-    #     prjs <- req(prj_object())
-    #     #slider_range$min_value <- as.integer(1)
-    #     #slider_range$max_value <- as.integer(nrow(prjs))
-    #     
-    #     # Update precomputed clusters_labels artifacts list
-    #     clusters_ar_names <- names(clusters_artifacts)
-    #     precomputed_clusters$selected <- if (length(clusters_ar_names) == 0) NULL else clusters_ar_names[1]
-    #     updateSelectInput(session = session, 
-    #                       inputId = "clusters_labels_name",
-    #                       choices = clusters_ar_names, 
-    #                       selected = precomputed_clusters$selected)
-    #     
-    #     # Enable/disable "precomputed_clusters" option depending on clusters_ar_names length
-    #     shinyjs::toggleState(selector = "[type=radio][value=precomputed_clusters]", 
-    #                          condition = length(clusters_ar_names) > 0)
-    # 
-    #     # Update clustering option, by default "no_clusters"
-    #     clustering_options$selected <- "no_clusters"
-    #     reset("clustering_options")
-    #     
-    #     # Update cluster parameters to default values and update interface config
-    #     clusters_config$metric_hdbscan <- DEFAULT_VALUES$metric_hdbscan
-    #     reset("metric_hdbscan")
-    #     clusters_config$min_cluster_size_hdbscan <- DEFAULT_VALUES$min_cluster_size_hdbscan
-    #     reset("min_cluster_size_hdbscan")
-    #     clusters_config$min_samples_hdbscan <- DEFAULT_VALUES$min_samples_hdbscan
-    #     reset("min_samples_hdbscan")
-    #     clusters_config$cluster_selection_epsilon_hdbscan <- DEFAULT_VALUES$cluster_selection_epsilon_hdbscan
-    #     reset("cluster_selection_epsilon_hdbscan")
+    # observeEvent(X(), {
+    #   #max_ = ts_ar()$metadata$TS$n_samples
+    #   max_ = dim(X())[[1]]
+    #   freezeReactiveValue(input, "points_emb")
+    #   updateSliderInput(session = session, inputId = "points_emb",
+    #                     min = 1, max = max_, value = c(1, max_))
     # })
-    
+
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
-      freezeReactiveValue(input, "select_variables")
+      #freezeReactiveValue(input, "select_variables")
       ts_variables$selected <- names(tsdf())
       updateCheckboxGroupInput(session = session,
                                inputId = "select_variables",
                                choices = ts_variables$selected,
                                selected = ts_variables$selected)
-    })
+    }, label = "select_variables")
     
     # Update slider_range reactive values with current samples range
     # observe({
@@ -249,15 +223,15 @@ shinyServer(function(input, output, session) {
     #  REACTIVES  #
     ###############
     X <- reactive({
-      req(input$wlen, s(), tsdf())
-      tsai_data$SlidingWindow(window_len = input$wlen, stride = s(), get_y = list())(tsdf())[[1]]
+      req(input$wlen != 0, input$stride != 0, tsdf())
+      tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
     })
     
     # Time series artifact
     ts_ar = eventReactive(input$dataset, {
       print("ts_ar hash")
       api$artifact(req(input$dataset), type='dataset')
-    })
+    }, label = "ts_ar")
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
@@ -317,38 +291,44 @@ shinyServer(function(input, output, session) {
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
-      req(input$points_emb, input$wlen, s())
+      req(input$wlen != 0, input$stride != 0, ts_ar())
+      print("tsdf")
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
-      first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = s())[[1]] %>% head(1)
-      last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = s())[[1]] %>% tail(1)
+      # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
+      # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
       py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
         rownames_to_column("timeindex") %>% 
-        slice(first_data_index:last_data_index) %>%
+        # slice(first_data_index:last_data_index) %>%
         column_to_rownames(var = "timeindex")
     })
     
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
-        get_window_indices(1:nrow(req(projections())), w = input$wlen, s = s())
+      req(input$wlen != 0, input$stride != 0)
+      get_window_indices(1:nrow(req(projections())), w = input$wlen, s = input$stride)
     })
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-        prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
-        switch(clustering_options$selected,
-               precomputed_clusters={
-                   filename <- req(selected_clusters_labels_ar())$metadata$ref$hash
-                   clusters_labels <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, filename))
-                   prjs$cluster <- clusters_labels[input$points_emb[[1]]:input$points_emb[[2]]]
-               },
-               calculate_clusters={
-                   clusters <- hdbscan$HDBSCAN(min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
-                                               min_samples = as.integer(clusters_config$min_samples_hdbscan),
-                                               cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
-                                               metric = clusters_config$metric_hdbscan)$fit(prjs)
-                   prjs$cluster <- clusters$labels_
-               })
-        prjs
+      req(prj_object())
+      #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
+      prjs <- req(prj_object())
+      print("projections")
+      switch(clustering_options$selected,
+             precomputed_clusters={
+               filename <- req(selected_clusters_labels_ar())$metadata$ref$hash
+               clusters_labels <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, filename))
+               #prjs$cluster <- clusters_labels[input$points_emb[[1]]:input$points_emb[[2]]]
+               prjs$cluster <- clusters_labels
+             },
+             calculate_clusters={
+               clusters <- hdbscan$HDBSCAN(min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
+                                           min_samples = as.integer(clusters_config$min_samples_hdbscan),
+                                           cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
+                                           metric = clusters_config$metric_hdbscan)$fit(prjs)
+               prjs$cluster <- clusters$labels_
+             })
+      prjs
     })
     
     # Update the colour palette for the clusters
@@ -368,9 +348,9 @@ shinyServer(function(input, output, session) {
         colour_palette
     })
     
-    # Generate timeseries dygraph
+    # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
-        req(tsdf(), prj_object(), input$wlen, s(), ts_variables)
+        req(tsdf(), prj_object(), input$wlen != 0, input$stride, ts_variables)
         print("ts_plot")
         tsdf_data <- tsdf()
         ts_plt <- dygraph(tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px") %>%
@@ -393,7 +373,7 @@ shinyServer(function(input, output, session) {
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
             # Get the window indices
-            window_indices <- get_window_indices(embedding_idxs, input$wlen, s())
+            window_indices <- get_window_indices(embedding_idxs, input$wlen, input$stride)
             # Put all the indices in one list and remove duplicates
             unlist_window_indices <- unique(unlist(window_indices))
             # Calculate a vector of differences to detect idx where a new window should be created 
@@ -493,10 +473,11 @@ shinyServer(function(input, output, session) {
     
     # Render projections plot
     output$projections_plot_ui <- renderUI({
-        plotOutput("projections_plot", 
-                   click = "projections_click",
-                   brush = "projections_brush",
-                   height = input$embedding_plot_height) %>% withSpinner()
+      print("projections_plot_UI")
+      plotOutput("projections_plot", 
+                 click = "projections_click",
+                 brush = "projections_brush",
+                 height = input$embedding_plot_height) %>% withSpinner()
     })
     
     
@@ -529,7 +510,7 @@ shinyServer(function(input, output, session) {
     
     # Generate time series plot
     output$ts_plot_dygraph <- renderDygraph({
-        ts_plot()
+      req(ts_plot())
     })
     
 })

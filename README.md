@@ -1,5 +1,5 @@
 # Deep VATS
-> Deep learning for Visual Analytics in Time Series
+> Deep learning Visual Analytics for Time Series
 
 ## Deploy
 

@@ -1,5 +1,6 @@
 #!/bin/bash --login
 set -e
-pip install -e /home/victor/work
 conda activate $ENV_PREFIX
+pip install -e /home/$USER/work
+pip install protobuf==3.18.1
 exec "$@"

@@ -57,7 +57,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session = session,
                            inputId = "dataset",
                            choices = encs_l %>% 
-                             map(~.$metadata$valid_artifact) %>% 
+                             map(~.$metadata$train_artifact) %>% 
                              set_names())
     }, label = "input_dataset")
     
@@ -69,7 +69,7 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(session = session,
                            inputId = "encoder",
                            choices = encs_l %>% 
-                             keep(~ .$metadata$valid_artifact == input$dataset) %>% 
+                             keep(~ .$metadata$train_artifact == input$dataset) %>% 
                              #map(~ .$metadata$enc_artifact) %>% 
                              names)
     }, label = "input_encoder")

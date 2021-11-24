@@ -1,5 +1,3 @@
-name: python-gpu-env
-
 channels:
   - defaults
   - conda-forge

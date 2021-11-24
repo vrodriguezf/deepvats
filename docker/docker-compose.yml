@@ -6,7 +6,7 @@ services:
         - uid=${USER_ID}
         - gid=${GROUP_ID}
       context: ../
-      dockerfile: Dockerfile-conda
+      dockerfile: Dockerfile
     ports:
       - "${JUPYTER_PORT}:8888"
     runtime: nvidia
@@ -16,7 +16,7 @@ services:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       - WANDB_DIR=/home/${USER_NAME}/work
     volumes:
-      - ../../:/home/${USER}/work
+      - ../:/home/${USER}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
       - conda-env:/home/${USER_NAME}/env
       - miniconda:/home/${USER_NAME}/miniconda3
@@ -26,8 +26,8 @@ services:
     tty: true    
   rstudio-server:
       build:
-          context: ../../
-          dockerfile: Dockerfile-rstudio-conda
+          context: ../
+          dockerfile: Dockerfile-rstudio
           args:
               - WANDB_API_KEY=${WANDB_API_KEY} #
               - RETICULATE_PYTHON_ENV=/home/${USER_NAME}/env
@@ -47,9 +47,9 @@ services:
           - GH_TOKEN=${GH_TOKEN} #*
       runtime: nvidia
       volumes:
-         - ../../r_shiny_app:/home/${USER_NAME}/app #*
+         - ../r_shiny_app:/home/${USER_NAME}/app #*
          - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
-         - ../../tchub:/home/${USER_NAME}/tchub # No se usa aun
+         - ../tchub:/home/${USER_NAME}/tchub # No se usa aun
          - conda-env:/home/${USER_NAME}/env:ro
          - miniconda:/home/${USER_NAME}/miniconda3:ro
          - lib:/home/${USER_NAME}/lib:ro

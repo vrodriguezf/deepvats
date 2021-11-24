@@ -114,7 +114,7 @@ api <- wandb$Api()
 print("Querying encoders")
 encs_l <- tchub$get_wandb_artifacts(project_path = "pacmel/tchub", type = "learner", 
                                  last_version=F) %>% 
-  discard(~ is_empty(.$aliases) | is_empty(.$metadata$valid_artifact))
+  discard(~ is_empty(.$aliases) | is_empty(.$metadata$train_artifact))
 encs_l <- encs_l %>% set_names(encs_l %>% map(~ glue("pacmel/tchub/", .$name)))
   #discard(~ str_detect(.$name, "dcae"))
 

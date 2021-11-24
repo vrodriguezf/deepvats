@@ -4,7 +4,7 @@
 ## Deploy
 
 To run the notebooks and the app, install `docker` and `docker-compose` in your system. 
-Then, create a new *.env* file in the root of the project following the structure shown [here](https://github.com/vrodriguezf/dockerfiles).
+Then, create a new *.env* file inside the folder `docker` of the project following the structure shown [here](https://github.com/vrodriguezf/dockerfiles).
 
 You'll also need to have a `.gitconfig` file in your home folder. It can be an empty file that you create manually, or it can contain your git global configuration. For the latter case, run:
 - `git config --global user.name "YOUR NAME IN THIS GITLAB INSTANCE"`
@@ -12,7 +12,7 @@ You'll also need to have a `.gitconfig` file in your home folder. It can be an e
 
 This will automatically create the `~/.gitconfig` file in your home folder.
 
-Finally, in a terminal located in the root of this repository, run:
+Finally, in a terminal located in the folder `docker` of this repository, run:
 
 ```docker-compose up -d --build```
 

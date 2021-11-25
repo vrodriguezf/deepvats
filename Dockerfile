@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.2.1-cudnn8-runtime-ubuntu20.04
+FROM ubuntu:20.04
 
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
 
@@ -34,7 +34,7 @@ RUN adduser --disabled-password \
 USER $USER
 
 # Add the jupyterlab settings
-COPY --chown=$uid:$gid docker/.jupyter $HOME/.jupyter
+COPY --chown=$uid:$gid docker/jupyter_config $HOME/.jupyter
 
 # install miniconda
 ENV MINICONDA_VERSION 4.10.3

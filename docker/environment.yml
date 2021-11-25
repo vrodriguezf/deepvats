@@ -6,7 +6,7 @@ channels:
   - fastai
 
 dependencies:
-  - cudatoolkit=11.2
+  - cudatoolkit=11.0
   - cudf=21.10
   - cuml=21.10
   - fastgpu

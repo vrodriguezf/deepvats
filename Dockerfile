@@ -1,4 +1,5 @@
-FROM ubuntu:20.04
+#FROM ubuntu:20.04
+FROM nvidia/cuda:11.2.1-cudnn8-runtime-ubuntu20.04
 
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
 
@@ -81,12 +82,24 @@ RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 # Ipython config
 #COPY --chown=$UID:$GID ./ipython_config.py $HOME
 
+# Reinstall pytorch (fix for gtx 3090)
+RUN conda activate $ENV_PREFIX && \
+    pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 -f https://download.pytorch.org/whl/torch_stable.html && \
+    conda deactivate
+
 # Editable packages (pip)
 RUN mkdir /home/$USER/lib
-RUN cd /home/$USER/lib \
+RUN conda activate $ENV_PREFIX && \
+    cd /home/$USER/lib \
     && git clone https://github.com/timeseriesAI/tsai.git \
     && cd tsai \ 
-    && pip install -e .
+    && pip install -e . && \
+    conda deactivate
+
+# Fix protobuf mismatch after tsai installation
+RUN conda activate $ENV_PREFIX && \
+    pip install protobuf==3.18.1 && \  
+    conda deactivate
 
 # use an entrypoint script to insure conda environment is properly activated at runtime
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin

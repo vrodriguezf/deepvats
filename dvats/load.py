@@ -8,8 +8,8 @@ import numpy as np
 from fastcore.all import *
 import wandb
 from datetime import datetime, timedelta
-from tchub.imports import *
-from tchub.utils import *
+from .imports import *
+from .utils import *
 import pickle
 
 # Cell

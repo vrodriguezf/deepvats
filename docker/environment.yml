@@ -9,7 +9,6 @@ dependencies:
   - cudatoolkit=11.0
   - cudf=21.10
   - cuml=21.10
-  - fastgpu
   - git
   - gh
   - hdbscan
@@ -28,8 +27,8 @@ dependencies:
   - pip:
      - jupyterlab-quickopen
      - aquirdturtle_collapsible_headings
-     #- git+https://github.com/vrodriguezf/tsai.git
-   # - -r file:/tmp/requirements.txt	
+#     - git+https://github.com/timeseriesAI/tsai.git
+#     - -r file:/tmp/requirements.txt
   - plotly
   - protobuf
   - python=3.8

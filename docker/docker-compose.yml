@@ -49,7 +49,7 @@ services:
       volumes:
          - ../r_shiny_app:/home/${USER_NAME}/app #*
          - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
-         - ../tchub:/home/${USER_NAME}/tchub # No se usa aun
+         - ../dvats:/home/${USER_NAME}/dvats
          - conda-env:/home/${USER_NAME}/env:ro
          - miniconda:/home/${USER_NAME}/miniconda3:ro
          - lib:/home/${USER_NAME}/lib:ro

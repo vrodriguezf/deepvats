@@ -4,7 +4,7 @@ __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'Re
            'get_wandb_artifacts']
 
 # Cell
-from tchub.imports import *
+from .imports import *
 from fastcore.all import *
 import wandb
 import pickle

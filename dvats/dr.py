@@ -9,8 +9,8 @@ import cuml
 import pandas as pd
 import numpy as np
 from fastcore.all import *
-from tchub.imports import *
-from tchub.load import TSArtifact
+from .imports import *
+from .load import TSArtifact
 
 # Cell
 def check_compatibility(dr_ar:TSArtifact, enc_ar:TSArtifact):

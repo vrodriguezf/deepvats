@@ -22,7 +22,7 @@ tsai_data = import("tsai.data.all")
 wandb = import("wandb")
 pd = import("pandas")
 hdbscan = import("hdbscan")
-tchub = import_from_path("tchub.all", path=paste0(Sys.getenv("HOME")))
+dvats = import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
 
 #############
 # CONFIG #
@@ -112,16 +112,10 @@ make_individual_dygraph <- function(i){
 api <- wandb$Api()
 
 print("Querying encoders")
-encs_l <- tchub$get_wandb_artifacts(project_path = "pacmel/tchub", type = "learner", 
+encs_l <- dvats$get_wandb_artifacts(project_path = "pacmel/tchub", type = "learner", 
                                  last_version=F) %>% 
   discard(~ is_empty(.$aliases) | is_empty(.$metadata$train_artifact))
 encs_l <- encs_l %>% set_names(encs_l %>% map(~ glue("pacmel/tchub/", .$name)))
   #discard(~ str_detect(.$name, "dcae"))
 
-# embs_l <- tchub$get_wandb_artifacts(project_path = "pacmel/tchub", type = "object",
-#                                     name="embeddings", last_version=F) %>%
-#   discard(~ is_empty(.$aliases))
-# embs_l <- embs_l %>% set_names(embs_l %>% map(~.$aliases))
-#encs_l <- embs_l %>% map(~.$metadata$enc_artifact) %>% str_split("/") %>% map(pluck(3))
-#dsets_l <- embs_l %>% map(~.$metadata$input_ar) %>% str_split("/") %>% map(pluck(3))
 print("Done!")

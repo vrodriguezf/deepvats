@@ -224,6 +224,7 @@ shinyServer(function(input, output, session) {
     ###############
     X <- reactive({
       req(input$wlen != 0, input$stride != 0, tsdf())
+      print("X")
       tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
     })
     
@@ -261,9 +262,6 @@ shinyServer(function(input, output, session) {
     #   else
     #     selected_embs_ar$to_obj()
     # })
-    embs = reactive({
-      tchub$get_enc_embs(X = req(X()), enc_learn = req(enc()), cpu = F)
-    })
     
     # Get encoder artifact
     enc_ar = eventReactive(input$encoder, {
@@ -276,6 +274,12 @@ shinyServer(function(input, output, session) {
       py_load_object(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, enc_ar()$metadata$ref$hash))
     })
     
+    embs = reactive({
+      req(X(), enc())
+      print("embs")
+      dvats$get_enc_embs(X = X(), enc_learn = enc(), cpu = F)
+    })
+    
     # Get stride value
     s = reactive({
         req(enc_ar())$metadata$stride
@@ -283,7 +287,8 @@ shinyServer(function(input, output, session) {
     
     prj_object <- reactive({
       embs = req(embs())
-      res = tchub$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)) %>% 
+      print("prj_object")
+      res = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)) %>% 
         as.data.frame # TODO: This should be a matrix for improved efficiency
       colnames(res) = c("xcoord", "ycoord")
       res

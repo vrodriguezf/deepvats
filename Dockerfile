@@ -82,7 +82,7 @@ RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 # Ipython config
 #COPY --chown=$UID:$GID ./ipython_config.py $HOME
 
-# Reinstall pytorch (fix for gtx 3090)
+# Install pytorch (fix for gtx 3090)
 RUN conda activate $ENV_PREFIX && \
     pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 -f https://download.pytorch.org/whl/torch_stable.html && \
     conda deactivate

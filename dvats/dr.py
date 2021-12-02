@@ -35,7 +35,6 @@ def check_compatibility(dr_ar:TSArtifact, enc_ar:TSArtifact):
         raise e
     return None
 
-
 # Cell
 import warnings
 from numba.core.errors import NumbaPerformanceWarning

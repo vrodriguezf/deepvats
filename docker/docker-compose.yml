@@ -11,6 +11,8 @@ services:
       - "${JUPYTER_PORT}:8888"
     runtime: nvidia
     environment:
+      - WANDB_ENTITY=${WANDB_ENTITY}
+      - WANDB_PROJECT=${WANDB_PROJECT}
       - WANDB_API_KEY=${WANDB_API_KEY} #*
       - GH_TOKEN=${GH_TOKEN} #*
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
@@ -38,6 +40,8 @@ services:
       ports:
           - "${RSTUDIO_PORT}:8787" #*
       environment:
+          - WANDB_ENTITY=${WANDB_ENTITY}
+          - WANDB_PROJECT=${WANDB_PROJECT}
           - USER=${USER_NAME} #* 
           - USERID=${USER_ID} #*
           - GROUPID=${GROUP_ID} #*

@@ -78,6 +78,7 @@ def get_enc_embs(X, enc_learn, module=None, cpu=False, average_seq_dim=True, to_
     else:
         enc_learn.dls.cuda()
         enc_learn.cuda()
+    if enc_learn.dls.bs == 0: enc_learn.dls.bs = 64
     aux_dl = enc_learn.dls.valid.new_dl(X=X)
     aux_dl.bs = enc_learn.dls.bs if enc_learn.dls.bs>0 else 64
     module = nested_attr(enc_learn.model,

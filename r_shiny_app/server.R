@@ -286,10 +286,13 @@ shinyServer(function(input, output, session) {
     })
     
     prj_object <- reactive({
-      embs = req(embs())
+      embs = req(embs(), input$dr_method)
       print("prj_object")
-      res = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)) %>% 
-        as.data.frame # TODO: This should be a matrix for improved efficiency
+      res = switch(input$dr_method,
+             UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)),
+             TSNE = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)),
+             PCA = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)))
+      res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
       colnames(res) = c("xcoord", "ycoord")
       res
     })

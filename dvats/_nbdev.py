@@ -4,6 +4,8 @@ __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"check_compatibility": "dr.ipynb",
          "get_UMAP_prjs": "dr.ipynb",
+         "get_PCA_prjs": "dr.ipynb",
+         "get_TSNE_prjs": "dr.ipynb",
          "DCAE_torch": "encoder.ipynb",
          "ENCODER_EMBS_MODULE_NAME": "encoder.ipynb",
          "get_enc_embs": "encoder.ipynb",
@@ -20,7 +22,8 @@ index = {"check_compatibility": "dr.ipynb",
          "Learner.export_and_get": "utils.ipynb",
          "get_wandb_artifacts": "utils.ipynb",
          "plot_TS": "visualization.ipynb",
-         "plot_validation_ts_ae": "visualization.ipynb"}
+         "plot_validation_ts_ae": "visualization.ipynb",
+         "plot_mask": "visualization.ipynb"}
 
 modules = ["dr.py",
            "encoder.py",

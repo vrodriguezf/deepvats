@@ -32,6 +32,7 @@ shinyUI(fluidPage(
       # sliderInput("points_emb", "Select range of points to plot in the projections", 
       #             min = 0, max = 0, value = 0, step = 1, ticks = FALSE),
       #uiOutput("points_prj_controls"),
+      radioButtons("dr_method", "Projection method:", c("UMAP", "TSNE", "PCA"), selected="UMAP", inline=T),
       br(),
       radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
                    choices = c("No clusters" = "no_clusters",

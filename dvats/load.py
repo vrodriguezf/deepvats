@@ -144,7 +144,8 @@ def to_tsartifact(self:wandb.apis.public.Artifact):
                       metadata=self.metadata)
 
 # Cell
-def infer_or_inject_freq(df, injected_freq='1s', start_date=None):
+@delegates(pd.to_datetime)
+def infer_or_inject_freq(df, injected_freq='1s', start_date=None, **kwargs):
     """
         Infer index frequency. If there's not a proper time index, create fake timestamps,
         keeping the desired `injected_freq`. If that is None, set a default one of 1 second.
@@ -153,7 +154,7 @@ def infer_or_inject_freq(df, injected_freq='1s', start_date=None):
     inferred_freq = pd.infer_freq(df.index)
     if inferred_freq == 'N':
         timedelta = pd.to_timedelta(injected_freq)
-        df.index = pd.to_datetime(ifnone(start_date, 0)) + timedelta*df.index
+        df.index = pd.to_datetime(ifnone(start_date, 0), **kwargs) + timedelta*df.index
         df.index.freq = pd.infer_freq(df.index)
     else:
         df.index.freq = inferred_freq

@@ -1,20 +1,29 @@
 # Deep VATS
 > Deep learning Visual Analytics for Time Series
 
+## Structure
+![](https://i.imgur.com/2VQqKpF.png)
+
 ## Deploy
 
 To run the notebooks and the app, install `docker` and `docker-compose` in your system. 
-Then, create a new *.env* file inside the folder `docker` of the project following the structure shown [here](https://github.com/vrodriguezf/dockerfiles).
+Then, create a new *.env* file inside the folder `docker` of the project following the structure shown [here](https://github.com/vrodriguezf/dockerfiles/tree/master/jupyterlab-cuda). Additionally, add these config variables to the file:
+```
+# Port in which you want Rstudio server to be deployed (for developing in the front end)
+RSTUDIO_PORT=
+# Password to access the Rstudio server
+RSTUDIO_PASSWD=
+```
 
 Finally, in a terminal located in the folder `docker` of this repository, run:
 
 ```docker-compose up -d --build```
 
-then go to `localhost:{{JUPYTER_PORT}}` to run the notebooks or go to `localhost:{{RSTUDIO_PORT}}` to run the app. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
+then go to `localhost:{{JUPYTER_PORT}}` to run/edit the notebooks (backend) or go to `localhost:{{RSTUDIO_PORT}}` to run/edit the app (frontend). In case you are working in a remote server, replace `localhost` with the IP of your remote server.
 
-## Contribute
+## Contribute to the backend
 
-This project has been created using [nbdev](https://github.com/fastai/nbdev), a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.
+The backend of the project has been created using [nbdev](https://github.com/fastai/nbdev), a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.
 
 We recommend using the following procedure to contribute and resolve issues in the repository:
 

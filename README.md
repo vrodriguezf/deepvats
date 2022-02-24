@@ -1,20 +1,50 @@
 # Deep VATS
 > Deep learning Visual Analytics for Time Series
 
+The main objective of DeepVATS is to combine cutting-edge research in neural networks and visual analytics of time series. It is inspired by projects such as [Timecluster](https://link.springer.com/article/10.1007/s00371-019-01673-y) and the [TensorFlow's Embeddings Projector](https://projector.tensorflow.org/), in which tools are created to interpret the content of neural networks trained with visual and textual data. This allows to verify how the internal content of a neural network reveals high-level abstraction patterns present in the data (for example, semantic similarity between words in a language model).
+
+![General scheme of DeepVATS. Visualizing the embeddings can help in easily detecting outliers, change points, and regimes.
+](https://i.imgur.com/zkmUQtl.png)
+
+Given a set of time series data, DeepVATS will allow three basic tasks to be carried out:
+1. Train neural networks to search for representations that contain, in a compressed way, meaningful patterns of that data.
+2. Project and visualize the content of the latent space of neural network in a way that allows the search for patterns and anomalies.
+3. Provide interactive visualizations to explore different perspectives of the latent space.
+
+Currently, DeepVATS is recommended for time series data with the following properties:
+- Univariate & Multivariate time series
+- With or without natural timesteps
+- Regular timestamps
+- 1 single series at a time
+- Suitable for long time series that present cyclical patterns
+
+## Structure
+![](https://i.imgur.com/2VQqKpF.png)
+
 ## Deploy
 
 To run the notebooks and the app, install `docker` and `docker-compose` in your system. 
-Then, create a new *.env* file inside the folder `docker` of the project following the structure shown [here](https://github.com/vrodriguezf/dockerfiles).
+Then, create a new *.env* file inside the folder `docker` of the project following the structure shown [here](https://github.com/vrodriguezf/dockerfiles/tree/master/jupyterlab-cuda).
+
+> Note: You need to have an account in [Weights & Biases (wandb)](https://wandb.ai/).
+
+Additionally, add these config variables to the file:
+```
+# Port in which you want Rstudio server to be deployed (for developing in the front end)
+RSTUDIO_PORT=
+# Password to access the Rstudio server
+RSTUDIO_PASSWD=
+```
 
 Finally, in a terminal located in the folder `docker` of this repository, run:
 
 ```docker-compose up -d --build```
 
-then go to `localhost:{{JUPYTER_PORT}}` to run the notebooks or go to `localhost:{{RSTUDIO_PORT}}` to run the app. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
+then go to `localhost:{{JUPYTER_PORT}}` to run/edit the notebooks (backend) or go to `localhost:{{RSTUDIO_PORT}}` to run/edit the app (frontend). In case you are working in a remote server, replace `localhost` with the IP of your remote server.
 
-## Contribute
+## Contribute to the backend
 
-This project has been created using [nbdev](https://github.com/fastai/nbdev), a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.
+The backend of the project has been created using [nbdev](https://github.com/fastai/nbdev), a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.
 
 We recommend using the following procedure to contribute and resolve issues in the repository:
 

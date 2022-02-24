@@ -6,59 +6,77 @@ services:
         - uid=${USER_ID}
         - gid=${GROUP_ID}
       context: ../
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.jupyter
     ports:
       - "${JUPYTER_PORT}:8888"
-    runtime: nvidia
+    # runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: [gpu]
     environment:
       - WANDB_ENTITY=${WANDB_ENTITY}
       - WANDB_PROJECT=${WANDB_PROJECT}
       - WANDB_API_KEY=${WANDB_API_KEY} #*
       - GH_TOKEN=${GH_TOKEN} #*
-      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+      # - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       - WANDB_DIR=/home/${USER_NAME}/work
     volumes:
       - ../:/home/${USER}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
-      - conda-env:/home/${USER_NAME}/env
-      - miniconda:/home/${USER_NAME}/miniconda3
       - lib:/home/${USER_NAME}/lib
+      - conda:/opt/conda
+      - hpcx:/opt/hpcx
+      - cuda-volume:/usr/local/cuda-11.4
+      - linux-lib:/usr/lib/x86_64-linux-gnu
     init: true
     stdin_open: true
     tty: true    
   rstudio-server:
-      build:
-          context: ../
-          dockerfile: Dockerfile-rstudio
-          args:
-              - WANDB_API_KEY=${WANDB_API_KEY} #
-              - RETICULATE_PYTHON_ENV=/home/${USER_NAME}/env
-              - RETICULATE_MINICONDA_PATH=/home/${USER_NAME}/miniconda3
-              - USER=${USER_NAME} #* 
-              - UID=${USER_ID} #*
-              - GID=${GROUP_ID} #*
-      ports:
-          - "${RSTUDIO_PORT}:8787" #*
-      environment:
-          - WANDB_ENTITY=${WANDB_ENTITY}
-          - WANDB_PROJECT=${WANDB_PROJECT}
-          - USER=${USER_NAME} #* 
-          - USERID=${USER_ID} #*
-          - GROUPID=${GROUP_ID} #*
-          - PASSWORD=${RSTUDIO_PASSWD} #*
-          - ROOT=FALSE
-          - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
-          - GH_TOKEN=${GH_TOKEN} #*
-      runtime: nvidia
-      volumes:
-         - ../r_shiny_app:/home/${USER_NAME}/app #*
-         - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
-         - ../dvats:/home/${USER_NAME}/dvats
-         - conda-env:/home/${USER_NAME}/env:ro
-         - miniconda:/home/${USER_NAME}/miniconda3:ro
-         - lib:/home/${USER_NAME}/lib:ro
-
+    build:
+      args:
+        - WANDB_API_KEY=${WANDB_API_KEY} #
+        - CONDA_ENV=/opt/conda
+        - USER=${USER_NAME} #* 
+        - UID=${USER_ID} #*
+        - GID=${GROUP_ID} #*
+      context: ../
+      dockerfile: Dockerfile.rstudio
+    ports:
+      - "${RSTUDIO_PORT}:8787" #*
+    # runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: [gpu]
+    environment:
+      - WANDB_ENTITY=${WANDB_ENTITY}
+      - WANDB_PROJECT=${WANDB_PROJECT}
+      - USER=${USER_NAME} #* 
+      - USERID=${USER_ID} #*
+      - GROUPID=${GROUP_ID} #*
+      - PASSWORD=${RSTUDIO_PASSWD} #*
+      - ROOT=FALSE
+      # - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+      - GH_TOKEN=${GH_TOKEN} #*
+    volumes:
+      - ../r_shiny_app:/home/${USER_NAME}/app #*
+      - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
+      - ../dvats:/home/${USER_NAME}/dvats
+      - lib:/home/${USER_NAME}/lib:ro
+      - conda:/opt/conda:ro
+      - hpcx:/opt/hpcx:ro
+      - cuda-volume:/usr/local/cuda-11.4:ro
+      - linux-lib:/usr/lib/x86_64-linux-gnu-aux:ro
 volumes:
-  conda-env:
-  miniconda:
   lib:
+  conda:
+  hpcx:
+  cuda-volume:
+  linux-lib:

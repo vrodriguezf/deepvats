@@ -6,34 +6,46 @@ channels:
   - fastai
 
 dependencies:
-  - cudatoolkit=11.0
-  - cudf=21.10
-  - cuml=21.10
+  - cudatoolkit=11.4
+  - cudf=22.02
+  - cuml=22.02
+  - cupy
   - git
   - gh
   - hdbscan
+  - imbalanced-learn>=0.8.0  # TSAI
   - ipywidgets
   - jupyterlab
   - jupyterlab-git
   - keyrings.alt
   - libprotobuf # This has to be aligned with protobuf
+  - llvmlite<=0.38.0 ##### NEW #####
   - matplotlib
   - nano
   - nbclassic>=0.2.8
   - nbdev
+  - nbformat>=5.1.3  # TSAI
   - nodejs
+  - numba>=0.53.1,<0.55  # TSAI
   - numpy
   - pip
   - pip:
      - jupyterlab-quickopen
      - aquirdturtle_collapsible_headings
-#     - git+https://github.com/timeseriesAI/tsai.git
-#     - -r file:/tmp/requirements.txt
+     # - https://github.com/NVIDIA/Torch-TensorRT/releases/download/v1.0.0/torch_tensorrt-1.0.0-cp38-cp38-linux_x86_64.whl
+     # - git+https://github.com/timeseriesAI/tsai.git
+     # -r file:/tmp/requirements.txt
+     - fastai>=2.5.3  # TSAI
+  - pyts>=0.12.0  # TSAI
   - plotly
   - protobuf
+  - pynvml ##### NEW #####
   - python=3.8
-  #- python-language-server
+  - python-language-server
+  - pywavelets>=1.1.1  # TSAI
   - seaborn
+  - sktime>=0.9.0,<0.10.0  # TSAI
+  - tsfresh>=0.18.0  # TSAI
   - twine
   - xeus-python
   - umap-learn

@@ -1,0 +1,70 @@
+## rocker/ml image adds rstudio server, tiyverse and devtools to rocker/cuda
+# FROM rocker/ml:4.1.2-cuda11.1
+FROM rocker/tidyverse:4.1.2
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+
+## Install the required system libraries
+RUN apt-get update --fix-missing && \
+    apt-get install -y libxt-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+
+## Install R packages
+RUN R -e "install.packages(c('shiny', 'pals', 'shinyWidgets', 'dygraphs', 'shinycssloaders', 'shinyjs', 'Rcpp'))"
+RUN R -e "require(remotes); install_version('reticulate', version='1.22')"
+
+
+## Add new user
+ARG USER=user
+ARG UID=1000
+ARG GID=1000
+ENV HOME /home/$USER
+# ENV ENV_PREFIX $HOME/env
+
+RUN addgroup --gid $GID $USER
+RUN adduser --disabled-password \
+    --gecos "Non-root user" \
+    --uid $UID \
+    --gid $GID \
+    --home $HOME \
+    $USER
+
+
+## Configure CUDA
+RUN mkdir -p /usr/local/cuda-11.4 && \
+    rm -f /usr/local/cuda && \
+    ln -s /usr/local/cuda-11.4 /usr/local/cuda
+ARG PYTHON_PKGS=/opt/conda/lib/python3.8/site-packages
+RUN echo /opt/hpcx/ompi/lib/ >> /etc/ld.so.conf.d/ompi.conf && \
+    echo /usr/lib/x86_64-linux-gnu-aux >> /etc/ld.so.conf.d/x86_64-linux-gnu.conf && \
+    ldconfig
+
+
+## Configure Reticulate to use conda as the default environment for reticulate
+ARG CONDA_ENV
+ENV RETICULATE_CONDA=${CONDA_ENV}
+ENV RETICULATE_PYTHON=${CONDA_ENV}/bin/python/
+
+RUN echo "RETICULATE_CONDA=${RETICULATE_CONDA}" >> ${HOME}/.Renviron
+RUN echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> ${HOME}/.Renviron
+RUN echo "RETICULATE_PYTHON_ENV=${RETICULATE_CONDA}" >> ${HOME}/.Renviron
+
+# RUN R -e "reticulate::virtualenv_create(envname='${RETICULATE_PYTHON_ENV}', python='/usr/bin/python3')"
+# RUN R -e "reticulate::virtualenv_install(c('numpy', 'pandas', 'wandb', 'hdbscan'), envname='${RETICULATE_PYTHON_ENV}')"
+
+
+## Export W&B environment variable to Rstudio
+ARG WANDB_API_KEY
+RUN echo "WANDB_API_KEY=${WANDB_API_KEY}" >> /${HOME}/.Renviron
+
+
+## Use an entrypoint script to insure conda environment is properly activated at runtime
+COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
+RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
+ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]
+
+
+## Make non-activate conda commands available
+ENV PATH=${CONDA_PATH}/bin:${PATH}

@@ -32,9 +32,6 @@ services:
       - hpcx:/opt/hpcx
       - cuda-volume:/usr/local/cuda-11.4
       - linux-lib:/usr/lib/x86_64-linux-gnu
-    init: true
-    stdin_open: true
-    tty: true    
   rstudio-server:
     build:
       args:

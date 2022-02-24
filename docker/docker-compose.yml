@@ -9,7 +9,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "${JUPYTER_PORT}:8888"
-    runtime: nvidia
     environment:
       - WANDB_ENTITY=${WANDB_ENTITY}
       - WANDB_PROJECT=${WANDB_PROJECT}
@@ -25,7 +24,12 @@ services:
       - lib:/home/${USER_NAME}/lib
     init: true
     stdin_open: true
-    tty: true    
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
   rstudio-server:
       build:
           context: ../
@@ -49,7 +53,6 @@ services:
           - ROOT=FALSE
           - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
           - GH_TOKEN=${GH_TOKEN} #*
-      runtime: nvidia
       volumes:
          - ../r_shiny_app:/home/${USER_NAME}/app #*
          - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
@@ -57,6 +60,11 @@ services:
          - conda-env:/home/${USER_NAME}/env:ro
          - miniconda:/home/${USER_NAME}/miniconda3:ro
          - lib:/home/${USER_NAME}/lib:ro
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - capabilities: [gpu]
 
 volumes:
   conda-env:

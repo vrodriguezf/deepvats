@@ -54,7 +54,9 @@ shinyUI(fluidPage(
         sliderInput("cluster_selection_epsilon_hdbscan", label = "cluster_selection_epsilon", 
                     value = DEFAULT_VALUES$cluster_selection_epsilon_hdbscan, min=0, max=5, step = 0.01),
         actionBttn(inputId = "calculate_clusters", label = "Calculate and show clusters", style = "bordered",
-                   color = "primary", size = "sm", block = TRUE)
+                   color = "primary", size = "sm", block = TRUE),
+        downloadButton("save_clusters_by_window", "Save clusters by Windows"),
+        downloadButton("save_clusters_by_obs", "Save clusters by Observations")
       ),
     ),
     # Show a plot of the generated distribution

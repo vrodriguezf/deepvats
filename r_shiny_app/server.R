@@ -20,7 +20,7 @@ shinyServer(function(input, output, session) {
     # Reactive value created to keep updated the selected precomputed clusters_labels artifact
     precomputed_clusters <- reactiveValues(selected = NULL)
     
-    
+
     # Reactive value created to keep updated the selected clustering option
     clustering_options <- reactiveValues(selected = "no_clusters")
     
@@ -153,7 +153,7 @@ shinyServer(function(input, output, session) {
         clusters_config$min_samples_hdbscan <- req(input$min_samples_hdbscan)
         clusters_config$cluster_selection_epsilon_hdbscan <- req(input$cluster_selection_epsilon_hdbscan)
     })
-    
+
     
     # Observe the events related to zoom the projections graph
     observeEvent(input$zoom_btn,{
@@ -222,6 +222,67 @@ shinyServer(function(input, output, session) {
     ###############
     #  REACTIVES  #
     ###############
+    
+    clusters_labels_by_windows <-  reactive({
+      print("Download clusters by Windows")
+      prjs <- req(prj_object())
+      
+      clusters <- hdbscan$HDBSCAN(min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
+                                  min_samples = as.integer(clusters_config$min_samples_hdbscan),
+                                  cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
+                                  metric = clusters_config$metric_hdbscan)$fit(prjs)
+      
+      tsdf_data <- tsdf()
+      nRows <- nrow(tsdf_data) 
+      dt_windows <- data.table(window_idx = seq(along.with = clusters$labels_), cluster = clusters$labels_, n_rows = nRows)
+      dt_windows[, obs_start := (window_idx - 1) * input$stride]
+      dt_windows[, obs_end := obs_start + input$wlen]
+      dt_windows$obs_start = pmin(dt_windows$obs_start, dt_windows$n_rows)
+      dt_windows$obs_end = pmin(dt_windows$obs_end, dt_windows$n_rows)
+      dt_windows <- dt_windows[, c('window_idx', 'cluster', 'obs_start', 'obs_end')]
+      print("Done: dt_windows")
+      
+      dt_windows
+    })
+    
+    clusters_labels_by_obs <-  reactive({
+      print("Download clusters by Observations")
+      
+      tsdf_data <- tsdf()
+      nRows <- nrow(tsdf_data) 
+      
+      dt_windows <- req(clusters_labels_by_windows())
+      
+      add_cluster_idx <- Vectorize(function(x, new) {
+        list(c(x, new))
+      }, vectorize.args = c("x"), SIMPLIFY = TRUE)
+      obs_clusters <- data.table(idx = seq(0, nRows-1), clusters = vector("list", nRows)) 
+      get_clusters_for_obs <- function(row, output) {
+        output[seq(row['obs_start'], row['obs_end']), clusters := add_cluster_idx(clusters, row['cluster'])]
+      }
+      apply(dt_windows, 1, get_clusters_for_obs, output = obs_clusters)
+      print("Done: get_clusters_for_obs")
+  
+      get_most_freq_cluster <- Vectorize(function(x) {
+        if (length(x) == 0) {
+          ""
+        } else {
+          tab <- table(x)
+          most_freq = names(tab)[tab == max(tab)][1]
+          as.character(most_freq)
+        }
+      }, SIMPLIFY = TRUE)
+      obs_clusters[, most_freq_cluster := get_most_freq_cluster(clusters)]
+      
+      get_representation <- Vectorize(function(x) {
+        toString(x)
+      }, SIMPLIFY = TRUE)
+      obs_clusters[, clusters := get_representation(clusters)]
+      print("Done: most_freq_cluster")
+      
+      obs_clusters
+    })
+    
     X <- reactive({
       req(input$wlen != 0, input$stride != 0, tsdf())
       print("X")
@@ -521,4 +582,21 @@ shinyServer(function(input, output, session) {
       req(ts_plot())
     })
     
+    # Downloadable csv of selected dataset ----
+    output$save_clusters_by_window <- downloadHandler(
+      filename = function() {
+        paste("clusters_windows_", gsub(":", "_", gsub("/", "_", input$dataset)), ".csv", sep = "")
+      },
+      content = function(file) {
+        write.csv(clusters_labels_by_windows(), file, row.names = FALSE)
+      }
+    )
+    output$save_clusters_by_obs <- downloadHandler(
+      filename = function() {
+        paste("clusters_obs_", gsub(":", "_", gsub("/", "_", input$dataset)), ".csv", sep = "")
+      },
+      content = function(file) {
+        write.csv(clusters_labels_by_obs(), file, row.names = FALSE)
+      }
+    )
 })

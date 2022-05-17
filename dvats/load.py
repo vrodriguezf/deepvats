@@ -20,7 +20,9 @@ class TSArtifact(wandb.Artifact):
     handle_missing_values_techniques = {
         'linear_interpolation': lambda df : df.interpolate(method='linear', limit_direction='both'),
         'overall_mean': lambda df : df.fillna(df.mean()),
-        'overall_median': lambda df : df.fillna(df.median())
+        'overall_median': lambda df : df.fillna(df.median()),
+        'backward_fill' : lambda df : df.fillna(method='bfill'),
+        'forward_fill' : lambda df : df.fillna(method='ffill')
     }
 
     "Class that represents a wandb artifact containing time series data. sd stands for start_date \
@@ -107,7 +109,7 @@ class TSArtifact(wandb.Artifact):
             df = normalize_columns(df)
 
         # Hash and save
-        hash_code = str(hash(df.values.tobytes()))
+        hash_code = str(pd.util.hash_pandas_object(df).sum()) # str(hash(df.values.tobytes()))
         path = obj.default_storage_path/f'{hash_code}' if path is None else Path(path)/f'{hash_code}'
         df.to_pickle(path)
         obj.metadata['TS']['hash'] = hash_code

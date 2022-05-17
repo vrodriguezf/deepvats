@@ -19,7 +19,16 @@ Currently, DeepVATS is recommended for time series data with the following prope
 - Suitable for long time series that present cyclical patterns
 
 ## Structure
-![](https://i.imgur.com/2VQqKpF.png)
+
+The tool consists of three modules. The DL (Deep Learning) module sets the pipeline for training the 'backbone' neural netowirk model. The second module, namely the storage module, provides an API that allows to save the datatsets and de encoder models produced by the DL module, and load the into the Visual Analytics module to be used for inference. That module, the VA (Visual Analytics) module, allows to use the trained models in a exploratory way throught a Graphical User Interface (GUI). 
+
+![](https://github.com/vrodriguezf/deepvats/blob/master/imgs/architecture.png)
+
+## How it works
+
+The tool can be used for different time series data mining tasks, such as segmentation or detection of repetitive patterns (motifs) and anomalies (outliers). This example shows the use of the tool with a pre-trained model for segmentation.
+
+![](https://github.com/vrodriguezf/deepvats/blob/master/imgs/deepvats.gif)
 
 ## Deploy
 

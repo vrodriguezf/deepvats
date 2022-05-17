@@ -21,6 +21,7 @@ index = {"check_compatibility": "dr.ipynb",
          "PrintLayer": "utils.ipynb",
          "Learner.export_and_get": "utils.ipynb",
          "get_wandb_artifacts": "utils.ipynb",
+         "get_pickle_artifact": "utils.ipynb",
          "plot_TS": "visualization.ipynb",
          "plot_validation_ts_ae": "visualization.ipynb",
          "plot_mask": "visualization.ipynb"}

@@ -1,17 +1,21 @@
 channels:
+  - pytorch
   - defaults
   - conda-forge
   - nvidia
   - rapidsai
+  - fastchan
   - fastai
 
 dependencies:
-  - cudatoolkit=11.0
-  - cudf=21.10
-  - cuml=21.10
+  - cudatoolkit=11.3          #
+  - cudf=21.12                #
+  - cuml=21.12                #
+  - fastai>=2.5.6             ##
   - git
   - gh
   - hdbscan
+  - imbalanced-learn>=0.8.0   ##
   - ipywidgets
   - jupyterlab
   - jupyterlab-git
@@ -20,6 +24,7 @@ dependencies:
   - matplotlib
   - nano
   - nbclassic>=0.2.8
+  - nbformat>=5.1.3           ##
   - nbdev
   - nodejs
   - numpy
@@ -27,13 +32,17 @@ dependencies:
   - pip:
      - jupyterlab-quickopen
      - aquirdturtle_collapsible_headings
-#     - git+https://github.com/timeseriesAI/tsai.git
-#     - -r file:/tmp/requirements.txt
+     # - git+https://github.com/timeseriesAI/tsai.git
+     # - -r file:/tmp/requirements.txt
   - plotly
   - protobuf
+  - psutil>=5.4.8             ##
   - python=3.8
-  #- python-language-server
+  # - python-language-server
+  - pytorch                   #
+  - pyts>=0.12.0              ##
   - seaborn
+  - torchvision               #
   - twine
   - xeus-python
   - umap-learn

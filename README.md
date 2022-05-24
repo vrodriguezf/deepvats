@@ -4,7 +4,7 @@
 The main objective of DeepVATS is to combine cutting-edge research in neural networks and visual analytics of time series. It is inspired by projects such as [Timecluster](https://link.springer.com/article/10.1007/s00371-019-01673-y) and the [TensorFlow's Embeddings Projector](https://projector.tensorflow.org/), in which tools are created to interpret the content of neural networks trained with visual and textual data. This allows to verify how the internal content of a neural network reveals high-level abstraction patterns present in the data (for example, semantic similarity between words in a language model).
 
 ![General scheme of DeepVATS. Visualizing the embeddings can help in easily detecting outliers, change points, and regimes.
-](https://i.imgur.com/zkmUQtl.png)
+](https://github.com/vrodriguezf/deepvats/blob/master/imgs/deepvats_intro.png)
 
 Given a set of time series data, DeepVATS will allow three basic tasks to be carried out:
 1. Train neural networks to search for representations that contain, in a compressed way, meaningful patterns of that data.
@@ -22,13 +22,13 @@ Currently, DeepVATS is recommended for time series data with the following prope
 
 The tool consists of three modules. The DL (Deep Learning) module sets the pipeline for training the 'backbone' neural netowirk model. The second module, namely the storage module, provides an API that allows to save the datatsets and de encoder models produced by the DL module, and load the into the Visual Analytics module to be used for inference. That module, the VA (Visual Analytics) module, allows to use the trained models in a exploratory way throught a Graphical User Interface (GUI). 
 
-![](https://github.com/vrodriguezf/deepvats/blob/master/imgs/architecture.png)
+![DeepVATS architecture](https://github.com/vrodriguezf/deepvats/blob/master/imgs/architecture.png)
 
 ## How it works
 
 The tool can be used for different time series data mining tasks, such as segmentation or detection of repetitive patterns (motifs) and anomalies (outliers). This example shows the use of the tool with a pre-trained model for segmentation.
 
-![](https://github.com/vrodriguezf/deepvats/blob/master/imgs/deepvats.gif)
+![Using the DeepVATS GUI](https://github.com/vrodriguezf/deepvats/blob/master/imgs/deepvats.gif)
 
 ## Deploy
 

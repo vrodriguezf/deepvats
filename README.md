@@ -109,19 +109,12 @@ If you use DeepVATS, please cite the paper:
 ``` text
 @misc{https://doi.org/10.48550/arxiv.2302.03858,
   doi = {10.48550/ARXIV.2302.03858},
-  
   url = {https://arxiv.org/abs/2302.03858},
-  
   author = {Rodriguez-Fernandez, Victor and Montalvo, David and Piccialli, Francesco and Nalepa, Grzegorz J. and Camacho, David},
-  
   keywords = {Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
-  
   title = {DeepVATS: Deep Visual Analytics for Time Series},
-  
   publisher = {arXiv},
-  
   year = {2023},
-  
   copyright = {Creative Commons Attribution Non Commercial No Derivatives 4.0 International}
 }
 

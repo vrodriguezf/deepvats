@@ -35,12 +35,35 @@ The tool can be used for different time series data mining tasks, such as segmen
 To run the notebooks and the app, install `docker`, `docker-compose` and the [nvidia container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) in your system. 
 > Note: Your system needs an NVIDIA GPU
 
-Then, create a new *.env* file inside the folder `docker` of the project following the structure shown [here](https://github.com/vrodriguezf/dockerfiles/tree/master/jupyterlab-cuda).
+Then, create a new *.env* file inside the folder `docker` of the project adding the following config variables [here](https://github.com/vrodriguezf/dockerfiles/tree/master/jupyterlab-cuda).
 
 > Note: You need to have an account in [Weights & Biases (wandb)](https://wandb.ai/).
 
-Additionally, add these config variables to the file:
 ```
+# The name of the docker-compose project
+COMPOSE_PROJECT_NAME=your_project_name
+# The user ID you are using to run docker-compose
+USER_ID=your_numeric_id
+# The group ID you are using to run docker-compose (you can get it with id -g in a terminal)
+GROUP_ID=your_numeric_id
+# The user name assigned to the user id
+USER_NAME=your_user_name
+# The port from which you want to access Jupyter lab
+JUPYTER_PORT=
+# The token used to access (like a password)
+JUPYTER_TOKEN=
+# The path to your data files to train/test the models
+LOCAL_DATA_PATH=/path/to/your/data
+# The W&B entity
+WANDB_ENTITY=
+# The W&B project
+WANDB_PROJECT=
+# The W&B personal API key (see https://wandb.ai/authorize)
+WANDB_API_KEY=your_wandb_api_key
+# List of comma separated GPU indices that will be available in the container (by default only 0, the first one)
+CUDA_VISIBLE_DEVICES=0
+# Github PAT (see https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and>
+GH_TOKEN=your_github_pat
 # Port in which you want Rstudio server to be deployed (for developing in the front end)
 RSTUDIO_PORT=
 # Password to access the Rstudio server

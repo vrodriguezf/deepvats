@@ -35,7 +35,7 @@ The tool can be used for different time series data mining tasks, such as segmen
 To run the notebooks and the app, install `docker`, `docker-compose` and the [nvidia container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) in your system. 
 > Note: Your system needs an NVIDIA GPU
 
-Then, create a new *.env* file inside the folder `docker` of the project adding the following config variables [here](https://github.com/vrodriguezf/dockerfiles/tree/master/jupyterlab-cuda).
+Then, create a new *.env* file inside the folder `docker` of the project adding the following config variables liste below.
 
 > Note: You need to have an account in [Weights & Biases (wandb)](https://wandb.ai/).
 

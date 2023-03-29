@@ -1,9 +1,10 @@
 #FROM vrodriguezf/rstudio-server-shiny-development
 # Adds rstudio server, tiyverse, devtools to rocker/cuda
-FROM rocker/ml
+FROM rocker/ml:devel-cuda11.3
 
 SHELL [ "/bin/bash", "--login", "-c" ]
 
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC 
 RUN apt-get update
 RUN apt-get install -y python3-pip
 RUN python3 -m pip install --upgrade pip

@@ -6,7 +6,7 @@ LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
 SHELL [ "/bin/bash", "--login", "-c" ]
 
 RUN apt-get update --fix-missing && \
-    apt-get install -y wget bzip2 curl git && \
+    apt-get install -y wget bzip2 curl git sudo && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -87,11 +87,12 @@ RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 #     pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 -f https://download.pytorch.org/whl/torch_stable.html && \
 #     conda deactivate
 
-# Editable packages (pip)
+# Editable packages (pip) (install tsai v0.3.1)
 RUN mkdir /home/$USER/lib
 RUN conda activate $ENV_PREFIX && \
     cd /home/$USER/lib \
-    && git clone https://github.com/timeseriesAI/tsai.git \
+    && rm -rf tsai \
+    && git clone -b 0.3.1 --single-branch https://github.com/timeseriesAI/tsai.git \
     && cd tsai \ 
     && pip install --no-deps -e . && \
     conda deactivate
@@ -105,6 +106,11 @@ RUN conda activate $ENV_PREFIX && \
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+
+# Passwordless sudo (TODO: mv to root section)
+USER root
+RUN echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+USER $USER
 
 # default command will be to launch JupyterLab server for development
 CMD [ "jupyter", "lab", "--no-browser", "--ip", "0.0.0.0", "--ContentsManager.allow_hidden=True"]

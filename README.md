@@ -74,7 +74,16 @@ Finally, in a terminal located in the folder `docker` of this repository, run:
 
 ```docker-compose up -d```
 
-then go to `localhost:{{JUPYTER_PORT}}` to run/edit the notebooks (backend) or go to `localhost:{{RSTUDIO_PORT}}` to run/edit the app (frontend). In case you are working in a remote server, replace `localhost` with the IP of your remote server.
+then go to `localhost:{{JUPYTER_PORT}}` to run/edit the notebooks (backend) or go to `localhost:{{RSTUDIO_PORT}}` to edit the visualization module (frontend). 
+
+> Note: In case you are working in a remote server, replace `localhost` with the IP of your remote server.
+
+To run the GUI, enter the visualization service in `localhost:{{RSTUDIO_PORT}}`, 
+and then run, in the R console: 
+```r
+runApp("app")
+```
+
 
 ## Contribute to the backend
 

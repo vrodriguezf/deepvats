@@ -58,3 +58,7 @@ RUN echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> ${HOME}/.Re
 # make non-activate conda commands available
 ENV PATH=${RETICULATE_MINICONDA_PATH}/bin:${PATH}
 
+# TODO: Move this to the beginning of the Dockerfile
+# This solves this bug (https://github.com/rstudio/reticulate/issues/841)
+RUN rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6 \
+    && ln -s $ENV_PREFIX/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6

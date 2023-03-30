@@ -81,7 +81,7 @@ then go to `localhost:{{JUPYTER_PORT}}` to run/edit the notebooks (backend) or g
 To run the GUI, enter the visualization service in `localhost:{{RSTUDIO_PORT}}`, 
 and then run, in the R console: 
 ```r
-runApp("app")
+shiny::runApp("app")
 ```
 
 

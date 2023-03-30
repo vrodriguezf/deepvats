@@ -53,8 +53,8 @@
 		// "ghcr.io/devcontainers/features/nvidia-cuda:1": {
 		// 	"installCudnn": true
 		// }
-	},
+	}
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "sudo chown -R $(id -u):$(id -g) $HOME/.config"
+	//"postCreateCommand": "sudo chown -R $(id -u):$(id -g) $HOME/.config"
 }

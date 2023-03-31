@@ -31,7 +31,8 @@
 				"ms-python.vscode-pylance",
 				"ms-toolsai.jupyter",
 				"github.copilot",
-				"genieai.chatgpt-vscode"
+				"genieai.chatgpt-vscode",
+				"run-ai.vscode-genv"
 			]
 		}
 	},

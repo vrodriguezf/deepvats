@@ -1,5 +1,5 @@
 #FROM ubuntu:20.04
-FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
+FROM nvidia/cuda:12.0.1-cudnn8-runtime-ubuntu22.04
 
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
 
@@ -90,12 +90,12 @@ RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 #     pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 -f https://download.pytorch.org/whl/torch_stable.html && \
 #     conda deactivate
 
-# Editable packages (pip) (install tsai v0.3.1)
+# Editable packages (pip) (install tsai v0.3.5)
 RUN mkdir /home/$USER/lib
 RUN conda activate $ENV_PREFIX && \
     cd /home/$USER/lib \
     && rm -rf tsai \
-    && git clone -b 0.3.1 --single-branch https://github.com/timeseriesAI/tsai.git \
+    && git clone -b 0.3.5 --single-branch https://github.com/timeseriesAI/tsai.git \
     && cd tsai \ 
     && pip install --no-deps -e . && \
     conda deactivate

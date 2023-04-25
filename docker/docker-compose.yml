@@ -17,7 +17,7 @@ services:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       - WANDB_DIR=/home/${USER_NAME}/work
     volumes:
-      - ../:/home/${USER}/work
+      - ../:/home/${USER_NAME}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
       - conda-env:/home/${USER_NAME}/env
       - miniconda:/home/${USER_NAME}/miniconda3

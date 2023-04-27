@@ -1,17 +1,17 @@
 channels:
   - pytorch
+  - fastchan
+  - nvidia
+  - fastai
+  - rapidsai
   - defaults
   - conda-forge
-  - nvidia
-  - rapidsai
-  - fastchan
-  - fastai
 
 dependencies:
-  - cuda-toolkit=11.8          #
+  - cuda-toolkit=11.6          #
   - cudf=23.02                #
   - cuml=23.02                #
-  - fastai>=2.7.12             ##
+  - fastai=2.7.10             ##
   # - git
   - genv
   - gh
@@ -43,10 +43,10 @@ dependencies:
 #  - psutil>=5.4.8             ##
   - python=3.10
   # - python-language-server
-  # - pytorch                   #
+  - pytorch=1.13.1=py3.10_cuda11.6_cudnn8.3.2_0                  #
   - pyts>=0.12.0              ##
   - seaborn
-  - torchvision               #
+  # - torchvision               #
   - twine
   - xeus-python
   - umap-learn

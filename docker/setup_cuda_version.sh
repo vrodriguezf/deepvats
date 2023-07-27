@@ -34,12 +34,13 @@ update_or_append_cuda_version() {
 
 get_cuda_img() {
   local version="$1"
-  local cuda_file="environments/cuda_$version.env"
+  local cuda_file="environments/cuda_version.env"
+  local cuda_var="CUDA_$version"
    if [ ! -f "$cuda_file" ]; then
     echo "Error: The CUDA version environment file ($cuda_file) does not exist."
     exit 1
   fi
-  local cuda_img=$(grep -oP 'CUDA_VERSION=\K.*' "$cuda_file")
+  local cuda_img=$(grep -oP ${cuda_var}'=\K.*' "$cuda_file")
   echo "$cuda_img"
 }
 

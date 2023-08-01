@@ -1,0 +1,137 @@
+56c56
+<   - cmarkgfm=0.4.2=py310h7f8727e_0
+---
+>   - cmarkgfm=2022.10.27=py310h5eee18b_0
+61c61
+<   - cryptography=39.0.1=py310h9ce1e76_2
+---
+>   - cryptography=41.0.2=py310h22a60cf_0
+73c73
+<   - cuda-gdb=12.1.105=0
+---
+>   - cuda-gdb=12.2.53=0
+77,78c77,78
+<   - cuda-nsight=12.1.105=0
+<   - cuda-nsight-compute=12.1.1=0
+---
+>   - cuda-nsight=12.2.53=0
+>   - cuda-nsight-compute=12.2.0=0
+80c80
+<   - cuda-nvdisasm=12.1.105=0
+---
+>   - cuda-nvdisasm=12.2.53=0
+82c82
+<   - cuda-nvprof=12.1.105=0
+---
+>   - cuda-nvprof=12.2.60=0
+87c87
+<   - cuda-nvvp=12.1.105=0
+---
+>   - cuda-nvvp=12.2.60=0
+92c92
+<   - cuda-sanitizer-api=12.1.105=0
+---
+>   - cuda-sanitizer-api=12.2.53=0
+103c103
+<   - cython=0.29.35=py310h6a678d5_0
+---
+>   - cython=3.0.0=py310h5eee18b_0
+133,135c133,134
+<   - future=0.18.3=py310h06a4308_0
+<   - gds-tools=1.6.1.9=0
+<   - genv=0.12.0=ha770c72_0
+---
+>   - gds-tools=1.7.0.149=0
+>   - genv=1.2.0=pyhd8ed1ab_0
+146c145
+<   - hdbscan=0.8.29=py310h0a54255_2
+---
+>   - hdbscan=0.8.33=py310h278f3c1_0
+167c166
+<   - jupyter_client=8.1.0=py310h06a4308_0
+---
+>   - jupyter_client=7.4.9=py310h06a4308_0
+170c169
+<   - jupyter_server=2.5.0=py310h06a4308_0
+---
+>   - jupyter_server=1.23.4=py310h06a4308_0
+172d170
+<   - jupyter_server_terminals=0.4.4=py310h06a4308_1
+203,204c201,202
+<   - libcufile=1.6.1.9=0
+<   - libcufile-dev=1.6.1.9=0
+---
+>   - libcufile=1.7.0.149=0
+>   - libcufile-dev=1.7.0.149=0
+230,231c228,229
+<   - libnpp=12.1.0.40=0
+<   - libnpp-dev=12.1.0.40=0
+---
+>   - libnpp=12.1.1.14=0
+>   - libnpp-dev=12.1.1.14=0
+261a260
+>   - markdown-it-py=2.2.0=py310h06a4308_1
+265a265
+>   - mdurl=0.1.0=py310h06a4308_0
+283c283
+<   #- notebook=6.5.4=py310h06a4308_0
+---
+>   - notebook=6.5.4=py310h06a4308_0
+285c285
+<   - nsight-compute=2023.1.1.4=0
+---
+>   - nsight-compute=2023.2.0.16=0
+288,289c288,289
+<   - numba=0.57.0=py310h0f6aa51_2
+<   - numpy=1.24.3=py310ha4c1d20_0
+---
+>   - numba=0.57.1=py310h0f6aa51_0
+>   - numpy=1.24.4=py310ha4c1d20_0
+304c304
+<   - pip=23.1.2=py310h06a4308_0
+---
+>   - pip=23.2.1=py310h06a4308_0
+325c325
+<   - pyopenssl=23.0.0=py310h06a4308_0
+---
+>   - pyopenssl=23.2.0=py310h06a4308_0
+342c342
+<   - pyzmq=25.1.0=py310h6a678d5_0
+---
+>   - pyzmq=23.2.0=py310h6a678d5_0
+349,350c349,350
+<   - readme_renderer=24.0=py310h06a4308_0
+<   - requests=2.29.0=py310h06a4308_0
+---
+>   - readme_renderer=40.0=py310h06a4308_0
+>   - requests=2.31.0=py310h06a4308_0
+354a355
+>   - rich=13.3.5=py310h06a4308_0
+358c359
+<   - scipy=1.10.1=py310h8deb116_0
+---
+>   - scipy=1.11.1=py310ha4c1d20_0
+362c363
+<   - sentry-sdk=1.28.1=pyhd8ed1ab_0
+---
+>   - sentry-sdk=1.29.0=pyhd8ed1ab_0
+364c365
+<   - setuptools=67.8.0=py310h06a4308_0
+---
+>   - setuptools=68.0.0=py310h06a4308_0
+396c397
+<   - twine=3.7.1=pyhd3eb1b0_0
+---
+>   - twine=4.0.2=py310h06a4308_0
+398,399c399,400
+<   - typing-extensions=4.6.3=py310h06a4308_0
+<   - typing_extensions=4.6.3=py310h06a4308_0
+---
+>   - typing-extensions=4.7.1=py310h06a4308_0
+>   - typing_extensions=4.7.1=py310h06a4308_0
+406c407
+<   - wandb=0.14.2=pyhd8ed1ab_0
+---
+>   - wandb=0.15.7=pyhd8ed1ab_0
+430a432
+> prefix: /home/macu/env

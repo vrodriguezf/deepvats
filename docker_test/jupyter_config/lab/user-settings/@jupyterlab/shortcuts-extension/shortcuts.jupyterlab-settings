@@ -1,0 +1,90 @@
+{
+  "shortcuts": [
+    {
+      "command": "quickopen:activate",
+      "keys": [
+        "Accel ."
+      ],
+      "selector": "body",
+      "title": "Activate Quick Open",
+      "category": "Main Area"
+    },
+    {
+        "command": "application:activate-next-tab",
+        "keys": [
+                "Alt ArrowRight"
+            ],
+            "selector": "body"
+    },
+    {
+        "command": "application:activate-previous-tab",
+        "keys": [
+                "Alt ArrowLeft"
+            ],
+            "selector": "body"
+    },
+    {
+        "command": "notebook:run-all-above",
+        "keys": [
+            "Accel F8"
+        ],
+        "selector": ".jp-Notebook:focus"
+    },
+    {
+        "command": "notebook:run-all-below",
+        "keys": [
+            "Accel F10"
+        ],
+        "selector": ".jp-Notebook:focus"
+    },
+    {
+        "command": "notebook:run-all-cells",
+        "keys": [
+            "Accel F9"
+        ],
+        "selector": ".jp-Notebook:focus"
+    },
+    {
+        "command": "kernelmenu:restart-and-clear",
+        "keys": [
+            "0 0"
+        ],
+        "selector": "[data-jp-kernel-user]:focus"
+    },
+      {
+        "command": "notebook:clear-cell-output",
+        "keys": [
+            "Accel o"
+        ],
+        "selector": ".jp-Notebook:focus"
+    },
+           {
+            "command": "console:run-forced",
+            "keys": [
+                "Enter"
+            ],
+            "selector": ".jp-CodeConsole[data-jp-interaction-mode='notebook'] .jp-CodeConsole-promptCell"
+        },
+        {
+            "command": "console:run-forced",
+            "keys": [
+                "Enter"
+            ],
+            "selector": ".jp-CodeConsole[data-jp-interaction-mode='terminal'] .jp-CodeConsole-promptCell"
+        },
+              {
+            "command": "console:linebreak",
+            "keys": [
+                "Accel Enter"
+            ],
+            "selector": ".jp-CodeConsole[data-jp-interaction-mode='notebook'] .jp-CodeConsole-promptCell"
+        },
+        {
+            "command": "console:linebreak",
+            "keys": [
+                "Accel Enter"
+            ],
+            "selector": ".jp-CodeConsole[data-jp-interaction-mode='terminal'] .jp-CodeConsole-promptCell"
+        }
+  ]
+}

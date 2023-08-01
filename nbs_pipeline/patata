@@ -5,7 +5,6 @@ channels:
   - nvidia
   - rapidsai
   - conda-forge
-  - fastchan
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
@@ -280,7 +279,7 @@ dependencies:
   - ncurses=6.4=h6a678d5_0
   - nest-asyncio=1.5.6=py310h06a4308_0
   - nodejs=18.16.0=h2d74bed_0
-  #- notebook=6.5.4=py310h06a4308_0
+  - notebook=6.5.2=pyha770c72_0
   - notebook-shim=0.2.2=py310h06a4308_0
   - nsight-compute=2023.1.1.4=0
   - nspr=4.35=h6a678d5_0
@@ -428,3 +427,4 @@ dependencies:
   - pip:
     - pyqt5-sip==12.11.0
     - treelite-runtime==3.1.0
+prefix: /home/macu/env

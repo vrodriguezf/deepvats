@@ -1,0 +1,23 @@
+{
+    // Quick Open
+    // @parente/jupyterlab-quickopen:plugin
+    // Quick open panel settings
+    // ************************************
+
+    // Exclude Patterns
+    // File and directory patterns to exclude from the list
+    "excludes": [
+        "env",
+        "miniconda3",
+        "data",
+        "wandb",
+        ".*",
+        "node_modules",
+        "__pycache__",
+        "*.egg-info"
+    ],
+
+    // Relative Search
+    // Whether to search from currently selected directory
+    "relativeSearch": false
+}

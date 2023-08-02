@@ -1,8 +1,12 @@
 {
-  "pacmel_mining_use_case": {
+  "timecluster_hub": {
     "Overview": "/",
-    "Load data from the longwall": "/load",
-    "Detect and explain outliers for high dimensional time series data": "/Timecluster_replication",
-    "GUI ": "/GUI"
+    "Title": "dataset_artifact",
+    "DCAE: Deep Convolutional Autoencoder": "DCAE",
+    "Dimensionality reduction": "dimensionality_reduction",
+    "Baseline Models": "baseline_models",
+    "Load data from the longwall": "load",
+    "Utils": "utils",
+    "Visualization": "visualization"
   }
 }

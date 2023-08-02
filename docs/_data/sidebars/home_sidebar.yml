@@ -10,15 +10,27 @@ entries:
       title: Overview
       url: /
     - output: web,pdf
+      title: Title
+      url: dataset_artifact
+    - output: web,pdf
+      title: 'DCAE: Deep Convolutional Autoencoder'
+      url: DCAE
+    - output: web,pdf
+      title: Dimensionality reduction
+      url: dimensionality_reduction
+    - output: web,pdf
+      title: Baseline Models
+      url: baseline_models
+    - output: web,pdf
       title: Load data from the longwall
-      url: /load
+      url: load
     - output: web,pdf
-      title: Detect and explain outliers for high dimensional time series data
-      url: /Timecluster_replication
+      title: Utils
+      url: utils
     - output: web,pdf
-      title: 'GUI '
-      url: /GUI
+      title: Visualization
+      url: visualization
     output: web
-    title: pacmel_mining_use_case
+    title: timecluster_hub
   output: web
   title: Sidebar

@@ -8,138 +8,360 @@
 #
 
 
-# Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
+  
+    ######################
+    #  REACTIVES VALUES  #
+    ######################
+    
+    # Reactive values created to update the current range of the main slider input
+    #slider_range <- reactiveValues(min_value = 1, max_value = 2)
+    
+    # Reactive value created to keep updated the selected precomputed clusters_labels artifact
+    precomputed_clusters <- reactiveValues(selected = NULL)
+    
+    
+    # Reactive value created to keep updated the selected clustering option
+    clustering_options <- reactiveValues(selected = "no_clusters")
+    
+    
+    # Reactive value created to configure the graph brush
+    ranges <- reactiveValues(x = NULL, y = NULL)
+    
+    
+    # Reactive value created to configure clusters options
+    clusters_config <- reactiveValues(metric_hdbscan = DEFAULT_VALUES$metric_hdbscan,
+                                      min_cluster_size_hdbscan = DEFAULT_VALUES$min_cluster_size_hdbscan,
+                                      min_samples_hdbscan = DEFAULT_VALUES$min_samples_hdbscan,
+                                      cluster_selection_epsilon_hdbscan = DEFAULT_VALUES$cluster_selection_epsilon_hdbscan)
+    
+    
+    # Reactive values created to configure the appearance of the projections graph.
+    config_style <- reactiveValues(path_line_size = DEFAULT_VALUES$path_line_size,
+                                   path_alpha = DEFAULT_VALUES$path_alpha,
+                                   point_alpha = DEFAULT_VALUES$point_alpha,
+                                   point_size = DEFAULT_VALUES$point_size)
+    
+    
+    # Reactive value created to store time series selected variables
+    ts_variables <- reactiveValues(selected = NULL)
+    
+    
+    
+    #################################
+    #  OBSERVERS & OBSERVERS EVENTS #
+    #################################
+    observeEvent(req(exists("encs_l")), {
+      print("input_dataset")
+      freezeReactiveValue(input, "dataset")
+      updateSelectizeInput(session = session,
+                           inputId = "dataset",
+                           choices = encs_l %>% 
+                             map(~.$metadata$train_artifact) %>% 
+                             set_names())
+    }, label = "input_dataset")
+    
+    observeEvent(input$dataset, {
+      req(exists("encs_l"))
+      print("input_encoder")
+      print(input$dataset)
+      freezeReactiveValue(input, "encoder")
+      updateSelectizeInput(session = session,
+                           inputId = "encoder",
+                           choices = encs_l %>% 
+                             keep(~ .$metadata$train_artifact == input$dataset) %>% 
+                             #map(~ .$metadata$enc_artifact) %>% 
+                             names)
+    }, label = "input_encoder")
+    
+    # observeEvent(input$encoder, {
+    #   freezeReactiveValue(input, "embs_ar")
+    #   updateSelectizeInput(session = session, inputId = "embs_ar",
+    #                        choices = embs_l %>%
+    #                          keep(~ .$metadata$enc_artifact == input$encoder)
+    #                        %>% names)
+    # })
+    
+    observeEvent(input$encoder, {
+      enc_ar = req(enc_ar())
+      freezeReactiveValue(input, "wlen")
+      if (is.null(enc_ar$metadata$mvp_ws)) 
+        enc_ar$metadata$mvp_ws = c(enc_ar$metadata$w, enc_ar$metadata$w)
+      updateSliderInput(session = session, inputId = "wlen",
+                        min = enc_ar$metadata$mvp_ws[1],
+                        max = enc_ar$metadata$mvp_ws[2],
+                        value = enc_ar$metadata$w)
+    })
+    
+    observeEvent(input$wlen, {
+      req(input$wlen != 0)
+      old_value = input$stride
+      freezeReactiveValue(input, "stride")
+      updateSliderInput(session = session, inputId = "stride", 
+                        min = 1, max = input$wlen, 
+                        value = ifelse(old_value <= input$wlen, old_value, 1))
+    })
+
+    # Update "metric_hdbscan" selectInput when the app is loaded
+    observe({
+        updateSelectInput(session = session,
+                          inputId = "metric_hdbscan",
+                          choices = names(req(hdbscan_metrics)))
+    })
+    # Update the range of point selection when there is new data
+    # observeEvent(X(), {
+    #   #max_ = ts_ar()$metadata$TS$n_samples
+    #   max_ = dim(X())[[1]]
+    #   freezeReactiveValue(input, "points_emb")
+    #   updateSliderInput(session = session, inputId = "points_emb",
+    #                     min = 1, max = max_, value = c(1, max_))
+    # })
+
+    # Update selected time series variables and update interface config
+    observeEvent(tsdf(), {
+      #freezeReactiveValue(input, "select_variables")
+      ts_variables$selected <- names(tsdf())
+      updateCheckboxGroupInput(session = session,
+                               inputId = "select_variables",
+                               choices = ts_variables$selected,
+                               selected = ts_variables$selected)
+    }, label = "select_variables")
+    
+    # Update slider_range reactive values with current samples range
+    # observe({
+    #     req(input$points_emb)
+    #     slider_range$min_value <- input$points_emb[1]
+    #     slider_range$max_value <- input$points_emb[2]
+    # })
+    
+    # Update precomputed_clusters reactive value when the input changes
+    observe({
+        precomputed_clusters$selected <- req(input$clusters_labels_name)
+    })
+    
+    
+    # Update clustering_options reactive value when the input changes
+    observe({
+        clustering_options$selected <- req(input$clustering_options)
+    })
 
     
-    ###
-    # Inputs
-    ###
-    observe({
-        req(exists("runs"))
-        updateSelectInput(session=session,
-                          inputId = "run_dr",
-                          choices = names(runs))
+    # Update clusters_config reactive values when user clicks on "calculate_clusters" button
+    observeEvent(input$calculate_clusters, {
+        clusters_config$metric_hdbscan <- req(input$metric_hdbscan)
+        clusters_config$min_cluster_size_hdbscan <- req(input$min_cluster_size_hdbscan)
+        clusters_config$min_samples_hdbscan <- req(input$min_samples_hdbscan)
+        clusters_config$cluster_selection_epsilon_hdbscan <- req(input$cluster_selection_epsilon_hdbscan)
     })
     
-    ###
-    # Reactives
-    ###
     
-    # Selected run is the run_dr
-    selected_run = reactive({
-        req(exists("runs"))
-        runs[[input$run_dr]]
+    # Observe the events related to zoom the projections graph
+    observeEvent(input$zoom_btn,{
+        brush <- input$projections_brush
+        if (!is.null(brush)) {
+            if(isTRUE(input$zoom_btn)){
+                ranges$x <- c(brush$xmin, brush$xmax)
+                ranges$y <- c(brush$ymin, brush$ymax)
+            }else {
+                ranges$x <- NULL
+                ranges$y <- NULL
+            }
+            
+        } else {
+            ranges$x <- NULL
+            ranges$y <- NULL
+        }
     })
     
-    # Get dr run metadata
-    run_dr_config = reactive({
-        req(selected_run())
-        fromJSON(selected_run()$json_config)
+    
+    # Observe the events related to change the appearance of the projections graph
+    observeEvent(input$update_prj_graph,{
+        style_values <- list(path_line_size = input$path_line_size ,
+                             path_alpha = input$path_alpha,
+                             point_alpha = input$point_alpha,
+                             point_size = input$point_size)
+        
+        if (!is.null(style_values)) {
+            config_style$path_line_size <- style_values$path_line_size
+            config_style$path_alpha <- style_values$path_alpha
+            config_style$point_alpha <- style_values$point_alpha
+            config_style$point_size <- style_values$point_size
+        } else {
+            config_style$path_line_size <- NULL
+            config_style$path_alpha <- NULL
+            config_style$point_alpha <- NULL
+            config_style$point_size <- NULL
+        }
     })
     
-    # Get dcae run metadata
-    run_dcae_config = reactive({
-        req(run_dr_config())
-        dcae_run_path = run_dr_config()$dcae_run_path$value
-        dcae_run = api$run(dcae_run_path)
-        fromJSON(dcae_run$json_config)
+    
+    # Update ts_variables reactive value when time series variable selection changes
+    observeEvent(input$select_variables, {
+        ts_variables$selected <- input$select_variables
     })
+    
+    
+    # Observe to check/uncheck all variables
+    observeEvent(input$selectall,{
+        ts_variables$selected <- names(req(tsdf()))
+        if(input$selectall %%2 == 0){
+            updateCheckboxGroupInput(session = session, 
+                                     inputId = "select_variables",
+                                     choices = ts_variables$selected, 
+                                     selected = ts_variables$selected)
+        } else {
+            updateCheckboxGroupInput(session = session, 
+                                     inputId = "select_variables",
+                                     choices = ts_variables$selected, 
+                                     selected = NULL)
+        }
+    })
+    
+    
+    
+    ###############
+    #  REACTIVES  #
+    ###############
+    X <- reactive({
+      req(input$wlen != 0, input$stride != 0, tsdf())
+      print("X")
+      tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
+    })
+    
+    # Time series artifact
+    ts_ar = eventReactive(input$dataset, {
+      print("ts_ar hash")
+      api$artifact(req(input$dataset), type='dataset')
+    }, label = "ts_ar")
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
-        req(selected_run())
-        used_arts = selected_run()$used_artifacts()
-        # Creo lista vacia y añado a los metadatos el nombre.
-        # used_arts = mi_run$used_artifacts()
-        # Take the first item of the iterable (that is the used by the software)
-        artifact = iter_next(used_arts)
-        list_used_arts = artifact$metadata$TS
-        list_used_arts$name = artifact$name
-        list_used_arts$aliases = artifact$aliases
-        list_used_arts$artifact_name = artifact$artifact_name
-        list_used_arts$id = artifact$id
-        list_used_arts$created_at = artifact$created_at
-        list_used_arts
+      ts_ar <- req(ts_ar())
+      list_used_arts = ts_ar$metadata$TS
+      list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
+      list_used_arts$name = ts_ar$name
+      list_used_arts$aliases = ts_ar$aliases
+      list_used_arts$artifact_name = ts_ar$name
+      list_used_arts$id = ts_ar$id
+      list_used_arts$created_at = ts_ar$created_at
+      list_used_arts
     })
     
-    # Get embedding artifact metadata
-    embs_ar_config = reactive({
-        req(selected_run())
-        logged_arts = selected_run()$logged_artifacts()
-        # Take the first item of the iterable (that is the used by the software)
-        artifact = iter_next(logged_arts)
-        list_used_arts = artifact$metadata$ref
-        list_used_arts$name = artifact$name
-        list_used_arts$aliases = artifact$aliases
-        list_used_arts$artifact_name = artifact$artifact_name
-        list_used_arts$id = artifact$id
-        list_used_arts$created_at = artifact$created_at
-        list_used_arts
+    # selected_embs_ar = eventReactive(input$embs_ar, {
+    #   embs_l[[input$embs_ar]]
+    # })
+    
+    # embeddings object. Get it from local if it is there, otherwise download
+    # embs = reactive({
+    #   selected_embs_ar = req(selected_embs_ar())
+    #   print("embs")
+    #   fname = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, 
+    #                     selected_embs_ar$metadata$ref$hash)
+    #   if (file.exists(fname))
+    #     py_load_object(filename = fname)
+    #   else
+    #     selected_embs_ar$to_obj()
+    # })
+    
+    # Get encoder artifact
+    enc_ar = eventReactive(input$encoder, {
+        print(paste("Enc. Artifact: ", input$encoder))
+        api$artifact(input$encoder, type = 'learner')
+    }, ignoreInit = T)
+    
+    # Encoder
+    enc = eventReactive(enc_ar(), {
+      py_load_object(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, enc_ar()$metadata$ref$hash))
     })
     
-    # Get windows size value
-    w = reactive({run_dcae_config()$w$value})
+    embs = reactive({
+      req(X(), enc())
+      print("embs")
+      dvats$get_enc_embs(X = X(), enc_learn = enc(), cpu = F)
+    })
     
     # Get stride value
-    s = reactive({run_dcae_config()$stride$value})
+    s = reactive({
+        req(enc_ar())$metadata$stride
+    })
     
-    # Load Embedding object from wandb
-    emb_object <- reactive({
-        req(selected_run())
-        logged_artifacts = selected_run()$logged_artifacts()
-        # NOTE: This assumes the run has only logged the embeddings artifacts, so it is located in the first position
-        embs_ar = iter_next(logged_artifacts)
-        embs <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, embs_ar$metadata$ref$hash)) %>% as.data.frame
-        colnames(embs) = c("xcoord", "ycoord")
-        embs
+    prj_object <- reactive({
+      embs = req(embs(), input$dr_method)
+      print("prj_object")
+      res = switch(input$dr_method,
+             UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)),
+             TSNE = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)),
+             PCA = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)))
+      res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
+      colnames(res) = c("xcoord", "ycoord")
+      res
     })
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
-        req(selected_run())
-        used_artifacts <- selected_run()$used_artifacts()
-        # NOTE: This assumes the run has only used the tsdf artifact, so it is located in the first position
-        ts_ar <<- iter_next(used_artifacts)
-        # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
-        first_data_index <- get_window_indices(idxs = input$points_emb[1], w = w(), s = s())[[1]] %>% head(1)
-        last_data_index <- get_window_indices(idxs =input$points_emb[2], w = w(), s = s())[[1]] %>% tail(1)
-        tsdf <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)) %>% 
-            rownames_to_column("timeindex") %>% 
-            slice(first_data_index:last_data_index) %>%
-            column_to_rownames(var = "timeindex")
-        col_names_tsdf <<- setNames(names(tsdf), names(tsdf))
-        tsdf
+      req(input$wlen != 0, input$stride != 0, ts_ar())
+      print("tsdf")
+      # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
+      # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
+      # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
+      py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
+        rownames_to_column("timeindex") %>% 
+        # slice(first_data_index:last_data_index) %>%
+        column_to_rownames(var = "timeindex")
     })
     
-    # auxiliary object for the interaction ts->embeddings
+    # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
-        get_window_indices(1:nrow(embeddings()), w=w(), s=s())
+      req(input$wlen != 0, input$stride != 0)
+      get_window_indices(1:nrow(req(projections())), w = input$wlen, s = input$stride)
     })
     
-    # Filter the embedding points and calculate the clusters if conditions are met.
-    embeddings <- reactive({
-        req(selected_run(),emb_object())
-        embs <- emb_object() %>% slice(input$points_emb[1]:input$points_emb[2])
-        # Calculate clusters when checkbox is clicked (TRUE)
-        if(input$show_clusters){
-            cl2 <- hdbscan$HDBSCAN(min_cluster_size = as.integer(input$min_cluster_size_hdbscan),
-                                   min_samples=as.integer(input$min_samples_hdbscan),
-                                   cluster_selection_epsilon =input$cluster_selection_epsilon_hdbscan,
-                                   metric = input$metric_hdbscan)$fit(embs)
-            embs$cluster <- cl2$labels_
-            # IF the value "-1" exists, assign the first element of mycolors to #000000, if not, assign the normal colorRampPalette
-            myColors <<-append("#000000",colorRampPalette(brewer.pal(12,"Paired"))(length(unique(embs$cluster))-1))
+    # Filter the embedding points and calculate/show the clusters if conditions are met.
+    projections <- reactive({
+      req(prj_object())
+      #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
+      prjs <- req(prj_object())
+      print("projections")
+      switch(clustering_options$selected,
+             precomputed_clusters={
+               filename <- req(selected_clusters_labels_ar())$metadata$ref$hash
+               clusters_labels <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, filename))
+               #prjs$cluster <- clusters_labels[input$points_emb[[1]]:input$points_emb[[2]]]
+               prjs$cluster <- clusters_labels
+             },
+             calculate_clusters={
+               clusters <- hdbscan$HDBSCAN(min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
+                                           min_samples = as.integer(clusters_config$min_samples_hdbscan),
+                                           cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
+                                           metric = clusters_config$metric_hdbscan)$fit(prjs)
+               prjs$cluster <- clusters$labels_
+             })
+      prjs
+    })
+    
+    # Update the colour palette for the clusters
+    update_palette <- reactive({
+        prjs <- req(projections())
+        if ("cluster" %in% names(prjs)) {
+            unique_labels <- unique(prjs$cluster)
+            ## IF the value "-1" exists, assign the first element of mycolors to #000000, if not, assign the normal colorRampPalette
+            if (as.integer(-1) %in% unique_labels) 
+                colour_palette <- append("#000000", colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels)-1))
+            else 
+                colour_palette <- colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels))
         }
-        embs
+        else
+            colour_palette <- "red"
+        
+        colour_palette
     })
-
     
-    # PLOT GENERATION: Generate timeseries dygraph
+    # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
-        req(tsdf(),embeddings())
+        req(tsdf(), prj_object(), input$wlen != 0, input$stride, ts_variables)
+        print("ts_plot")
         tsdf_data <- tsdf()
-        ts_plt <- dygraph(tsdf_data %>% select(input$select_variables), width="100%", height = "400px") %>%
+        ts_plt <- dygraph(tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px") %>%
                     dyRangeSelector() %>%
                     dyHighlight(hideOnMouseOut = TRUE) %>%
                     dyOptions(labelsUTC = FALSE ) %>%
@@ -154,14 +376,12 @@ shinyServer(function(input, output, session) {
                         )
                     )
         
-        # NOTE: embs2 is a global variable created in embeddings(). We use it instead of the 
-        #       reactive expression to avoid loading the embedding plot each time this function is runned.
-        bp <- brushedPoints(embeddings(), input$embeddings_brush, allRows = TRUE)
+        bp <- brushedPoints(prj_object(), input$projections_brush, allRows = TRUE)
         embedding_idxs <- bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
             # Get the window indices
-            window_indices <- get_window_indices(embedding_idxs, w(), s())
+            window_indices <- get_window_indices(embedding_idxs, input$wlen, input$stride)
             # Put all the indices in one list and remove duplicates
             unlist_window_indices <- unique(unlist(window_indices))
             # Calculate a vector of differences to detect idx where a new window should be created 
@@ -186,7 +406,6 @@ shinyServer(function(input, output, session) {
                                          to = rownames(tsdf_data)[tail(ts_idxs, 1)],
                                          color = "#CCEBD6")
             }
-
             
             # NOTE: This code block allows you to plot shadyng at once. 
             #       The traditional method has to plot the dygraph n times 
@@ -210,122 +429,67 @@ shinyServer(function(input, output, session) {
     })
     
     
-    # PLOT GENERATION: Generate embeddings plot
-    emb_plot <- reactive({
-        req(embeddings())
-        embs_ <- embeddings()
+    
+    #############
+    #  OUTPUTS  #
+    #############
+    
+    # Generate encoder info table
+    output$enc_info = renderDataTable({
+      req(enc_ar())$metadata %>% 
+        #map(~ .$value) %>%
+        enframe()
+    })
+    
+    # Generate time series info table
+    output$ts_ar_info = renderDataTable({
+        ts_ar_config() %>% 
+            enframe()
+    })
+    
+    # Generate projections plot
+    output$projections_plot <- renderPlot({
+        prjs_ <- req(projections())
+        print("projections_plot")
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
             selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
-            embeddings_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
-            embs_$highlight = embeddings_idxs
+            projections_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
+            prjs_$highlight = projections_idxs
         } else {
-            embs_$highlight = FALSE
+            prjs_$highlight = FALSE
         }
         # Prepare the column highlight to color data. If input$generate_cluster has not been clicked
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
-        if(!("cluster" %in% names(embs_))){
-            embs_$cluster = FALSE
-            myColors <-"red"
-        }
+        if(!("cluster" %in% names(prjs_)))
+            prjs_$cluster = FALSE
         
-        plt <- ggplot(data = embs_) + 
+        plt <- ggplot(data = prjs_) + 
             aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
-            scale_colour_manual(name = "clusters",values = myColors) +
+            scale_colour_manual(name = "clusters", values = req(update_palette())) +
             geom_point(shape = 21,alpha = config_style$point_alpha, size = config_style$point_size) + 
             scale_shape(solid = FALSE) +
             geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha) + 
             guides() + 
             scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA"))+
             coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE)+
-            theme(legend.position = "none",
-                  panel.background = element_rect(fill = "white", colour = "black"))
-        
+            theme_void() + 
+            theme(legend.position = "none")
         plt
     })
     
     
-    # PLOT CONFIGURATION EVENTS: Observe the events related to zoom the embeddings graph:
-    ranges <- reactiveValues(x = NULL, y = NULL)
-    observeEvent(input$zoom_btn,{
-        brush <- input$embeddings_brush
-        if (!is.null(brush)) {
-            if(isTRUE(input$zoom_btn)){
-                ranges$x <- c(brush$xmin, brush$xmax)
-                ranges$y <- c(brush$ymin, brush$ymax)
-            }else {
-                ranges$x <- NULL
-                ranges$y <- NULL
-            }
-
-        } else {
-            ranges$x <- NULL
-            ranges$y <- NULL
-        }
-    })
-    
-    # PLOT CONFIGURATION EVENTS:  Observe the events related to change the appearance of the embeddings graph:
-    config_style <- reactiveValues(path_line_size = 0.08,
-                                   path_alpha = 5/10,
-                                   point_alpha = 1/10,
-                                   point_size = 1)
-    
-    observeEvent(input$update_emb_graph,{
-        style_values <- list(path_line_size = input$path_line_size ,
-                             path_alpha = input$path_alpha,
-                             point_alpha = input$point_alpha,
-                             point_size = input$point_size )
-        
-        if (!is.null(style_values)) {
-            config_style$path_line_size <- style_values$path_line_size
-            config_style$path_alpha <- style_values$path_alpha
-            config_style$point_alpha <- style_values$point_alpha
-            config_style$point_size <- style_values$point_size
-        } else {
-            config_style$path_line_size <- NULL
-            config_style$path_alpha <- NULL
-            config_style$point_alpha <- NULL
-            config_style$point_size <- NULL 
-        }
+    # Render projections plot
+    output$projections_plot_ui <- renderUI({
+      print("projections_plot_UI")
+      plotOutput("projections_plot", 
+                 click = "projections_click",
+                 brush = "projections_brush",
+                 height = input$embedding_plot_height) %>% withSpinner()
     })
     
     
-    
-    ###
-    # Outputs
-    ###
-    output$run_dr_info_title = renderUI({
-        req(selected_run())
-        id = selected_run()$id
-        name =selected_run()$name
-        foo = paste0("Configuration of dimensionality reduction run ", selected_run()$id, " (", selected_run()$name, ")")
-        tags$h3(foo)
-    })
-    
-    output$run_dr_info = renderDataTable({
-        run_dr_config() %>%
-            map(~ .$value) %>%
-            enframe()
-    })
-    
-    output$run_dcae_info = renderDataTable({
-            run_dcae_config() %>% 
-            map(~ .$value) %>%
-            enframe()
-    })
-    
-    output$ts_ar_info = renderDataTable({
-        ts_ar_config() %>% 
-            enframe()
-    })
-    
-    output$embs_ar_info = renderDataTable({
-        embs_ar_config() %>% 
-            enframe()
-    })
-    
-    output$embeddings_plot <- renderPlot({emb_plot()})
-    
+    # Render information about the selected point in the time series graph
     output$point <- renderText({
         ts_idx = which(ts_plot()$ts$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
         paste0('X = ', strftime(req(input$ts_plot_dygraph_click$x_closest_point), "%F %H:%M:%S"), 
@@ -333,80 +497,28 @@ shinyServer(function(input, output, session) {
                '; X (raw) = ', req(input$ts_plot_dygraph_click$x_closest_point))
     })
 
-    output$embeddings_plot_interaction_info <- renderText({
-        
+    
+    # Render information about the selected point and brush in the projections graph
+    output$projections_plot_interaction_info <- renderText({
         xy_str <- function(e) {
             if(is.null(e)) return("NULL\n")
             paste0("x=", round(e$x, 1), " y=", round(e$y, 1), "\n")
         }
-        
         xy_range_str <- function(e) {
             if(is.null(e)) return("NULL\n")
             paste0("xmin=", round(e$xmin, 1), " xmax=", round(e$xmax, 1), 
                    " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
         }
-        
         paste0(
-            "click: ", xy_str(input$embeddings_click),
-            "brush: ", xy_range_str(input$embeddings_brush)
+            "click: ", xy_str(input$projections_click),
+            "brush: ", xy_range_str(input$projections_brush)
         )
     })
     
+    
+    # Generate time series plot
     output$ts_plot_dygraph <- renderDygraph({
-        ts_plot()
+      req(ts_plot())
     })
     
-    output$embeddings_plot_ui <- renderUI({
-        plotOutput("embeddings_plot", 
-                   click = "embeddings_click",
-                   brush = "embeddings_brush",
-                   height = input$embedding_plot_height) %>% withSpinner()
-    })
-    
-    
-    ###
-    # Outputs (renderUI components)
-    ###
-    
-    # Get variable names to be shown in a checkboxGroupInput when select_variables dropdown is clicked
-    output$select_variables <-renderUI({
-        req(selected_run())
-        tags$div(style= 'height:200px; overflow-y: scroll',
-            checkboxGroupInput(
-                inputId = "select_variables",
-                label=NULL,
-                choices = col_names_tsdf,
-                selected = col_names_tsdf
-                )
-        )
-    })
-    
-    # Observe to check/uncheck all variables
-    observeEvent(input$selectall,{
-        if(input$selectall %%2 == 0){
-            updateCheckboxGroupInput(session = session, inputId = "select_variables",
-                                     choices = col_names_tsdf, selected = col_names_tsdf)
-        } else {
-            updateCheckboxGroupInput(session = session, inputId = "select_variables",
-                                     choices = col_names_tsdf, selected = NULL)
-        }
-        
-    })
-    
-    # Open the dropdown button to load the series
-    observeEvent(input$tabs,{
-        if(input$tabs == "Embeddings"){
-            toggleDropdownButton(inputId = "ts_config")
-        }
-    })
-    
-    # Get the embeddings number of points and generate the sliderInput
-    output$points_emb_controls <- renderUI({
-        req(selected_run(),emb_object())
-        embs <- emb_object()
-        max_value <- nrow(embs)
-        sliderInput("points_emb", "Select range of points to plot in the embedding", min = 1, max = max_value,value = c(0,max_value), ticks = FALSE)
-    })
-    
-
 })

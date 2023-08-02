@@ -1,19 +1,44 @@
-# Timecluster hub (test mirroring)
-> Hub for different visual analytics approaches for high-dimensional time series. Inspired by the paper ["Timecluster: dimension reduction applied to temporal data for visual analytics"](https://link.springer.com/article/10.1007/s00371-019-01673-y) 
+# Deep VATS
+> Deep learning Visual Analytics for Time Series
 
+The main objective of DeepVATS is to combine cutting-edge research in neural networks and visual analytics of time series. It is inspired by projects such as [Timecluster](https://link.springer.com/article/10.1007/s00371-019-01673-y) and the [TensorFlow's Embeddings Projector](https://projector.tensorflow.org/), in which tools are created to interpret the content of neural networks trained with visual and textual data. This allows to verify how the internal content of a neural network reveals high-level abstraction patterns present in the data (for example, semantic similarity between words in a language model).
 
-The main intention of this repo is twofold:
-1. Replicate the ideas of the Timecluster paper, and apply them to the data from PACMEL.
-2. Extend the ideas of the paper for high-dimensional time series. The idea is to find the most important variables that make that a time window from
-the original space (high-dimensional time series) is mapped to a specific point of the final 2D space, and focus only on them, to make it easier for the
-domain expert to analyse and cluster the behaviour of the process.
+![General scheme of DeepVATS. Visualizing the embeddings can help in easily detecting outliers, change points, and regimes.
+](https://github.com/vrodriguezf/deepvats/blob/master/imgs/deepvats_intro.png)
 
-The visual part of this repo can also be used as a testbed to validate different approaches to unsupervised learning for time series data. This includes clustering, anomaly detection, segmentation, annotation...
+Given a set of time series data, DeepVATS will allow three basic tasks to be carried out:
+1. Train neural networks to search for representations that contain, in a compressed way, meaningful patterns of that data.
+2. Project and visualize the content of the latent space of neural network in a way that allows the search for patterns and anomalies.
+3. Provide interactive visualizations to explore different perspectives of the latent space.
+
+Currently, DeepVATS is recommended for time series data with the following properties:
+- Univariate & Multivariate time series
+- With or without natural timesteps
+- Regular timestamps
+- 1 single series at a time
+- Suitable for long time series that present cyclical patterns
+
+## Structure
+
+The tool consists of three modules. The DL (Deep Learning) module sets the pipeline for training the 'backbone' neural netowirk model. The second module, namely the storage module, provides an API that allows to save the datatsets and de encoder models produced by the DL module, and load the into the Visual Analytics module to be used for inference. That module, the VA (Visual Analytics) module, allows to use the trained models in a exploratory way throught a Graphical User Interface (GUI). 
+
+![DeepVATS architecture](https://github.com/vrodriguezf/deepvats/blob/master/imgs/architecture.png)
+
+## How it works
+
+The tool can be used for different time series data mining tasks, such as segmentation or detection of repetitive patterns (motifs) and anomalies (outliers). This example shows the use of the tool with a pre-trained model for segmentation.
+
+![Using the DeepVATS GUI](https://github.com/vrodriguezf/deepvats/blob/master/imgs/deepvats.gif)
 
 ## Deploy
 
-To run the notebooks, install `docker` and `docker-compose` in your system. 
-Then, create a new *.env* file in the root of the project following the structure:
+To run the notebooks and the app, install `docker`, `docker-compose` and the [nvidia container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) in your system. 
+> Note: Your system needs an NVIDIA GPU
+
+Then, create a new *.env* file inside the folder `docker` of the project adding the following config variables liste below.
+
+> Note: You need to have an account in [Weights & Biases (wandb)](https://wandb.ai/).
+
 ```
 # The name of the docker-compose project
 COMPOSE_PROJECT_NAME=your_project_name
@@ -24,36 +49,49 @@ GROUP_ID=your_numeric_id
 # The user name assigned to the user id
 USER_NAME=your_user_name
 # The port from which you want to access Jupyter lab
-JUPYTER_PORT=XXXX
-# The port from which you want to access RStudio server
-RSTUDIO_PORT=XXXX
-# The password you want to access RStudio server (user is given by USER_NAME)
-RSTUDIO_PASSWD=XXXX
-# The port from which you want to access Shiny
-SHINY_PORT=XXXX
+JUPYTER_PORT=
+# The token used to access (like a password)
+JUPYTER_TOKEN=
 # The path to your data files to train/test the models
 LOCAL_DATA_PATH=/path/to/your/data
+# The W&B entity
+WANDB_ENTITY=
+# The W&B project
+WANDB_PROJECT=
+# The W&B personal API key (see https://wandb.ai/authorize)
+WANDB_API_KEY=your_wandb_api_key
+# List of comma separated GPU indices that will be available in the container (by default only 0, the first one)
+CUDA_VISIBLE_DEVICES=0
+# Github PAT (see https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and>
+GH_TOKEN=your_github_pat
+# Port in which you want Rstudio server to be deployed (for developing in the front end)
+RSTUDIO_PORT=
+# Password to access the Rstudio server
+RSTUDIO_PASSWD=
 ```
 
-You'll also need to have a `.gitconfig` file in your home folder. It can be an empty file that you create manually, or it can contain your git global configuration. For the latter case, run:
-- `git config --global user.name "YOUR NAME IN THIS GITLAB INSTANCE"`
-- `git config --global user.email "YOUR EMAIL IN THIS GITLAB INSTANCE"`
-
-This will automatically create the `~/.gitconfig` file in your home folder.
-
-Finally, in a terminal located in the root of this repository, run:
+Finally, in a terminal located in the folder `docker` of this repository, run:
 
 ```docker-compose up -d```
 
-then go to `localhost:{{JUPYTER_PORT}}`. There are several parameters that can optionally be adapted to your needs in the docker-compose file, marked as `#*`. In case you are working in a remote server, replace `localhost` with the IP of your remote server.
+then go to `localhost:{{JUPYTER_PORT}}` to run/edit the notebooks (backend) or go to `localhost:{{RSTUDIO_PORT}}` to edit the visualization module (frontend). 
+
+> Note: In case you are working in a remote server, replace `localhost` with the IP of your remote server.
+
+To run the GUI, enter the visualization service in `localhost:{{RSTUDIO_PORT}}`, 
+and then run, in the R console: 
+```r
+shiny::runApp("app")
+```
 
 
-## Contribute
-This project has been created using [nbdev](https://github.com/fastai/nbdev), a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.
+## Contribute to the backend
+
+The backend of the project has been created using [nbdev](https://github.com/fastai/nbdev), a library that allows to create Python projects directly from Jupyter Notebooks. Please refer to this library when adding new functionalities to the project, in order to keep the structure of it.
 
 We recommend using the following procedure to contribute and resolve issues in the repository:
 
-1. Because the project uses nbdev, we need to run `nbdev_install_git_hooks` the first time after the repo is cloned and deployed; this ensures that our notebooks are automatically cleaned and trusted whenever we push to Github/Gitlab. The command has to be run from within the container. 
+1. Because the project uses nbdev, we need to run `nbdev_install_git_hooks` the first time after the repo is cloned and deployed; this ensures that our notebooks are automatically cleaned and trusted whenever we push to Github/Gitlab. The command has to be run from within the container. Also, it can be run from outside if you pip install nbdev in your local machine.
 
 1. Create a local branch in your development environment to solve the issue XX (or add a new functionality), with the name you want to give your merge request (use something that will be easy for you to remember in the future if you need to update your request):
     ```
@@ -84,7 +122,7 @@ We recommend using the following procedure to contribute and resolve issues in t
     * Write in the description what is the problem to solve with your branch using a hyperlink to the issue (just use the hashtag symbol "#" followed by the issue number) 
     * Click on the option "Delete source branch when merge request is accepted" and assign the merge to your profile.
     * Click on the button "Create merge request"
-![image](/uploads/da18a985a69973ad62a60bc6564304b9/image.png)
+![image](../../../uploads/da18a985a69973ad62a60bc6564304b9/image.png)
 
 8. Wait to the merge to be accepted. In case you're solving an issue, we recommend to move the issue to the field "In review" (in the Issue Board). To keep your branch up to date with the changes to the main repo, run:
 ```
@@ -94,4 +132,22 @@ git pull upstream master
 9. If there are no problems, the merge request will be accepted and the issue will be closed. Once your PR has been merged or rejected, you can delete your branch if you don't need it any more:
 ```
 git branch -d issueXX
+```
+
+## Cite
+
+If you use DeepVATS, please cite the paper:
+
+``` text
+@misc{https://doi.org/10.48550/arxiv.2302.03858,
+  doi = {10.48550/ARXIV.2302.03858},
+  url = {https://arxiv.org/abs/2302.03858},
+  author = {Rodriguez-Fernandez, Victor and Montalvo, David and Piccialli, Francesco and Nalepa, Grzegorz J. and Camacho, David},
+  keywords = {Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
+  title = {DeepVATS: Deep Visual Analytics for Time Series},
+  publisher = {arXiv},
+  year = {2023},
+  copyright = {Creative Commons Attribution Non Commercial No Derivatives 4.0 International}
+}
+
 ```

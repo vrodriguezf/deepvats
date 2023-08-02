@@ -1,10 +1,12 @@
 # R dependencies
 library(shiny)
+library(shinyjs)
 library(reticulate)
 library(purrr)
 library(jsonlite)
 library(tibble)
 library(ggplot2)
+library(glue)
 library(shinycssloaders)
 library(tidyr)
 library(data.table)
@@ -13,23 +15,40 @@ library(dygraphs)
 library(shinyWidgets)
 library(RColorBrewer)
 library(pals)
+library(stringr)
+
 # Python dependencies
+tsai_data = import("tsai.data.all")
 wandb = import("wandb")
 pd = import("pandas")
 hdbscan = import("hdbscan")
-###
-# CONSTANTS
-###
-QUERY_RUNS_LIMIT = 150
-DEFAULT_PATH_WANDB_ARTIFACTS = "/data/PACMEL-2019/wandb_artifacts"
-hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
-Sys.setenv("TZ"="UTC")
-#w = 36 # * TODO: This has to be dependant on the selected run! 
-#s = 1 # * TODO: This has to be dependant on the selected run!
+dvats = import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
 
-###
-# HELPER FUNCTIONS
-###
+#############
+# CONFIG #
+#############
+
+QUERY_RUNS_LIMIT = 1
+DEFAULT_PATH_WANDB_ARTIFACTS = paste0(Sys.getenv("HOME"), "/data/wandb_artifacts")
+hdbscan_metrics <- hdbscan$dist_metrics$METRIC_MAPPING
+#hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
+Sys.setenv("TZ"="UTC")
+DEFAULT_VALUES = list(metric_hdbscan = "euclidean",
+                      min_cluster_size_hdbscan = 100,
+                      min_samples_hdbscan = 15,
+                      cluster_selection_epsilon_hdbscan = 0.08,
+                      path_line_size = 0.08,
+                      path_alpha = 5/10,
+                      point_alpha = 1/10,
+                      point_size = 1)
+WANDB_ENTITY = Sys.getenv("WANDB_ENTITY")
+WANDB_PROJECT = Sys.getenv("WANDB_PROJECT")
+
+
+####################
+# HELPER FUNCTIONS #
+####################
+
 get_window_indices = function(idxs, w, s) {
   idxs %>% map(function (i) {
     start_index = ((i-1)*s + 1)
@@ -86,64 +105,19 @@ make_individual_dygraph <- function(i){
   plt
 }
 
-###
-# Retrieve wandb runs
-###
-api = wandb$Api()
 
-print(paste0("Querying ", QUERY_RUNS_LIMIT, "runs..."))
-runs_it = api$runs("pacmel/timecluster-extension")
-print("Processing runs...")
-runs = purrr::rerun(QUERY_RUNS_LIMIT, iter_next(runs_it))
+##############################################
+# RETRIEVE WANDB RUNS & ARTIFACTS #
+##############################################
 
-# Filter to keep only the dimensionality reduction runs, those that have a config parameter
-# called "dcae_run_path" and whose state is "finished"
-print("Filtering runs...")
-runs = runs %>%
-  keep(function(run) {
-    # config = fromJSON(run$json_config)
-    print(run)
-    logged_artifacts = run$logged_artifacts()
-    print(logged_artifacts)
-    print(run$state)
-    print(run$config$emb_artifact_name)
-    return(
-      run$state == "finished" &&
-      !is.null(run$config$emb_artifact_name) 
-    )
-  })
+api <- wandb$Api()
 
-runs = runs %>% set_names(runs %>% map(~ .$name))
+print("Querying encoders")
+encs_l <- dvats$get_wandb_artifacts(project_path = glue(WANDB_ENTITY, "/", WANDB_PROJECT), 
+                                    type = "learner", 
+                                    last_version=F) %>% 
+  discard(~ is_empty(.$aliases) | is_empty(.$metadata$train_artifact))
+encs_l <- encs_l %>% set_names(encs_l %>% map(~ glue(WANDB_ENTITY, "/", WANDB_PROJECT, "/", .$name)))
+  #discard(~ str_detect(.$name, "dcae"))
 
-print(runs)
-
-###
-# Debug: Load embeddings and data for testing
-###
-# foo = api$run("pacmel/timecluster-extension/3jvuv2s3")
-# runs = list(foo) %>% set_names(foo$name)
-
-# embeddings = py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, "5630535579917677987")) %>% as.data.frame
-# colnames(embeddings) = c("xcoord", "ycoord")
-# tsdf = py_load_object(filename = "/data/PACMEL-2019/wandb_artifacts/7087224962096418705") %>% 
-#   rownames_to_column("Time") %>% 
-#   mutate(Time=as.POSIXct(Time))
-#last_data_index = get_window_indices(idxs = nrow(embeddings), w = w, s = s)[[1]] %>% tail(1)
-# tsdf = py_load_object(filename = "/data/PACMEL-2019/wandb_artifacts/7087224962096418705") %>% 
-#   rownames_to_column("timeindex") %>% 
-#   slice(1:last_data_index) %>% 
-#   column_to_rownames(var = "timeindex")
-  
-#View(embeddings)
-
-# default_tsplot <- dygraph(tsdf, main = "Original data (normalized)") %>%
-#   dyRangeSelector() %>%   
-#   dyHighlight(hideOnMouseOut = TRUE) %>% 
-#   dyOptions(labelsUTC = TRUE) %>% 
-#   dyLegend(show="follow", hideOnMouseOut = TRUE) %>% 
-#   dyUnzoom() %>% 
-#   dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
-#   dyCSS(textConnection("
-#      .dygraph-legend > span { display: none; }
-#      .dygraph-legend > span.highlight { display: inline; }
-#   "))
+print("Done!")

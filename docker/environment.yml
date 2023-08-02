@@ -5,7 +5,7 @@ channels:
   - nvidia
   - fastai
   - rapidsai
-  - defaults
+  - defaults  
   - conda-forge
 
 dependencies:
@@ -51,4 +51,5 @@ dependencies:
   - twine
   - xeus-python
   - umap-learn
-  - wandb
+  - wandb=0.14.2=pyhd8ed1ab_0
+  - scikit-learn=1.2.2=py310h6a678d5_1

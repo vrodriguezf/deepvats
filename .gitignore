@@ -162,3 +162,4 @@ Dockerfile.jupyter.*
 Dockerfile.rstudio.*
 environment.*.yml
 environment.yml.*
+*.bkup

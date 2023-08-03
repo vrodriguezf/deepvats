@@ -39,11 +39,14 @@ dependencies:
   #     - cuml-cu11
   #     - git+https://github.com/timeseriesAI/tsai.git
      # - -r file:/tmp/requirements.txt
+  - platformdirs=2.5.2=py310h06a4308_0
   - plotly
 #  - protobuf
 #  - psutil>=5.4.8             ##
   - python=3.10
   # - python-language-server
+  #If problems importing torch, exec 
+  #conda install pytorch=1.13.1=py3.10_cuda11.6_cudnn8.3.2_0 -c pytorch
   - pytorch=1.13.1=py3.10_cuda11.6_cudnn8.3.2_0                  #
   - pyts>=0.12.0              ##
   - seaborn
@@ -51,5 +54,5 @@ dependencies:
   - twine
   - xeus-python
   - umap-learn
-  - wandb=0.14.2=pyhd8ed1ab_0
-  - scikit-learn=1.2.2=py310h6a678d5_1
+  - scikit-learn=1.2.2
+  - wandb=0.14.2

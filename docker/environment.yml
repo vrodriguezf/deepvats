@@ -8,7 +8,8 @@ channels:
   - conda-forge
 
 dependencies:
-  - cuda-toolkit=11.6          #
+  - cuda-toolkit=11.6.2=0
+  #- cuda-toolkit=11.6          #
   - cudf=23.02                #
   - cuml=23.02                #
   - fastai=2.7.10             ##
@@ -50,5 +51,6 @@ dependencies:
   - twine
   - xeus-python
   - umap-learn
-  - wandb=0.14.2
   - scikit-learn=1.2.2
+  - wandb=0.14.2
+  

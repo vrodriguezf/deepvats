@@ -48,6 +48,7 @@ dependencies:
   #If problems importing torch, exec 
   #conda install pytorch=1.13.1=py3.10_cuda11.6_cudnn8.3.2_0 -c pytorch
   #conda install pytorch=1.13.1 -c pytorch
+  - jpeg
   - pytorch=1.13.1=py3.10_cuda11.6_cudnn8.3.2_0                  #
   - pyts>=0.12.0              ##
   - seaborn

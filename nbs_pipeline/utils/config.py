@@ -72,7 +72,7 @@ def get_artiffact_config_MVP(print_flag=False):
         analysis_mode = config['wandb']['mode'], 
         batch_size = artiffact['batch_size'],
         epochs = artiffact['n_epoch'],
-        mask_futures = bool(artiffact['mask_futures']),
+        mask_future = bool(artiffact['mask_future']),
         mask_stateful =  bool(artiffact['mask_stateful']),
         mask_sync=bool(artiffact['mask_sync']),
         mvp_ws = (mvp_ws1, mvp_ws2), 
@@ -93,7 +93,12 @@ def get_artiffact_config_MVP(print_flag=False):
     if (os_project != project):
         custom_error("Please check .env and base.yml: project differs os " + os_project + " yaml " + project)
         
-    if not artiffact_config.use_wandb:
+    if artiffact_config.use_wandb:
+        if (artiffact_config.analysis_mode != 'online'):
+            print("Changing to online analysis mode - use_wandb=true")
+            artiffact_config.analysis_mode = 'online'
+    else:
         project = 'work-nbs'
+    
     return user, project, version, data, artiffact_config
 

@@ -6,24 +6,49 @@ user_preferences:
   wdb_user: &wdb_user mi-santamaria # Name of wandb project
   wdb_project: &wdb_project test-project
   wdb_version: &wdb_version '0'
+  # 'online' if the model will be tested on future data, or 'offline' if not
   wdb_mode: &wdb_mode 'offline'
   #Project
   base_path: &path '~/data/'
   data_fname: &fname 'speed_6005'
   data_ftype: &ftype '.csv'
+  # Alias of the artifact resulting of this run. None will create one automatically
+  alias: &alias 'speed'
   
 data:
   name: *fname
   path: !join [ *path, *fname, *ftype   ]
 
-#TODO: Check the used info
-trainer:
-  bs: 64 # batch size
-  lr_max: null # Maximum learning rate. If none, it will be computed automatically
-  n_epoch: 10 # Number of epochs to train for
-  partial_n: 1 # Number of partials to use
-  seed: 42 # random seed
-
+artiffact_MVP:
+  alias: *alias 
+  batch_size: 32 
+  n_epoch: 100 # Number of epochs to train for
+  # Mask future samples
+  mask_futures: 'False'
+  # True: mask stateful samples, False: mask individual time steps
+  mask_stateful: 'True'
+  # (only for multivariate ts) mask all variables at once
+  mask_sync: 'False'
+  # Tuple (min_w, max_x) to train MVP with adaptable window sizes. Usually max_w = config.w
+  # Set to None to train MVP with fixed window size
+  mvp_ws1: 10
+  mvp_ws2: 30
+  # Normalize by sample or not
+  norm_by_sample: 'False'
+  # Whether to use a single batch or not for the normalization (TSStandardize)
+  norm_use_single_batch: 'False'
+  # probability of masking in MVP
+  r: 0.7
+  # n datapoints the window is moved ahead along the sequence in the sliding window
+  stride: 1
+  # Whether to use or not wandb for experiment tracking
+  use_wandb: 'True'
+  # This will set the percentage of items that go to val 
+  valid_size: 0.2
+  # window size for the sliding window (taxi=48, steamflow=640)
+  w: 30
+  # Whether to group this run in a wandb group (for sweeps)
+  wandb_group: None 
 wandb:
   user: *wdb_user
   dir: !join [ '~/', *wdb_project] # TODO: Make relative to this file? (null for using the OS default) 

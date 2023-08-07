@@ -1,6 +1,6 @@
 #!/bin/bash
 commits=( 
-    "40d3e9e8afac405a625ed7ed3a73c114459cffd9" #config yml added
+    #"40d3e9e8afac405a625ed7ed3a73c114459cffd9" #config yml added
     "6155c4fb3fcde57bf60b4a27f1e33e8441672cec"
     "7fc3ec936aabd2a5d17580e803212b07dadd0a0d" #base yaml
     "035233076c27622dd0445bc8abc60a7dbf1f181c" #Check variables & environment

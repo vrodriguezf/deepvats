@@ -1,15 +1,35 @@
-bs: 64 # batch size
-data:
-    path: '~/data/speed_6005.csv'
-lr_max: null # Maximum learning rate. If none, it will be computed automatically
-n_epoch: 10 # Number of epochs to train for
-partial_n: 1 # Number of partials to use
-seed: 42 # random seed
 tmp_folder: 'tmp' # Folder to store temporary files
+
+#Modify this one when using other user or data-file
+user_preferences: 
+  #Weights & biases
+  wdb_user: &wdb_user mi-santamaria # Name of wandb project
+  wdb_project: &wdb_project test-project
+  wdb_version: &wdb_version '0'
+  wdb_mode: &wdb_mode 'offline'
+  #Project
+  base_path: &path '~/data/'
+  data_fname: &fname 'speed_6005'
+  data_ftype: &ftype '.csv'
+  
+data:
+  name: user_preferences.fname
+  path: !join [ *path, *fname, *ftype   ]
+
+#TODO: Check the used info
+trainer:
+  bs: 64 # batch size
+  lr_max: null # Maximum learning rate. If none, it will be computed automatically
+  n_epoch: 10 # Number of epochs to train for
+  partial_n: 1 # Number of partials to use
+  seed: 42 # random seed
+
 wandb:
-  dir: '~/test-project' # TODO: Make relative to this file? (null for using the OS default) 
+  user: *wdb_user
+  dir: !join [ '~/', *wdb_project] # TODO: Make relative to this file? (null for using the OS default) 
   enabled: False # To use it, the environment variable WANDB_API_KEY must be set
   group: null # Useful to group runs that belong to the same optuna study
   log_learner: False # Log learner to wandb
-  mode: 'offline' # 'online' or 'offline' for wandb
-  project: 'test-project' # Name of wandb project
+  mode: *wdb_mode
+  project: *wdb_project
+  version: *wdb_version

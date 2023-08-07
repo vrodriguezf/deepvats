@@ -55,36 +55,36 @@ def get_project_data(print_flag):
       
     return user, project, version, data
 
-def get_train_artiffact(user, project, data):
+def get_train_artifact(user, project, data):
     # entity/project/name:version
-    train_artiffact=user+'/'+project+'/'+data 
-    return train_artiffact
+    train_artifact=user+'/'+project+'/'+data 
+    return train_artifact
 
-def get_artiffact_config_MVP(print_flag=False):
+def get_artifact_config_MVP(print_flag=False):
     user, project, version, data = get_project_data(print_flag)
     config = get_config()
-    train_artiffact_=get_train_artiffact(user,project,data)
-    artiffact=config['artiffact_MVP']
-    mvp_ws1=artiffact['mvp_ws1']
-    mvp_ws2=artiffact['mvp_ws2']
-    artiffact_config = AttrDict(
-        alias = artiffact['alias'],
+    train_artifact_=get_train_artifact(user,project,data)
+    artifact=config['artifact_MVP']
+    mvp_ws1=artifact['mvp_ws1']
+    mvp_ws2=artifact['mvp_ws2']
+    artifact_config = AttrDict(
+        alias = artifact['alias'],
         analysis_mode = config['wandb']['mode'], 
-        batch_size = artiffact['batch_size'],
-        epochs = artiffact['n_epoch'],
-        mask_future = bool(artiffact['mask_future']),
-        mask_stateful =  bool(artiffact['mask_stateful']),
-        mask_sync=bool(artiffact['mask_sync']),
+        batch_size = artifact['batch_size'],
+        epochs = artifact['n_epoch'],
+        mask_future = bool(artifact['mask_future']),
+        mask_stateful =  bool(artifact['mask_stateful']),
+        mask_sync=bool(artifact['mask_sync']),
         mvp_ws = (mvp_ws1, mvp_ws2), 
-        norm_by_sample = artiffact['norm_by_sample'],
-        norm_use_single_batch=artiffact['norm_use_single_batch'],
-        r = artiffact['r'],
-        stride = artiffact['stride'], 
-        train_artifact = train_artiffact_, 
-        use_wandb=artiffact['use_wandb'], 
-        valid_size = artiffact['valid_size'],
-        w = artiffact['w'],
-        wandb_group = artiffact['wandb_group']
+        norm_by_sample = artifact['norm_by_sample'],
+        norm_use_single_batch=artifact['norm_use_single_batch'],
+        r = artifact['r'],
+        stride = artifact['stride'], 
+        train_artifact = train_artifact_, 
+        use_wandb=config['user_preferences']['use_wandb'], 
+        valid_size = artifact['valid_size'],
+        w = artifact['w'],
+        wandb_group = artifact['wandb_group']
     )
     os_entity = os.environ['WANDB_ENTITY']
     os_project = os.environ['WANDB_PROJECT']
@@ -93,12 +93,47 @@ def get_artiffact_config_MVP(print_flag=False):
     if (os_project != project):
         custom_error("Please check .env and base.yml: project differs os " + os_project + " yaml " + project)
         
-    if artiffact_config.use_wandb:
-        if (artiffact_config.analysis_mode != 'online'):
+    if artifact_config.use_wandb:
+        if (artifact_config.analysis_mode != 'online'):
             print("Changing to online analysis mode - use_wandb=true")
-            artiffact_config.analysis_mode = 'online'
+            artifact_config.analysis_mode = 'online'
     else:
         project = 'work-nbs'
     
-    return user, project, version, data, artiffact_config
+    return user, project, version, data, artifact_config
+
+
+#sd2a = series dataframe to artifact
+def get_artifact_config_sd2a(print_flag=False):
+    user, project, version, data = get_project_data(print_flag)
+    config = get_config()
+    data = config['data']
+    artifact_config = AttrDict(
+        artifact_name           = data['alias'],
+        csv_config              = data['csv_config'],
+        data_cols               = data['cols'],
+        data_fpath              = data['path'],
+        date_format             = data['date_format'],
+        date_offset             = data['date_offset'],
+        freq                    = data['freq'],
+        joining_train_test      = bool(data['joining_train_test']),
+        missing_values_technique= data['missing_values_technique'], 
+        missing_values_constant = data['missing_values_constant'],
+        normalize_training      = data['normalize_training'],
+        range_training          = data['range_training'],
+        range_testing           = data['range_testing'],
+        resampling_freq         = data['resampling_freq'], 
+        start_date              = data['start_date'],
+        test_split              = data['test_split'],
+        time_col                = data['time_col'],
+        use_wandb               = config['user_preferences']['use_wandb'],
+        wandb_artifacts_path    = config['wandb']['wandb_artifacts_path']
+    )
+    
+    if (config['user_preferences']['use_wandb'] == "offline" and artifact_config.joining_train_test == True):
+        custom_error("If you're using deepvats in offline mode, set joining_train_test to False")
+    if (artifact_config['missing_values_constant'] is not None and artifact_config['missing_values_technique'] is None):
+        custom_error("Missing values constant must be setted up only if missing_values_technique is not None. Please check base.yaml")
+    return artifact_config
+
 

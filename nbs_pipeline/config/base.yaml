@@ -13,7 +13,7 @@ user_preferences:
   data_ftype: &ftype '.csv'
   
 data:
-  name: user_preferences.fname
+  name: *fname
   path: !join [ *path, *fname, *ftype   ]
 
 #TODO: Check the used info

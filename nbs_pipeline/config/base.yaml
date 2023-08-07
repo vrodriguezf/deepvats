@@ -1,0 +1,15 @@
+bs: 64 # batch size
+data:
+    path: '~/data/speed_6005.csv'
+lr_max: null # Maximum learning rate. If none, it will be computed automatically
+n_epoch: 10 # Number of epochs to train for
+partial_n: 1 # Number of partials to use
+seed: 42 # random seed
+tmp_folder: 'tmp' # Folder to store temporary files
+wandb:
+  dir: '~/test-project' # TODO: Make relative to this file? (null for using the OS default) 
+  enabled: False # To use it, the environment variable WANDB_API_KEY must be set
+  group: null # Useful to group runs that belong to the same optuna study
+  log_learner: False # Log learner to wandb
+  mode: 'offline' # 'online' or 'offline' for wandb
+  project: 'test-project' # Name of wandb project

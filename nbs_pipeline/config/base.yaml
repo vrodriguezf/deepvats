@@ -1,103 +1,15 @@
-#########################################################
-########### NBS - PIPELINE CONFIGURATION FILE ###########
-#########################################################
-###### Author: Maria Inmaculada Santamaria-Valenzuela   #
-###### Date: 08-2023                                    #
-#########################################################
-
-##########################
-# Basic user preferences #
-##########################
-user_preferences: 
-  #Weights & biases
-  # Whether to use or not wandb for experiment tracking
-  #use_wandb: &use_wandb true
-  use_wandb: &use_wandb false
-  wdb:
-    user: &wdb_user mi-santamaria 
-    project_name: &wdb_project test-project
-    version: &wdb_version '0'
-    # 'online' if the model will be tested on future data, or 'offline' if not
-    mode: &wdb_mode 'offline'
-    artifacts_path: &artifacts_path './data/wandb_artifacts'
-  data:
-    folder: &path '~/data/'
-    fname: &fname 'Semantic_Segmentation_TiltABP'
-    ftype: &ftype '.csv'
-    cols: &cols []
-    freq: &freq '1s'
-  artifact:
-    # Alias of the artifact resulting of this run. null will create one automatically
-    alias: &alias 'TiltABP'
-  directories:
-    # Folder to store temporary files
-    tmp: &tmp 'tmp' 
-    data: &data_path !join [ *path, *fname, *ftype ]
-  
-# Remember DCAE:
-# Name:version of the encoder artifact
-# enc_artifact = 'user/project/dcae:run-deepvats-tk702aqg', 
-
-#######################
-# Data specifications #
-#######################
+bs: 64 # batch size
 data:
-  name: *fname
-  # Name of the data file. Must be pickle, csv or tsf file
-  path: *data_path
-  # Name of the artifact to be created
-  alias: *alias 
-  # Put here the idxs of the columns of interest ([] for all)
-  cols: *cols
-  # CSV file config ({} if this setting is not required)
-  csv_config: {}
-  # Frequency offset used to set the date index (null to omit it) [Example pd.offsets.MonthEnd(0)]
-  date_offset: null
-  # Default date format (only for .tsf files)
-  date_format: '%Y-%m-%d %H:%M:%S'
-  # Frequency of the data (cannot be null). It can be used to force a sampling freq to data without an index
-  # See offset aliases in https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
-  freq: *freq
-  # To create an artifact linking training and testing data (False if it doesn't)
-  # If you're using deepvats in "offline" mode, set this to False
-  joining_train_test: false
-  missing_values:
-    # Handle missing values technique (null for no handling)
-    technique: null 
-    # Default value used for missing values (only if missing_values_technique is not null)
-    constant: null
-  # To normalize the data
-  normalize_training: false
-  # Training and Testing ranges. They can be lists with values to be included 
-  # (of the same type as the index) or dictionaries that include the keys 'start', 'end' and 'freq'.
-  range_training: null
-  range_testing: null
-  # Resampling frequency (null for no resampling)
-  resampling_freq: null
-  # Starting date (in format yyyy-mm-dd) (set to null for default start date)
-  start_date: null
-  # Ratio of test set, only if range_training and range_testing are null
-  # Set to null for no test set (offline mode, all training)
-  test_split: null
-  # List or int with the idx(s) of the column containing the timestamp
-  # (null if there is no timestamp column)
-  time_col: null
-
-########################
-# Wandb specifications #
-########################
+    path: '~/data/speed_6005.csv'
+lr_max: null # Maximum learning rate. If none, it will be computed automatically
+n_epoch: 10 # Number of epochs to train for
+partial_n: 1 # Number of partials to use
+seed: 42 # random seed
+tmp_folder: 'tmp' # Folder to store temporary files
 wandb:
-  user: *wdb_user
-  # TODO: Make relative to this file? (null for using the OS default) 
-  dir: !join [ '~/', *wdb_project ]
-  # To use it, the environment variable WANDB_API_KEY must be set
-  enabled: False
-  # Useful to group runs that belong to the same optuna study
-  group: null
-  # Log learner to wandb
-  log_learner: False
-  mode: *wdb_mode
-  project: *wdb_project
-  version: *wdb_version
-  # Output path where the resulting TSArtifact will be stored
-  artifacts_path: *artifacts_path
+  dir: '~/test-project' # TODO: Make relative to this file? (null for using the OS default) 
+  enabled: False # To use it, the environment variable WANDB_API_KEY must be set
+  group: null # Useful to group runs that belong to the same optuna study
+  log_learner: False # Log learner to wandb
+  mode: 'offline' # 'online' or 'offline' for wandb
+  project: 'test-project' # Name of wandb project

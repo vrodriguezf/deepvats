@@ -10,10 +10,10 @@ user_preferences:
   wdb_mode: &wdb_mode 'offline'
   #Project
   base_path: &path '~/data/'
-  data_fname: &fname 'speed_6005'
+  data_fname: &fname 'Semantic_Segmentation_TiltABP'
   data_ftype: &ftype '.csv'
   # Alias of the artifact resulting of this run. None will create one automatically
-  alias: &alias 'speed'
+  alias: &alias 'TiltABP'
   
 data:
   name: *fname
@@ -23,8 +23,8 @@ artiffact_MVP:
   alias: *alias 
   batch_size: 32 
   n_epoch: 100 # Number of epochs to train for
-  # Mask future samples
-  mask_futures: 'False'
+  # Mask future samplesx
+  mask_future: 'False'
   # True: mask stateful samples, False: mask individual time steps
   mask_stateful: 'True'
   # (only for multivariate ts) mask all variables at once

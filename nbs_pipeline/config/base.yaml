@@ -38,10 +38,11 @@ data:
   # To create an artifact linking training and testing data (False if it doesn't)
   # If you're using deepvats in "offline" mode, set this to False
   joining_train_test: false
-  # Handle missing values technique (null for no handling)
-  missing_values_technique: null 
-  # Default value used for missing values (only if missing_values_technique is not null)
-  missing_values_constant: null
+  missing_values:
+    # Handle missing values technique (null for no handling)
+    technique: null 
+    # Default value used for missing values (only if missing_values_technique is not null)
+    constant: null
   # To normalize the data
   normalize_training: false
   # Training and Testing ranges. They can be lists with values to be included 
@@ -100,9 +101,7 @@ wandb:
   # Output path where the resulting TSArtifact will be stored
   wandb_artifacts_path: './data/wandb_artifacts'
 
-embeddings:
-# Whether to use or not wandb for experiment tracking
-  use_wandb: true 
+embeddings:  
   # Whether to group this run in a wandb group
   wandb_group: 'embeddings'   
   # Name:version of the encoder artifact

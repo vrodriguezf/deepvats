@@ -99,3 +99,15 @@ wandb:
   version: *wdb_version
   # Output path where the resulting TSArtifact will be stored
   wandb_artifacts_path: './data/wandb_artifacts'
+
+embeddings:
+# Whether to use or not wandb for experiment tracking
+  use_wandb: true 
+  # Whether to group this run in a wandb group
+  wandb_group: 'embeddings'   
+  # Name:version of the encoder artifact
+  train_artifact: !join [ *wdb_user, '/', *wdb_project, *fname, ':v', *wdb_version] 
+  # If none, the validation set used to train enc_artifact is used
+  input_ar: null
+  cpu: false
+  

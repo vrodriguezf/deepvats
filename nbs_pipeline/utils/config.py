@@ -80,7 +80,7 @@ def get_artifact_config_MVP(print_flag=False):
     user, project, version, data, config, train_artifact_, mvp_ws = get_artifact_config_MVP_auxiliar_variables(print_flag)
     artifact        = config.artifact_MVP
     artifact_config = AttrDict(
-        alias                   = artifact.alias,
+        alias                   = config.alias,
         analysis_mode           = config.wandb.mode, 
         batch_size              = artifact.batch_size,
         epochs                  = artifact.n_epoch,
@@ -99,7 +99,7 @@ def get_artifact_config_MVP(print_flag=False):
         wandb_group             = artifact.wandb_group
     )
     get_artifact_config_MVP_check_errors(artifact_config, user, project)
-    return user, project, version, data, artifact_config
+    return user, project, version, data, artifact_config, config.job_type
 
 ##############################
 # 01 - DATAFRAME TO ARTIFACT #
@@ -150,3 +150,32 @@ def get_artifact_config_sd2a(print_flag=False):
     )
     get__artifact_config_sd2a_check_errors(use_wandb, artifact_config)    
     return artifact_config
+
+######################
+# 02a - ENCODER DCAE #
+######################
+def get_artifact_config_DCAE(print_flag=False):
+    config = get_config(print_flag, "02b-encoder_dcae")
+    print("Antes de leer configuration " + str(config))
+    config = config.configuration
+    artifact_config = AttrDict(
+        use_wandb           = config.wandb.use,
+        wandb_group         = config.wandb.group,
+        wandb_entity        = config.wandb.entity,
+        wandb_project       = config.wandb.project,
+        train_artifact      = config.artifacts.train,
+        valid_artifact      = config.artifacts.valid.data,
+        # In case valid_artifact is None, this will set the percentage of random items to go to val
+        valid_size          = config.artifacts.valid.size,
+        w                   = config.specifications.sliding_windows.size,
+        stride              = config.specifications.sliding_windows.stride,
+        delta               = config.specifications.autoencoder.delta,
+        nfs                 = config.specifications.autoencoder.filters.nfs,
+        kss                 = config.specifications.autoencoder.filters.kss,
+        output_filter_size  = config.specifications.autoencoder.filters.output_size,
+        pool_szs            = config.specifications.pool_szs,
+        batch_size          = config.specifications.batch_size, 
+        epochs              = config.specifications.n_epoch,
+        top_k               = config.specifications.pool_szs
+    )
+    return artifact_config, config.job_type

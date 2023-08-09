@@ -11,131 +11,92 @@
 user_preferences: 
   #Weights & biases
   # Whether to use or not wandb for experiment tracking
-  use_wandb: true
+  use_wandb: &use_wandb true
   wdb:
-    user:         &wdb_user mi-santamaria 
+    user: &wdb_user mi-santamaria 
     project_name: &wdb_project test-project
-    version:      &wdb_version '0'
+    version: &wdb_version '0'
     # 'online' if the model will be tested on future data, or 'offline' if not
-    mode:         &wdb_mode 'offline'
+    mode: &wdb_mode 'offline'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
-    folder:  &path '~/data/'
-    fname:   &fname 'Semantic_Segmentation_TiltABP'
-    ftype:   &ftype '.csv'
-    cols:    &cols []
-    freq:    &freq '1s'
+    folder: &path '~/data/'
+    fname: &fname 'Semantic_Segmentation_TiltABP'
+    ftype: &ftype '.csv'
+    cols: &cols []
+    freq: &freq '1s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
     alias: &alias 'TiltABP'
   directories:
     # Folder to store temporary files
-    tmp: *tmp 'tmp' 
-    data: *data_path !join [ *path, *fname, *ftype   ]
+    tmp: &tmp 'tmp' 
+    data: &data_path !join [ *path, *fname, *ftype ]
   
+# Remember DCAE:
+# Name:version of the encoder artifact
+# enc_artifact = 'user/project/dcae:run-deepvats-tk702aqg', 
+
 #######################
 # Data specifications #
 #######################
-  data:
-    name: *fname
-    # Name of the data file. Must be pickle, csv or tsf file
-    path: *data_path
-    # Name of the artifact to be created
-    alias: *alias 
-    # Put here the idxs of the columns of interest ([] for all)
-    cols: *cols
-    # CSV file config ({} if this setting is not required)
-    csv_config: {}
-    # Frequency offset used to set the date index (null to omit it) [Example pd.offsets.MonthEnd(0)]
-    date_offset: null
-    # Default date format (only for .tsf files)
-    date_format: '%Y-%m-%d %H:%M:%S'
-    # Frequency of the data (cannot be null). It can be used to force a sampling freq to data without an index
-    # See offset aliases in https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
-    freq: *freq
-    # To create an artifact linking training and testing data (False if it doesn't)
-    # If you're using deepvats in "offline" mode, set this to False
-    joining_train_test: false
-    missing_values:
-      # Handle missing values technique (null for no handling)
-      technique: null 
+data:
+  name: *fname
+  # Name of the data file. Must be pickle, csv or tsf file
+  path: *data_path
+  # Name of the artifact to be created
+  alias: *alias 
+  # Put here the idxs of the columns of interest ([] for all)
+  cols: *cols
+  # CSV file config ({} if this setting is not required)
+  csv_config: {}
+  # Frequency offset used to set the date index (null to omit it) [Example pd.offsets.MonthEnd(0)]
+  date_offset: null
+  # Default date format (only for .tsf files)
+  date_format: '%Y-%m-%d %H:%M:%S'
+  # Frequency of the data (cannot be null). It can be used to force a sampling freq to data without an index
+  # See offset aliases in https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
+  freq: *freq
+  # To create an artifact linking training and testing data (False if it doesn't)
+  # If you're using deepvats in "offline" mode, set this to False
+  joining_train_test: false
+  missing_values:
+    # Handle missing values technique (null for no handling)
+    technique: null 
     # Default value used for missing values (only if missing_values_technique is not null)
     constant: null
-    # To normalize the data
-    normalize_training: false
-    # Training and Testing ranges. They can be lists with values to be included 
-    # (of the same type as the index) or dictionaries that include the keys 'start', 'end' and 'freq'.
-    range_training: null
-    range_testing: null
-    # Resampling frequency (null for no resampling)
-    resampling_freq: null
-    # Starting date (in format yyyy-mm-dd) (set to null for default start date)
-    start_date: null
-    # Ratio of test set, only if range_training and range_testing are null
-    # Set to null for no test set (offline mode, all training)
-    test_split: null
-    # List or int with the idx(s) of the column containing the timestamp
-    # (null if there is no timestamp column)
-    time_col: null
+  # To normalize the data
+  normalize_training: false
+  # Training and Testing ranges. They can be lists with values to be included 
+  # (of the same type as the index) or dictionaries that include the keys 'start', 'end' and 'freq'.
+  range_training: null
+  range_testing: null
+  # Resampling frequency (null for no resampling)
+  resampling_freq: null
+  # Starting date (in format yyyy-mm-dd) (set to null for default start date)
+  start_date: null
+  # Ratio of test set, only if range_training and range_testing are null
+  # Set to null for no test set (offline mode, all training)
+  test_split: null
+  # List or int with the idx(s) of the column containing the timestamp
+  # (null if there is no timestamp column)
+  time_col: null
 
 ########################
 # Wandb specifications #
 ########################
 wandb:
   user: *wdb_user
-  dir: !join [ '~/', *wdb_project] # TODO: Make relative to this file? (null for using the OS default) 
-  enabled: False # To use it, the environment variable WANDB_API_KEY must be set
-  group: null # Useful to group runs that belong to the same optuna study
-  log_learner: False # Log learner to wandb
+  # TODO: Make relative to this file? (null for using the OS default) 
+  dir: !join [ '~/', *wdb_project ]
+  # To use it, the environment variable WANDB_API_KEY must be set
+  enabled: False
+  # Useful to group runs that belong to the same optuna study
+  group: null
+  # Log learner to wandb
+  log_learner: False
   mode: *wdb_mode
   project: *wdb_project
   version: *wdb_version
   # Output path where the resulting TSArtifact will be stored
   artifacts_path: *artifacts_path
-
-
-#####################
-# 02b - ENCODER MVP #
-#####################
-artifact_MVP:
-  alias: *alias 
-  batch_size: 32 
-  n_epoch: 100 # Number of epochs to train for
-  # Mask future samplesx
-  mask_future: false
-  # True: mask stateful samples, False: mask individual time steps
-  mask_stateful: true
-  # (only for multivariate ts) mask all variables at once
-  mask_sync: false
-  # Tuple (min_w, max_x) to train MVP with adaptable window sizes. Usually max_w = config.w
-  # Set to null to train MVP with fixed window size
-  mvp_ws1: 10
-  mvp_ws2: 30
-  # Normalize by sample or not
-  norm_by_sample: false
-  # Whether to use a single batch or not for the normalization (TSStandardize)
-  norm_use_single_batch: false
-  # probability of masking in MVP
-  r: 0.7
-  # n datapoints the window is moved ahead along the sequence in the sliding window
-  stride: 1
-  # This will set the percentage of items that go to val 
-  valid_size: 0.2
-  # window size for the sliding window (taxi=48, steamflow=640)
-  w: 30
-  # Whether to group this run in a wandb group (for sweeps)
-  wandb_group: null 
-
-
-###################
-# 03 - Embeddings #
-###################
-embeddings:  
-  # Whether to group this run in a wandb group
-  wandb_group: 'embeddings'   
-  # Name:version of the encoder artifact
-  train_artifact: !join [ *wdb_user, '/', *wdb_project, *fname, ':v', *wdb_version] 
-  # If none, the validation set used to train enc_artifact is used
-  input_ar: null
-  cpu: false
-  

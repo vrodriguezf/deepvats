@@ -1,16 +1,5 @@
-include: !include "base.yaml"
-#########################################################
-########### NBS - PIPELINE CONFIGURATION FILE ###########
-########### 02b - ENCODER MVP                 ###########
-#########################################################
-###### Author: Maria Inmaculada Santamaria-Valenzuela   #
-###### Date: 08-2023                                    #
-#########################################################
-#MVP = Masked Value Predition
+!include base.yaml
 
-#####################
-# 02b - ENCODER MVP #
-#####################
 configuration:
   job_type: 'encoder_MVP'
   alias: *alias

@@ -1,15 +1,4 @@
 include: !include "base.yaml"
-#########################################################
-########### NBS - PIPELINE CONFIGURATION FILE ###########
-########### 02a - ENCODER DCAE                ###########
-#########################################################
-###### Author: Maria Inmaculada Santamaria-Valenzuela   #
-###### Date: 08-2023                                    #
-#########################################################
-
-######################
-# 02a - ENCODER DCAE #
-######################
 
 configuration:
   job_type: 'encoder_DCAE'
@@ -49,5 +38,3 @@ configuration:
         #Kernel size determines the area each filter considers when processing input data.
         kss: [10,5,5]
         output_size: 10
-    
-

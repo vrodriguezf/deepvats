@@ -1,4 +1,4 @@
-import utils.errors
+import nbs_pipeline.utils.errors
 import os
 import yaml
 import sys
@@ -11,15 +11,80 @@ def join_constructor(loader, node):
     return ''.join(seq)
 ##### -- end
 
+
+import os
+import yaml
+
+"""
+def include_constructor(loader, node):    
+    # Get the path of the file you want to include
+    file_path = loader.construct_scalar(node)
+    # Construct the full path if the path in the node is not absolute
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(os.path.dirname(loader.stream.name), file_path)
+    try:
+        # Load the referenced file and return its content
+        print("Loading " + file_path)
+        with open(file_path, 'r') as include_file:
+            return yaml.load(include_file, Loader=yaml.FullLoader)
+    except Exception as e:
+        print(f"Error loading file {file_path}. Reason: {str(e)}")
+        return None
+"""
+
+
+
 def recursive_attrdict(d):
     """ Recursively converts a dictionary into an AttrDict, including all nested dictionaries. """
     if isinstance(d, dict):
         return AttrDict({k: recursive_attrdict(v) for k, v in d.items()})
     return d
 
-def get_config(print_flag=False):
+def replace_includes_with_content(filename, path = "./"):
+    print("... About to replace includes with content")
+    with open(path+filename, 'r') as f:
+        content = f.read()
+        
+        # Mientras exista una directiva !include en el contenido, sigue reemplazándola
+        while "!include" in content:
+            # Obtén la posición de la directiva
+            start_idx = content.find('!include')
+            # Encuentra el inicio y el final de las comillas que contienen el nombre del archivo
+            start_quote_idx = content.find('"', start_idx) + 1
+            end_quote_idx = content.find('"', start_quote_idx)
+            
+            # Extrae el nombre del archivo
+            include_filename = content[start_quote_idx:end_quote_idx]
+            
+            # Lee el archivo incluido
+            with open(path+include_filename, 'r') as include_file:
+                included_content = include_file.read()
+            
+            # Reemplaza la directiva por el contenido del archivo incluido
+            content = content[:start_idx] + included_content + content[end_quote_idx+1:]
+        
+    return content
+
+def get_config(print_flag=False, filename="base"):
+    filename = filename+".yaml"
+    path = "./config/"
+    if (print_flag):
+        current_directory = os.getcwd()
+        print("Current: " + current_directory)
+        print("yml: "+ path + filename)
     yaml.add_constructor('!join', join_constructor)
-    yml ="./config/base.yaml"
+    full_content = replace_includes_with_content(filename, path)
+    config = yaml.load(full_content, Loader=yaml.FullLoader)
+    return recursive_attrdict(config)
+"""
+def get_config(print_flag=False, filename="base"):
+    #username = os.getenv('USER') or os.getenv('USERNAME')
+    yaml.add_constructor('!join', join_constructor)
+    if (filename != "base"):
+        print("... Adding include constructor")
+        yaml.add_constructor('!include', include_constructor)
+    #yml ="/home/"+username+"/config/base.yaml"
+    yml="./config/"+filename+".yaml"
     if (print_flag):
         current_directory = os.getcwd()
         print("Current: " + current_directory)
@@ -27,6 +92,8 @@ def get_config(print_flag=False):
     with open(yml, "r") as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
     return recursive_attrdict(config)
+
+"""
 
 def get_project_data(print_flag):
     config      = get_config()
@@ -54,10 +121,10 @@ def get_train_artifact(user, project, data):
 def get_artifact_config_MVP_auxiliar_variables(print_flag):
     #Get neccesary variables
     user, project, version, data = get_project_data(print_flag)
-    config          = get_config()
+    config          = get_config(print_flag, "02a-encoder_mvp").configuration
     train_artifact_ = get_train_artifact(user,project,data)    
-    mvp_ws1         = config.artifact_MVP.mvp_ws1
-    mvp_ws2         = config.artifact_MVP.mvp_ws2
+    mvp_ws1         = config.specifications.mvp.ws1
+    mvp_ws2         = config.specifications.mvp.ws2
     mvp_ws = (mvp_ws1,mvp_ws2)
     return user, project, version, data, config, train_artifact_, mvp_ws
 
@@ -78,25 +145,25 @@ def get_artifact_config_MVP_check_errors(artifact_config, user, project):
 
 def get_artifact_config_MVP(print_flag=False):
     user, project, version, data, config, train_artifact_, mvp_ws = get_artifact_config_MVP_auxiliar_variables(print_flag)
-    artifact        = config.artifact_MVP
     artifact_config = AttrDict(
-        alias                   = artifact.alias,
+        job_type                = config.job_type,
+        alias                   = config.alias,
         analysis_mode           = config.wandb.mode, 
-        batch_size              = artifact.batch_size,
-        epochs                  = artifact.n_epoch,
-        mask_future             = bool(artifact.mask_future),
-        mask_stateful           = bool(artifact.mask_stateful),
-        mask_sync               = bool(artifact.mask_sync),
+        batch_size              = config.specifications.batch_size,
+        epochs                  = config.specifications.n_epoch,
+        mask_future             = config.specifications.mask.future,
+        mask_stateful           = config.specifications.mask.stateful,
+        mask_sync               = config.specifications.mask.sync,
         mvp_ws                  = mvp_ws, 
-        norm_by_sample          = artifact.norm_by_sample,
-        norm_use_single_batch   = artifact.norm_use_single_batch,
-        r                       = artifact.r,
-        stride                  = artifact.stride, 
+        norm_by_sample          = config.specifications.mvp.normalize.by_sample,
+        norm_use_single_batch   = config.specifications.mvp.normalize.use_single_batch,
+        r                       = config.specifications.mvp.r,
+        stride                  = config.specifications.sliding_windows.stride, 
         train_artifact          = train_artifact_, 
         use_wandb               = config.user_preferences.use_wandb, 
-        valid_size              = artifact.valid_size,
-        w                       = artifact.w,
-        wandb_group             = artifact.wandb_group
+        valid_size              = config.valid_size,
+        w                       = config.specifications.sliding_windows.size, 
+        wandb_group             = config.wandb.group
     )
     get_artifact_config_MVP_check_errors(artifact_config, user, project)
     return user, project, version, data, artifact_config
@@ -104,10 +171,9 @@ def get_artifact_config_MVP(print_flag=False):
 ##############################
 # 01 - DATAFRAME TO ARTIFACT #
 ##############################
-
 def get__artifact_config_sd2a_get_auxiliar_variables(print_flag):
     user, project, version, data = get_project_data(print_flag)
-    config      = get_config()
+    config      = get_config(print_flag)
     data        = config.data
     use_wandb   = config.user_preferences.use_wandb
     wandb_path  = config.wandb.artifacts_path
@@ -135,7 +201,7 @@ def get_artifact_config_sd2a(print_flag=False):
         date_format             = data.date_format,
         date_offset             = data.date_offset,
         freq                    = data.freq,
-        joining_train_test      = bool(data.joining_train_test),
+        joining_train_test      = data.joining_train_test,
         missing_values_technique= data.missing_values.technique,
         missing_values_constant = data.missing_values.constant,
         normalize_training      = data.normalize_training,
@@ -149,4 +215,34 @@ def get_artifact_config_sd2a(print_flag=False):
         wandb_artifacts_path    = wandb_path
     )
     get__artifact_config_sd2a_check_errors(use_wandb, artifact_config)    
+    return artifact_config
+
+######################
+# 02a - ENCODER DCAE #
+######################
+def get_artifact_config_DCAE(print_flag=False):
+    config = get_config(print_flag, "02b-encoder_dcae")
+    print("Antes de leer configuration " + str(config))
+    config = config.configuration
+    artifact_config = AttrDict(
+        job_type            = config.job_type,
+        use_wandb           = config.wandb.use,
+        wandb_group         = config.wandb.group,
+        wandb_entity        = config.wandb.entity,
+        wandb_project       = config.wandb.project,
+        train_artifact      = config.artifacts.train,
+        valid_artifact      = config.artifacts.valid.data,
+        # In case valid_artifact is None, this will set the percentage of random items to go to val
+        valid_size          = config.artifacts.valid.size,
+        w                   = config.specifications.sliding_windows.size,
+        stride              = config.specifications.sliding_windows.stride,
+        delta               = config.specifications.autoencoder.delta,
+        nfs                 = config.specifications.autoencoder.filters.nfs,
+        kss                 = config.specifications.autoencoder.filters.kss,
+        output_filter_size  = config.specifications.autoencoder.filters.output_size,
+        pool_szs            = config.specifications.pool_szs,
+        batch_size          = config.specifications.batch_size, 
+        epochs              = config.specifications.n_epoch,
+        top_k               = config.specifications.pool_szs
+    )
     return artifact_config

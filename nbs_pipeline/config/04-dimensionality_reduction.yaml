@@ -1,4 +1,4 @@
-!include base.yml
+include: !include "base.yaml"
 
 #########################################################
 ########### NBS - PIPELINE CONFIGURATION FILE ###########
@@ -11,6 +11,7 @@
 #################################
 # 04 - Dimensionality reduction #
 #################################
+job_type: 'dimensionality_reduction'
 configuration:
   wandb: 
     use: *use_wandb
@@ -19,15 +20,16 @@ configuration:
     # The entity to use for wandb,
     entity: *wdb_user
     # The project to use for wandb,
-    project: *wdb_project
-  artifact: 
-    # * Set to None for using the default one (encoder validation set)
-    name: null
-    # Name:version of the encoder artifact
+    project: *wdb_project 
   encoder:
-    artifact: !join [ *wdb_user, '/', *wdb_project, '/', *fname, ':v', *wdb_version]
+    # Name:version of the encoder artifact
+    artifact: 
+      # * Set to None for using the default one (encoder validation set)
+      name: null
+      enc: !join [ *wdb_user, '/', *wdb_project, '/', *fname, ':v', *wdb_version]
+      # * Set to None for using the default one (encoder validation set)
+      valid: null
     umap:
       n_neighbors: 15
       min_dist: 0.1
       random_state: 1234
-      

@@ -1,4 +1,4 @@
-!include base.yaml
+include: !include "base.yaml"
 
 configuration:
   job_type: 'encoder_MVP'

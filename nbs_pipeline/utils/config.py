@@ -146,7 +146,6 @@ def get_artifact_config_MVP_check_errors(artifact_config, user, project):
 def get_artifact_config_MVP(print_flag=False):
     user, project, version, data, config, train_artifact_, mvp_ws = get_artifact_config_MVP_auxiliar_variables(print_flag)
     artifact_config = AttrDict(
-        job_type                = config.job_type,
         alias                   = config.alias,
         analysis_mode           = config.wandb.mode, 
         batch_size              = config.specifications.batch_size,
@@ -166,7 +165,7 @@ def get_artifact_config_MVP(print_flag=False):
         wandb_group             = config.wandb.group
     )
     get_artifact_config_MVP_check_errors(artifact_config, user, project)
-    return user, project, version, data, artifact_config
+    return user, project, version, data, artifact_config, config.job_type
 
 ##############################
 # 01 - DATAFRAME TO ARTIFACT #
@@ -225,7 +224,6 @@ def get_artifact_config_DCAE(print_flag=False):
     print("Antes de leer configuration " + str(config))
     config = config.configuration
     artifact_config = AttrDict(
-        job_type            = config.job_type,
         use_wandb           = config.wandb.use,
         wandb_group         = config.wandb.group,
         wandb_entity        = config.wandb.entity,
@@ -245,4 +243,4 @@ def get_artifact_config_DCAE(print_flag=False):
         epochs              = config.specifications.n_epoch,
         top_k               = config.specifications.pool_szs
     )
-    return artifact_config
+    return artifact_config, config.job_type

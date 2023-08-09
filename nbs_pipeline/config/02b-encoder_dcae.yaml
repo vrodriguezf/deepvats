@@ -38,3 +38,7 @@ configuration:
         #Kernel size determines the area each filter considers when processing input data.
         kss: [10,5,5]
         output_size: 10
+    config:
+      alias: *alias
+      
+

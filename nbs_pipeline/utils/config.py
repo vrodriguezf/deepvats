@@ -11,6 +11,9 @@ def join_constructor(loader, node):
     return ''.join(seq)
 ##### -- end
 
+
+
+
 def recursive_attrdict(d):
     """ Recursively converts a dictionary into an AttrDict, including all nested dictionaries. """
     if isinstance(d, dict):
@@ -19,14 +22,10 @@ def recursive_attrdict(d):
 
 def get_config(print_flag=False):
     yaml.add_constructor('!join', join_constructor)
-    yml ="./config/base.yaml"
-    if (print_flag):
-        current_directory = os.getcwd()
-        print("Current: " + current_directory)
-        print("yml: "+yml)
-    with open(yml, "r") as file:
-        config = yaml.load(file, Loader=yaml.FullLoader)
+    full_content = replace_includes_with_content(filename, path)
+    config = yaml.load(full_content, Loader=yaml.FullLoader)
     return recursive_attrdict(config)
+
 
 def get_project_data(print_flag):
     config      = get_config()
@@ -63,13 +62,17 @@ def get_artifact_config_MVP_auxiliar_variables(print_flag):
     mvp_ws = (mvp_ws1,mvp_ws2)
     return user, project, version, data, config, train_artifact_, mvp_ws, user_preferences
 
-def get_artifact_config_MVP_check_errors(artifact_config, user, project):
+def check_project_and_entity(user, project):
     os_entity = os.environ['WANDB_ENTITY']
     os_project = os.environ['WANDB_PROJECT']
     if (os_entity != user):
         custom_error("Please check .env and base.yml: entity != user os " + os_entity + " yaml " + user)
     if (os_project != project):
         custom_error("Please check .env and base.yml: project differs os " + os_project + " yaml " + project)
+
+
+def get_artifact_config_MVP_check_errors(artifact_config, user, project):
+    check_project_and_entity(user, project)
         
     if artifact_config.use_wandb:
         if (artifact_config.analysis_mode != 'online'):
@@ -114,7 +117,8 @@ def get__artifact_config_sd2a_get_auxiliar_variables(print_flag):
     wandb_path  = config.wandb.artifacts_path
     return user, project, version, data, use_wandb, wandb_path
 
-def get__artifact_config_sd2a_check_errors(use_wandb, artifact_config):
+def get__artifact_config_sd2a_check_errors(use_wandb, artifact_config, user, project):
+    check_project_and_entity(user, project)
     if (
             use_wandb   == "offline" 
         and artifact_config.joining_train_test  == True
@@ -149,7 +153,7 @@ def get_artifact_config_sd2a(print_flag=False):
         use_wandb               = use_wandb,
         wandb_artifacts_path    = wandb_path
     )
-    get__artifact_config_sd2a_check_errors(use_wandb, artifact_config)    
+    get__artifact_config_sd2a_check_errors(use_wandb, artifact_config, user, project)    
     return artifact_config
 
 ######################
@@ -179,4 +183,46 @@ def get_artifact_config_DCAE(print_flag=False):
         epochs              = config.specifications.n_epoch,
         top_k               = config.specifications.pool_szs
     )
+    check_project_and_entity(artifact_config.wandb_entity, artifact_config.wandb_project)
     return artifact_config, config.job_type
+
+
+######################
+# 03 - EMBEDDINGS    #
+######################
+def get_artifact_config_embeddings(print_flag=False):
+    config = get_config(print_flag, "03-embeddings")
+    job_type=config.job_type
+    config = config.configuration
+    artifact_config = AttrDict(
+        use_wandb       = config.wandb.use,
+        wandb_group     = config.wandb.group,
+        wandb_entity    = config.wandb.entity,
+        wandb_project   = config.wandb.project,
+        enc_artifact    = config.artifacts.enc,
+        input_ar        = config.specifications.input_ar,
+        cpu             = config.specifications.cpu
+    )
+    check_project_and_entity(artifact_config.wandb_entity, artifact_config.wandb_project)
+    return artifact_config, job_type
+
+
+###################################
+# 03 - DIMENSIONALITY REDUCTION   #
+###################################
+def get_artifact_config_dimensionality_reduction(print_flag=False):
+    config          = get_config(print_flag, "04-dimensionality_reduction")
+    job_type        = config.job_type
+    config          = config.configuration
+    artifact_config = AttrDict(
+        use_wandb           = config.wandb.use, 
+        wandb_group         = config.wandb.group,
+        wandb_entity        = config.wandb.entity,
+        wandb_project       = config.wandb.project,
+        dr_artifact_name    = config.encoder.artifact.valid, 
+        enc_artifact        = config.encoder.artifact.enc,
+        n_neighbors         = config.encoder.umap.n_neighbors,
+        min_dist            = config.encoder.umap.min_dist,
+        random_state        = config.encoder.umap.random_state
+    )
+    return artifact_config, job_type

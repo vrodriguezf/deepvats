@@ -10,7 +10,7 @@ commits=(
     #"197d137a4145a150850d842c0e2ebc0bf6ee47d1" #Better..
     #"943c3975524eeb941e4195408ce08d3ace51d789" #Added update
     #"39c9d377b56af0ef1aa392a13c80409835acd3fb" #Separados
-    "2febfbf0c179be1b81a00eb9aa62437869e78e76" #Revisado inicio...
+    #"2febfbf0c179be1b81a00eb9aa62437869e78e76" #Revisado inicio...
     "b2535c3e16806a99c8b6353641d30a8eb8aedaf9" #Revisado 0a..
     "31f07069bd4ff0a76de96dbd601542552c6edc6e" #Configuration separated
     "a6c838969979621fe8b3208d233594e847465f56" #Removed echo mssgs 2

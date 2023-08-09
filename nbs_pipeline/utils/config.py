@@ -121,12 +121,14 @@ def get_train_artifact(user, project, data):
 def get_artifact_config_MVP_auxiliar_variables(print_flag):
     #Get neccesary variables
     user, project, version, data = get_project_data(print_flag)
-    config          = get_config(print_flag, "02a-encoder_mvp").configuration
+    config          = get_config(print_flag, "02a-encoder_mvp")
+    user_preferences = config.user_preferences
+    config = config.configuration
     train_artifact_ = get_train_artifact(user,project,data)    
     mvp_ws1         = config.specifications.mvp.ws1
     mvp_ws2         = config.specifications.mvp.ws2
     mvp_ws = (mvp_ws1,mvp_ws2)
-    return user, project, version, data, config, train_artifact_, mvp_ws
+    return user, project, version, data, config, train_artifact_, mvp_ws, user_preferences
 
 def get_artifact_config_MVP_check_errors(artifact_config, user, project):
     os_entity = os.environ['WANDB_ENTITY']
@@ -144,7 +146,7 @@ def get_artifact_config_MVP_check_errors(artifact_config, user, project):
         project = 'work-nbs'
 
 def get_artifact_config_MVP(print_flag=False):
-    user, project, version, data, config, train_artifact_, mvp_ws = get_artifact_config_MVP_auxiliar_variables(print_flag)
+    user, project, version, data, config, train_artifact_, mvp_ws, user_preferences = get_artifact_config_MVP_auxiliar_variables(print_flag)
     artifact_config = AttrDict(
         alias                   = config.alias,
         analysis_mode           = config.wandb.mode, 
@@ -159,8 +161,8 @@ def get_artifact_config_MVP(print_flag=False):
         r                       = config.specifications.mvp.r,
         stride                  = config.specifications.sliding_windows.stride, 
         train_artifact          = train_artifact_, 
-        use_wandb               = config.user_preferences.use_wandb, 
-        valid_size              = config.valid_size,
+        use_wandb               = user_preferences.use_wandb, 
+        valid_size              = config.specifications.mvp.valid_size,
         w                       = config.specifications.sliding_windows.size, 
         wandb_group             = config.wandb.group
     )

@@ -1,0 +1,21 @@
+!include base.yml
+
+#########################################################
+########### NBS - PIPELINE CONFIGURATION FILE ###########
+########### 03 - EMBEDDINGS                   ###########
+#########################################################
+###### Author: Maria Inmaculada Santamaria-Valenzuela   #
+###### Date: 08-2023                                    #
+#########################################################
+
+###################
+# 03 - Embeddings #
+###################
+embeddings:  
+  # Whether to group this run in a wandb group
+  wandb_group: 'embeddings'   
+  # Name:version of the encoder artifact
+  train_artifact: !join [ *wdb_user, '/', *wdb_project, '/', *fname, ':v', *wdb_version]
+  # If none, the validation set used to train enc_artifact is used
+  input_ar: null
+  cpu: false

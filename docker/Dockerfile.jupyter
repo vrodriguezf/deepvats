@@ -129,11 +129,6 @@ RUN cd /home/$USER/lib \
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh
 
-#USER root
-#RUN chown -R $UID:$GID $HOME/work
-#RUN chown -R $UID:$GID $ENV_PREFIX/include
-#USER $USER
-run echo "uid $uid gid $gid"
 run id -u
 RUN chmod 777 $ENV_PREFIX/include
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]

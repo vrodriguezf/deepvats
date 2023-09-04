@@ -12,10 +12,10 @@ commits=(
     #"39c9d377b56af0ef1aa392a13c80409835acd3fb" #Separados
     #"2febfbf0c179be1b81a00eb9aa62437869e78e76" #Revisado inicio...
     #"b2535c3e16806a99c8b6353641d30a8eb8aedaf9" #Revisado 0a..
-    "31f07069bd4ff0a76de96dbd601542552c6edc6e" #Configuration separated
-    "a6c838969979621fe8b3208d233594e847465f56" #Removed echo mssgs 2
-    "f1fdf7e10d0047d0fd61647be5061298647470b7" #Removed echo mssgs
-    "2a7691c27a6c3a0af3b31d51537c33668fde74b9" #Removed patata
+    #"31f07069bd4ff0a76de96dbd601542552c6edc6e" #Configuration separated
+    #"a6c838969979621fe8b3208d233594e847465f56" #Removed echo mssgs 2
+    #"f1fdf7e10d0047d0fd61647be5061298647470b7" #Removed echo mssgs
+    #"2a7691c27a6c3a0af3b31d51537c33668fde74b9" #Removed patata
     "4896cfd0f08001465915820435468783133d006b" #Removed aux 
     "e7988f45f68bf0c2aadf137853a3181a4c1d6e22" #get_jupyter_token
     "4e6d06e4d5d8339795c80403378cf3d78b1501f2" #removed extra env

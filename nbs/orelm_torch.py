@@ -1,5 +1,15 @@
 from tsai.all import *
-import lib.orelm.algorithms.OR_ELM as orelm
+
+import sys
+import os
+
+lib_orelm_path = os.path.expanduser("~/lib/orelm/algorithms")
+sys.path.append(lib_orelm_path)
+print(lib_orelm_path)
+import algorithms.OR_ELM  as orelm
+
+
+
 
 class ORELM_torch(Module):
     def __init__(self, 
@@ -101,7 +111,8 @@ class ORELM_torch(Module):
         :param features feature matrix with dimension (numSamples, numInputs)
         :return: activation level (numSamples, numHiddenNeurons)
         """
-        if self.activationFunction is "sig": #? Este paso lo quita Alaiñe... porque sólo está implementada la opción de "sig"
+        #? Este paso lo quita Alaiñe... porque sólo está implementada la opción de "sig"
+        if self.activationFunction == "sig": 
             if self.AE:
                 self.inputWeights = self.__calculateInputWeightsUsingAE(features)
                 self.hiddenWeights = self.__calculateHiddenWeightsUsingAE(self.H)
@@ -126,7 +137,7 @@ class ORELM_torch(Module):
         :param features feature matrix with dimension (numSamples, numInputs)
         :param targets target matrix with dimension (numSamples, numOutputs)
         """
-        if self.activationFunction is "sig":
+        if self.activationFunction == "sig":
             self.bias = np.random.random((1, self.numHiddenNeurons)) * 2 - 1
         else:
             print (" Unknown activation function type")

@@ -1,14 +1,20 @@
 from tsai.all import *
-
-import sys
 import os
-
-lib_orelm_path = os.path.expanduser("~/lib/orelm/algorithms")
+import sys
+lib_orelm_path = os.path.expanduser("~/lib/orelm/")
 sys.path.append(lib_orelm_path)
 print(lib_orelm_path)
-import algorithms.OR_ELM  as orelm
+if os.path.exists(lib_orelm_path):
+    print("El directorio existe:", lib_orelm_path)
+else:
+    print("El directorio no existe:", lib_orelm_path)
 
-
+sys.path = [path for path in sys.path if path != lib_orelm_path]
+print(sys.path)
+if lib_orelm_path not in sys.path:
+    sys.path.append(lib_orelm_path)
+print(sys.path)
+import algorithms.OR_ELM as orelm
 
 
 class ORELM_torch(Module):
@@ -227,3 +233,27 @@ class ORELM_torch(Module):
         H = self.calculateHiddenLayerActivation(features)
         prediction = np.dot(H, self.beta)
         return prediction        
+    
+
+
+
+
+def readDataSet(dataSet):
+  prefix = '~/lib/orelm/'
+  filePath = prefix+'data/'+dataSet+'.csv'
+  if dataSet=='nyc_taxi':
+    df = pd.read_csv(filePath, header=0, skiprows=[1,2],
+                     names=['time', 'data', 'timeofday', 'dayofweek'])
+    sequence = df['data']
+    dayofweek = df['dayofweek']
+    timeofday = df['timeofday']
+    seq = pd.DataFrame(np.array(pd.concat([sequence, timeofday, dayofweek], axis=1)),
+                        columns=['data', 'timeofday', 'dayofweek'])
+  elif dataSet=='sine':
+    df = pd.read_csv(filePath, header=0, skiprows=[1, 2], names=['time', 'data'])
+    sequence = df['data']
+    seq = pd.DataFrame(np.array(sequence), columns=['data'])
+  else:
+    raise(' unrecognized dataset type ')
+
+  return seq

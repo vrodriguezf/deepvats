@@ -1,6 +1,7 @@
 from tsai.all import *
 import os
 import sys
+
 lib_orelm_path = os.path.expanduser("~/lib/orelm/")
 sys.path.append(lib_orelm_path)
 print(lib_orelm_path)
@@ -15,7 +16,7 @@ if lib_orelm_path not in sys.path:
     sys.path.append(lib_orelm_path)
 print(sys.path)
 import algorithms.OR_ELM as orelm
-
+import algorithms.FOS_ELM as foselm
 
 class ORELM_torch(Module):
     def valid_parameters(self, inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor):
@@ -25,7 +26,7 @@ class ORELM_torch(Module):
           'outputs must be numeric and greater than or equal to 1'
         assert isinstance(numHiddenNeurons, (int, float)) and numHiddenNeurons >= 1, \
           'numHiddenNeurons must be numeric and greater than or equal to 1'
-        assert isinstance(orth, bool), \
+        assert isinstance(ORTH, bool), \
           'orth must be a logical value'
         assert isinstance(inputWeightForgettingFactor, (int, float)) and 0 < inputWeightForgettingFactor <= 1, \
           'inputWeightForgettingFactor must be numeric between 0 and 1'
@@ -44,11 +45,12 @@ class ORELM_torch(Module):
       outputWeightForgettingFactor  = 0.999,
     ): 
         self.valid_parameters(inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor)    
-        
         self.activationFunction = activationFunction #?
         self.outputs = outputs
         self.numHiddenNeurons = numHiddenNeurons
+        self.inputs = inputs
         # input to hidden weights
+        print("("+str(self.numHiddenNeurons) +", "+ str(self.inputs)+")")
         self.inputWeights  = np.random.random((self.numHiddenNeurons, self.inputs))
         # hidden layer to hidden layer wieghts
         self.hiddenWeights = np.random.random((self.numHiddenNeurons, self.numHiddenNeurons))
@@ -77,7 +79,7 @@ class ORELM_torch(Module):
 
 
         if self.AE: #En OTSAD -> directamente FOSELM
-            self.inputAE = orelm.FOSELM(
+            self.inputAE = foselm.FOSELM(
                 inputs              = inputs,
                 outputs             = inputs,
                 numHiddenNeurons    = numHiddenNeurons,
@@ -87,7 +89,7 @@ class ORELM_torch(Module):
                 ORTH = ORTH
             )
 
-            self.hiddenAE = orelm.FOSELM(
+            self.hiddenAE = foselm.FOSELM(
                 inputs = numHiddenNeurons,
                 outputs = numHiddenNeurons,
                 numHiddenNeurons = numHiddenNeurons,
@@ -135,7 +137,7 @@ class ORELM_torch(Module):
                 V = self.layerNormalization(V)
             self.H = orelm.sigmoidActFunc(V)
         else:
-            print ("Unknown activation function type")
+            print ("Unknown activation function type: " + self.activationFunction )
             raise NotImplementedError
         return self.H
     
@@ -148,7 +150,7 @@ class ORELM_torch(Module):
         if self.activationFunction == "sig":
             self.bias = np.random.random((1, self.numHiddenNeurons)) * 2 - 1
         else:
-            print (" Unknown activation function type")
+            print (" Unknown activation function type: " + self.activationFunction)
             raise NotImplementedError   
     
         self.M      = orelm.inv(lamb*np.eye(self.numHiddenNeurons))

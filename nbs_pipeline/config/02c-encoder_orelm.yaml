@@ -29,14 +29,14 @@ configuration:
       size: 0.1
   specifications:
     random_seed: 6
-    numHiddenNeurons: 23
+    numHiddenNeurons: 25
     activationFunction: 'sig'
     LN: true
     AE: true
     ORTH: true
     weight_forgetting_factors:
       input: 1
-      output: 0.915
+      output: 0.92
     sliding_windows:
       # n datapoints the window is moved ahead along the sequence in the sliding window
       stride: 1

@@ -18,18 +18,7 @@ import algorithms.OR_ELM as orelm
 
 
 class ORELM_torch(Module):
-    def __init__(self, 
-      inputs, 
-      outputs, 
-      numHiddenNeurons, 
-      activationFunction = "sig", #? Must always be "sig"
-      LN    = True,  #? - Layer normalization boolean
-      AE    = True,  #? - Para Alaiñe, siempre es True
-      ORTH  = True, 
-      inputWeightForgettingFactor   = 0.999,
-      outputWeightForgettingFactor  = 0.999,
-      hiddenWeightForgettingFactor  = 0.999
-    ): 
+    def valid_parameters(self, inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor):
         assert isinstance(inputs, (int, float)) and inputs >= 1, \
           'inputs must be numeric and greater than or equal to 1'
         assert isinstance(outputs, (int, float)) and outputs >= 1, \
@@ -42,6 +31,19 @@ class ORELM_torch(Module):
           'inputWeightForgettingFactor must be numeric between 0 and 1'
         assert isinstance(outputWeightForgettingFactor, (int, float)) and 0 < outputWeightForgettingFactor <= 1, \
           'outputWeightForgettingFactor must be numeric between 0 and 1'
+
+    def __init__(self, 
+      inputs, 
+      outputs, 
+      numHiddenNeurons, 
+      activationFunction = "sig", #? Must always be "sig"
+      LN    = True,  #? - Layer normalization boolean
+      AE    = True,  #? - Para Alaiñe, siempre es True
+      ORTH  = True, 
+      inputWeightForgettingFactor   = 0.999,
+      outputWeightForgettingFactor  = 0.999,
+    ): 
+        self.valid_parameters(inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor)    
         
         self.activationFunction = activationFunction #?
         self.outputs = outputs

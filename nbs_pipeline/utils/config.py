@@ -191,7 +191,7 @@ def get_artifact_config_sd2a(print_flag=False):
 ######################
 def get_artifact_config_DCAE(print_flag=False):
     config = get_config(print_flag, "02b-encoder_dcae")
-    print("Antes de leer configuration " + str(config))
+    print("Before configuration reading " + str(config))
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use,
@@ -236,6 +236,36 @@ def get_artifact_config_embeddings(print_flag=False):
     check_project_and_entity(artifact_config.wandb_entity, artifact_config.wandb_project)
     return artifact_config, job_type
 
+#######################
+# 02c - ENCODER ORELM #
+#######################
+def get_artifact_config_ORELM(print_flag=False):
+    config = get_config(print_flag, "02c-encoder_orelm")
+    print("Before configuration reading " + str(config))
+    config = config.configuration
+    artifact_config = AttrDict(
+        job_type                        = config.job_type,
+        use_wandb                       = config.wandb.use,
+        wandb_group                     = config.wandb.group,
+        wandb_entity                    = config.wandb.entity,
+        wandb_project                   = config.wandb.project,
+        train_artifact                  = config.artifacts.train,
+        valid_artifact                  = config.artifacts.valid.data,
+        # In case valid_artifact is None, this will set the percentage of random items to go to val
+        valid_size                      = config.artifacts.valid.size,
+        seed                            = config.specifications.random_seed,
+        numHiddenNeurons                = config.specifications.numHiddenNeurons,
+        activationFunction              = config.specifications.activationFunction,
+        LN                              = config.specifications.LN,
+        AE                              = config.specifications.AE,
+        ORTH                            = config.specifications.ORTH,
+        inputWeightForgettingFactor     = config.specifications.weight_forgetting_factors.input,
+        outputWeightForgettingFactor    = config.specifications.weight_forgetting_factors.output,
+        sliding_windows_stride          = config.specifications.sliding_windows.stride,
+        sliding_windows_size            = config.specifications.sliding_windows.size
+    )
+    check_project_and_entity(artifact_config.wandb_entity, artifact_config.wandb_project)
+    return artifact_config, config.job_type
 
 ###################################
 # 03 - DIMENSIONALITY REDUCTION   #

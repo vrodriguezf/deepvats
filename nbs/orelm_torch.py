@@ -33,18 +33,27 @@ class ORELM_torch(Module):
         assert isinstance(outputWeightForgettingFactor, (int, float)) and 0 < outputWeightForgettingFactor <= 1, \
           'outputWeightForgettingFactor must be numeric between 0 and 1'
 
-    def __init__(self, 
-      inputs, 
-      outputs, 
-      numHiddenNeurons, 
-      activationFunction = "sig", #? Must always be "sig"
-      LN    = True,  #? - Layer normalization boolean
-      AE    = True,  #? - Para Alaiñe, siempre es True
-      ORTH  = True, 
-      inputWeightForgettingFactor   = 0.999,
-      outputWeightForgettingFactor  = 0.999,
+    def __init__(
+        self, 
+        inputs, 
+        outputs, 
+        numHiddenNeurons, 
+        activationFunction = "sig", #? Must always be "sig"
+        LN    = True,  #? - Layer normalization boolean
+        AE    = True,  #? - Para Alaiñe, siempre es True
+        ORTH  = True, 
+        inputWeightForgettingFactor   = 0.999,
+        outputWeightForgettingFactor  = 0.999,
     ): 
-        self.valid_parameters(inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor)    
+        self.valid_parameters(inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor)
+        print("inputs")
+        print(inputs)
+        print("outputs")
+        print(outputs)
+        print("numNeurons")
+        print(numHiddenNeurons)
+        print("Out weight FF")
+        print(outputWeightForgettingFactor)    
         self.activationFunction = activationFunction #?
         self.outputs = outputs
         self.numHiddenNeurons = numHiddenNeurons

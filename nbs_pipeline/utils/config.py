@@ -11,6 +11,13 @@ def join_constructor(loader, node):
     return ''.join(seq)
 ##### -- end
 
+def recursive_print_attrdict(d, nivel = 0):
+     for key, value in d.items():
+        if isinstance(value, AttrDict):
+            print('\t' *nivel +'-'+ f'{key}:')
+            recursive_print_attrdict(value, nivel + 1)
+        else:
+            print('\t'*nivel + '-' + f'{key}: {value}')
 
 
 
@@ -191,7 +198,8 @@ def get_artifact_config_sd2a(print_flag=False):
 ######################
 def get_artifact_config_DCAE(print_flag=False):
     config = get_config(print_flag, "02b-encoder_dcae")
-    print("Before configuration reading " + str(config))
+    print("Before configuration reading ")
+    recursive_print_attrdict(config)
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use,
@@ -214,6 +222,8 @@ def get_artifact_config_DCAE(print_flag=False):
         top_k               = config.specifications.pool_szs
     )
     check_project_and_entity(artifact_config.wandb_entity, artifact_config.wandb_project)
+    print("After reading config")
+    recursive_print_attrdict(config)
     return artifact_config, config.job_type
 
 
@@ -241,7 +251,9 @@ def get_artifact_config_embeddings(print_flag=False):
 #######################
 def get_artifact_config_ORELM(print_flag=False):
     config = get_config(print_flag, "02c-encoder_orelm")
-    print("Before configuration reading " + str(config))
+    print("Before configuration reading " )
+    recursive_print_attrdict(config)
+
     config = config.configuration
     artifact_config = AttrDict(
         job_type                        = config.job_type,
@@ -261,10 +273,13 @@ def get_artifact_config_ORELM(print_flag=False):
         ORTH                            = config.specifications.ORTH,
         inputWeightForgettingFactor     = config.specifications.weight_forgetting_factors.input,
         outputWeightForgettingFactor    = config.specifications.weight_forgetting_factors.output,
-        sliding_windows_stride          = config.specifications.sliding_windows.stride,
-        sliding_windows_size            = config.specifications.sliding_windows.size
+        stride                          = config.specifications.sliding_windows.stride,
+        w                               = config.specifications.sliding_windows.size,
+        random_seed                     = config.specifications.random_seed
     )
     check_project_and_entity(artifact_config.wandb_entity, artifact_config.wandb_project)
+    print("After reading config")
+    recursive_print_attrdict(config)
     return artifact_config, config.job_type
 
 ###################################

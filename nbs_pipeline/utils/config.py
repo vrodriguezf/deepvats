@@ -253,10 +253,11 @@ def get_artifact_config_ORELM(print_flag=False):
     config = get_config(print_flag, "02c-encoder_orelm")
     print("Before configuration reading " )
     recursive_print_attrdict(config)
-
+    dataSet = config.user_preferences.data
     config = config.configuration
     artifact_config = AttrDict(
         job_type                        = config.job_type,
+        epochs                          = config.specifications.n_epoch,
         use_wandb                       = config.wandb.use,
         wandb_group                     = config.wandb.group,
         wandb_entity                    = config.wandb.entity,
@@ -275,12 +276,14 @@ def get_artifact_config_ORELM(print_flag=False):
         outputWeightForgettingFactor    = config.specifications.weight_forgetting_factors.output,
         stride                          = config.specifications.sliding_windows.stride,
         w                               = config.specifications.sliding_windows.size,
-        random_seed                     = config.specifications.random_seed
+        random_seed                     = config.specifications.random_seed,
+        lamb                            = config.specifications.lamb,
+        algorithm                       = config.specifications.algorithm
     )
     check_project_and_entity(artifact_config.wandb_entity, artifact_config.wandb_project)
     print("After reading config")
     recursive_print_attrdict(config)
-    return artifact_config, config.job_type
+    return artifact_config, config.job_type, recursive_attrdict(dataSet)
 
 ###################################
 # 03 - DIMENSIONALITY REDUCTION   #

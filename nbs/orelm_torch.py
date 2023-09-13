@@ -168,7 +168,7 @@ class ORELM_torch(Module):
         # randomly initialize the input->hidden connections
         self.inputWeights = np.random.random((self.numHiddenNeurons, self.inputs))
         self.inputWeights = self.inputWeights * 2 - 1
-        
+        print("--> Initialize_Phase: Input Weights initialized. Shape: "+ str(self.inputWeights.shape)) #? 
         if self.AE:
             self.inputAE.initializePhase(lamb=0.00001)
             self.hiddenAE.initializePhase(lamb=0.00001)
@@ -197,8 +197,14 @@ class ORELM_torch(Module):
         :param features feature matrix with dimension (numSamples, numInputs)
         :param targets target matrix with dimension (numSamples, numOutputs)
         """
+        sys.stdout.flush()
         (numSamples, numOutputs) = targets.shape
-        assert (features.shape[0] == targets.shape[0]), \
+        numWeights = features.shape[0]
+        print("samples = weights: " +  str(numSamples) + " | outputs: " + str(numOutputs))
+        print("Features shape: " + str(features.shape) + "=> Columns: " + str(features.shape[0]))
+        print("Weights number: " + str(numWeights) + " = " + str(numSamples))
+        sys.stdout.flush()
+        assert (features.shape[0] == numSamples), \
             "Number of columns of features and weights differ"
         H = self.calculateHiddenLayerActivation(features)
         Ht = np.transpose(H)
@@ -246,7 +252,10 @@ class ORELM_torch(Module):
         H = self.calculateHiddenLayerActivation(features)
         prediction = np.dot(H, self.beta)
         return prediction        
-    
+    #Añadiendo para poder aplicar a foo #?
+    def forward(self, features):
+        return self.calculateHiddenLayerActivation(features)
+
 
 
 

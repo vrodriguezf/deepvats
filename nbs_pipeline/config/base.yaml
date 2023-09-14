@@ -22,9 +22,11 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder: &path '~/data/'
-    fname: &fname 'Semantic_Segmentation_TiltABP'
+    #fname: &fname 'Semantic_Segmentation_TiltABP'
+    fname: &fname 'speed_6005'
     ftype: &ftype '.csv'
-    cols: &cols []
+    #skipped cols
+    cols: &cols [1]
     freq: &freq '1s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically

@@ -164,3 +164,4 @@ environment.*.yml
 environment.yml.*
 *.bkup
 *.logs
+/nbs_pipeline/predictionPlot.png

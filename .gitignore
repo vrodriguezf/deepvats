@@ -159,3 +159,4 @@ checklink/cookies.txt
 /environments/generic.env
 /docker/.env 
 /docker_test/
+/docker/tmp_configComits.sh

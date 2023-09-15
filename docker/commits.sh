@@ -16,7 +16,7 @@ commits=(
     #"a6c838969979621fe8b3208d233594e847465f56" #Removed echo mssgs 2
     #"f1fdf7e10d0047d0fd61647be5061298647470b7" #Removed echo mssgs
     #"2a7691c27a6c3a0af3b31d51537c33668fde74b9" #Removed patata
-    "4896cfd0f08001465915820435468783133d006b" #Removed aux 
+    #"4896cfd0f08001465915820435468783133d006b" #Removed aux 
     "e7988f45f68bf0c2aadf137853a3181a4c1d6e22" #get_jupyter_token
     "4e6d06e4d5d8339795c80403378cf3d78b1501f2" #removed extra env
 )

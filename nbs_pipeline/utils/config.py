@@ -198,7 +198,7 @@ def get_artifact_config_DCAE(print_flag=False):
     print("Antes de leer configuration " + str(config))
     config = config.configuration
     artifact_config = AttrDict(
-        use_wandb           = config.wandb.use,
+        use_wandb           = config.wandb.user,
         wandb_group         = config.wandb.group,
         wandb_entity        = config.wandb.entity,
         wandb_project       = config.wandb.project,

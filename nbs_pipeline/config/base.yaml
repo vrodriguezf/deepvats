@@ -31,13 +31,13 @@ user_preferences:
     alias: &alias 'TiltABP'
   directories:
     # Folder to store temporary files
-    tmp: *tmp 'tmp' 
-    data: *data_path !join [ *path, *fname, *ftype   ]
+    tmp: &tmp 'tmp' 
+    data: &data_path !join [ *path, *fname, *ftype   ]
   
 #######################
 # Data specifications #
 #######################
-  data:
+data:
     name: *fname
     # Name of the data file. Must be pickle, csv or tsf file
     path: *data_path

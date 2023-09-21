@@ -1,6 +1,8 @@
 from tsai.all import *
+from utils import *
 import os
 import sys
+
 
 lib_orelm_path = os.path.expanduser("~/lib/orelm/")
 sys.path.append(lib_orelm_path)
@@ -15,7 +17,6 @@ print(sys.path)
 if lib_orelm_path not in sys.path:
     sys.path.append(lib_orelm_path)
 print(sys.path)
-import algorithms.OR_ELM as orelm
 import algorithms.FOS_ELM as foselm
 
 class ORELM_torch(Module):
@@ -78,7 +79,7 @@ class ORELM_torch(Module):
         self.beta = np.random.random((self.numHiddenNeurons, self.outputs))
 
         # auxiliary matrix used for sequential learning
-        self.M = orelm.inv(0.00001 * np.eye(self.numHiddenNeurons)) #eye: diagonal, inv: inverse
+        self.M = inv(0.00001 * np.eye(self.numHiddenNeurons)) #eye: diagonal, inv: inverse
 
         self.forgettingFactor       = outputWeightForgettingFactor
         self.inputForgettingFactor  = inputWeightForgettingFactor

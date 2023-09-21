@@ -12,7 +12,7 @@ def join_constructor(loader, node):
 ##### -- end
 
 def recursive_print_attrdict(d, nivel = 0):
-     for key, value in d.items():
+    for key, value in d.items():
         if isinstance(value, AttrDict):
             print('\t' *nivel +'-'+ f'{key}:')
             recursive_print_attrdict(value, nivel + 1)
@@ -200,6 +200,7 @@ def get_artifact_config_DCAE(print_flag=False):
     config = get_config(print_flag, "02b-encoder_dcae")
     print("Before configuration reading ")
     recursive_print_attrdict(config)
+    dataSet = config.user_preferences.data
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use,
@@ -224,7 +225,7 @@ def get_artifact_config_DCAE(print_flag=False):
     check_project_and_entity(artifact_config.wandb_entity, artifact_config.wandb_project)
     print("After reading config")
     recursive_print_attrdict(config)
-    return artifact_config, config.job_type
+    return artifact_config, config.job_type, recursive_attrdict(dataSet)
 
 
 ######################

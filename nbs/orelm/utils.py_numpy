@@ -1,0 +1,79 @@
+import torch
+from nbs.orelm.foselm_torch import FOSELM_torch
+
+"""
+def linear_recurrent(features, inputW,hiddenW,hiddenA, bias, print_flag = True):
+  if (print_flag):
+    (numSamples, numInputs) = features.shape
+    (numHiddenNeuron, numInputs) = inputW.shape
+    print("numSamples: " + str(numSamples))
+    print("numInputs: " + str(numInputs))
+    print("numHiddenNeuron: " + str(numHiddenNeuron))
+    print("Features = (samples, inputs): " + str(features.shape))
+    print("NumInputs = (hidden, inputs): " + str(inputW.shape))
+  V = np.dot(features, np.transpose(inputW)) + np.dot(hiddenA,hiddenW) + bias
+  return V
+"""
+
+def linear_recurrent(features, inputW,hiddenW,hiddenA, bias, print_flag = True):
+    if (print_flag):
+        print("---> Linear_recurrent")
+        (numSamples, numInputs) = features.shape
+        (numHiddenNeuron, numInputs) = inputW.shape
+        print("numSamples: " + str(numSamples))
+        print("numInputs: " + str(numInputs))
+        print("numHiddenNeuron: " + str(numHiddenNeuron))
+        print("Features = (samples, inputs): " + str(features.shape))
+        print("NumInputs = (hidden, inputs): " + str(inputW.shape))
+    V = torch.mm(features, inputW.t()) + torch.mm(hiddenA, hiddenW) + bias
+    if (print_flag):
+       print("Linear_recurrent --->")
+    return V
+
+  
+
+"""
+def sigmoidActFunc(V, printFlag = True):
+  if (printFlag):
+     print("--> SigmoidActFunc")
+  H = 1 / (1+np.exp(-V))
+  return H
+
+#Arr must be a matrix (np.array)
+def orthogonalization(Arr):
+    [Q, S, _] = np.linalg.svd(Arr)
+    tol = max(Arr.shape) * np.spacing(max(S))
+    r = np.sum(S > tol)
+    Q = Q[:, :r]
+    return Q
+"""
+
+def sigmoidActFunc(V, printFlag=True):
+    if printFlag:
+        print("--> SigmoidActFunc")
+    H = 1 / (1 + torch.exp(-V))
+    return H
+
+def orthogonalization(Arr):
+    """
+    Arr: Matriz (torch.Tensor)
+    Q:   Resultado (torch.Tensor)
+    """
+    [Q, S, _] = torch.svd(Arr)
+    tol = torch.max(Arr.shape) * torch.spacing(torch.max(S))
+    r = torch.sum(S > tol)
+    Q = Q[:, :r]
+    return Q
+
+
+
+def linear(features, weights, bias, print_flag = True):
+  assert(features.shape[1] == weights.shape[1]), \
+    "features shape ("+str(features.shape[1]) +") must be equal to weights shape (" + str(weights.shape[1]) +")"
+  if (print_flag):
+    (numSamples, numInputs) = features.shape
+    (numHiddenNeuron, numInputs) = weights.shape
+    print("Features ~ (numSamples, numInputs) = " + str(numSamples, numInputs))
+    print("Weights ~ (numHiddenNeuron, numInputs) = " + str(numHiddenNeuron, numInputs))
+  V = np.dot(features, np.transpose(weights)) + bias
+  return V

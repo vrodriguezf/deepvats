@@ -4,12 +4,13 @@ FROM rocker/ml:4.2
 
 SHELL [ "/bin/bash", "--login", "-c" ]
 
+RUN echo "AQUI 1"
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC 
 RUN apt-get update
 RUN apt-get install -y python3-pip
 RUN python3 -m pip install --upgrade pip
 RUN apt-get install -y python3-venv libxt-dev
-
+RUN echo "AQUI 2"
 ## Install R packages
 
 RUN R -e "install.packages(c('shiny', 'pals', 'shinyWidgets', 'dygraphs', 'shinycssloaders', 'shinyjs', 'Rcpp'))"
@@ -23,7 +24,7 @@ ARG UID=1000
 ARG GID=1000
 ENV HOME /home/$USER
 ENV ENV_PREFIX $HOME/env
-
+RUN echo "AQUI 3"
 RUN addgroup --gid $GID $USER
 RUN adduser --disabled-password \
     --gecos "Non-root user" \
@@ -35,7 +36,7 @@ RUN adduser --disabled-password \
 ARG RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
 ARG RETICULATE_PYTHON_ENV=/usr/virtualenvs/venv_shiny_app
 ENV RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/
-
+RUN echo "AQUI 3"
 #RUN R -e "reticulate::virtualenv_create(envname='${RETICULATE_PYTHON_ENV}', python='/usr/bin/python3')"
 #RUN R -e "reticulate::virtualenv_install(c('numpy', 'pandas', 'wandb', 'hdbscan'), envname='${RETICULATE_PYTHON_ENV}')"
 
@@ -48,6 +49,8 @@ ARG WANDB_API_KEY
 RUN echo "WANDB_API_KEY=${WANDB_API_KEY}" >> /${HOME}/.Renviron
 
 # use an entrypoint script to insure conda environment is properly activated at runtime
+
+RUN echo "CHOWN"
 COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
 ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]

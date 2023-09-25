@@ -32,6 +32,7 @@ class ORELM_torch(elm.ELM_torch):
         inputWeightForgettingFactor   = 0.999,
         outputWeightForgettingFactor  = 0.999,
     ): 
+        super().__init__(inputs, outputs, numHiddenNeurons)
         self.valid_parameters(inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor)
         print("inputs: " + str(inputs))
         print("outputs: " + str(outputs))
@@ -102,13 +103,17 @@ class ORELM_torch(elm.ELM_torch):
         return H_normalized
         
     def __calculateInputWeightsUsingAE(self, features):
-        self.inputAE.train(features=features,targets=features)
+        print("--> Input AE")
+        self.inputAE.train_func(features=features,targets=features)
+        print("Input AE -->")
         return self.inputAE.beta
 
     def __calculateHiddenWeightsUsingAE(self, features):
-        self.hiddenAE.train(features=features,targets=features)
+        print("--> Hidden AE")
+        self.hiddenAE.train_func(features=features,targets=features)
+        print("Hidden AE -->")
         return self.hiddenAE.beta
-    def calculateHiddenLayerActivation(self, features):
+    def calculateHiddenLayerActivation(self, features, flag_debug=0):
         """
         Calculate activation level of the hidden layer
         :param features feature matrix with dimension (numSamples, numInputs)
@@ -119,6 +124,7 @@ class ORELM_torch(elm.ELM_torch):
             if self.AE:
                 self.inputWeights = self.__calculateInputWeightsUsingAE(features)
                 self.hiddenWeights = self.__calculateHiddenWeightsUsingAE(self.H)
+            print("Before LR " + str(flag_debug) + ": " + str(features.shape))
             V = linear_recurrent(
                 features    = features,
                 inputW      = self.inputWeights,
@@ -132,6 +138,7 @@ class ORELM_torch(elm.ELM_torch):
         else:
             print ("Unknown activation function type: " + self.activationFunction )
             raise NotImplementedError
+        print("ORELM: calculate hidden layer activation "+str(flag_debug)+"-->")
         return self.H
     
     def initializePhase(self, lamb=0.0001):
@@ -175,7 +182,10 @@ class ORELM_torch(elm.ELM_torch):
         #? ...
     def reset(self):#?
         self.H = self.initial_H
-    def train(self, features, targets,RESETTING=False):
+    def train_func_single(self, features, targets,RESETTING=False):
+        print("Espera a ver si hace falta")
+
+    def train_func(self, features, targets,RESETTING=False):
         """
         Step 2: Sequential learning phase
         :param features feature matrix with dimension (numSamples, numInputs)
@@ -183,15 +193,17 @@ class ORELM_torch(elm.ELM_torch):
         """
         sys.stdout.flush()
         (numSamples, numOutputs) = targets.shape
-        numWeights = features.shape[0]
-        print("samples = weights: " +  str(numSamples) + " | outputs: " + str(numOutputs))
-        print("Features shape: " + str(features.shape) + "=> Columns: " + str(features.shape[0]))
-        print("Weights number: " + str(numWeights) + " = " + str(numSamples))
+        (numWeights, _) = features.shape
+        print("ORELM:TRAIN:samples = weights: " +  str(numSamples) + " | outputs: " + str(numOutputs))
+        print("ORELM:TRAIN:Features shape: " + str(features.shape) + "=> Columns: " + str(features.shape[0]))
+        print("ORELM:TRAIN:Weights number: " + str(numWeights) + " = " + str(numSamples))
         sys.stdout.flush()
         assert (features.shape[0] == numSamples), \
             "Number of columns of features and weights differ"
-        H = self.calculateHiddenLayerActivation(features)
-        Ht = H.t
+        self.fprint("--> Calculate Hidden Activation 1", self.print_flag)
+        H = self.calculateHiddenLayerActivation(features, 1)
+        self.fprint("Calculate Hidden Activation 1 -->", self.print_flag)
+        Ht = H.t()
         try:
             scale = 1/(self.forgettingFactor)
             aux = scale * self.M
@@ -234,13 +246,29 @@ class ORELM_torch(elm.ELM_torch):
         :param features: feature matrix with dimension (numSamples, numInputs)
         :return: predictions with dimension (numSamples, numOutputs)
         """
-        H = self.calculateHiddenLayerActivation(features)
+        self.fprint("--> Calculate Hidden Activation 3", self.print_flag)
+        self.fprint("Features ~ " + str(features.shape), self.print_flag)
+        H = self.calculateHiddenLayerActivation(features,2 )
+        self.fprint("Get prediction", self.print_flag)
         prediction = torch.mm(H, self.beta)
+        self.fprint("Calculate Hidden Activation 3 --> Features ~ " + str(features.shape), self.print_flag)
         return prediction        
     
     #Añadiendo para poder aplicar a foo #?
     def forward(self, features):
-        return self.calculateHiddenLayerActivation(features)
+        print("--> Forward")
+        if len(features.shape) == 3:
+            print("Case: anomalous - 3D shape")
+            nwindows = features.shape[0]
+            #activations_tensor = []
+            #for i in range(nwindows):
+                #activations_tensor+=[self.calculateHiddenLayerActivation(features[i], 3)]
+            result = self.calculateHiddenLayerActivation(features[0], 3)
+            #Todo: Ver como completar bien este apartado para que haga lo mismo que el original    
+        else:
+            result= self.calculateHiddenLayerActivation(features, 4)
+        print("Forward --> result ~ " + str(result.shape))
+        return result 
 
 
 

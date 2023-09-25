@@ -19,8 +19,10 @@ def linear_recurrent(features, inputW,hiddenW,hiddenA, bias, print_flag = True):
 
 def sigmoidActFunc(V, printFlag=True):
     if printFlag:
-        print("--> SigmoidActFunc")
+        print("--> SigmoidActFunc V ~ " + str(V.shape))
     H = 1 / (1 + torch.exp(-V))
+    if printFlag:
+        print("SigmoidActFunc -->")
     return H
 
 def spacing_torch(S):
@@ -46,7 +48,10 @@ def orthogonalization(Arr):
     Q = U[:, :r]
     return Q
 
-def linear(features, weights, bias, print_flag=True):
+
+def linear(features, weights, bias, print_flag=False):
+    print("Features: " + str(features.shape))
+    print("weights: " + str(weights.shape))
     assert features.shape[1] == weights.shape[1], \
         "features shape (" + str(features.shape[1]) + ") must be equal to weights shape (" + str(weights.shape[1]) + ")"
     if print_flag:

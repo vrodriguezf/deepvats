@@ -17,9 +17,11 @@ class ELM_torch(Module):
         self.inputs = inputs
         self.outputs = outputs 
         self.numHiddenNeurons = numHiddenNeurons
+        self.print_flag = True
         
     def get_random_matrix(self, nrows, ncols):
         return torch.rand((nrows, ncols), dtype=torch.float32)   
+        #return torch.rand((nrows, ncols), dtype=torch.double)   
 
     def get_random_InputWeights(self):
         self.inputWeights = self.get_random_matrix(self.numHiddenNeurons, self.inputs)
@@ -30,3 +32,7 @@ class ELM_torch(Module):
     def get_random_HiddenWeights(self):
         self.hiddenWeights = self.get_random_matrix(self.numHiddenNeurons, self.numHiddenNeurons)  
         return self.hiddenWeights
+    def fprint(self, mssg, print_flag = False):
+        if (print_flag):
+            print(mssg)
+    

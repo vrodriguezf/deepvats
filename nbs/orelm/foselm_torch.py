@@ -141,17 +141,16 @@ class FOSELM_torch(elm.ELM_torch):
     """
         #if len(targets.shape) == 3:
      # print("FOSELM:TRAIN:3SHAPED")
-     
-    (num_windows, num_samples, num_outputs) = targets.shape
-    (num_samples, num_vars, num_steps) = features.shape
+    assert features.shape[0] == targets.shape[0], \
+      "FOS_ELM:train: differs number of samples features "+ str(features.shape[0]) + " targets "+str(targets.shape[0])
+
+    #(num_samples, num_outputs, num_steps) = targets.shape
+    #(num_samples, num_inputs, num_steps) = features.shape
     
     print("FOSELM Features & targets shape")
-    print("Features ~" +str(features.shape))
-    print("Targets ~" +str(targets.shape))
-    print(num_samples, num_vars)
-    assert num_samples == num_vars, \
-      "FOS_ELM:train: differs features "+ str(num_vars) + " targets "+str(num_samples)
-    
+    print("Features ~ (samples, outputs, steps) = " +str(features.shape))
+    print("Targets ~ (samples, imputs, steps) = " +str(targets.shape))
+       
     #Train
     H = self.calculateHiddenLayerActivation(features)
     Ht = H.t() #Traspose

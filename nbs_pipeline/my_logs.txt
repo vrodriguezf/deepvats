@@ -10,18 +10,18 @@ self.model: ORELM_torch(
 )
 self.splitter(self.model): []
 Learning rate: 0.001
-OPT func: <function Adam at 0x7fb12d6b1870>
+OPT func: <function Adam at 0x7f8eaf262dd0>
 Adam optimizer
 Get cbs
 decouple_wd: True
-weight_decay <function weight_decay at 0x7fb12d6b1240>
-l2_reg <function l2_reg at 0x7fb12d6b12d0>
-Cbs: [<function weight_decay at 0x7fb12d6b1240>]
+weight_decay <function weight_decay at 0x7f8eaf2627a0>
+l2_reg <function l2_reg at 0x7f8eaf262830>
+Cbs: [<function weight_decay at 0x7f8eaf2627a0>]
 Add to cbs
-average_sqr_grad<function average_sqr_grad at 0x7fb12d6b13f0>
-step_stat<function step_stat at 0x7fb12d6b16c0>
-adam_step<function adam_step at 0x7fb12d6b17e0>
-partial(average_grad, dampening=True): functools.partial(<function average_grad at 0x7fb12d6b1360>, dampening=True)
+average_sqr_grad<function average_sqr_grad at 0x7f8eaf262950>
+step_stat<function step_stat at 0x7f8eaf262c20>
+adam_step<function adam_step at 0x7f8eaf262d40>
+partial(average_grad, dampening=True): functools.partial(<function average_grad at 0x7f8eaf2628c0>, dampening=True)
 About to get optimizer
 Get params
 Get cbs
@@ -46,16 +46,16 @@ Okay got res
 About to return
 Okay got res
 About to return
-mapping var [tensor([[-0.9281, -0.3265, -0.6139, -0.0523,  0.9559, -0.2959,  0.6461, -0.5057,
-          0.6349,  0.1729, -0.1395, -0.3453,  0.6145,  0.6861, -0.7515, -0.4512,
-         -0.5681,  0.3694,  0.9863,  0.6492,  0.2367,  0.7097,  0.8426,  0.8849,
-          0.4654]], grad_fn=<SubBackward0>), tensor([[ 0.5707,  0.3299, -0.4203, -0.7006, -0.1685, -0.3179, -0.8012, -0.2648,
-         -0.1671,  0.9585, -0.3112,  0.8239, -0.2507,  0.4902,  0.9100, -0.0626,
-          0.3256,  0.2209, -0.6170,  0.9390, -0.6823, -0.5199,  0.8885,  0.5851,
-         -0.9374]], grad_fn=<SubBackward0>), tensor([[-0.1313, -0.0513, -0.8545, -0.6734, -0.1830,  0.5123,  0.5629, -0.9279,
-          0.3664, -0.7139,  0.7546, -0.8900, -0.9000, -0.4931,  0.1415,  0.6086,
-          0.1870,  0.4635,  0.2155,  0.2734,  0.0594, -0.1737, -0.0144,  0.2699,
-          0.2452]], grad_fn=<SubBackward0>)]
+mapping var [tensor([[-0.5040,  0.3977, -0.2986,  0.4099,  0.5373, -0.8866, -0.5283, -0.0956,
+          0.3371,  0.4291, -0.5562, -0.0354,  0.6489, -0.7505, -0.1940,  0.7543,
+          0.7996,  0.4207,  0.0034, -0.1975, -0.7938,  0.0936, -0.1774,  0.7550,
+          0.0565]], grad_fn=<SubBackward0>), tensor([[-0.0717,  0.3356,  0.4120, -0.4970, -0.8808,  0.8454,  0.4416, -0.6135,
+          0.8051,  0.0723, -0.6930,  0.3070,  0.6031, -0.4744, -0.8249,  0.6204,
+          0.8642,  0.6299, -0.6454,  0.1378,  0.0723,  0.7249,  0.7542, -0.4302,
+          0.6675]], grad_fn=<SubBackward0>), tensor([[ 0.1672,  0.6357,  0.3414,  0.8804,  0.9681, -0.9522, -0.2547,  0.6516,
+          0.3739,  0.6962, -0.2616,  0.1454, -0.8589,  0.9769, -0.3588,  0.4407,
+         -0.3254, -0.4750,  0.2678,  0.2762, -0.2543, -0.9892, -0.6785,  0.0498,
+         -0.7959]], grad_fn=<SubBackward0>)]
 Returning
 Got norm bias state
 --> bn_bias_state
@@ -76,32 +76,30 @@ Returning
 Create opt -->
 About to fit
 Event: fit
-Function: <bound method Learner._do_fit of <fastai.learner.Learner object at 0x7faf67148a60>>
+Function: <bound method Learner._do_fit of <fastai.learner.Learner object at 0x7f8ce9e4ff70>>
 --> _do_fit
 epoch 0:
 Event: epoch
-Function: <bound method Learner._do_epoch of <fastai.learner.Learner object at 0x7faf67148a60>>
+Function: <bound method Learner._do_epoch of <fastai.learner.Learner object at 0x7f8ce9e4ff70>>
 --> Do epoch
 Event: train
-Function: <bound method Learner.all_batches of <fastai.learner.Learner object at 0x7faf67148a60>>
+Function: <bound method Learner.all_batches of <fastai.learner.Learner object at 0x7f8ce9e4ff70>>
 Set the model to training mode
 ... Enabling Vs Code execution ...
 --> Al batches
 Event: batch
-Function: <bound method Learner._do_one_batch of <fastai.learner.Learner object at 0x7faf67148a60>>
+Function: <bound method Learner._do_one_batch of <fastai.learner.Learner object at 0x7f8ce9e4ff70>>
 --> Do one batch
 --> Forward
 features ~ (num_samples, num_Inputs, num_steps - nwindows) = torch.Size([64, 1, 25])
 --> Input AE
 --> Foselm: Train
-targets shape torch.Size([64, 1, 25])
-FOSELM:TRAIN:3SHAPED
-FOSELM Features& targets shape
-torch.Size([64, 1, 25])
-torch.Size([64, 1, 25])
-1 1
+FOSELM Features & targets shape
+Features ~torch.Size([64, 1, 25])
+Targets ~torch.Size([64, 1, 25])
+64 1
 Traceback (most recent call last):
-  File "/tmp/ipykernel_1222721/1119649501.py", line 16, in <module>
+  File "/tmp/ipykernel_1263083/1119649501.py", line 16, in <module>
     lr_valley, lr_steep = learn.lr_find(suggest_funcs=[valley, steep])
   File "/home/macu/env/lib/python3.10/site-packages/fastai/callback/schedule.py", line 309, in lr_find
     with self.no_logging(): self.fit(n_epoch, cbs=cb)
@@ -135,11 +133,7 @@ Traceback (most recent call last):
     self.inputWeights = self.__calculateInputWeightsUsingAE(features)
   File "/home/macu/work/nbs/orelm/orelm_torch.py", line 103, in __calculateInputWeightsUsingAE
     self.inputAE.train_func(features=features,targets=features)
-  File "/home/macu/work/nbs/orelm/foselm_torch.py", line 159, in train_func
-    self.train_func_single(features[i], targets[i])
-  File "/home/macu/work/nbs/orelm/foselm_torch.py", line 119, in train_func_single
-    self.fprint("--> FOSELM: Train func (single)", self.print_flag)
-  File "/home/macu/env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1269, in __getattr__
-    raise AttributeError("'{}' object has no attribute '{}'".format(
-AttributeError: 'FOSELM_torch' object has no attribute 'print_flag'
+  File "/home/macu/work/nbs/orelm/foselm_torch.py", line 152, in train_func
+    assert num_samples == num_vars, \
+AssertionError: FOS_ELM:train: differs features 1 targets 64
 

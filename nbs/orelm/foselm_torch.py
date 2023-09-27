@@ -1,7 +1,7 @@
 from tsai.all import *
 import nbs.orelm.utils as ut
 import nbs.orelm.elm_torch as elm
-
+import nbs.orelm.rls as rls
 """
 Implementation of the fully online-sequential extreme learning machine (FOS-ELM)
 Reference:
@@ -21,7 +21,7 @@ class FOSELM_torch(elm.ELM_torch):
       LN=False,         #Layer normalization flag
       forgettingFactor=0.999, 
       ORTH = False,     #Orthogonalization flag
-      RLS=False         #Recuirsive Least squares 
+      RLS_flag =False         #Recuirsive Least squares 
     ):
 
     self.activationFunction = activationFunction
@@ -43,7 +43,9 @@ class FOSELM_torch(elm.ELM_torch):
     # auxiliary matrix used for sequential learning
     self.M = None
     self.forgettingFactor = forgettingFactor
-    self.RLS=RLS
+    self.RLS = RLS_flag
+    if (RLS_flag):
+      self.rls_torch = rls.RLS_torch(self.M, self.beta, self.forgettingFactor)
 
   
 
@@ -60,8 +62,9 @@ class FOSELM_torch(elm.ELM_torch):
       l_layer = nn.Linear(input_size, output_size)
       l_layer.bias = nn.Parameter(self.bias)
       if self.LN:
+        self.fprint("FOSELM: Create normalization layer", self.print_flag)
         ln_layer = self.get_ln_layer(V)
-        self.fprint("Normalize lr output", self.print_flag)
+        self.fprint("FOSELM: Normalize lr output", self.print_flag)
         V = ln_layer(V)
       H = ut.sigmoidActFunc(V)
     else:
@@ -99,29 +102,43 @@ class FOSELM_torch(elm.ELM_torch):
       raise "Not implemented"
 
     self.M = torch.inverse(lamb*torch.eye(self.numHiddenNeurons))
-    self.beta = torch.zeros(self.numHiddenNeurons,self.outputs)
-
+    self.beta = torch.zeros(self.numHiddenNeurons,self.outputs)    
+    
+  def compute_coefficients(self, targets, H, Ht):
+    self.beta + torch.mm(self.M, torch.mm(Ht, targets - torch.mm(H, self.beta)))
+    return self.beta
+  def compute_inverse_covariance_matrix(self, targets, H, Ht):
+    (numSamples, _) = targets.shape
+    self.M = (1/self.forgettingFactor) * self.M - torch.mm(
+      (1/self.forgettingFactor) * self.M,
+      torch.mm(
+        Ht, 
+        torch.mm(
+          torch.pinverse(
+            torch.eye(numSamples) + torch.mm(
+              H, 
+              torch.mm((
+                1/self.forgettingFactor) * self.M, 
+                Ht
+              )
+            )
+          ),
+          torch.mm(H, (1/self.forgettingFactor) * self.M)
+        )
+      )
+    )
+    return self.M 
+  
   def train_func_single(self, features, targets):
-    print("--> Train func (single)")
+    self.fprint("--> FOSELM: Train func (single)", self.print_flag)
     H = self.calculateHiddenLayerActivation(features)
-    Ht = H.t()
+    Ht = H.t() #Traspose
     if self.RLS:
-      print("RLS")
-      self.RLS_k = torch.mm(torch.mm(self.M, Ht), torch.inverse(self.forgettingFactor * torch.eye(numSamples) + torch.mm(H, torch.mm(self.M, Ht))))
-      self.RLS_e = targets - torch.mm(H,self.beta)
-      self.beta = self.beta + torch.mm(self.RLS_k,self.RLS_e)
-      self.M = 1/(self.forgettingFactor)*(self.M - torch.mm(self.RLS_k,torch.mm(H,self.M)))
-
+      self.beta, self.M = self.rls_torch.compute_recursive_least_squares(targets, H, Ht)
     else:
       print("non RLS")
-      (numSamples, _) = targets.shape
-      self.M = (1/self.forgettingFactor) * self.M - torch.mm((1/self.forgettingFactor) * self.M,
-                                       torch.mm(Ht, torch.mm(
-                                         torch.pinverse(torch.eye(numSamples) + torch.mm(H, torch.mm((1/self.forgettingFactor) * self.M, Ht))),
-                                         torch.mm(H, (1/self.forgettingFactor) * self.M))))
-      self.beta = self.beta + torch.mm(self.M, torch.mm(Ht, targets - torch.mm(H, self.beta)))
-      # self.beta = (self.forgettingFactor)*self.beta + torch.mm(self.M, torch.mm(Ht, targets - torch.mm(H, (self.forgettingFactor)*self.beta)))
-      # self.beta = (self.forgettingFactor)*self.beta + (self.forgettingFactor)*torch.mm(self.M, torch.mm(Ht, targets - torch.mm(H, self.beta)))
+      self.M    = self.compute_inverse_covariance_matrix(targets, H, Ht)
+      self.beta = self.compute_coefficients(targets, H, Ht)
     print("Train func (single) -->")
 
   

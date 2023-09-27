@@ -20,7 +20,7 @@ class ORELM_torch(elm.ELM_torch):
           'inputWeightForgettingFactor must be numeric between 0 and 1'
         assert isinstance(outputWeightForgettingFactor, (int, float)) and 0 < outputWeightForgettingFactor <= 1, \
           'outputWeightForgettingFactor must be numeric between 0 and 1'
-        assert isinstance(seq_len > 0), \
+        assert seq_len > 0, \
             'Sequence len (seq_len) must be bigger than 0'
 
     def __init__(
@@ -142,9 +142,9 @@ class ORELM_torch(elm.ELM_torch):
             #Layer normalization
             if self.LN: #? -> Aqui es siempre true para Alaiñe
                 #Batch normalization
-                print("Create normalization layer")
+                self.fprint("ORELM: Create normalization layer", self.print_flag)
                 ln_layer  = self.get_ln_layer(lr_output)
-                self.fprint("Normalize lr output", self.print_flag)
+                self.fprint("ORELM: Normalize lr output", self.print_flag)
                 lr_output = ln_layer(lr_output)
             #Layer activation
             self.fprint("Get hidden layer activation", self.print_flag)
@@ -300,3 +300,5 @@ def readDataSet(dataSet):
     raise(' unrecognized dataset type ')
 
   return seq
+
+

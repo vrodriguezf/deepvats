@@ -1,12 +1,13 @@
 from tsai.all import *
 from nbs.orelm.utils import *
 from nbs.orelm.foselm_torch import *
+from nbs.orelm.linear_recurrent import *
 import nbs.orelm.elm_torch as elm
 import os
 import sys
 
 class ORELM_torch(elm.ELM_torch):
-    def valid_parameters(self, inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor):
+    def valid_parameters(self, inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor, seq_len):
         assert isinstance(inputs, (int, float)) and inputs >= 1, \
           'inputs must be numeric and greater than or equal to 1'
         assert isinstance(outputs, (int, float)) and outputs >= 1, \
@@ -19,6 +20,8 @@ class ORELM_torch(elm.ELM_torch):
           'inputWeightForgettingFactor must be numeric between 0 and 1'
         assert isinstance(outputWeightForgettingFactor, (int, float)) and 0 < outputWeightForgettingFactor <= 1, \
           'outputWeightForgettingFactor must be numeric between 0 and 1'
+        assert isinstance(seq_len > 0), \
+            'Sequence len (seq_len) must be bigger than 0'
 
     def __init__(
         self, 
@@ -31,13 +34,15 @@ class ORELM_torch(elm.ELM_torch):
         ORTH  = True, 
         inputWeightForgettingFactor   = 0.999,
         outputWeightForgettingFactor  = 0.999,
+        seq_len = 1
     ): 
         super().__init__(inputs, outputs, numHiddenNeurons)
-        self.valid_parameters(inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor)
+        self.valid_parameters(inputs, outputs, numHiddenNeurons, activationFunction, LN,AE, ORTH, inputWeightForgettingFactor, outputWeightForgettingFactor, seq_len)
         print("inputs: " + str(inputs))
         print("outputs: " + str(outputs))
         print("numNeurons: " + str(numHiddenNeurons))
         print("Out weight FF: " + str(outputWeightForgettingFactor))
+        print("Window size: " + str(seq_len))
         
         self.activationFunction = activationFunction #?
         self.outputs = outputs
@@ -84,23 +89,14 @@ class ORELM_torch(elm.ELM_torch):
             )
 
             self.hiddenAE = FOSELM_torch(
-                inputs = numHiddenNeurons,
-                outputs = numHiddenNeurons,
-                numHiddenNeurons = numHiddenNeurons,
-                activationFunction=activationFunction,#?
-                LN= LN,
-                ORTH = ORTH
+                inputs              = numHiddenNeurons,
+                outputs             = numHiddenNeurons,
+                numHiddenNeurons    = numHiddenNeurons,
+                activationFunction  =activationFunction,#?
+                LN                  = LN,
+                ORTH                = ORTH
             )
 
-    def layerNormalization(
-            self, 
-            H, 
-            scaleFactor=1, 
-            biasFactor=0
-        ):
-        H_normalized = (H-H.mean())/(torch.sqrt(H.var() + 0.000001)) #0.0001
-        H_normalized = scaleFactor*H_normalized+biasFactor
-        return H_normalized
         
     def __calculateInputWeightsUsingAE(self, features):
         print("--> Input AE")
@@ -117,7 +113,7 @@ class ORELM_torch(elm.ELM_torch):
     def calculateHiddenLayerActivation(self, features, flag_debug=0):
         """
         Calculate activation level of the hidden layer
-        :param features feature matrix with dimension (numSamples, numInputs)
+        :param features feature matrix with dimension (numSamples, numInputs) #Aqui se añade numWindows
         :return: activation level (numSamples, numHiddenNeurons)
         """
         #? Este paso lo quita Alaiñe... porque sólo está implementada la opción de "sig"
@@ -125,21 +121,38 @@ class ORELM_torch(elm.ELM_torch):
             if self.AE:
                 self.inputWeights = self.__calculateInputWeightsUsingAE(features)
                 self.hiddenWeights = self.__calculateHiddenWeightsUsingAE(self.H)
-            print("Before LR " + str(flag_debug) + ": " + str(features.shape))
-            V = linear_recurrent(
-                features    = features,
-                inputW      = self.inputWeights,
-                hiddenW     = self.hiddenWeights,
-                hiddenA     = self.H,
-                bias        = self.bias
-            )
+            self.fprint("Before LR " + str(flag_debug) + ": " + str(features.shape), self.printflag)
+            #Linear recurrent RNN layer setup
+            input_size  = self.inputs 
+            hidden_size = self.numHiddenNeurons     
+            numLayers   =1                  #Num Linear Recurrent layers
+            batch_size = features.shape[0]  #numSamples
+            #Create layer
+            self.fprint("Create layer", self.print_flag)
+            lr_layer  = nn.RNN(input_size,hidden_size,numLayers,bias=True, batch_first=True)
+            #Setup bias matrices
+            self.fprint("Setup bias", self.print_flag)
+            lr_layer.bias_ih_l0 = nn.Parameter(self.bias)
+            lr_layer.bias_hh_l0 = nn.Parameter(self.bias)
+            #Create tensor for initial hiddenState
+            lr_initial_hidden_state = torch.zeros(numLayers, batch_size, self.numHiddenNeurons)  
+            self.fprint("Apply LR layer", self.print_flag)
+            lr_output, lr_new_hidden_state = lr_layer(features, lr_initial_hidden_state)
+            #lr_layer = linear_recurrent(features    = features,inputW      = self.inputWeights,hiddenW     = self.hiddenWeights, hiddenA     = self.H, bias        = self.bias)
+            #Layer normalization
             if self.LN: #? -> Aqui es siempre true para Alaiñe
-                V = self.layerNormalization(V)
-            self.H = sigmoidActFunc(V)
+                #Batch normalization
+                print("Create normalization layer")
+                ln_layer  = self.get_ln_layer(lr_output)
+                self.fprint("Normalize lr output", self.print_flag)
+                lr_output = ln_layer(lr_output)
+            #Layer activation
+            self.fprint("Get hidden layer activation", self.print_flag)
+            self.H = torch.sigmoid(lr_output)
         else:
             print ("Unknown activation function type: " + self.activationFunction )
             raise NotImplementedError
-        print("ORELM: calculate hidden layer activation "+str(flag_debug)+"-->")
+        print("ORELM: calculate hidden layer activation "+str(flag_debug)+" -->")
         return self.H
     
     def initializePhase(self, lamb=0.0001):
@@ -258,16 +271,11 @@ class ORELM_torch(elm.ELM_torch):
     
     #Añadiendo para poder aplicar a foo #?
     def forward(self, features):
-        print("--> Forward")
-        if len(features.shape) == 3:
-            print("features ~ (num_samples - nimputs, num_vars, num_steps - nwindows) = " + str(features.shape))
-            result = self.calculateHiddenLayerActivation(features, 3) #Revisar esto...
-            
-        else:
-            print("Error")
-            exit(0)
-        print("Forward --> result ~ " + str(result.shape))
-        return result 
+        self.fprint("--> Forward", self.print_flag)
+        self.fprint("features ~ (num_samples, num_Inputs, num_steps - nwindows) = " + str(features.shape), self.print_flag)
+        features = self.calculateHiddenLayerActivation(features, 3) #Revisar esto...
+        print("Forward --> result ~ " + str(features.shape))
+        return features 
 
 
 

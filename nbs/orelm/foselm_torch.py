@@ -1,7 +1,7 @@
 from tsai.all import *
 import nbs.orelm.utils as ut
 import nbs.orelm.elm_torch as elm
-import nbs.orelm.rls as rls
+import nbs.orelm.rls_torch as rls
 """
 Implementation of the fully online-sequential extreme learning machine (FOS-ELM)
 Reference:
@@ -23,6 +23,7 @@ class FOSELM_torch(elm.ELM_torch):
       ORTH = False,     #Orthogonalization flag
       RLS_flag =False         #Recuirsive Least squares 
     ):
+    super().__init__(inputs, outputs, numHiddenNeurons)
 
     self.activationFunction = activationFunction
     self.inputs = inputs
@@ -55,7 +56,7 @@ class FOSELM_torch(elm.ELM_torch):
     :param features feature matrix with dimension (numSamples, numInputs)
     :return: activation level (numSamples, numHiddenNeurons)
     """
-    print("Foselm - Calculate Hidden layer activation")
+    self.fprint("Foselm - Calculate Hidden layer activation", self.print_flag)
     if self.activationFunction == "sig":
       input_size  = self.inputs
       output_size = self.numHiddenNeurons
@@ -68,7 +69,7 @@ class FOSELM_torch(elm.ELM_torch):
         V = ln_layer(V)
       H = ut.sigmoidActFunc(V)
     else:
-      print ("FOS-ELM l-95 Unknown activation function type: " + self.activationFunction)
+      self.fprint("FOS-ELM l-95 Unknown activation function type: " + self.activationFunction, self.print_flag)
       raise NotImplementedError
     print("FOSELM: Calculate hidden layer activation -->")
     return H
@@ -128,9 +129,30 @@ class FOSELM_torch(elm.ELM_torch):
       )
     )
     return self.M 
+
+
   
-  def train_func_single(self, features, targets):
-    self.fprint("--> FOSELM: Train func (single)", self.print_flag)
+  def train_func(self, features, targets):
+    self.fprint("--> Foselm: Train", self.print_flag)
+    """
+    Step 2: Sequential learning phase
+    :param features feature matrix with dimension (numSamples, numInputs) #, numSteps
+    :param targets target matrix with dimension (numSamples, numOutputs) 
+    """
+        #if len(targets.shape) == 3:
+     # print("FOSELM:TRAIN:3SHAPED")
+     
+    (num_windows, num_samples, num_outputs) = targets.shape
+    (num_samples, num_vars, num_steps) = features.shape
+    
+    print("FOSELM Features & targets shape")
+    print("Features ~" +str(features.shape))
+    print("Targets ~" +str(targets.shape))
+    print(num_samples, num_vars)
+    assert num_samples == num_vars, \
+      "FOS_ELM:train: differs features "+ str(num_vars) + " targets "+str(num_samples)
+    
+    #Train
     H = self.calculateHiddenLayerActivation(features)
     Ht = H.t() #Traspose
     if self.RLS:
@@ -139,49 +161,8 @@ class FOSELM_torch(elm.ELM_torch):
       print("non RLS")
       self.M    = self.compute_inverse_covariance_matrix(targets, H, Ht)
       self.beta = self.compute_coefficients(targets, H, Ht)
-    print("Train func (single) -->")
-
-  
-  def train_func(self, features, targets):
-    print("--> Foselm: Train")
-    """
-    Step 2: Sequential learning phase
-    :param features feature matrix with dimension (numSamples, numInputs)
-    :param targets target matrix with dimension (numSamples, numOutputs)
-    """
-    print("targets shape " + str(targets.shape))
-    if len(targets.shape) == 3:
-      print("FOSELM:TRAIN:3SHAPED")
-      (numWindows, numSamples, numOutputs) = targets.shape
-      (_, features_size, _) = features.shape
-      print("FOSELM Features& targets shape")
-      print(str(features.shape))
-      print(str(targets.shape))
-      print(numSamples, features_size)
-      assert features_size == numSamples, \
-        "FOS_ELM:train: differs features "+\
-          str(features_size)+ \
-            " targets "+str(numSamples)
-      for i in range(numWindows):
-        self.train_func_single(features[i], targets[i])
-    else:
-      print("FOSELM:TRAIN:2SHAPED")
-      if (features.shape[1] == self.inputs):
-        print("Dimensions ok")
-        (numSamples, numOutputs) = targets.shape
-        (features_size, _) = features.shape
-        print("Features ~ " + str(features.shape))
-        print("Targets ~ " + str(targets.shape))
-        print("Inputs ~ " + str(self.inputs))
-        print(numSamples, features_size)
-        assert features_size == numSamples, \
-          "FOS_ELM:train: differs features "+\
-            str(features_size)+ \
-              " targets "+str(numSamples)
-        self.train_func_single(features, targets)
-      else: 
-        print("Check if a better partition can be done: last window has just " + str(features.shape[1]) + " inputs instead of " + str(self.inputs))
-    print("FOSELM:Train:END -->")
+    
+    self.fprint("FOSELM:Train:END -->", self.print_flag)
 
   
   

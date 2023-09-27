@@ -1,7 +1,6 @@
 from tsai.all import *
 import nbs.orelm.utils as ut
 import nbs.orelm.elm_torch as elm
-import nbs.orelm.rls
 
 class RLS_torch():
     def __init__(

@@ -2,7 +2,11 @@ import torch
 from nbs.orelm.foselm_torch import FOSELM_torch
 
 
-def linear_recurrent(features, inputW,hiddenW,hiddenA, bias, print_flag = True):
+def linear_recurrent(
+        features, 
+        inputW,
+        hiddenW,
+        hiddenA, bias, print_flag = True):
     if (print_flag):
         print("---> Linear_recurrent")
         (numSamples, numInputs) = features.shape

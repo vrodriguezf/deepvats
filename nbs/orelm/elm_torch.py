@@ -19,6 +19,9 @@ class ELM_torch(Module):
         self.numHiddenNeurons = numHiddenNeurons
         self.print_flag = True
         self.requires_grad = True #False #True #? Intentando arerglar problema de lr_find
+    
+    def get_ln_layer(layer):
+        return nn.LayerNorm(layer.size()[1:])
         
     def get_random_matrix(self, nrows, ncols):
         return torch.rand((nrows, ncols), dtype=torch.float32, requires_grad = True)  

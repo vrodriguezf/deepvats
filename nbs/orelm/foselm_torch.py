@@ -45,12 +45,7 @@ class FOSELM_torch(elm.ELM_torch):
     self.forgettingFactor = forgettingFactor
     self.RLS=RLS
 
-  def layerNormalization(self, H, scaleFactor=1, biasFactor=0):
-    print("Foselm - Layer normalizatison")
-    H_normalized = (H - H.mean()) / (torch.sqrt(H.var() + 0.0001))
-    H_normalized = scaleFactor * H_normalized + biasFactor
-
-    return H_normalized
+  
 
   def calculateHiddenLayerActivation(self, features):
     """
@@ -60,9 +55,14 @@ class FOSELM_torch(elm.ELM_torch):
     """
     print("Foselm - Calculate Hidden layer activation")
     if self.activationFunction == "sig":
-      V = ut.linear(features, self.inputWeights,self.bias)
+      input_size  = self.inputs
+      output_size = self.numHiddenNeurons
+      l_layer = nn.Linear(input_size, output_size)
+      l_layer.bias = nn.Parameter(self.bias)
       if self.LN:
-        V = self.layerNormalization(V)
+        ln_layer = self.get_ln_layer(V)
+        self.fprint("Normalize lr output", self.print_flag)
+        V = ln_layer(V)
       H = ut.sigmoidActFunc(V)
     else:
       print ("FOS-ELM l-95 Unknown activation function type: " + self.activationFunction)

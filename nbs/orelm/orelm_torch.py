@@ -113,6 +113,7 @@ class ORELM_torch(elm.ELM_torch):
         self.hiddenAE.train_func(features=features,targets=features)
         print("Hidden AE -->")
         return self.hiddenAE.beta
+    
     def calculateHiddenLayerActivation(self, features, flag_debug=0):
         """
         Calculate activation level of the hidden layer
@@ -239,7 +240,8 @@ class ORELM_torch(elm.ELM_torch):
                                 )
         except torch.linalg.LinAlgError:
             print ("SVD not converge, ignore the current training cycle")
-    
+
+        print("ORELM train -->") 
     def predict(self, features):
         """
         Make prediction with feature matrix
@@ -258,15 +260,12 @@ class ORELM_torch(elm.ELM_torch):
     def forward(self, features):
         print("--> Forward")
         if len(features.shape) == 3:
-            print("Case: anomalous - 3D shape")
-            nwindows = features.shape[0]
-            #activations_tensor = []
-            #for i in range(nwindows):
-                #activations_tensor+=[self.calculateHiddenLayerActivation(features[i], 3)]
-            result = self.calculateHiddenLayerActivation(features[0], 3)
-            #Todo: Ver como completar bien este apartado para que haga lo mismo que el original    
+            print("features ~ (num_samples - nimputs, num_vars, num_steps - nwindows) = " + str(features.shape))
+            result = self.calculateHiddenLayerActivation(features, 3) #Revisar esto...
+            
         else:
-            result= self.calculateHiddenLayerActivation(features, 4)
+            print("Error")
+            exit(0)
         print("Forward --> result ~ " + str(result.shape))
         return result 
 

@@ -155,8 +155,11 @@ class ORELM_torch(elm.ELM_torch):
             lr_layer.bias_ih_l0 = nn.Parameter(self.bias)
             lr_layer.bias_hh_l0 = nn.Parameter(self.bias)
             #Create tensor for initial hiddenState
-            lr_initial_hidden_state = torch.zeros(numLayers, batch_size, self.numHiddenNeurons)  
+            #lr_initial_hidden_state = torch.zeros(numLayers, batch_size, self.numHiddenNeurons)  
+            lr_initial_hidden_state = torch.zeros(numLayers, batch_size, features.shape[2])  
             self.fprint("Apply LR layer", self.print_flag)
+            self.fprint("features ~ " + str(features.shape), self.print_flag)
+            self.fprint("Lr initial hidden state ~ " + str(lr_initial_hidden_state.shape), self.print_flag)
             lr_output, lr_new_hidden_state = lr_layer(features, lr_initial_hidden_state)
             #lr_layer = linear_recurrent(features    = features,inputW      = self.inputWeights,hiddenW     = self.hiddenWeights, hiddenA     = self.H, bias        = self.bias)
             #Layer normalization
@@ -278,6 +281,9 @@ class ORELM_torch(elm.ELM_torch):
 
         print("ORELM train -->") 
     
+    def orelm_splitter(self, model): #Ver cómo escribirlo bien para que no de guerra
+        return [list(self.inputAE.parameters()), list(self.hiddenAE.parameters())]
+    
     
     def forward(self, features): #Predict
         """
@@ -305,7 +311,6 @@ class ORELM_torch(elm.ELM_torch):
     
 
 
-nn.MSELoss
 
 
 

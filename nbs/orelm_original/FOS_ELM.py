@@ -93,6 +93,8 @@ class FOSELM(object):
       if self.LN:
         V = self.layerNormalization(V)
       H = sigmoidActFunc(V)
+      print("V ~ ", V.shape)
+      print("H ~ ", H.shape)
     else:
       print ("FOS-ELM l-95 Unknown activation function type: " + self.activationFunction)
       raise NotImplementedError
@@ -167,9 +169,20 @@ class FOSELM(object):
       self.M = factor_M - np.dot(
         factor_M, np.dot(Ht, np.dot(inverse_covariance_matrix, temp1))
       )
+      
       print("self.M ~ ", self.M.shape)
-      self.beta = self.beta + np.dot(self.M, np.dot(Ht, targets - 
-                                                    np.dot(H, self.beta)))
+      print("H ~ ", H.shape)
+      print("Beta ~ ", self.beta.shape)
+      print("Targets ~ ", targets.shape)
+      product = np.dot(H, self.beta)
+      print("Product ~", product.shape )
+      diff = targets - product
+      product = np.dot(self.M, np.dot(Ht, diff))
+      print("Product2 ~ ", product.shape)
+      self.beta = self.beta + product
+      
+      #self.beta = self.beta + np.dot(self.M, np.dot(Ht, targets - 
+      #                                              np.dot(H, self.beta)))
       # self.beta = (self.forgettingFactor)*self.beta + np.dot(self.M, np.dot(Ht, targets - np.dot(H, (self.forgettingFactor)*self.beta)))
       # self.beta = (self.forgettingFactor)*self.beta + (self.forgettingFactor)*np.dot(self.M, np.dot(Ht, targets - np.dot(H, self.beta)))
 

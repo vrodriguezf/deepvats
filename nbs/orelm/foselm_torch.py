@@ -64,17 +64,21 @@ class FOSELM_torch(elm.ELM_torch):
       input_size  = features.shape[2]
       output_size = self.numHiddenNeurons
       
-      print("FOSELM hidden - create l_layer")
-      l_layer = nn.Linear(input_size, output_size)
+      print("FOSELM hidden - create l_layer input ", input_size, " output ", output_size)
+      l_layer = nn.Linear(input_size, output_size, bias = True)
       print("FOSELM hidden - set bias matrix")
+      print("self.bias ~ ", self.bias.shape)
       l_layer.bias = nn.Parameter(self.bias)
       V = l_layer(features)
+      print("V_l_layer ~", V.shape)
       if self.LN:
         self.fprint("FOSELM: Create normalization layer", self.print_flag)
         ln_layer = self.get_ln_layer(V)
         self.fprint("FOSELM: Normalize lr output", self.print_flag)
         V = ln_layer(V)
       H = torch.sigmoid(V)
+      print("V ~ ", V.shape)
+      print("H ~ ", H.shape)
     else:
       self.fprint("FOS-ELM l-95 Unknown activation function type: " + self.activationFunction, self.print_flag)
       raise NotImplementedError
@@ -108,8 +112,24 @@ class FOSELM_torch(elm.ELM_torch):
     self.beta = torch.zeros(self.numHiddenNeurons,self.outputs)    
     
   def compute_coefficients(self, targets, H, Ht):
-    diff      = targets - torch.matmul(H, self.beta)
-    self.beta = self.beta + torch.matmul(self.M, torch.matmul(Ht, diff))
+    print("H ~ ", H.shape)
+    print("Beta ~ ", self.beta.shape)
+    print("Targets ~ ", targets.shape)
+    if (len(self.beta.shape )== 2 and H.shape[0] != self.beta.shape[0]):
+      product   = torch.matmul(H, self.beta)
+      print("Product ~", product.shape )
+      diff      = targets - product
+      product   = torch.matmul(self.M, torch.matmul(Ht, diff))
+      print("Product2 ~ ", product.shape)
+      self.beta = self.beta+ product 
+    else:
+      product   = torch.matmul(H, self.beta[:H.shape[0], :, :])
+      print("Product ~", product.shape )
+      diff      = targets - product
+      product   = torch.matmul(self.M, torch.matmul(Ht, diff))
+      print("Product2 ~ ", product.shape)
+      self.beta[:H.shape[0], :, :] = self.beta[:H.shape[0], :, :] + product         
+    
     return self.beta
   
   def compute_inverse_covariance_matrix(self, targets, H, Ht, num_steps):
@@ -186,6 +206,7 @@ class FOSELM_torch(elm.ELM_torch):
     
     H = self.calculateHiddenLayerActivation(features)
     Ht = H.transpose(1,2)
+    print("Foselm before RLS: H~ ", H.shape)
     if self.RLS:
       #Flatten
       H = H.view(-1, num_inputs, num_samples)

@@ -1,0 +1,8 @@
+Training[0] shape: (1, 2476)
+Targets[0] shape: (1, 2476)
+ORELM:TRAIN:samples = weights: 1 | outputs: 2476
+ORELM:TRAIN:Features shape: (1, 2476)=> Columns: 1
+ORELM:TRAIN:Weights number: 1 = 1
+--> Calculate Hidden Activation 1
+--> Input AE
+--> Foselm: Train

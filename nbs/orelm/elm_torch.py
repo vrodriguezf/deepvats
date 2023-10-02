@@ -20,7 +20,7 @@ class ELM_torch(Module):
         self.print_flag = True
         self.requires_grad = True #False #True #? Intentando arerglar problema de lr_find
     
-    def get_ln_layer(layer):
+    def get_ln_layer(self, layer):
         return nn.LayerNorm(layer.size()[1:])
         
     def get_random_matrix(self, nrows, ncols):

@@ -21,7 +21,8 @@ class FOSELM_torch(elm.ELM_torch):
       LN=False,         #Layer normalization flag
       forgettingFactor=0.999, 
       ORTH = False,     #Orthogonalization flag
-      RLS_flag =False         #Recuirsive Least squares 
+      RLS_flag =False,         #Recuirsive Least squares 
+      seq_len = 1
     ):
     super().__init__(inputs, outputs, numHiddenNeurons)
 
@@ -29,7 +30,7 @@ class FOSELM_torch(elm.ELM_torch):
     self.inputs = inputs
     self.outputs = outputs
     self.numHiddenNeurons = numHiddenNeurons
-
+    self.window_size = seq_len
     # input to hidden weights
     self.get_random_InputWeights()
     self.ORTH = ORTH
@@ -53,32 +54,33 @@ class FOSELM_torch(elm.ELM_torch):
   def calculateHiddenLayerActivation(self, features):
     """
     Calculate activation level of the hidden layer
-    :param features feature matrix with dimension (numSamples, numInputs)
+    :param features feature matrix with dimension (numSamples, numInputs, num_steps)
     :return: activation level (numSamples, numHiddenNeurons)
     """
     self.fprint("Foselm - Calculate Hidden layer activation", self.print_flag)
     if self.activationFunction == "sig":
-      input_size  = self.inputs
+      #input_size  = features.shape[0]
+      #input_size  = features.shape[1]
+      input_size  = features.shape[2]
       output_size = self.numHiddenNeurons
+      
+      print("FOSELM hidden - create l_layer")
       l_layer = nn.Linear(input_size, output_size)
+      print("FOSELM hidden - set bias matrix")
       l_layer.bias = nn.Parameter(self.bias)
+      V = l_layer(features)
       if self.LN:
         self.fprint("FOSELM: Create normalization layer", self.print_flag)
         ln_layer = self.get_ln_layer(V)
         self.fprint("FOSELM: Normalize lr output", self.print_flag)
         V = ln_layer(V)
-      H = ut.sigmoidActFunc(V)
+      H = torch.sigmoid(V)
     else:
       self.fprint("FOS-ELM l-95 Unknown activation function type: " + self.activationFunction, self.print_flag)
       raise NotImplementedError
     print("FOSELM: Calculate hidden layer activation -->")
     return H
-  #Añadiendo para pasar a torch
-  def forward(self, features):
-    print("Foselm - forward")
-    return self.calculateHiddenLayerActivation(features)
-
-
+  
 
   def initializePhase(self, lamb=0.0001):
     """
@@ -101,33 +103,62 @@ class FOSELM_torch(elm.ELM_torch):
     else:
       print ("119: Unknown activation function type: " + self.activationFunction)
       raise "Not implemented"
-
+    
     self.M = torch.inverse(lamb*torch.eye(self.numHiddenNeurons))
     self.beta = torch.zeros(self.numHiddenNeurons,self.outputs)    
     
   def compute_coefficients(self, targets, H, Ht):
-    self.beta + torch.mm(self.M, torch.mm(Ht, targets - torch.mm(H, self.beta)))
+    diff      = targets - torch.matmul(H, self.beta)
+    self.beta = self.beta + torch.matmul(self.M, torch.matmul(Ht, diff))
     return self.beta
-  def compute_inverse_covariance_matrix(self, targets, H, Ht):
-    (numSamples, _) = targets.shape
-    self.M = (1/self.forgettingFactor) * self.M - torch.mm(
-      (1/self.forgettingFactor) * self.M,
-      torch.mm(
-        Ht, 
-        torch.mm(
-          torch.pinverse(
-            torch.eye(numSamples) + torch.mm(
-              H, 
-              torch.mm((
-                1/self.forgettingFactor) * self.M, 
-                Ht
-              )
-            )
-          ),
-          torch.mm(H, (1/self.forgettingFactor) * self.M)
-        )
-      )
-    )
+  
+  def compute_inverse_covariance_matrix(self, targets, H, Ht, num_steps):
+    self.fprint("Foselm: --> Compute inverse covariance matrix", self.print_flag)
+    num_samples, num_outputs, num_steps = targets.shape
+    print("samples ", num_samples, " outputs ", num_outputs, " steps ", num_steps)
+    
+    for i in range (num_samples):
+      I = torch.eye(num_outputs) #Create identity matrix
+      factor = 1/self.forgettingFactor
+      factor_M = factor*self.M
+      self.fprint("Get temp1", self.print_flag)
+      temp1 = torch.matmul(H[i], factor_M)
+      self.fprint("Get temp2", self.print_flag)
+      temp2 = torch.matmul(factor_M, Ht[i])
+      self.fprint("Get covariance matrix", self.print_flag)
+      self.fprint("I ~ " + str(I.shape) + "H ~ " + str(H[i].shape) + "temp2 ~ " + str(temp2.shape), self.print_flag)
+      covariance_matrix = I + torch.matmul(H[i], temp2)
+      self.fprint("Get inverse covariance matrix", self.print_flag)
+      self.fprint("covariance matrix ~ " + str(covariance_matrix.shape), self.print_flag)
+      inverse_covariance_matrix = torch.pinverse(covariance_matrix)
+      self.fprint("self.M = ... ~ " + str(self.M.shape), self.print_flag)
+      self.fprint("inverse" + str(inverse_covariance_matrix.shape)  + "temp1 ~ " + str(temp1.shape), self.print_flag)
+      Mi = factor_M - torch.matmul( 
+      factor_M, torch.matmul(Ht[i], torch.matmul(inverse_covariance_matrix,temp1)))
+      print("Mi ~", Mi.shape)
+      print("M ~", self.M.shape)
+      self.M = Mi
+    self.fprint("Foselm: Compute inverse covariance matrix -->", self.print_flag)
+    """
+    I = torch.eye(num_samples) #Create identity matrix
+    factor = 1/self.forgettingFactor
+    factor_M = factor*self.M
+    self.fprint("Get temp1", self.print_flag)
+    temp1 = torch.matmul(H, factor_M)
+    self.fprint("Get temp2", self.print_flag)
+    temp2 = torch.matmul(factor_M, Ht)
+    self.fprint("Get covariance matrix", self.print_flag)
+    self.fprint("I ~ " + str(I.shape) + "H ~ " + str(H.shape) + "temp2 ~ " + str(temp2.shape), self.print_flag)
+    covariance_matrix = I + torch.matmul(H, temp2)
+    self.fprint("Get inverse covariance matrix", self.print_flag)
+    self.fprint("covariance matrix ~ " + str(covariance_matrix.shape), self.print_flag)
+    inverse_covariance_matrix = torch.pinverse(covariance_matrix)
+    self.fprint("self.M = ...", self.print_flag)
+    self.fprint("inverse" + str(inverse_covariance_matrix.shape)  + "temp1 ~ " + str(temp1.shape), self.print_flag)
+    self.M = factor_M - torch.matmul( 
+      factor_M, torch.matmul(Ht, torch.matmul(inverse_covariance_matrix,temp1)))
+    self.fprint("Foselm: Compute inverse covariance matrix -->", self.print_flag)
+    """
     return self.M 
 
 
@@ -143,39 +174,83 @@ class FOSELM_torch(elm.ELM_torch):
      # print("FOSELM:TRAIN:3SHAPED")
     assert features.shape[0] == targets.shape[0], \
       "FOS_ELM:train: differs number of samples features "+ str(features.shape[0]) + " targets "+str(targets.shape[0])
+    assert features.shape[2] == targets.shape[2], \
+      "FOS_ELM:train: differs number of steps features "+ str(features.shape[0]) + " targets "+str(targets.shape[0])
 
-    #(num_samples, num_outputs, num_steps) = targets.shape
-    #(num_samples, num_inputs, num_steps) = features.shape
+    (num_samples, num_outputs, num_steps) = targets.shape
+    (num_samples, num_inputs, num_steps) = features.shape
     
     print("FOSELM Features & targets shape")
-    print("Features ~ (samples, outputs, steps) = " +str(features.shape))
-    print("Targets ~ (samples, imputs, steps) = " +str(targets.shape))
-       
-    #Train
+    print("Features ~ (samples, outputs (vars), steps) = " +str(features.shape))
+    print("Targets ~ (samples, inputs (vars), steps) = " +str(targets.shape))
+    
     H = self.calculateHiddenLayerActivation(features)
-    Ht = H.t() #Traspose
+    Ht = H.transpose(1,2)
     if self.RLS:
+      #Flatten
+      H = H.view(-1, num_inputs, num_samples)
+      Ht = Ht.view(-1, num_samples, num_inputs)
+      targets = targets.view(-1, num_outputs, num_samples)
+      #Compute
       self.beta, self.M = self.rls_torch.compute_recursive_least_squares(targets, H, Ht)
     else:
       print("non RLS")
-      self.M    = self.compute_inverse_covariance_matrix(targets, H, Ht)
+      print("targets ~ " + str(targets.shape))
+      print("H ~ " + str(H.shape)) #(n_samples, 1, num_hidden_neurons)
+      print("Ht ~ " + str(Ht.shape)) 
+      self.M    = self.compute_inverse_covariance_matrix(targets, H, Ht, num_steps)
       self.beta = self.compute_coefficients(targets, H, Ht)
-    
     self.fprint("FOSELM:Train:END -->", self.print_flag)
+    
 
-  
-  
+    """
+    #Latten & splite into windows
+    num_samples, num_inputs, num_steps = targets.shape
+    _, num_outputs, _ = features.shape
+    window_size = self.window_size
+    targets   = targets.view(num_samples, num_outputs, -1, window_size)
+    features  = features.view(num_samples, num_inputs, -1, window_size)
 
-  def predict(self, features, print_flag = True):
+    print("Features ~ (samples, outputs, windows, window size) = " +str(features.shape))
+    print("Targets ~ (samples, inputs, windows, window size) = " +str(targets.shape))
+
+    #Train
+    H = self.calculateHiddenLayerActivation(features)
+    Ht = H.transpose(2, 3)
+    if self.RLS:
+      #Flatten
+      H = H.view(-1, num_inputs, window_size)
+      Ht = Ht.view(-1, window_size, num_inputs)
+      targets = targets.view(-1, num_outputs, window_size)
+      #Compute
+      self.beta, self.M = self.rls_torch.compute_recursive_least_squares(targets, H, Ht)
+    else:
+      print("non RLS")
+      print("non RLS")
+      print("targets ~ " + str(targets.shape))
+      print("H ~ " + str(H.shape))
+      print("Ht ~ " + str(Ht.shape))
+      targets = targets.view(-1, num_outputs, window_size)
+      self.M    = self.compute_inverse_covariance_matrix(targets, H, Ht, num_windows)
+      self.beta = self.compute_coefficients(targets, H, Ht)
+    self.fprint("FOSELM:Train:END -->", self.print_flag)
+    """
+  
+  def forward(self, features): #Predict
     """
     Make prediction with feature matrix
-    :param features: feature matrix with dimension (numSamples, numInputs)
-    :return: predictions with dimension (numSamples, numOutputs)
+    :param features: feature matrix with dimension (num_samples, num_inputs, num_timesteps)
+    :return: predictions with dimension (num_samples, num_outputs, num_timesteps)
     """
-    self.fprint("--> ORELM: Prediction", self.print_flag)
-    H = self.calculateHiddenLayerActivation(features)
-    self.fprint("Just before prediction", self.print_flag)
-    prediction = torch.mm(H, self.beta)
-    self.fprint("ORELM: Prediction -->", self.print_flag)
-    return prediction
+    (_, num_inputs, )  = features.shape 
+    assert num_inputs == self.inputs, \
+      print ("FOSELM ~ Invalid number of inputs for the model features ~ ", features.shape, "num_inputs", num_inputs)
+    
 
+    self.fprint("--> FOSELM: Prediction", self.print_flag)
+    H = self.calculateHiddenLayerActivation(features)
+    self.fprint("FOSELM --> Just before prediction", self.print_flag)
+    prediction = torch.matmul(H, self.beta)
+    self.fprint("FOSELM: Prediction -->", self.print_flag)
+
+    return prediction

@@ -44,7 +44,7 @@ configuration:
       # n datapoints the window is moved ahead along the sequence in the sliding window
       stride: 1
       # window size for the sliding window (taxi=48, steamflow=640)
-      size: 25 #Intentando que funcionen los learner... #2500 #Forzando 1 ventana solo #200 #w
+      size: 25 #100 #Intentando que funcionen los learner... #2500 #Forzando 1 ventana solo #200 #w
     
     
 

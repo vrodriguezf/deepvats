@@ -20,8 +20,9 @@ configuration:
     entity: *wdb_user
     project: *wdb_project
   artifacts: 
+    algorithm: &algorithm dcae
     # Name:version of the encoder artifact
-    enc: !join [ *wdb_user, '/', *wdb_project, '/', *fname, ':v', *wdb_version]
+    enc: !join [ *wdb_user, '/', *wdb_project, '/', *algorithm, ':v', *wdb_version] #!join [ *wdb_user, '/', *wdb_project, '/', *fname, ':v', *wdb_version]
     # If none, the validation set used to train enc is used
     valid: null
   specifications:

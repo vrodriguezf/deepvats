@@ -1,3 +1,4 @@
+/nbs_pipeline/utils
 include: !include "base.yaml"
 
 #########################################################
@@ -26,7 +27,8 @@ configuration:
     artifact: 
       # * Set to None for using the default one (encoder validation set)
       name: null
-      enc: !join [ *wdb_user, '/', *wdb_project, '/', *fname, ':v', *wdb_version]
+      algorithm: &algorithm dcae 
+      enc: !join [ *wdb_user, '/', *wdb_project, '/', *algorithm, ':v', *wdb_version]
       # * Set to None for using the default one (encoder validation set)
       valid: null
     umap:

@@ -5,6 +5,7 @@ services:
         - username=${USER_NAME}
         - uid=${USER_ID}
         - gid=${GROUP_ID}
+        - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       context: ../
       dockerfile: docker/Dockerfile.jupyter
     ports:

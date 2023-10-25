@@ -18,6 +18,9 @@ RUN R -e "remotes::install_github('r-lib/later')"
 ## Install reticulate and create virtual environment using default Ubuntu installed Python
 RUN R -e "install.packages('reticulate')"
 
+########################
+# Create non-root user #
+########################
 ARG USER=user
 ARG UID=1000
 ARG GID=1000

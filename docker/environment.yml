@@ -1,62 +1,60 @@
 channels:
-  - pytorch
-  - fastchan
+  # Torch & Cuda
+  - pytorch-nightly #TODO: change to pytorch when pytorch-cuda is stable for cuda 12.2
+  - nvidia/label/cuda-12.2.0 #TODO Change to cuda when stable
   - nvidia
+  #Generic
+  - conda-forge
+  - defaults
+  #AI
   - fastai
   - rapidsai
-  - defaults  
-  - conda-forge
-
 dependencies:
-  - cuda-toolkit=11.6.2=0
-  #- cuda-toolkit=11.6          #
-  - cudf=23.02                #
-  - cuml=23.02                #
-  - fastai=2.7.10             ##
-  # - git
-  - genv
-  - gh
-  - hdbscan
-  - imbalanced-learn>=0.8.0   ##
+  ##########################
+  # Generic configurations #
+  ##########################
+  - nano
+  #--- github
+  - git
+  - gh 
+  ##--- Python
+  - python=3.10
+  - pip
+  - twine
+  - xeus-python
+  #---Jupyter
   - ipywidgets
   - jupyterlab
   - jupyterlab-git
-  - keyrings.alt
-#  - libprotobuf # This has to be aligned with protobuf
-  #- libstdcxx-ng # To solve this bug https://github.com/rstudio/reticulate/issues/841
-#  - matplotlib
-  - nano
   - nbclassic>=0.2.8
-#  - nbformat>=5.1.3           ##
   - nbdev
+  #--- passwords & files
+  - keyrings.alt
+  - platformdirs #=2.5.2=py310h06a4308_0
+
+  ##############
+  # CUDA & GPU #
+  ##############
+  - cuda-toolkit=12.1
+  - cudf
+  - cuml
+  - genv
+  #--- Torch
+  ############
+  # Specific #
+  ############
   - nodejs
-# - numpy
-  - pip
-  # - pip:
-  #     - --extra-index-url=https://pypi.nvidia.com
-  #     - cudf-cu11
-  #     - dask-cudf-cu11
-  #     - cuml-cu11
-  #     - git+https://github.com/timeseriesAI/tsai.git
-     # - -r file:/tmp/requirements.txt
-  - platformdirs=2.5.2=py310h06a4308_0
+  #---Torch
+  - pytorch #2.2.0.dev20231023
+  - pytorch-cuda=12.1
+  #---Graphs & imgs
   - plotly
-#  - protobuf
-#  - psutil>=5.4.8             ##
-  - python=3.10
-  # - python-language-server
-  #If problems importing torch, exec 
-  #conda install pytorch=1.13.1=py3.10_cuda11.6_cudnn8.3.2_0 -c pytorch
-  #conda install pytorch=1.13.1 -c pytorch
   - jpeg
-  - pytorch=1.13.1=py3.10_cuda11.6_cudnn8.3.2_0                  #
-  - pyts>=0.12.0              ##
   - seaborn
-  # - torchvision               #
-  - twine
-  - xeus-python
+  #--- IA
+  - hdbscan
+  - imbalanced-learn>=0.8.0
+  - pyts>=0.12.0
   - umap-learn
   - scikit-learn=1.2.2
-  - wandb=0.14.2
-
-  
+  - wandb

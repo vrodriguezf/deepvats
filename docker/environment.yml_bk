@@ -1,0 +1,80 @@
+name: dvats_env
+
+channels:
+  #--- Torch & Cuda
+  - pytorch-nightly #TODO: As soon as pytorch for cuda 12.2 stable version is out, pytorch channel shpuld be used instead of nightly version
+#  - nvidia/label/cuda-12.2.0
+  - nvidia
+  #--- Generic
+  - conda-forge
+  - defaults  
+  #--- AI
+  - fastai
+  - rapidsai
+#  - timeseriesai
+#  - fastchan
+
+dependencies:
+  ##########################
+  # Generic configurations #
+  ##########################
+  - nano
+  #--- Git & Github
+  - git
+  - gh
+  #- libprotobuf # This has to be aligned with protobuf
+  #- libstdcxx-ng # To solve this bug https://github.com/rstudio/reticulate/issues/841
+  ##--- Python
+  - python=3.10
+  - pip
+  #--#- twine
+  #--#- xeus-python
+  # - pip:
+  #     - --extra-index-url=https://pypi.nvidia.com
+  #     - cudf-cu11
+  #     - dask-cudf-cu11
+  #     - cuml-cu11
+  #     - git+https://github.com/timeseriesAI/tsai.git
+     # - -r file:/tmp/requirements.txt
+  #  - protobuf
+  #  - psutil>=5.4.8             ##
+  #--- Node JS
+  #--#- nodejs
+  #--- Jupyter
+  #--#- ipywidgets
+  - jupyterlab
+  #--#- jupyterlab-git
+  #--#- nbclassic>=0.2.8
+  #- nbformat>=5.1.3           ##
+  #--#- nbdev
+  #--- passwords & files
+  #--#- keyrings.alt
+  #--#- platformdirs #=2.5.2=py310h06a4308_0
+  # - python-language-server
+  ##############
+  # CUDA & GPU #
+  ##############
+  - cuda-toolkit=12.1
+  #--#- cudf
+  #--#- cuml
+  #--#- genv   
+  ############
+  # Specific #
+  ############
+  - numpy
+  #--- Torch
+  - pytorch <=2.1 #=2.2.0.dev20231023=py3.10_cuda12.1_cudnn8.9.2_0 TSAI NECESITA <= 2.1
+  - pytorch-cuda=12.1
+  #--. Graphs & imgs
+  #--#- plotly
+  #--#- seaborn
+  #- matplotlib
+  #---IA
+  #--#- fastai=2.7.10             ##
+  #--#- hdbscan
+  #--#- imbalanced-learn>=0.8.0   ##
+  #--#- pyts>=0.12.0              ##
+  #--#- umap-learn
+  #--#- scikit-learn=1.2.2
+  #--#- wandb #=0.14.2
+  #- tsai #=0.3.5

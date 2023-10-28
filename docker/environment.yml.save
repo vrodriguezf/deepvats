@@ -1,4 +1,3 @@
-name: dvats_env
 channels:
   #--- Torch & Cuda
   - pytorch
@@ -9,8 +8,8 @@ channels:
   - conda-forge
   - defaults
   #--- AI
-  - fastai
-  - rapidsai
+  #- fastai
+  #- rapidsai
 dependencies:
   ##########################
   # Generic configurations #
@@ -22,8 +21,8 @@ dependencies:
   ##--- Python
   - python=3.10
   - pip
-  - twine
-  - xeus-python
+  #- twine
+  #- xeus-python
   ##--- NodeJS ¿Se usa en algún lado?
   #- nodejs
   #---Jupyter
@@ -32,7 +31,6 @@ dependencies:
   - jupyterlab-git
   - nbclassic>=0.2.8
   - nbdev
-  
   #--- passwords & files
   #- keyrings.alt
   #- platformdirs #=2.5.2=py310h06a4308_0
@@ -40,7 +38,8 @@ dependencies:
   ##############
   # CUDA & GPU #
   ##############
-  - nvidia::cuda-toolkit=11.8
+########PURGE
+  - nvidia::cuda-toolkit=12.1
   #- cudf
   #- cuml
   #- genv
@@ -48,11 +47,10 @@ dependencies:
   ############
   # Specific #
   ############
-  - numpy
+  #- numpy
   #--- Torch
-  #- pytorch::pytorch=2.1.0=py3.10_cuda12.1_cudnn8.9.2_0 
-  - pytorch::pytorch=2.1.0=py3.10_cuda11.8_cudnn8.7.0_0
-  #- pytorch-nightly::pytorch-cuda=12.1=ha16c6d3_5 #
+  - pytorch=2.1 #=2.2.0.dev20231023=py3.10_cuda12.1_cudnn8.9.2_0
+  - pytorch-nightly::pytorch-cuda=12.1 #=ha16c6d3_5
 
   #---Graphs & imgs
  # - plotly
@@ -65,4 +63,4 @@ dependencies:
   #- umap-learn
   #- scikit-learn=1.2.2
   #- wandb
-  
+  #- tsai

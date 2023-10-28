@@ -5,6 +5,8 @@ services:
         - username=${USER_NAME}
         - uid=${USER_ID}
         - gid=${GROUP_ID}
+        #- CUDA_VERSION=12.2.0-devel-ubuntu20.04
+        - CUDA_VERSION=11.8.0-devel-ubuntu22.04
       context: ../
       dockerfile: docker/Dockerfile.jupyter
     ports:
@@ -17,11 +19,12 @@ services:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       - WANDB_DIR=/home/${USER_NAME}/work
     volumes:
-      - ../:/home/${USER_NAME}/work
+      - ../:/home/${USER}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
       - conda-env:/home/${USER_NAME}/env
       - miniconda:/home/${USER_NAME}/miniconda3
       - lib:/home/${USER_NAME}/lib
+
     init: true
     stdin_open: true
     tty: true

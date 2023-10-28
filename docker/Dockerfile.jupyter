@@ -4,31 +4,37 @@
 # Set up a jupyter-lab for  #
 # developing using deepvats #
 #############################
-ARG log_path=/home/macu/dockerfile_jupyter.logs
-
 ##############
 # Base image #
 ##############
 ##--- Setup Ubuntu
-ARG CUDA_VERSION=12.0.1-cudnn8-runtime-ubuntu22.04
+ARG CUDA_VERSION
 FROM nvidia/cuda:${CUDA_VERSION}
+
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
 LABEL cuda_version=${CUDA_VERSION}
-LABEL log_path=${log_path}
 ##---Initialize bash
 SHELL [ "/bin/bash", "--login", "-c" ]
 
 ##################
 # Packages setup #
-##################
+################## 
+#TODO: Automatizar que lo coja de /etc/timezone
+#Only neccesary for libarchive & libtiff if error appears
+ARG TZ=Etc/UTC 
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update --fix-missing \
+    #if errors with libtiff library
     && apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev \
+    #Otherwise
+    #&& apt-get install -y wget bzip2 curl git sudo \
     && apt-get clean  \
     && rm -rf /var/lib/apt/lists/*
+
 #-- Environmental variables for wandb
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8 
+ENV LANG=C.UTF-8 
 
 ########################
 # Create non-root user #
@@ -59,6 +65,7 @@ COPY --chown=$uid:$gid docker/jupyter_config $HOME/.jupyter
 #####################
 
 ENV MINICONDA_VERSION=4.10.3 \ 
+#ENV MINICONDA_VERSION=23.9.0 \ 
     CONDA_DIR=$HOME/miniconda3 \
     # Make non-activate conda commands available
     PATH=$CONDA_DIR/bin:$PATH \
@@ -86,7 +93,27 @@ RUN conda install --name base --channel conda-forge mamba \
     && mamba update --name base --channel defaults conda 
 #-- Build the mamba environment
 COPY --chown=$UID:$GID docker/environment.yml docker/requirements.txt /tmp/
-RUN mamba env create --prefix $ENV_PREFIX --file /tmp/environment.yml --force  \ 
+#RUN mamba env create --prefix $ENV_PREFIX --file /tmp/environment.yml --force  \ 
+
+
+
+######################
+# FORCE FIX VERSIONS #
+######################
+# Instalar conda-lock
+
+# ...
+#RUN conda install -c conda-forge conda-lock && \
+#    bash -c "source activate base && conda-lock -f /tmp/environment.yml -p linux-64 && conda-lock install -f /app/conda-linux-64.lock"
+# ...
+
+#RUN conda install -c conda-forge conda-lock
+# Generar el archivo de bloqueo y crear el entorno Conda
+#RUN conda-lock -f /tmp/environment.yml -p linux-64 && \
+ #   conda-lock install -f /app/conda-linux-64.lock
+#############################################################
+
+RUN mamba env create --prefix $ENV_PREFIX --file /tmp/environment.yml \ 
     && conda clean --all --yes
 
 # run the postBuild script to install the JupyterLab extensions
@@ -101,23 +128,15 @@ RUN chmod u+x /usr/local/bin/postBuild \
 ###########################
 # Editable packages (pip) #
 ########################### 
-RUN mkdir /home/$USER/lib \
-    && conda activate $ENV_PREFIX \
-    && cd /home/$USER/lib \
-    # Install tsai (v0.3.5)
-    && rm -rf tsai \
-    && git clone -b 0.3.5 --single-branch https://github.com/timeseriesAI/tsai.git \
-    && cd tsai \ 
-    && pip install --no-deps -e . 
-    # Install ORELM
-RUN cd /home/$USER/lib \
-    && rm -rf orelm \
-    && git clone --single-branch https://github.com/chickenbestlover/Online-Recurrent-Extreme-Learning-Machine \
-    && mv Online-Recurrent-Extreme-Learning-Machine orelm \
-    && conda deactivate
-
-
-
+#RUN mkdir /home/$USER/lib \
+    #&& conda activate $ENV_PREFIX \
+    #&& cd /home/$USER/lib \
+    ##Install tsai (v0.3.5)
+    #&& rm -rf tsai \
+    #&& git clone -b 0.3.5 --single-branch https://github.com/timeseriesAI/tsai.git \
+    #&& cd tsai \ 
+    #&& pip install --no-deps -e . \
+    #&& conda deactivate
 
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh

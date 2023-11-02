@@ -5,8 +5,13 @@ services:
         - username=${USER_NAME}
         - uid=${USER_ID}
         - gid=${GROUP_ID}
-        #- CUDA_VERSION=12.2.0-devel-ubuntu20.04
-        - CUDA_VERSION=11.8.0-devel-ubuntu22.04
+        - CUDA_VERSION=12.2.0-devel-ubuntu20.04
+        #- CUDA_VERSION=11.8.0-devel-ubuntu22.04
+        #- CUDA_VERSION=11.8.0-cudnn8-devel-ubuntu22.04
+        #- CUDA_VERSION=12.0.0-devel-ubuntu20.04
+        #- CUDA_VERSION=12.0.0-cudnn8-devel-ubuntu20.04
+        
+        - LOCKS_PATH=/home/${USER_NAME}
       context: ../
       dockerfile: docker/Dockerfile.jupyter
     ports:
@@ -22,6 +27,7 @@ services:
       - ../:/home/${USER}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
       - conda-env:/home/${USER_NAME}/env
+      #- ./locks:/home/${USER_NAME}/locks
       - miniconda:/home/${USER_NAME}/miniconda3
       - lib:/home/${USER_NAME}/lib
 

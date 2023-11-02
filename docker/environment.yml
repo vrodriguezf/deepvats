@@ -1,8 +1,6 @@
-name: dvats_env
 channels:
   #--- Torch & Cuda
   - pytorch
-  #- pytorch-nightly #TODO: As soon as pytorch for cuda 12.2 stable version is out, pytorch channel shpuld be used instead of nightly version
   #- nvidia/label/cuda-12.2.0
   - nvidia
   #--- Generic
@@ -19,13 +17,13 @@ dependencies:
   - git
   #--- github
   - gh 
-  ##--- Python
+  #--- Python
   - python=3.10
   - pip
   - twine
   - xeus-python
-  ##--- NodeJS ¿Se usa en algún lado?
-  #- nodejs
+  #--- NodeJS
+  - nodejs
   #---Jupyter
   - ipywidgets
   - jupyterlab
@@ -34,35 +32,34 @@ dependencies:
   - nbdev
   
   #--- passwords & files
-  #- keyrings.alt
-  #- platformdirs #=2.5.2=py310h06a4308_0
+  - keyrings.alt
+  - platformdirs #=2.5.2=py310h06a4308_0
 
   ##############
   # CUDA & GPU #
   ##############
-  - nvidia::cuda-toolkit=11.8
-  #- cudf
-  #- cuml
-  #- genv
+  - nvidia::cuda-toolkit=12.0
+  - rapidsai::cudf=23.10
+  - rapidsai::cuml=23.10
+  - conda-forge::genv
   
   ############
   # Specific #
   ############
   - numpy
   #--- Torch
-  #- pytorch::pytorch=2.1.0=py3.10_cuda12.1_cudnn8.9.2_0 
-  - pytorch::pytorch=2.1.0=py3.10_cuda11.8_cudnn8.7.0_0
-  #- pytorch-nightly::pytorch-cuda=12.1=ha16c6d3_5 #
+  - pytorch::pytorch=1.13=py3.10_cuda12.0_cudnn8.7.0_0 
 
   #---Graphs & imgs
- # - plotly
- # - jpeg
- # - seaborn
+  - plotly
+  - jpeg
+  - seaborn
   #--- IA
-  #- hdbscan
-  #- imbalanced-learn>=0.8.0
-  #- pyts>=0.12.0
-  #- umap-learn
-  #- scikit-learn=1.2.2
-  #- wandb
+  - hdbscan
+  - imbalanced-learn>=0.8.0
+  - pyts>=0.12.0
+  - umap-learn
+  - scikit-learn=1.2.2
+  - wandb
+  - tsai
   

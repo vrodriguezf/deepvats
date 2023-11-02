@@ -1,0 +1,18 @@
+name: dvats
+channels:
+- pytorch
+- nvidia
+- conda-forge
+- defaults 
+- fastai
+- rapidsai
+- fastchan
+#- timeseriesai
+dependencies:
+- hdbscan
+- imbalanced-learn >= 0.8.0
+- pyts >= 0.12.0
+- umap-learn
+- scikit-learn=1.2.2
+- wandb
+- tsai

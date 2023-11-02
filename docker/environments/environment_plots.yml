@@ -1,0 +1,14 @@
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults 
+  - fastai
+  - rapidsai
+  - fastchan
+  - timeseriesai
+dependencies:
+  - plotly
+  - jpeg
+  - seaborn
+  

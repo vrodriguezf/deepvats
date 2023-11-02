@@ -9,6 +9,8 @@ channels:
   #--- AI
   - fastai
   - rapidsai
+  - fastchan
+  - timeseriesai
 dependencies:
   ##########################
   # Generic configurations #

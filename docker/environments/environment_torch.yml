@@ -7,11 +7,6 @@ dependencies:
   ############
   # Pytorch  #
   ############
-  - numpy
-  - pytorch=1.13
-  - pytorch-cuda=11.6
-#  - numpy
-#  - pytorch=1.13.1=py3.10_cuda11.6_cudnn8.3.2_0      
-#  - pytorch-cuda
-  #- pytorch::pytorch=1.13 #>=1.13,<=2.1
-  #- pytorch::pytorch-cuda=11.8
+  #- numpy
+  - pytorch::pytorch=1.13=py3.10_cuda11.7_cudnn8.5.0_0
+  #- pytorch-cuda=11.6

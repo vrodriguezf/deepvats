@@ -8,7 +8,7 @@ channels:
   - fastchan
   - timeseriesai
 dependencies:
-  - plotly
-  - jpeg
-  - seaborn
+  - conda-forge::plotly=5.18.0=pyhd8ed1ab_0
+  - conda-forge::jpeg=9e=h166bdaf_2
+  - conda-forge::seaborn=0.13.0=hd8ed1ab_0
   

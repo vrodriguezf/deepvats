@@ -1,30 +1,27 @@
 name: dvats
 channels:
-  - pytorch
-  - nvidia
   - conda-forge
-  - defaults 
-  - fastai
-  - rapidsai
-  - fastchan
-  - timeseriesai
 dependencies:
   ##########################
   # Generic configurations #
   ########################## 
-  - nano
-  - git
+  - nano=7.2=h8228510_0
+  - git=2.42.0=pl5321h86e50cf_0
   #--- github
-  - gh 
+  - gh=2.37.0=ha8f183a_0
   ##--- Python
-  - python=3.10
-  - pip
-  - twine
-  - xeus-python
+  - python=3.10.13=hd12c33a_0_cpython
+  - pip=23.3.1=pyhd8ed1ab_0
+  - twine=4.0.2=pyhd8ed1ab_0
+  - xeus-python=0.15.10=py310hd41b1e2_1
   #---Jupyter
-  - ipywidgets
-  - jupyterlab
-  - jupyterlab-git
-  - nbclassic>=0.2.8
-  - nbdev
+  - ipywidgets=8.1.1=pyhd8ed1ab_0
+  - jupyterlab=4.0.7=pyhd8ed1ab_0
+  - jupyterlab-git=0.41.0=pyhd8ed1ab_1
+  #- nbclassic>=0.2.8
+  - nbclassic=1.0.0=pyhb4ecaf3_1
+  - nbdev=2.2.10=pyhd8ed1ab_0
+  #--- passwords & files
+  - keyrings.alt=4.2.0=pyhd8ed1ab_0
+  - platformdirs=3.11.0=pyhd8ed1ab_0
   

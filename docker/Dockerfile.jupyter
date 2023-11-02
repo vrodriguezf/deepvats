@@ -25,6 +25,7 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 #TODO: Automatizar que lo coja de /etc/timezone
 #Only neccesary for libarchive & libtiff if error appears
 ARG TZ=Etc/UTC 
+
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get update --fix-missing \
     #if errors with libtiff library
@@ -121,58 +122,36 @@ COPY --chown=$UID:$GID docker/environment.yml docker/requirements.txt /tmp/
 
 #ARG LOCKS_PATH
 #RUN mkdir -p ${LOCKS_PATH}
-COPY docker/environments/environment_jupyter.yml /tmp/environment_jupyter.yml 
-#RUN LOCK_FILE="${LOCKS_PATH}/jupyter-lock.yml" \
-ARG ENV_YML=/tmp/environment_jupyter.yml
-RUN head -n20 ${ENV_YML}\
-    #&& if [ ! -f ${LOCK_FILE} ]; then \
-    #    conda lock -f ${ENV_YML} -p linux-64 > ${LOCK_FILE};  \
-    #fi \
-    #&&  mamba create --prefix $ENV_PREFIX  --file ${LOCK_FILE};
-    &&  mamba env create --prefix ${ENV_PREFIX} --file ${ENV_YML};
 
-RUN echo $PATH
-RUN which conda
-RUN conda env list && sleep 10
+COPY docker/environments/environment_jupyter.yml /tmp/environment_jupyter.yml
+ARG ENV_YML_FILENAME=environment_jupyter.yml \
+    ENV_ORIG=docker/environments \
+    ENV_DEST=/tmp/
+RUN mamba env create --prefix ${ENV_PREFIX} --file ${ENV_YML};
 
 
-COPY docker/environments/environment_cuda.yml /tmp/environment_cuda.yml
-#RUN LOCK_FILE="${LOCKS_PATH}/cuda_torch-lock.yml" \
-RUN ENV_YML="/tmp/environment_cuda.yml" \ 
-    #&& if [ ! -f ${LOCK_FILE} ]; then \
-    #    conda lock -f ${ENV_YML} -p linux-64 > ${LOCK_FILE};  \
-    #fi \
-    #&& mamba update --prefix $ENV_PREFIX  --file ${LOCK_FILE};
-    && mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
+ARG ENV_YML="/tmp/environment_cuda.yml"
+COPY docker/environments/environment_cuda.yml ${ENV_YML}
+RUN mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
 
+ARG ENV_YML="/tmp/environment_torch.yml"
 COPY docker/environments/environment_torch.yml /tmp/environment_torch.yml
-#RUN LOCK_FILE="${LOCKS_PATH}/cuda_torch-lock.yml" \
-RUN ENV_YML="/tmp/environment_torch.yml" \ 
-    #&& if [ ! -f ${LOCK_FILE} ]; then \
-    #    conda lock -f ${ENV_YML} -p linux-64 > ${LOCK_FILE};  \
-    #fi \
-    #&& mamba update --prefix $ENV_PREFIX  --file ${LOCK_FILE};
-    && mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
+RUN mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
 
-
-
+ARG ENV_YML="/tmp/environment_plots.yml"
 COPY docker/environments/environment_plots.yml /tmp/environment_plots.yml 
-#RUN LOCK_FILE="${LOCKS_PATH}/plots-lock.yml" \
-#RUN ENV_YML="/tmp/environment_plots.yml" \
+RUN mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
+
+ARG ENV_YML="/tmp/environment_ai.yml"
+COPY docker/environments/environment_ai.yml /tmp/environment_ai.yml
+RUN mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
+
+#RUN LOCK_FILE="${LOCKS_PATH}/cuda_torch-lock.yml" \
+#RUN ENV_YML="/tmp/environment_cuda.yml" \ 
     #&& if [ ! -f ${LOCK_FILE} ]; then \
     #    conda lock -f ${ENV_YML} -p linux-64 > ${LOCK_FILE};  \
     #fi \
     #&& mamba update --prefix $ENV_PREFIX  --file ${LOCK_FILE};
-  #  && mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
-
-COPY docker/environments/environment_ai.yml /tmp/environment_ai.yml
-#RUN LOCK_FILE="${LOCKS_PATH}/ai-lock.yml" \
-#RUN ENV_YML="/tmp/environment_ai.yml" \
-    #&& if [ ! -f ${LOCK_FILE} ]; then \
-        #conda lock -f ${ENV_YML} -p linux-64 > ${LOCK_FILE};  \
-    #fi \
-    #&& mamba update --prefix $ENV_PREFIX  --file ${LOCK_FILE};
-    #&& mamba env update --prefix $ENV_PREFIX --file ${ENV_YML}; 
 
 RUN conda clean --all --yes
 
@@ -208,10 +187,6 @@ RUN chmod u+x /usr/local/bin/postBuild \
 
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh
-
-RUN conda list --prefix /home/macu/env && sleep 10
-
-RUN conda activate /home/macu/env && which pip && sleep 10
 
 
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]

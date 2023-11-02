@@ -118,50 +118,22 @@ COPY --chown=$UID:$GID docker/environment.yml docker/requirements.txt /tmp/
 #RUN conda-lock -f /tmp/environment.yml -p linux-64 && \
  #   conda-lock install -f /app/conda-linux-64-lock.yml
 #############################################################
-#RUN conda install -c conda-forge conda-lock 
 
 #ARG LOCKS_PATH
 #RUN mkdir -p ${LOCKS_PATH}
 
-COPY docker/environments/environment_jupyter.yml /tmp/environment_jupyter.yml
-ARG ENV_YML_FILENAME=environment_jupyter.yml \
-    ENV_ORIG=docker/environments \
-    ENV_DEST=/tmp/
-RUN mamba env create --prefix ${ENV_PREFIX} --file ${ENV_YML};
+#ARG LOCK_FILE=/tmp/environment-lock.yml
+#COPY docker/environment-lock.yml $LOCK_FILE
 
+#To generate first LOCK_FILE if doesnt exists use environment.yml and command
+#conda lock -f ${ENV_YML} -p linux-64 > ${LOCK_FILE};  \
+#RUN echo "LOCK_FILE ${LOCK_FILE}"
+#RUN head -n 10 ${LOCK_FILE}
 
-ARG ENV_YML="/tmp/environment_cuda.yml"
-COPY docker/environments/environment_cuda.yml ${ENV_YML}
-RUN mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
-
-ARG ENV_YML="/tmp/environment_torch.yml"
-COPY docker/environments/environment_torch.yml /tmp/environment_torch.yml
-RUN mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
-
-ARG ENV_YML="/tmp/environment_plots.yml"
-COPY docker/environments/environment_plots.yml /tmp/environment_plots.yml 
-RUN mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
-
-ARG ENV_YML="/tmp/environment_ai.yml"
-COPY docker/environments/environment_ai.yml /tmp/environment_ai.yml
-RUN mamba env update --prefix $ENV_PREFIX  --file ${ENV_YML};
-
-#RUN LOCK_FILE="${LOCKS_PATH}/cuda_torch-lock.yml" \
-#RUN ENV_YML="/tmp/environment_cuda.yml" \ 
-    #&& if [ ! -f ${LOCK_FILE} ]; then \
-    #    conda lock -f ${ENV_YML} -p linux-64 > ${LOCK_FILE};  \
-    #fi \
-    #&& mamba update --prefix $ENV_PREFIX  --file ${LOCK_FILE};
+#RUN mamba env create --prefix ${ENV_PREFIX}  --file ${LOCK_FILE};
+RUN mamba env create --prefix ${ENV_PREFIX}  --file environment.yml;
 
 RUN conda clean --all --yes
-
-# cuda-torch tarda 1490 secs
-# plots 75 segundos
-
-#RUN mamba env create --prefix $ENV_PREFIX --file /tmp/environment.yml \ 
- #   && conda clean --all --yes
-
-
 
 # run the postBuild script to install the JupyterLab extensions
 COPY --chown=$UID:$GID docker/postBuild /usr/local/bin
@@ -184,6 +156,8 @@ RUN chmod u+x /usr/local/bin/postBuild \
     #&& cd tsai \ 
     #&& pip install --no-deps -e . \
     #&& conda deactivate
+
+RUN conda list --prefix ${ENV_PREFIX}
 
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh

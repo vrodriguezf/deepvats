@@ -30,7 +30,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get update --fix-missing \
     #if errors with libtiff library
     #&& apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev \
-    && apt-get install -y wget bzip2 curl git sudo libarchive-dev \
+    && apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev \
     #Otherwise
  #   && apt-get install -y wget bzip2 curl git sudo \
     && apt-get clean  \
@@ -97,8 +97,11 @@ ENV ENV_PREFIX $PROJECT_DIR/env
 RUN conda install --name base --channel conda-forge mamba \
     && mamba update --name base --channel defaults conda 
 #-- Build the mamba environment
+RUN mamba install conda-lock -c conda-forge
 COPY --chown=$UID:$GID docker/environment.yml docker/requirements.txt /tmp/
-RUN conda env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml
+#RUN mamba lock -f /tmp/environment.yml --lockfile /tmp/environment.lock
+#RUN mamba create --prefix ${ENV_PREFIX} --file /tmp/environment.lock
+RUN mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml
 RUN conda clean --all --yes
 
 # run the postBuild script to install the JupyterLab extensions
@@ -113,15 +116,15 @@ RUN chmod u+x /usr/local/bin/postBuild \
 ###########################
 # Editable packages (pip) #
 ########################### 
-#RUN mkdir /home/$USER/lib \
-    #&& conda activate $ENV_PREFIX \
-    #&& cd /home/$USER/lib \
-    ##Install tsai (v0.3.5)
-    #&& rm -rf tsai \
-    #&& git clone -b 0.3.5 --single-branch https://github.com/timeseriesAI/tsai.git \
-    #&& cd tsai \ 
-    #&& pip install --no-deps -e . \
-    #&& conda deactivate
+RUN mkdir /home/$USER/lib \
+    && conda activate $ENV_PREFIX \
+    && cd /home/$USER/lib \
+    #Install tsai (v0.3.7)
+    && rm -rf tsai \
+    && git clone -b 0.3.7 --single-branch https://github.com/timeseriesAI/tsai.git \
+    && cd tsai \ 
+    && pip install --no-deps -e . \
+    && conda deactivate
 
 RUN conda list --prefix ${ENV_PREFIX}
 

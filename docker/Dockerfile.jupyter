@@ -122,17 +122,22 @@ COPY --chown=$UID:$GID docker/environment.yml docker/requirements.txt /tmp/
 #ARG LOCKS_PATH
 #RUN mkdir -p ${LOCKS_PATH}
 
-#ARG LOCK_FILE=/tmp/environment-lock.yml
-#COPY docker/environment-lock.yml $LOCK_FILE
+
+RUN conda install -c conda-forge conda-lock
+ARG ORIG=docker \
+    DEST=/tmp \
+    LOCK_YML=environment-lock.yml \
+    ENV_YML=environment.yml
+COPY $ORIG/$LOCK_YML $DEST/$LOCK_YML
+COPY $ORIG/$ENV_YML $DEST/$ENV_YML
 
 #To generate first LOCK_FILE if doesnt exists use environment.yml and command
-#conda lock -f ${ENV_YML} -p linux-64 > ${LOCK_FILE};  \
-#RUN echo "LOCK_FILE ${LOCK_FILE}"
-#RUN head -n 10 ${LOCK_FILE}
+#conda lock -f ${DEST}/${ENV_YML} -p linux-64 > ${DEST}/${LOCK_FILE};  \
+#RUN mamba env create --prefix ${ENV_PREFIX}  --file ${DEST}${LOCK_FILE};
 
-#RUN mamba env create --prefix ${ENV_PREFIX}  --file ${LOCK_FILE};
-#RUN mamba env create --prefix ${ENV_PREFIX}  --file environment.yml;
-RUN mamba ccreate -n ${ENV_PREFIX} --file ${LOCK_FILE}
+#RUN mamba env create -p ${ENV_PREFIX} --file $DEST/${LOCK_YML}
+RUN conda-lock install -p ${ENV_PREFIX} --file $DEST/${LOCK_YML}
+RUN head -n10 $DEST/${LOCK_YML} && sleep 10
 RUN conda list --prefix ${ENV_PREFIX} \
     && sleep 10
 

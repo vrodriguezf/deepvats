@@ -26,7 +26,6 @@ services:
       - conda-env:/home/${USER_NAME}/env
       - miniconda:/home/${USER_NAME}/miniconda3
       - lib:/home/${USER_NAME}/lib
-      - conda-pkgs:
     init: true
     stdin_open: true
     tty: true

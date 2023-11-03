@@ -95,52 +95,10 @@ WORKDIR $PROJECT_DIR
 ########################## 
 ENV ENV_PREFIX $PROJECT_DIR/env
 RUN conda install --name base --channel conda-forge mamba \
-    #sudo apt-get update -y
     && mamba update --name base --channel defaults conda 
 #-- Build the mamba environment
 COPY --chown=$UID:$GID docker/environment.yml docker/requirements.txt /tmp/
-#RUN mamba env create --prefix $ENV_PREFIX --file /tmp/environment.yml --force  \ 
-
-
-
-######################
-# FORCE FIX VERSIONS #
-######################
-# Instalar conda-lock
-
-# ...
-#RUN conda install -c conda-forge conda-lock && \
-#    bash -c "source activate base && conda-lock -f /tmp/environment.yml -p linux-64 && conda-lock install -f /app/conda-linux-64-lock.yml"
-# ...
-
-#RUN conda install -c conda-forge conda-lock
-# Generar el archivo de bloqueo y crear el entorno Conda
-#RUN conda-lock -f /tmp/environment.yml -p linux-64 && \
- #   conda-lock install -f /app/conda-linux-64-lock.yml
-#############################################################
-
-#ARG LOCKS_PATH
-#RUN mkdir -p ${LOCKS_PATH}
-
-
-RUN conda install -c conda-forge conda-lock
-ARG ORIG=docker \
-    DEST=/tmp \
-    LOCK_YML=environment-lock.yml \
-    ENV_YML=environment.yml
-COPY $ORIG/$LOCK_YML $DEST/$LOCK_YML
-COPY $ORIG/$ENV_YML $DEST/$ENV_YML
-
-#To generate first LOCK_FILE if doesnt exists use environment.yml and command
-#conda lock -f ${DEST}/${ENV_YML} -p linux-64 > ${DEST}/${LOCK_FILE};  \
-#RUN mamba env create --prefix ${ENV_PREFIX}  --file ${DEST}${LOCK_FILE};
-
-#RUN mamba env create -p ${ENV_PREFIX} --file $DEST/${LOCK_YML}
-RUN conda-lock install -p ${ENV_PREFIX} --file $DEST/${LOCK_YML}
-RUN head -n10 $DEST/${LOCK_YML} && sleep 10
-RUN conda list --prefix ${ENV_PREFIX} \
-    && sleep 10
-
+RUN conda env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml
 RUN conda clean --all --yes
 
 # run the postBuild script to install the JupyterLab extensions

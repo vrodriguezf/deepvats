@@ -51,7 +51,7 @@ dependencies:
   # Specific #
   ############
   #--- Torch
-  - pytorch::pytorch=1.13=py3.10_cuda12.0_cudnn8.7.0_0
+  - pytorch::pytorch=1.13=py3.10_cuda11.7_cudnn8.5.0_0
   #---Graphs & imgs
   - conda-forge::plotly=5.18.0=pyhd8ed1ab_0
   - conda-forge::jpeg=9e=h166bdaf_2

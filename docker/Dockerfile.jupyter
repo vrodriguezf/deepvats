@@ -131,7 +131,10 @@ COPY --chown=$UID:$GID docker/environment.yml docker/requirements.txt /tmp/
 #RUN head -n 10 ${LOCK_FILE}
 
 #RUN mamba env create --prefix ${ENV_PREFIX}  --file ${LOCK_FILE};
-RUN mamba env create --prefix ${ENV_PREFIX}  --file environment.yml;
+#RUN mamba env create --prefix ${ENV_PREFIX}  --file environment.yml;
+RUN mamba ccreate -n ${ENV_PREFIX} --file ${LOCK_FILE}
+RUN conda list --prefix ${ENV_PREFIX} \
+    && sleep 10
 
 RUN conda clean --all --yes
 

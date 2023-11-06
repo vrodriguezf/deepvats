@@ -20,6 +20,7 @@ services:
       - GH_TOKEN=${GH_TOKEN}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       - WANDB_DIR=/home/${USER_NAME}/work
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN}
     volumes:
       - ../:/home/${USER}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/

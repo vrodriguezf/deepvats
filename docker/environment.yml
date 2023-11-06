@@ -33,9 +33,8 @@ dependencies:
   - nbformat>=5.1.3
   #--- passwords & files
   - keyrings.alt
-  - conda-forge::platformdirs=3.11.0=pyhd8ed1ab_0
+  - platformdirs=2.5.2 #platformdirs=3.11.0=pyhd8ed1ab_0
   - conda-forge::keyrings.alt=4.2.0=pyhd8ed1ab_0
-  - conda-forge::platformdirs=3.11.0=pyhd8ed1ab_0
   - psutil>=5.4.8 
   ##############
   # CUDA & GPU #
@@ -62,4 +61,4 @@ dependencies:
   - conda-forge::scikit-learn=1.2.2=py310hf7d194e_2
   - conda-forge::wandb=0.14.2=pyhd8ed1ab_0
   - fastai::fastai=2.7.10
-  #- timeseriesai::tsai=0.3.7=py_0
+  #- timeseriesai::tsai=0.3.7=py_0 # tiene que ser la 0.3.5

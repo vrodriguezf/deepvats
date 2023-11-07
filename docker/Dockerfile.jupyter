@@ -4,41 +4,48 @@
 # Set up a jupyter-lab for  #
 # developing using deepvats #
 #############################
-ARG log_path=/home/macu/dockerfile_jupyter.logs
-
 ##############
 # Base image #
 ##############
 ##--- Setup Ubuntu
-#ARG CUDA_VERSION=12.0.1-cudnn8-runtime-ubuntu22.04
-#ARG CUDA_VERSION=12.0.1-devel-ubuntu22.04  
-ARG CUDA_VERSION=12.0.1-cudnn8-runtime-ubuntu22.04
-
+ARG CUDA_VERSION
 FROM nvidia/cuda:${CUDA_VERSION}
+
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
 LABEL cuda_version=${CUDA_VERSION}
-LABEL log_path=${log_path}
+
+RUN echo "Cuda version: $CUDA_VERSION"
 ##---Initialize bash
 SHELL [ "/bin/bash", "--login", "-c" ]
 
 ##################
 # Packages setup #
-##################
-RUN apt-get update --fix-missing \
+################## 
+#TODO: Automatizar que lo coja de /etc/timezone
+#Only neccesary for libarchive & libtiff if error appears
+ARG TZ=Etc/UTC 
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && apt-get update --fix-missing \
+    #if errors with libtiff library
+    #&& apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev \
     && apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev \
+    #Otherwise
+ #   && apt-get install -y wget bzip2 curl git sudo \
     && apt-get clean  \
     && rm -rf /var/lib/apt/lists/*
+
 #-- Environmental variables for wandb
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 
 
 ########################
 # Create non-root user #
 ########################
-ARG username=user
-ARG uid=1000
-ARG gid=1000
+ARG username=user\
+    uid=1000 \
+    gid=1000
 ENV USER=$username \
     UID=$uid \
     GID=$gid 

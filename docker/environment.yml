@@ -9,17 +9,20 @@ channels:
   #--- AI
   - fastai
   - rapidsai
+  - timeseriesai
 dependencies:
   ##########################
   # Generic configurations #
   ##########################
-  - conda-forge::nano=7.2=h8228510_0
-  - conda-forge::git=2.42.0=pl5321h86e50cf_0
+  - nano=7.2=h8228510_0
+  - git=2.42.0=pl5321h86e50cf_0
   #--- github
-  - conda-forge::gh=2.37.0=ha8f183a_0
+  - gh=2.37.0=ha8f183a_0
   #--- Python
-  - conda-forge::python=3.10.13=hd12c33a_0_cpython
-  - conda-forge::pip=23.3.1=pyhd8ed1ab_0
+  - python=3.10.13=hd12c33a_0_cpython
+  #WANDB <= 0.15.12 needs this version. See https://github.com/wandb/wandb/issues/6546
+  - ipython=8.16.1=pyh0d859eb_0
+  - pip=23.3.1=pyhd8ed1ab_0
   - conda-forge::twine=4.0.2=pyhd8ed1ab_0
   - conda-forge::xeus-python=0.15.10=py310hd41b1e2_1
   #--- NodeJS
@@ -33,7 +36,7 @@ dependencies:
   - nbformat>=5.1.3
   #--- passwords & files
   - keyrings.alt
-  - platformdirs=2.5.2 #platformdirs=3.11.0=pyhd8ed1ab_0
+  - platformdirs=2.5.2
   - conda-forge::keyrings.alt=4.2.0=pyhd8ed1ab_0
   - psutil>=5.4.8 
   ##############
@@ -55,10 +58,10 @@ dependencies:
   - conda-forge::matplotlib=3.8.1=py310hff52083_0
   #--- IA
   - conda-forge::hdbscan=0.8.33=py310h1f7b6fc_4
-  - conda-forge::imbalanced-learn=0.11.0=pyhd8ed1ab_0 #>= 0.8.0
-  - conda-forge::pyts=0.13.0=pyh1a96a4e_0 # >= 0.12.0
+  - conda-forge::imbalanced-learn>= 0.8.0
+  - conda-forge::pyts >= 0.12.0
   - conda-forge::umap-learn=0.5.4=py310hff52083_0
   - conda-forge::scikit-learn=1.2.2=py310hf7d194e_2
   - conda-forge::wandb=0.14.2=pyhd8ed1ab_0
-  - fastai::fastai=2.7.10
-  #- timeseriesai::tsai=0.3.7=py_0 # tiene que ser la 0.3.5
+  - fastai::fastai>=2.7.9
+  - timeseriesai::tsai

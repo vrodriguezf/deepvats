@@ -6,9 +6,10 @@ services:
         - username=${USER_NAME}
         - uid=${USER_ID}
         - gid=${GROUP_ID}
-        - CUDA_VERSION=12.2.0-devel-ubuntu20.04
+        - w
         - LOCKS_PATH=/home/${USER_NAME}
         - SPLIT_ENV=1 #0 otherwise
+        - CUDA_VERSION=12.2.0-devel-ubuntu20.04
       context: ../
       dockerfile: docker/Dockerfile.jupyter
     ports:

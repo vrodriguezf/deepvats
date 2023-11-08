@@ -60,6 +60,16 @@ def get_config(print_flag=False, filename="base"):
     config = yaml.load(full_content, Loader=yaml.FullLoader)
     return recursive_attrdict(config)
 
+def build_enc_artifact(config, print_flag = False):
+    version = config.user_preferences.wdb.version
+    enc_artifact = config.configuration.encoder.artifacts.train.enc_prefix
+    if (version == 'latest'):
+        enc_artifact+=":latest"
+    else:
+        enc_artifact=enc_artifact+":v"+version
+    if (print_flag):
+        print("enc_artifact: "+enc_artifact)
+    return enc_artifact
 
 def get_project_data(print_flag):
     config      = get_config()
@@ -228,15 +238,8 @@ def get_artifact_config_embeddings(print_flag=False):
     config = get_config(print_flag, "03-embeddings")
     job_type=config.job_type
     version = config.user_preferences.wdb.version
+    enc_artifact = build_enc_artifact(config, print_flag)
     config = config.configuration
-    enc_artifact = config.artifacts.enc_prefix
-    if (version == 'latest'):
-        enc_artifact+=":latest"
-    else:
-        enc_artifact=enc_artifact+":v"+version
-    if (print_flag):
-        print("enc_artifact: "+enc_artifact)
-        
     artifact_config = AttrDict(
         use_wandb       = config.wandb.use,
         wandb_group     = config.wandb.group,
@@ -256,14 +259,15 @@ def get_artifact_config_embeddings(print_flag=False):
 def get_artifact_config_dimensionality_reduction(print_flag=False):
     config          = get_config(print_flag, "04-dimensionality_reduction")
     job_type        = config.job_type
-    config          = config.configuration
+    enc_artifact = build_enc_artifact(config, print_flag)
+    config = config.configuration
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use, 
         wandb_group         = config.wandb.group,
         wandb_entity        = config.wandb.entity,
         wandb_project       = config.wandb.project,
-        dr_artifact_name    = config.encoder.artifact.valid, 
-        enc_artifact        = config.encoder.artifact.enc,
+        valid_artifact      = config.encoder.artifacts.valid, 
+        train_artifact      = enc_artifact,
         n_neighbors         = config.encoder.umap.n_neighbors,
         min_dist            = config.encoder.umap.min_dist,
         random_state        = config.encoder.umap.random_state

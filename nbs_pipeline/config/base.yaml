@@ -60,8 +60,8 @@ data:
     missing_values:
       # Handle missing values technique (null for no handling)
       technique: null 
-    # Default value used for missing values (only if missing_values_technique is not null)
-    constant: null
+      # Default value used for missing values (only if missing_values_technique is not null)
+      constant: null
     # To normalize the data
     normalize_training: false
     # Training and Testing ranges. They can be lists with values to be included 

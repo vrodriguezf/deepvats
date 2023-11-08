@@ -77,7 +77,9 @@ def get_project_data(print_flag):
     user        = config.wandb.user
     version     = config.wandb.version
     data_name   = config.data.name
-    data        = data_name + ':v' +version
+    if (version != "latest"):
+        version = 'v' +version
+    data        = data_name +":"+version
     if print_flag:
         dashes = '-----------'        
         print(dashes+"Project configuration"+dashes)
@@ -206,13 +208,14 @@ def get_artifact_config_sd2a(print_flag=False):
 def get_artifact_config_DCAE(print_flag=False):
     config = get_config(print_flag, "02b-encoder_dcae")
     print("Antes de leer configuration " + str(config))
+    enc_artifact = build_enc_artifact(config, print_flag)
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use,
         wandb_group         = config.wandb.group,
         wandb_entity        = config.wandb.entity,
         wandb_project       = config.wandb.project,
-        train_artifact      = config.artifacts.train,
+        train_artifact      = enc_artifact,
         valid_artifact      = config.artifacts.valid.data,
         # In case valid_artifact is None, this will set the percentage of random items to go to val
         valid_size          = config.artifacts.valid.size,

@@ -21,7 +21,8 @@ configuration:
     project: *wdb_project
   artifacts:
     # complete training artifact path
-    train: !join [ *wdb_user, '/', *wdb_project, '/', *fname, ':v', *wdb_version]
+    train_prefix: enc_prefix: !join [ *wdb_user, '/', *wdb_project, '/', *alg]
+    #!join [ *wdb_user, '/', *wdb_project, '/', *fname, ':v', *wdb_version]
     # complete name (None for random validation set)
     valid:
       data: null
@@ -30,7 +31,7 @@ configuration:
   specifications:
     batch_size: 64
     # Number of epochs to train for
-    n_epoch: 10 #200 Change after tests
+    n_epoch: 200
     pool_szs: [2,2,4]
     # Number of elements to analyse for the top losses
     top_k: 3

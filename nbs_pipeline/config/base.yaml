@@ -32,7 +32,7 @@ user_preferences:
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 
-    data: &data_path !join [ *path, *fname, *ftype   ]
+    data: &data_path !join [ *path, *fname, *ftype ]
   
 #######################
 # Data specifications #

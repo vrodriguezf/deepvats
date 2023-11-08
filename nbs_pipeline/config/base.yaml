@@ -11,8 +11,7 @@
 user_preferences: 
   #Weights & biases
   # Whether to use or not wandb for experiment tracking
-  #use_wandb: &use_wandb true
-  use_wandb: &use_wandb false
+  use_wandb: &use_wandb true
   wdb:
     user:         &wdb_user mi-santamaria 
     project_name: &wdb_project test-project
@@ -22,13 +21,13 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder:  &path '~/data/'
-    fname:   &fname 'Semantic_Segmentation_TiltABP'
+    fname:   &fname 'ETTh1'
     ftype:   &ftype '.csv'
-    cols:    &cols []
+    cols:    &cols [4, 5, 6, 7]
     freq:    &freq '1s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    alias: &alias 'TiltABP'
+    alias: &alias 'ETTh1'
     algorithm: &alg 'mvp'
   directories:
     # Folder to store temporary files
@@ -78,7 +77,8 @@ data:
     test_split: null
     # List or int with the idx(s) of the column containing the timestamp
     # (null if there is no timestamp column)
-    time_col: null
+    #time_col: null
+    time_col: 0
 
 ########################
 # Wandb specifications #

@@ -76,18 +76,27 @@ def get_enc_embs(X, enc_learn, module=None, cpu=False, average_seq_dim=True, to_
         enc_learn.dls.cpu()
         enc_learn.cpu()
     else:
+        #to delete prints
+        print("--> Use CUDA")
         enc_learn.dls.cuda()
         enc_learn.cuda()
+        print("Use CUDA -->")
     if enc_learn.dls.bs == 0: enc_learn.dls.bs = 64
+    
     aux_dl = enc_learn.dls.valid.new_dl(X=X)
     aux_dl.bs = enc_learn.dls.bs if enc_learn.dls.bs>0 else 64
+    print("--> Nested atrr")
     module = nested_attr(enc_learn.model,
                          ENCODER_EMBS_MODULE_NAME[type(enc_learn.model)]) \
                 if module is None else module
+    print("--> Embs")
     embs = [get_acts_and_grads(model=enc_learn.model,
                                modules=module,
                                x=xb[0], cpu=cpu)[0] for xb in aux_dl]
+    print("--> Concat")
     embs = to_concat(embs)
+    print("--> Mean")
     if embs.ndim == 3 and average_seq_dim: embs = embs.mean(axis=2)
+    print("--> Numpy")
     if to_numpy: embs = embs.numpy() if cpu else embs.cpu().numpy()
     return embs

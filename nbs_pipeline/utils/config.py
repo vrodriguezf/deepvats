@@ -1,4 +1,3 @@
-import nbs_pipeline.utils.errors
 import os
 import yaml
 import sys
@@ -11,7 +10,12 @@ def join_constructor(loader, node):
     return ''.join(seq)
 ##### -- end
 
-
+def custom_error(message):
+    # Código ANSI para texto en rojo
+    red_start = "\033[91m"
+    # Código ANSI para restablecer el color
+    reset = "\033[0m"
+    raise Exception(red_start + message + reset)
 
 
 def recursive_attrdict(d):
@@ -144,6 +148,7 @@ def get_artifact_config_MVP(print_flag=False):
         r                       = config.specifications.mvp.r,
         stride                  = config.specifications.sliding_windows.stride, 
         train_artifact          = train_artifact_, 
+        valid_artifact          = None, 
         use_wandb               = user_preferences.use_wandb, 
         valid_size              = config.specifications.mvp.valid_size,
         w                       = config.specifications.sliding_windows.size, 

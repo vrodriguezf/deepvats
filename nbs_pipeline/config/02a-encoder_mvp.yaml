@@ -21,7 +21,7 @@ configuration:
   specifications:
     batch_size: 32
     # Number of epochs to train for
-    n_epoch: 10 #0
+    n_epoch: 100
     mask:
       # Mask future samplesx
       future: false

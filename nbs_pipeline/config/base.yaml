@@ -16,7 +16,7 @@ user_preferences:
   wdb:
     user:         &wdb_user mi-santamaria 
     project_name: &wdb_project test-project
-    version:      &wdb_version '0'
+    version:      &wdb_version 'latest' #'6'
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode:         &wdb_mode 'offline'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
@@ -29,6 +29,7 @@ user_preferences:
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
     alias: &alias 'TiltABP'
+    algorithm: &alg 'mvp'
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 
@@ -93,50 +94,3 @@ wandb:
   version: *wdb_version
   # Output path where the resulting TSArtifact will be stored
   artifacts_path: *artifacts_path
-
-
-#####################
-# 02b - ENCODER MVP #
-#####################
-artifact_MVP:
-  alias: *alias 
-  batch_size: 32 
-  n_epoch: 100 # Number of epochs to train for
-  # Mask future samplesx
-  mask_future: false
-  # True: mask stateful samples, False: mask individual time steps
-  mask_stateful: true
-  # (only for multivariate ts) mask all variables at once
-  mask_sync: false
-  # Tuple (min_w, max_x) to train MVP with adaptable window sizes. Usually max_w = config.w
-  # Set to null to train MVP with fixed window size
-  mvp_ws1: 10
-  mvp_ws2: 30
-  # Normalize by sample or not
-  norm_by_sample: false
-  # Whether to use a single batch or not for the normalization (TSStandardize)
-  norm_use_single_batch: false
-  # probability of masking in MVP
-  r: 0.7
-  # n datapoints the window is moved ahead along the sequence in the sliding window
-  stride: 1
-  # This will set the percentage of items that go to val 
-  valid_size: 0.2
-  # window size for the sliding window (taxi=48, steamflow=640)
-  w: 30
-  # Whether to group this run in a wandb group (for sweeps)
-  wandb_group: null 
-
-
-###################
-# 03 - Embeddings #
-###################
-embeddings:  
-  # Whether to group this run in a wandb group
-  wandb_group: 'embeddings'   
-  # Name:version of the encoder artifact
-  train_artifact: !join [ *wdb_user, '/', *wdb_project, *fname, ':v', *wdb_version] 
-  # If none, the validation set used to train enc_artifact is used
-  input_ar: null
-  cpu: false
-  

@@ -198,7 +198,7 @@ def get_artifact_config_DCAE(print_flag=False):
     print("Antes de leer configuration " + str(config))
     config = config.configuration
     artifact_config = AttrDict(
-        use_wandb           = config.wandb.user,
+        use_wandb           = config.wandb.use,
         wandb_group         = config.wandb.group,
         wandb_entity        = config.wandb.entity,
         wandb_project       = config.wandb.project,
@@ -227,13 +227,22 @@ def get_artifact_config_DCAE(print_flag=False):
 def get_artifact_config_embeddings(print_flag=False):
     config = get_config(print_flag, "03-embeddings")
     job_type=config.job_type
+    version = config.user_preferences.wdb.version
     config = config.configuration
+    enc_artifact = config.artifacts.enc_prefix
+    if (version == 'latest'):
+        enc_artifact+=":latest"
+    else:
+        enc_artifact=enc_artifact+":v"+version
+    if (print_flag):
+        print("enc_artifact: "+enc_artifact)
+        
     artifact_config = AttrDict(
         use_wandb       = config.wandb.use,
         wandb_group     = config.wandb.group,
         wandb_entity    = config.wandb.entity,
         wandb_project   = config.wandb.project,
-        enc_artifact    = config.artifacts.enc,
+        enc_artifact    = enc_artifact,
         input_ar        = config.specifications.input_ar,
         cpu             = config.specifications.cpu
     )

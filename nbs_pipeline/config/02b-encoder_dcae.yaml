@@ -7,10 +7,6 @@ include: !include "base.yaml"
 ###### Date: 08-2023                                    #
 #########################################################
 
-######################
-# 02a - ENCODER DCAE #
-######################
-
 configuration:
   job_type: 'encoder_DCAE'
   alias: *alias

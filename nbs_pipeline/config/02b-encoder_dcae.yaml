@@ -47,4 +47,3 @@ configuration:
         kss: [10,5,5]
         output_size: 10
     
-

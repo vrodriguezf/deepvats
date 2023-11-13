@@ -262,10 +262,31 @@ def get_artifact_config_embeddings(print_flag=False):
 
 
 ###################################
-# 03 - DIMENSIONALITY REDUCTION   #
+# 04 - DIMENSIONALITY REDUCTION   #
 ###################################
 def get_artifact_config_dimensionality_reduction(print_flag=False):
     config          = get_config(print_flag, "04-dimensionality_reduction")
+    job_type        = config.job_type
+    enc_artifact = build_enc_artifact(config, print_flag)
+    config = config.configuration
+    artifact_config = AttrDict(
+        use_wandb           = config.wandb.use, 
+        wandb_group         = config.wandb.group,
+        wandb_entity        = config.wandb.entity,
+        wandb_project       = config.wandb.project,
+        valid_artifact      = config.encoder.artifacts.valid, 
+        train_artifact      = enc_artifact,
+        n_neighbors         = config.encoder.umap.n_neighbors,
+        min_dist            = config.encoder.umap.min_dist,
+        random_state        = config.encoder.umap.random_state
+    )
+    return artifact_config, job_type
+
+##################
+# 05 - XAI-SHAP  #
+##################
+def get_artifact_config_xai_shap(print_flag=False):
+    config          = get_config(print_flag, "05-xai_shap")
     job_type        = config.job_type
     enc_artifact = build_enc_artifact(config, print_flag)
     config = config.configuration

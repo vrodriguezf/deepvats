@@ -21,9 +21,9 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder:  &path '~/data/'
-    fname:   &fname 'Occupancy_Estimation'
+    fname:   &fname 'Occupancy_Estimation_etl'
     ftype:   &ftype '.csv'
-    cols:    &cols [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    cols:    &cols []
     freq:    &freq '1s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
@@ -77,7 +77,7 @@ data:
     test_split: null
     # List or int with the idx(s) of the column containing the timestamp
     # (null if there is no timestamp column)
-    time_col: null
+    time_col: 0 #null
     #time_col: 1
 
 ########################

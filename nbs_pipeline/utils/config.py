@@ -80,7 +80,7 @@ def get_project_data(print_flag):
     project     = config.wandb.project
     user        = config.wandb.user
     version     = config.wandb.version
-    data_name   = config.data.name
+    data_name   = config.data.alias
     if (version != "latest"):
         version = 'v' +version
     data        = data_name +":"+version

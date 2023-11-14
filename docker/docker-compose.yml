@@ -64,9 +64,9 @@ services:
          - ../r_shiny_app:/home/${USER_NAME}/app #*
          - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
          - ../dvats:/home/${USER_NAME}/dvats
-         - conda-env:/home/${USER_NAME}/env:ro
+         - conda-env:/home/${USER_NAME}/env
          - miniconda:/home/${USER_NAME}/miniconda3 #:ro
-         - lib:/home/${USER_NAME}/lib:ro
+         - lib:/home/${USER_NAME}/lib
       deploy:
         resources:
           reservations:

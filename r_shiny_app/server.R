@@ -7,8 +7,13 @@
 #    http://shiny.rstudio.com/
 #
 
-
+library(webshot)
 shinyServer(function(input, output, session) {
+
+    options(shiny.error = function() {
+        traceback()
+        stopApp()
+    })
   
     ######################
     #  REACTIVES VALUES  #

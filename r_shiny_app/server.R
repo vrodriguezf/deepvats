@@ -291,7 +291,7 @@ shinyServer(function(input, output, session) {
       res = switch(input$dr_method,
              UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)),
              TSNE = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)),
-             PCA = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)))
+             PCA = dvats$get_PCA_prjs(X = embs, cpu=F, random_state=as.integer(1234)))
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
       colnames(res) = c("xcoord", "ycoord")
       res

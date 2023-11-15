@@ -7,7 +7,7 @@
 #    http://shiny.rstudio.com/
 #
 
-library(webshot)
+
 shinyServer(function(input, output, session) {
 
     options(shiny.error = function() {
@@ -551,9 +551,51 @@ shinyServer(function(input, output, session) {
     })
     
     
+    
     # Generate time series plot
     output$ts_plot_dygraph <- renderDygraph({
-      req(ts_plot())
+        req (input$dataset, input$encoder)
+        print("Saving time series plot")
+        ts_plot <- req(ts_plot())
+        save_path <- file.path("..", "data", "plots", ts_plot_name())
+        htmlwidgets::saveWidget(ts_plot, file = save_path, selfcontained=TRUE)
+        print(paste0("Time series plot saved to", save_path))
+        ts_plot
+      #req(ts_plot())
+    })
+
+
+    ########### Saving graphs in local
+    get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster){
+        print("Getting embedding plot name")
+        plt_name <- paste0(dataset_name,"_", encoder_name, "_", input$dr_method)
+        if (!is.null(selected) && selected == "precomputed_clusters") {
+            plt_name <- paste0(plt_name, "_cluster_", cluster, "_prjs.png")
+        } else {
+            plt_name <- paste0(plt_name, "_prjs.png")
+        }
+        print(paste0("embeddings plot name", plt_name))
+        plt_name
+    }
+
+    get_ts_plot_name <- function(dataset_name, encoder_name){
+        print("Getting timeserie plot name")
+        plt_name <- paste0(dataset_name,  "_", encoder_name, input$dr_method, "_ts.html")
+        print(paste0("ts plot name: ", plt_name))
+        plt_name
+    }
+
+    prjs_plot_name <- reactive({
+        dataset_name <- basename(input$dataset)
+        encoder_name <- basename(input$encoder)
+        get_prjs_plot_name(dataset_name, encoder_name, clustering_options$selected, prjs_$cluster)
+    })
+    
+    ts_plot_name <- reactive({
+        dataset_name <- basename(input$dataset)
+        encoder_name <- basename(input$encoder)
+        get_ts_plot_name(dataset_name, encoder_name)
     })
     
 })
+

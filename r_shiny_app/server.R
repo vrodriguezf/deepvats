@@ -463,7 +463,11 @@ shinyServer(function(input, output, session) {
         ts_ar_config() %>% 
             enframe()
     })
+
+
+
     
+       
     # Generate projections plot
     output$projections_plot <- renderPlot({
         prjs_ <- req(projections())
@@ -492,6 +496,15 @@ shinyServer(function(input, output, session) {
             coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE)+
             theme_void() + 
             theme(legend.position = "none")
+
+        observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
+            prjs_ <- req(projections())
+            filename <- prjs_plot_name()
+            print(paste("saving embedding plot to ",filename))
+            ggsave(filename = filename, plot = plt, path="../data/plots/") 
+            print("Embeding plot saved")
+        })
+        
         plt
     })
     

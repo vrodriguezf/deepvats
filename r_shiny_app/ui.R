@@ -45,7 +45,7 @@ shinyUI(fluidPage(
       #     textOutput("clusters_labels_ar_desc")
       # ),
       conditionalPanel(
-        condition = "input.clustering_options == 'calculate_clusters'",
+          condition = "input.clustering_options == 'calculate_clusters'",
         selectInput("metric_hdbscan", label = "Metric", choices = DEFAULT_VALUES$metric_hdbscan),
         sliderInput("min_cluster_size_hdbscan", label = "min_cluster_size_hdbscan", 
                     value = DEFAULT_VALUES$min_cluster_size_hdbscan, min=0, max=200, step = 1),

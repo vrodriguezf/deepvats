@@ -304,10 +304,27 @@ shinyServer(function(input, output, session) {
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
       # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
       # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
-      py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
+      tryCatch({
+        print("Before tsdf py_load_object")
+        py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
+        print("Before tsdf row_names_to_column")
         rownames_to_column("timeindex") %>% 
         # slice(first_data_index:last_data_index) %>%
+        print("Before tsdf column to rownames")
         column_to_rownames(var = "timeindex")
+      }, error = function(e){
+            print(paste0("Error while loading TimeSeries object. Error:", e$message))
+            print("Retry TimeSeries load")
+            tryCatch({
+                py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
+                rownames_to_column("timeindex") %>% 
+                # slice(first_data_index:last_data_index) %>%
+                column_to_rownames(var = "timeindex")
+            }, error = function(e){
+                print(paste0("Error while loading TimeSeries object. Exit. Error:", e$message))
+                data.frame()
+            })
+        })
     })
     
     # Auxiliary object for the interaction ts->projections

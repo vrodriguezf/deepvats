@@ -19,7 +19,7 @@ configuration:
     # Whether to group this run in a wandb group (for sweeps)
     group: null
   specifications:
-    batch_size: 32
+    batch_size: 1024 #32
     # Number of epochs to train for
     n_epoch: 100
     mask:
@@ -32,8 +32,8 @@ configuration:
     mvp:
       # Tuple (min_w, max_x) to train MVP with adaptable window sizes. Usually max_w = config.w
       # Set to null to train MVP with fixed window size
-      ws1: 10
-      ws2: 30
+      ws1: 15 #10 (1 min intervalo 4 secs)
+      ws2: 75 #900 #30 (15*60=900 = 1hora intervalos 4 secs)
       # probability of masking in MVP
       r: 0.7
       valid_size: 0.2
@@ -43,8 +43,8 @@ configuration:
         use_single_batch: false
     sliding_windows:
       # n datapoints the window is moved ahead along the sequence in the sliding window
-      stride: 1
+      stride: 15 #1
       # This will set the percentage of items that go to val 
       # window size for the sliding window (taxi=48, steamflow=640)
       #w
-      size: 30
+      size: 75

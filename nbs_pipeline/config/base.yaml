@@ -95,3 +95,4 @@ wandb:
   version: *wdb_version
   # Output path where the resulting TSArtifact will be stored
   artifacts_path: *artifacts_path
+  

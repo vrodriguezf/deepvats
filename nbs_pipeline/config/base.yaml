@@ -21,13 +21,13 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder:  &path '~/data/'
-    fname:   &fname 'Occupancy_Estimation_etl'
-    ftype:   &ftype '.csv'
+    fname:   &fname 'solar_4_seconds_dataset'
+    ftype:   &ftype '.tsf'
     cols:    &cols []
     freq:    &freq '1s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    alias: &alias 'Occupancy_estimation'
+    alias: &alias 'Monash-solar_4_seconds'
     algorithm: &alg 'mvp'
   directories:
     # Folder to store temporary files

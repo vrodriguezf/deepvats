@@ -45,7 +45,7 @@ services:
               - USER=${USER_NAME} #* 
               - UID=${USER_ID} #*
               - GID=${GROUP_ID} #*
-      image: dvats-r:12.2.0-devel-ubuntu20.04
+      image: dvats-r:rocker-ml:4.2
       ports:
           - "${RSTUDIO_PORT}:8787" #*
       environment:

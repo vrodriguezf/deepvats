@@ -24,7 +24,7 @@ user_preferences:
     fname:   &fname 'solar_4_seconds_dataset'
     ftype:   &ftype '.tsf'
     cols:    &cols []
-    freq:    &freq '1s'
+    freq:    &freq '4s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
     alias: &alias 'Monash-solar_4_seconds'
@@ -77,8 +77,9 @@ data:
     test_split: null
     # List or int with the idx(s) of the column containing the timestamp
     # (null if there is no timestamp column)
-    time_col: 0 #null
+    time_col: null
     #time_col: 1
+    #time_col: 0
 
 ########################
 # Wandb specifications #

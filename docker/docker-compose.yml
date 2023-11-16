@@ -45,7 +45,7 @@ services:
               - USER=${USER_NAME} #* 
               - UID=${USER_ID} #*
               - GID=${GROUP_ID} #*
-      image: dvats-r:rocker-ml:4.2
+      image: dvats-r:rocker-ml_4.2
       ports:
           - "${RSTUDIO_PORT}:8787" #*
       environment:

@@ -64,7 +64,7 @@ shinyServer(function(input, output, session) {
                            choices = encs_l %>% 
                              map(~.$metadata$train_artifact) %>% 
                              set_names())
-        on.exit("observeEvent input_dataset -->")
+        on.exit(print("observeEvent input_dataset -->"))
     }, label = "input_dataset")
     
     observeEvent(input$dataset, {
@@ -78,7 +78,7 @@ shinyServer(function(input, output, session) {
                              keep(~ .$metadata$train_artifact == input$dataset) %>% 
                              #map(~ .$metadata$enc_artifact) %>% 
                              names)
-        on.exit("observeEvent input_encoder -->")
+        on.exit(print("observeEvent input_encoder -->"))
     }, label = "input_encoder")
     
     # observeEvent(input$encoder, {
@@ -593,7 +593,7 @@ shinyServer(function(input, output, session) {
                  click = "projections_click",
                  brush = "projections_brush",
                  height = input$embedding_plot_height) %>% withSpinner()
-        on.exit("output projections_plot_UI -->")       
+        on.exit(print("output projections_plot_UI -->"))      
     })
     
     

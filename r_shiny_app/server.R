@@ -353,7 +353,7 @@ shinyServer(function(input, output, session) {
     embs = reactive({
       req(X(), enc())
       print("--> reactive embs | get embeddings")
-      if (print(torch$cuda$is_available())){
+      if (torch$cuda$is_available()){
         print(paste0("CUDA devices: ", torch$cuda$device_count))
       } else {
         print("CUDA NOT AVAILABLE")

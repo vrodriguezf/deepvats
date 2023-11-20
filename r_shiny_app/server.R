@@ -57,18 +57,19 @@ shinyServer(function(input, output, session) {
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
     observeEvent(req(exists("encs_l")), {
-      print("input_dataset")
+      print("--> observeEvent input_dataset")
       freezeReactiveValue(input, "dataset")
       updateSelectizeInput(session = session,
                            inputId = "dataset",
                            choices = encs_l %>% 
                              map(~.$metadata$train_artifact) %>% 
                              set_names())
+        on.exit("observeEvent input_dataset -->")
     }, label = "input_dataset")
     
     observeEvent(input$dataset, {
       req(exists("encs_l"))
-      print("input_encoder")
+      print("--> observeEvent input_encoder")
       print(input$dataset)
       freezeReactiveValue(input, "encoder")
       updateSelectizeInput(session = session,
@@ -77,6 +78,7 @@ shinyServer(function(input, output, session) {
                              keep(~ .$metadata$train_artifact == input$dataset) %>% 
                              #map(~ .$metadata$enc_artifact) %>% 
                              names)
+        on.exit("observeEvent input_encoder -->")
     }, label = "input_encoder")
     
     # observeEvent(input$encoder, {
@@ -261,8 +263,7 @@ shinyServer(function(input, output, session) {
     ###############
     X <- reactive({
       req(input$wlen != 0, input$stride != 0, tsdf())
-      print("X")
-      print(paste0("X | wlen ", input$wlen, " | stride ", input$stride))
+      print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride))
       tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
     })
     
@@ -354,11 +355,10 @@ shinyServer(function(input, output, session) {
       # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
       tryCatch({
         ts_ar_hash=ts_ar()$metadata$TS$hash
-        print(paste0("reactive tsdf |  py_load_object ", DEFAULT_PATH_WANDB_ARTIFACTS, " hash ", ts_ar_hash ))
+        print(paste0("reactive tsdf | py_load_object ", DEFAULT_PATH_WANDB_ARTIFACTS, " hash ", ts_ar_hash ))
         py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)) %>% 
         rownames_to_column("timeindex") %>% 
         column_to_rownames(var = "timeindex")
-        print("Object loaded")
         # slice(first_data_index:last_data_index) %>% 
       }, error = function(e){
             print(paste0("reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
@@ -381,6 +381,7 @@ shinyServer(function(input, output, session) {
             print(paste0("reactive tsdf | Warning ", w))
         }
         )
+        on.exit(print("reactive tsdf | Object loaded"))
     })
     
     # Auxiliary object for the interaction ts->projections
@@ -587,11 +588,12 @@ shinyServer(function(input, output, session) {
     
     # Render projections plot
     output$projections_plot_ui <- renderUI({
-      print("projections_plot_UI")
+      print("--> output projections_plot_UI")
       plotOutput("projections_plot", 
                  click = "projections_click",
                  brush = "projections_brush",
                  height = input$embedding_plot_height) %>% withSpinner()
+        on.exit("output projections_plot_UI -->")       
     })
     
     

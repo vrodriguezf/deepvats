@@ -9,11 +9,11 @@
 
 
 shinyServer(function(input, output, session) {
-
-    options(shiny.error = function() {
-        traceback()
-        stopApp()
-    })
+    options(shiny.verbose = TRUE)
+    #options(shiny.error = function() {
+    #    traceback()
+    #    stopApp()
+    #})
   
     ######################
     #  REACTIVES VALUES  #
@@ -88,18 +88,33 @@ shinyServer(function(input, output, session) {
     # })
     
     observeEvent(input$encoder, {
-      enc_ar = req(enc_ar())
-      freezeReactiveValue(input, "wlen")
-      if (is.null(enc_ar$metadata$mvp_ws)) 
-        enc_ar$metadata$mvp_ws = c(enc_ar$metadata$w, enc_ar$metadata$w)
-      updateSliderInput(session = session, inputId = "wlen",
-                        min = enc_ar$metadata$mvp_ws[1],
-                        max = enc_ar$metadata$mvp_ws[2],
-                        value = enc_ar$metadata$w)
+#        req(input$dataset)
+        enc_ar = req(enc_ar())
+        freezeReactiveValue(input, "wlen")
+        print("Wlen | Set wlen slider values")
+        if (is.null(enc_ar$metadata$mvp_ws)) {
+            print("Wlen | Set wlen slider values from w | ")
+            enc_ar$metadata$mvp_ws = c(enc_ar$metadata$w, enc_ar$metadata$w)
+        }
+        print(paste0("Wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ))
+        wmin <- enc_ar$metadata$mvp_ws[1]
+        wmax <- enc_ar$metadata$mvp_ws[2]
+        wlen <- enc_ar$metadata$w
+        print(paste0("Wlen | Update slider input (", wmin, ", ", wmax, " ) -> ", wlen ))
+        updateSliderInput(session = session, inputId = "wlen",
+            min = wmin,
+            max = wmax,
+            value = wlen
+        )
     })
-    
+    observe({
+        if (input$stride == 0){
+            updateSliderInput(session, "stride", value=enc_ar_stride())
+        }
+    })
     observeEvent(input$wlen, {
-      req(input$wlen != 0)
+      req(input$wlen != 0, input$stride != 0)
+      print(paste0("observeEvent wlen -> wlen ",  input$wlen, " stride ", input$stride))
       old_value = input$stride
       freezeReactiveValue(input, "stride")
       updateSliderInput(session = session, inputId = "stride", 
@@ -124,7 +139,7 @@ shinyServer(function(input, output, session) {
 
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
-      #freezeReactiveValue(input, "select_variables")
+          #freezeReactiveValue(input, "select_variables")
       ts_variables$selected <- names(tsdf())
       updateCheckboxGroupInput(session = session,
                                inputId = "select_variables",
@@ -208,7 +223,9 @@ shinyServer(function(input, output, session) {
     
     # Observe to check/uncheck all variables
     observeEvent(input$selectall,{
-        ts_variables$selected <- names(req(tsdf()))
+        req(tsdf)
+        ts_variables$selected <- names(tsdf())
+        #ts_variables$selected <- names(req(tsdf()))
         if(input$selectall %%2 == 0){
             updateCheckboxGroupInput(session = session, 
                                      inputId = "select_variables",
@@ -230,6 +247,7 @@ shinyServer(function(input, output, session) {
     X <- reactive({
       req(input$wlen != 0, input$stride != 0, tsdf())
       print("X")
+      print(paste0("X | wlen ", input$wlen, " | stride ", input$stride))
       tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
     })
     
@@ -282,17 +300,27 @@ shinyServer(function(input, output, session) {
     embs = reactive({
       req(X(), enc())
       print("embs")
+      if (print(torch$cuda$is_available())){
+        print(paste0("CUDA devices: ", torch$cuda$device_count))
+      } else {
+        print("CUDA NOT AVAILABLE")
+      }
+      #print(X()) #--
+      #print(enc()) #--
       dvats$get_enc_embs(X = X(), enc_learn = enc(), cpu = F)
     })
     
-    # Get stride value
-    s = reactive({
+    # Obtener el valor de stride
+    enc_ar_stride = reactive({
         req(enc_ar())$metadata$stride
     })
+
+    
     
     prj_object <- reactive({
       embs = req(embs(), input$dr_method)
       print("prj_object")
+      print(embs) #--
       res = switch(input$dr_method,
              UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)),
              TSNE = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)),
@@ -305,17 +333,18 @@ shinyServer(function(input, output, session) {
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
       req(input$wlen != 0, input$stride != 0, ts_ar())
+      req(input$dataset, input$encoder)
       print("tsdf")
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
       # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
       # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
       tryCatch({
-        print("Before tsdf py_load_object")
+        print("tsdf py_load_object")
+        print(DEFAULT_PATH_WANDB_ARTIFACTS)
+        print(ts_ar()$metadata$TS$hash)
         py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
-        print("Before tsdf row_names_to_column")
         rownames_to_column("timeindex") %>% 
         # slice(first_data_index:last_data_index) %>%
-        print("Before tsdf column to rownames")
         column_to_rownames(var = "timeindex")
       }, error = function(e){
             print(paste0("Error while loading TimeSeries object. Error:", e$message))
@@ -340,10 +369,13 @@ shinyServer(function(input, output, session) {
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-      req(prj_object())
+      req(prj_object(), embs(), input$dr_method)
+
       #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
-      prjs <- req(prj_object())
+      prjs <- prj_object()
       print("projections")
+      req(input$dataset, input$encoder, input$wlen, input$stride)
+      
       switch(clustering_options$selected,
              precomputed_clusters={
                filename <- req(selected_clusters_labels_ar())$metadata$ref$hash
@@ -457,9 +489,23 @@ shinyServer(function(input, output, session) {
     #############
     
     # Generate encoder info table
+    #output$enc_info = renderDataTable({
+    #  print("enc_info")
+      #map(~ .$value) %>%
+    #  encoder_artiffact <- req(enc_ar())
+    #  print(paste0("Encoder artiffact", encoder_artiffact))
+      #req(enc_ar())$metadata %>%
+    #  print("Encoder artiffact metadata")
+    #  print(encoder_artiffact$metadata)
+    #  encoder_artiffact$metadata %>%
+    #    enframe()
+    #})
     output$enc_info = renderDataTable({
-      req(enc_ar())$metadata %>% 
-        #map(~ .$value) %>%
+          print(paste0("Encoder artiffact", encoder_artiffact))
+        selected_encoder_name <- req(input$encoder)
+        selected_encoder <- encs_l[[selected_encoder_name]]
+        encoder_metadata <- req(selected_encoder$metadata)
+        encoder_metadata %>%
         enframe()
     })
     
@@ -475,6 +521,7 @@ shinyServer(function(input, output, session) {
        
     # Generate projections plot
     output$projections_plot <- renderPlot({
+        req(input$dataset, input$encoder, input$wlen, input$stride)
         prjs_ <- req(projections())
         print("projections_plot")
         # Prepare the column highlight to color data
@@ -503,11 +550,13 @@ shinyServer(function(input, output, session) {
             theme(legend.position = "none")
 
         observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
+            req(input$dataset, input$encoder, input$wlen, input$stride)
+            #print("!-- CUDA?: ", torch$cuda$is_available())
             prjs_ <- req(projections())
             filename <- prjs_plot_name()
-            print(paste("saving embedding plot to ",filename))
+            #print(paste("saving embedding plot to ",filename))
             ggsave(filename = filename, plot = plt, path="../data/plots/") 
-            print("Embeding plot saved")
+            #print("Embeding plot saved")
         })
         
         plt
@@ -526,6 +575,7 @@ shinyServer(function(input, output, session) {
     
     # Render information about the selected point in the time series graph
     output$point <- renderText({
+        req(input$ts_plot_dygraph_click$x_closest_point)
         ts_idx = which(ts_plot()$ts$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
         paste0('X = ', strftime(req(input$ts_plot_dygraph_click$x_closest_point), "%F %H:%M:%S"), 
                '; Y = ', req(input$ts_plot_dygraph_click$y_closest_point),
@@ -554,12 +604,12 @@ shinyServer(function(input, output, session) {
     
     # Generate time series plot
     output$ts_plot_dygraph <- renderDygraph({
-        req (input$dataset, input$encoder)
-        print("Saving time series plot")
+        req (input$dataset, input$encoder, input$wlen, input$stride)
+        #print("Saving time series plot")
         ts_plot <- req(ts_plot())
-        save_path <- file.path("..", "data", "plots", ts_plot_name())
-        htmlwidgets::saveWidget(ts_plot, file = save_path, selfcontained=TRUE)
-        print(paste0("Time series plot saved to", save_path))
+        #save_path <- file.path("..", "data", "plots", ts_plot_name())
+        #htmlwidgets::saveWidget(ts_plot, file = save_path, selfcontained=TRUE)
+        #print(paste0("Time series plot saved to", save_path))
         ts_plot
       #req(ts_plot())
     })
@@ -567,14 +617,14 @@ shinyServer(function(input, output, session) {
 
     ########### Saving graphs in local
     get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster){
-        print("Getting embedding plot name")
+        #print("Getting embedding plot name")
         plt_name <- paste0(dataset_name,"_", encoder_name, "_", input$dr_method)
         if (!is.null(selected) && selected == "precomputed_clusters") {
             plt_name <- paste0(plt_name, "_cluster_", cluster, "_prjs.png")
         } else {
             plt_name <- paste0(plt_name, "_prjs.png")
         }
-        print(paste0("embeddings plot name", plt_name))
+        #print(paste0("embeddings plot name", plt_name))
         plt_name
     }
 

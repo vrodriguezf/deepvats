@@ -1,6 +1,6 @@
 version: '1'
 services:
-  jupyter:
+  jupyter-macu:
     build:
       args:
         - username=${USER_NAME}
@@ -34,7 +34,7 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]
-  rstudio-server:
+  rstudio-server-macu:
       build:
           context: ../
           dockerfile: docker/Dockerfile.rstudio

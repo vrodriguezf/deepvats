@@ -107,19 +107,28 @@ shinyServer(function(input, output, session) {
             value = wlen
         )
     })
-    observe({
-        if (input$stride == 0){
-            updateSliderInput(session, "stride", value=enc_ar_stride())
-        }
+
+    # Obtener el valor de stride
+    enc_ar_stride = reactive({
+        req(enc_ar())$metadata$stride
     })
+        
     observeEvent(input$wlen, {
-      req(input$wlen != 0, input$stride != 0)
-      print(paste0("observeEvent wlen -> wlen ",  input$wlen, " stride ", input$stride))
-      old_value = input$stride
-      freezeReactiveValue(input, "stride")
-      updateSliderInput(session = session, inputId = "stride", 
-                        min = 1, max = input$wlen, 
-                        value = ifelse(old_value <= input$wlen, old_value, 1))
+        req(input$wlen != 0, input$stride)
+        print(paste0("observeEvent wlen | wlen ",  input$wlen, " stride ", input$stride))
+        tryCatch({
+            old_value = ifelse(input$stride > 0, input$stride, enc_ar_stride())
+            freezeReactiveValue(input, "stride")
+            print(paste0("ovserveEvent wlen | Update stride to ", old_value))
+            updateSliderInput(
+                session = session, inputId = "stride", 
+                min = 1, max = input$wlen, 
+                value = ifelse(old_value <= input$wlen, old_value, 1)
+            )
+            print(paste0("observeEvent wlen  | After -> wlen min ",  min, " max ", max, " current value ", input$stride))
+        }, error = function(e){
+            print(paste0("Error: ", e$message))
+        })
     })
 
     # Update "metric_hdbscan" selectInput when the app is loaded
@@ -310,10 +319,7 @@ shinyServer(function(input, output, session) {
       dvats$get_enc_embs(X = X(), enc_learn = enc(), cpu = F)
     })
     
-    # Obtener el valor de stride
-    enc_ar_stride = reactive({
-        req(enc_ar())$metadata$stride
-    })
+    
 
     
     

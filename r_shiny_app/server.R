@@ -130,7 +130,7 @@ shinyServer(function(input, output, session) {
         
     observeEvent(input$wlen, {
         print("--> observeEvent input_wlen | update slide stride value")
-        req(input$wlen != 0)
+        #req(input$wlen != 0)
         print(paste0("observeEvent input_wlen | update slide stride value | wlen ",  input$wlen, " stride ", input$stride))
         tryCatch({
             old_value = ifelse(input$stride > 0, input$stride, enc_ar_stride())
@@ -196,7 +196,7 @@ shinyServer(function(input, output, session) {
     observe({
         print("--> observe | precomputed_cluster selected ")
         precomputed_clusters$selected <- req(input$clusters_labels_name)
-        on.exit(print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected)))
+        print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected))
     })
     
     
@@ -204,7 +204,7 @@ shinyServer(function(input, output, session) {
     observe({
         print("--> Observe clustering options")
         clustering_options$selected <- req(input$clustering_options)
-        on.exit(print("Observe clustering options -->"))
+        print("Observe clustering options -->")
     })
 
     

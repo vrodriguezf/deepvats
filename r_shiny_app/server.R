@@ -125,10 +125,16 @@ shinyServer(function(input, output, session) {
                 min = 1, max = input$wlen, 
                 value = ifelse(old_value <= input$wlen, old_value, 1)
             )
-            print(paste0("observeEvent wlen  | After -> wlen min ",  min, " max ", max, " current value ", input$stride))
-        }, error = function(e){
-            print(paste0("Error: ", e$message))
-        })
+            }, 
+            error = function(e){
+                print(paste0("observeEvent wlen | Error |  ", e))
+            }, 
+            warning = function(w) {
+                message(paste0("observeEvent | Warning | ", w))
+            }
+        )
+        print(paste0("observeEvent wlen  | Finally |  wlen min ",  min, " max ", max, " current value ", input$stride))
+
     })
 
     # Update "metric_hdbscan" selectInput when the app is loaded
@@ -262,8 +268,10 @@ shinyServer(function(input, output, session) {
     
     # Time series artifact
     ts_ar = eventReactive(input$dataset, {
-      print("ts_ar hash")
-      api$artifact(req(input$dataset), type='dataset')
+        req(input$dataset)
+        print(paste0("ts_ar  | stride ", input$stride))
+        print(paste0("ts_ar  | hash ", input$dataset))
+        api$artifact(input$dataset, type='dataset')
     }, label = "ts_ar")
     
     # Get timeseries artifact metadata
@@ -340,20 +348,20 @@ shinyServer(function(input, output, session) {
     tsdf <- reactive({
       req(input$wlen != 0, input$stride != 0, ts_ar())
       req(input$dataset, input$encoder)
-      print("tsdf")
+      print("reactive tsdf")
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
       # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
       # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
       tryCatch({
-        print("tsdf py_load_object")
-        print(DEFAULT_PATH_WANDB_ARTIFACTS)
-        print(ts_ar()$metadata$TS$hash)
-        py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
+        ts_ar_hash=ts_ar()$metadata$TS$hash
+        print(paste0("reactive tsdf |  py_load_object ", DEFAULT_PATH_WANDB_ARTIFACTS, " hash ", ts_ar_hash ))
+        py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)) %>% 
         rownames_to_column("timeindex") %>% 
-        # slice(first_data_index:last_data_index) %>%
         column_to_rownames(var = "timeindex")
+        print("Object loaded")
+        # slice(first_data_index:last_data_index) %>% 
       }, error = function(e){
-            print(paste0("Error while loading TimeSeries object. Error:", e$message))
+            print(paste0("reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
             print("Retry TimeSeries load")
             tryCatch({
                 py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
@@ -361,10 +369,18 @@ shinyServer(function(input, output, session) {
                 # slice(first_data_index:last_data_index) %>%
                 column_to_rownames(var = "timeindex")
             }, error = function(e){
-                print(paste0("Error while loading TimeSeries object. Exit. Error:", e$message))
+                print(paste0("reactive tsdf |2| Error while loading TimeSeries object. Exit. Error:", e$message))
                 data.frame()
-            })
-        })
+            }, 
+            warning = function(w){
+            print(paste0("reactive tsdf |2| Warning ", w))
+        }
+            )
+        }, 
+        warning = function(w){
+            print(paste0("reactive tsdf | Warning ", w))
+        }
+        )
     })
     
     # Auxiliary object for the interaction ts->projections

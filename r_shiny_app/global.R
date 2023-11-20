@@ -19,7 +19,6 @@ library(stringr)
 ##################QUITAR CUANDO YA TIRE
 library(reactlog)
 reactlog::reactlog_enable()
-
 #options(shiny.trace = TRUE)
 torch <- reticulate::import("torch")
 #options(shiny.trace = TRUE)

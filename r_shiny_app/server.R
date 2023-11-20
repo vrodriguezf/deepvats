@@ -98,9 +98,10 @@ shinyServer(function(input, output, session) {
     # })
     
     observeEvent(input$encoder, {
-        req(encs_l)
-        enc_ar = req(enc_ar())
         print("--> observeEvent input_encoder | update wlen")
+        #req(encs_l)
+        enc_ar = req(enc_ar())
+        print("--> observeEvent input_encoder | update wlen | After enc_ar known")
 #        req(input$dataset)
         freezeReactiveValue(input, "wlen")
         print("observeEvent input_encoder | update wlen | Set wlen slider values")
@@ -123,9 +124,8 @@ shinyServer(function(input, output, session) {
 
     # Obtener el valor de stride
     enc_ar_stride = reactive({
-        print("--> reactive enc_ar_stride")
+        print("--> reactive enc_ar_stride -->")
         req(enc_ar())$metadata$stride
-        on.exit(print(paste0("reactive enc_ar_stride: ", enc_ar()$metadata$stride)))
     })
         
     observeEvent(input$wlen, {
@@ -133,9 +133,12 @@ shinyServer(function(input, output, session) {
         req(input$wlen != 0)
         print(paste0("observeEvent input_wlen | update slide stride value | wlen ",  input$wlen, " stride ", input$stride))
         tryCatch({
-            old_value = ifelse(input$stride > 0, input$stride, enc_ar_stride())
+            old_value = input$stride
+            if (input$stride == 0){
+                old_value = enc_ar_stride()
+            }
             freezeReactiveValue(input, "stride")
-            print(paste0("ovserveEvent input_wlen | update slide stride value | Update stride to ", old_value))
+            print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value))
             updateSliderInput(
                 session = session, inputId = "stride", 
                 min = 1, max = input$wlen, 
@@ -303,9 +306,8 @@ shinyServer(function(input, output, session) {
     # Time series artifact
     ts_ar = eventReactive(input$dataset, {
         req(input$dataset)
-        print(paste0("--> eventReactive ts_ar | Update dataset artifact  | stride ", input$stride, "| hash ", input$dataset))
+        print(paste0("--> eventReactive ts_ar | Update dataset artifact  | stride ", input$stride, "| hash ", input$dataset, "-->"))
         api$artifact(input$dataset, type='dataset')
-        print("eventReactive ts_ar | Update dataset artifact -->")
     }, label = "ts_ar")
     
     # Get timeseries artifact metadata
@@ -341,17 +343,15 @@ shinyServer(function(input, output, session) {
     
     # Get encoder artifact
     enc_ar = eventReactive(input$encoder, {
-        print("--> eventReactive enc_ar")
+        print("--> eventReactive enc_ar --> ")
         print(paste0("eventReactive enc_ar | Enc. Artifact: ", input$encoder))
         api$artifact(input$encoder, type = 'learner')
-        on.exit(print("eventReactive enc_ar -->"))
     }, ignoreInit = T)
     
     # Encoder
     enc = eventReactive(enc_ar(), {
-        print("--> eventReactive enc | load encoder")
+        print("--> eventReactive enc | load encoder -->")
         py_load_object(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, enc_ar()$metadata$ref$hash))
-        on.exit(print("eventReactive enc | load encoder -->"))
     })
     
     embs = reactive({

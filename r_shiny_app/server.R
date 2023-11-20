@@ -60,8 +60,8 @@ shinyServer(function(input, output, session) {
     #################################
     observeEvent(req(exists("encs_l")), {
         print("--> observeEvent encoders list encs_l | update dataset list")
-        print("observeEvent enc_l | update dataset list")
         freezeReactiveValue(input, "dataset")
+        print("observeEvent encoders list enc_l | update dataset list | after freeze")
         updateSelectizeInput(
             session = session,
             inputId = "dataset",
@@ -73,7 +73,7 @@ shinyServer(function(input, output, session) {
     }, label = "input_dataset")
     
     observeEvent(input$dataset, {
-        req(exists("encs_l"))
+        req(encs_l)
         print("--> observeEvent input_dataset | update encoder list")
         print(input$dataset)
         freezeReactiveValue(input, "encoder")
@@ -98,9 +98,10 @@ shinyServer(function(input, output, session) {
     # })
     
     observeEvent(input$encoder, {
+        req(encs_l)
+        enc_ar = req(enc_ar())
         print("--> observeEvent input_encoder | update wlen")
 #        req(input$dataset)
-        enc_ar = req(enc_ar())
         freezeReactiveValue(input, "wlen")
         print("observeEvent input_encoder | update wlen | Set wlen slider values")
         if (is.null(enc_ar$metadata$mvp_ws)) {
@@ -129,7 +130,7 @@ shinyServer(function(input, output, session) {
         
     observeEvent(input$wlen, {
         print("--> observeEvent input_wlen | update slide stride value")
-        req(input$wlen != 0, input$stride)
+        req(input$wlen != 0)
         print(paste0("observeEvent input_wlen | update slide stride value | wlen ",  input$wlen, " stride ", input$stride))
         tryCatch({
             old_value = ifelse(input$stride > 0, input$stride, enc_ar_stride())
@@ -195,7 +196,7 @@ shinyServer(function(input, output, session) {
     observe({
         print("--> observe | precomputed_cluster selected ")
         precomputed_clusters$selected <- req(input$clusters_labels_name)
-        print("observe | precomputed_cluster selected --> ")
+        on.exit(print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected)))
     })
     
     
@@ -338,7 +339,8 @@ shinyServer(function(input, output, session) {
     
     # Get encoder artifact
     enc_ar = eventReactive(input$encoder, {
-        print(paste0("--> eventReactive enc_ar | Enc. Artifact: ", input$encoder))
+        print("--> eventReactive enc_ar")
+        print(paste0("eventReactive enc_ar | Enc. Artifact: ", input$encoder))
         api$artifact(input$encoder, type = 'learner')
         on.exit(print("eventReactive enc_ar -->"))
     }, ignoreInit = T)

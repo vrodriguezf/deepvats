@@ -1,4 +1,12 @@
-istening on http://127.0.0.1:6495
+
+
+> shiny::runApp("app")
+[1] "CUDA AVAILABLE. Num devices: 3"
+[1] ""
+[1] "Querying encoders"
+[1] "Done!"
+
+Listening on http://127.0.0.1:6495
 [1] "--> observeEvent encoders list encs_l | update dataset list"
 [1] "observeEvent encoders list enc_l | update dataset list | after freeze"
 [1] "observeEvent encoders list encs_l | update dataset list -->"
@@ -28,7 +36,8 @@ istening on http://127.0.0.1:6495
 [1] "observeEvent input_encoder | update wlen -->"
 [1] "--> observeEvent input_wlen | update slide stride value"
 [1] "observeEvent input_wlen | update slide stride value | wlen 900 stride 0"
-[1] "--> reactive enc_ar_stride"
-[1] "reactive enc_ar_stride: 15"
-observeEvent input_wlen | update slide stride value | Warning | 'x' is NULL so the result will be NULL
-[1] "observeEvent input_wlen | update slide stride value | Finally |  wlen min 1 max 900 current value 0 -->"
+[1] "--> reactive enc_ar_stride -->"
+[1] "oserveEvent input_wlen | update slide stride value | Update stride to 15"
+[1] "--> eventReactive ts_ar | Update dataset artifact  | stride 15| hash mi-santamaria/deepvats/Monash-solar_4_seconds:latest-->"
+[1] "reactive tsdf"
+[1] "reactive tsdf | py_load_object /home/macu/data/wandb_artifacts hash -2535364569820284064"

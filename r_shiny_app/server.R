@@ -59,7 +59,7 @@ shinyServer(function(input, output, session) {
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
     observeEvent(req(exists("encs_l")), {
-        print("--> observeEvent encoders list encs_l | update dataset list")
+        #print("--> observeEvent encoders list encs_l | update dataset list")
         freezeReactiveValue(input, "dataset")
         print("observeEvent encoders list enc_l | update dataset list | after freeze")
         updateSelectizeInput(
@@ -69,11 +69,11 @@ shinyServer(function(input, output, session) {
             map(~.$metadata$train_artifact) %>% 
             set_names()
         )
-        on.exit(print("observeEvent encoders list encs_l | update dataset list -->"))
+        #on.exit(print("observeEvent encoders list encs_l | update dataset list -->"))
     }, label = "input_dataset")
     
     observeEvent(input$dataset, {
-        req(encs_l)
+        #req(encs_l)
         print("--> observeEvent input_dataset | update encoder list")
         print(input$dataset)
         freezeReactiveValue(input, "encoder")
@@ -86,7 +86,7 @@ shinyServer(function(input, output, session) {
             #map(~ .$metadata$enc_artifact) %>% 
             names
         )
-        on.exit(print("observeEvent input_dataset | update encoder list -->"))
+        #on.exit(print("observeEvent input_dataset | update encoder list -->"))
     }, label = "input_encoder")
     
     # observeEvent(input$encoder, {
@@ -99,7 +99,7 @@ shinyServer(function(input, output, session) {
     
     observeEvent(input$encoder, {
         print("--> observeEvent input_encoder | update wlen")
-        #req(encs_l)
+        req(encs_l)
         enc_ar = req(enc_ar())
         print("--> observeEvent input_encoder | update wlen | After enc_ar known")
 #        req(input$dataset)
@@ -119,7 +119,7 @@ shinyServer(function(input, output, session) {
             max = wmax,
             value = wlen
         )
-        on.exit(print("observeEvent input_encoder | update wlen -->"))
+        #on.exit(print("observeEvent input_encoder | update wlen -->"))
     })
 
     # Obtener el valor de stride
@@ -152,9 +152,9 @@ shinyServer(function(input, output, session) {
                 message(paste0("observeEvent input_wlen | update slide stride value | Warning | ", w$message))
             }
         )
-        on.exit(print(paste0(
-            "observeEvent input_wlen | update slide stride value | Finally |  wlen min ",  
-            1, " max ", input$wlen, " current value ", input$stride, " -->")))
+        #on.exit(print(paste0(
+         #   "observeEvent input_wlen | update slide stride value | Finally |  wlen min ",  
+          #  1, " max ", input$wlen, " current value ", input$stride, " -->")))
     })
 
     # Update "metric_hdbscan" selectInput when the app is loaded
@@ -165,7 +165,7 @@ shinyServer(function(input, output, session) {
             inputId = "metric_hdbscan",
             choices = names(req(hdbscan_metrics))
         )
-        on.exit(print("observe metric_hdbscan | update metric_hdbscan choices-->"))
+        #on.exit(print("observe metric_hdbscan | update metric_hdbscan choices-->"))
     })
     # Update the range of point selection when there is new data
     # observeEvent(X(), {
@@ -187,7 +187,7 @@ shinyServer(function(input, output, session) {
             choices = ts_variables$selected,
             selected = ts_variables$selected
         )
-        on.exit(print("--> observeEvent tsdf | update select variables -->"))
+        #on.exit(print("--> observeEvent tsdf | update select variables -->"))
     }, label = "select_variables")
     
     # Update slider_range reactive values with current samples range
@@ -220,7 +220,7 @@ shinyServer(function(input, output, session) {
         clusters_config$min_cluster_size_hdbscan <- req(input$min_cluster_size_hdbscan)
         clusters_config$min_samples_hdbscan <- req(input$min_samples_hdbscan)
         clusters_config$cluster_selection_epsilon_hdbscan <- req(input$cluster_selection_epsilon_hdbscan)
-        on.exit(print("observe event calculate_clusters | update clusters_config -->"))
+        #on.exit(print("observe event calculate_clusters | update clusters_config -->"))
     })
     
     
@@ -241,7 +241,7 @@ shinyServer(function(input, output, session) {
             ranges$x <- NULL
             ranges$y <- NULL
         }
-        on.exit(print("observeEvent zoom_btn -->"))
+        #on.exit(print("observeEvent zoom_btn -->"))
     })
     
     
@@ -300,7 +300,7 @@ shinyServer(function(input, output, session) {
         req(input$wlen != 0, input$stride != 0, tsdf())
         print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride))
         tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
-        on.exit(print("Reactive X | Update Sliding Window -->"))
+        #on.exit(print("Reactive X | Update Sliding Window -->"))
     })
     
     # Time series artifact
@@ -312,8 +312,9 @@ shinyServer(function(input, output, session) {
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
-        print("--> reactive ts_ar_config | Update ts_ar & list used artifacts")
+        print("--> reactive ts_ar_config | List used artifacts")
         ts_ar <- req(ts_ar())
+        print(paste0("reactive ts_ar_config | List used artifacts | hash", ts_ar$hash))
         list_used_arts = ts_ar$metadata$TS
         list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
         list_used_arts$name = ts_ar$name
@@ -322,7 +323,6 @@ shinyServer(function(input, output, session) {
         list_used_arts$id = ts_ar$id
         list_used_arts$created_at = ts_ar$created_at
         list_used_arts
-        print("reactive ts_ar_config | Update ts_ar & list used artifacts -->")
     })
     
     # selected_embs_ar = eventReactive(input$embs_ar, {
@@ -345,7 +345,12 @@ shinyServer(function(input, output, session) {
     enc_ar = eventReactive(input$encoder, {
         print("--> eventReactive enc_ar --> ")
         print(paste0("eventReactive enc_ar | Enc. Artifact: ", input$encoder))
-        api$artifact(input$encoder, type = 'learner')
+        tryCatch({
+            api$artifact(input$encoder, type = 'learner')
+        }, error = function(e){
+            print(paste0("eventReactive enc_ar | Error: ", e$message))
+        }
+        )
     }, ignoreInit = T)
     
     # Encoder
@@ -365,7 +370,7 @@ shinyServer(function(input, output, session) {
       #print(X()) #--
       #print(enc()) #--
       dvats$get_enc_embs(X = X(), enc_learn = enc(), cpu = F)
-      on.exit(print("reactive embs | get embeddings -->"))
+      #on.exit(print("reactive embs | get embeddings -->"))
     })
     
     
@@ -375,7 +380,7 @@ shinyServer(function(input, output, session) {
     prj_object <- reactive({
       embs = req(embs(), input$dr_method)
       print("prj_object")
-      print(embs) #--
+      #print(embs) #--
       res = switch(input$dr_method,
              UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)),
              TSNE = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)),
@@ -387,14 +392,16 @@ shinyServer(function(input, output, session) {
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({
-      req(input$wlen != 0, input$stride != 0, ts_ar())
+      req(input$wlen != 0, input$stride != 0)
       req(input$dataset, input$encoder)
-      print("reactive tsdf")
+      print("--> reactive tsdf")
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
       # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
       # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
       tryCatch({
-        ts_ar_hash=ts_ar()$metadata$TS$hash
+        ts_ar = req(ts_ar())
+        print(paste0("reactive tsdf | ts artifact ", ts_ar))
+        ts_ar_hash=ts_ar$metadata$TS$hash
         print(paste0("reactive tsdf | py_load_object ", DEFAULT_PATH_WANDB_ARTIFACTS, " hash ", ts_ar_hash ))
         py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)) %>% 
         rownames_to_column("timeindex") %>% 
@@ -404,7 +411,7 @@ shinyServer(function(input, output, session) {
             print(paste0("reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
             print("Retry TimeSeries load")
             tryCatch({
-                py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
+                py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)) %>% 
                 rownames_to_column("timeindex") %>% 
                 # slice(first_data_index:last_data_index) %>%
                 column_to_rownames(var = "timeindex")
@@ -421,7 +428,7 @@ shinyServer(function(input, output, session) {
             print(paste0("reactive tsdf | Warning ", w))
         }
         )
-        on.exit(print("reactive tsdf | Object loaded"))
+        #on.exit(print("reactive tsdf | Object loaded"))
     })
     
     # Auxiliary object for the interaction ts->projections
@@ -633,7 +640,7 @@ shinyServer(function(input, output, session) {
                  click = "projections_click",
                  brush = "projections_brush",
                  height = input$embedding_plot_height) %>% withSpinner()
-        on.exit(print("output projections_plot_UI -->"))      
+        #on.exit(print("output projections_plot_UI -->"))      
     })
     
     

@@ -130,7 +130,7 @@ shinyServer(function(input, output, session) {
         
     observeEvent(input$wlen, {
         print("--> observeEvent input_wlen | update slide stride value")
-        #req(input$wlen != 0)
+        req(input$wlen != 0)
         print(paste0("observeEvent input_wlen | update slide stride value | wlen ",  input$wlen, " stride ", input$stride))
         tryCatch({
             old_value = ifelse(input$stride > 0, input$stride, enc_ar_stride())
@@ -143,13 +143,15 @@ shinyServer(function(input, output, session) {
             )
             }, 
             error = function(e){
-                print(paste0("observeEvent input_wlen | update slide stride value | Error |  ", e))
+                print(paste0("observeEvent input_wlen | update slide stride value | Error | ", e$message))
             }, 
             warning = function(w) {
-                message(paste0("observeEvent input_wlen | update slide stride value | Warning | ", w))
+                message(paste0("observeEvent input_wlen | update slide stride value | Warning | ", w$message))
             }
         )
-        on.exit(print(paste0("observeEvent input_wlen | update slide stride value | Finally |  wlen min ",  min, " max ", max, " current value ", input$stride, " -->")))
+        on.exit(print(paste0(
+            "observeEvent input_wlen | update slide stride value | Finally |  wlen min ",  
+            1, " max ", input$wlen, " current value ", input$stride, " -->")))
     })
 
     # Update "metric_hdbscan" selectInput when the app is loaded

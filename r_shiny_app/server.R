@@ -309,6 +309,17 @@ shinyServer(function(input, output, session) {
         print(paste0("--> eventReactive ts_ar | Update dataset artifact  | stride ", input$stride, "| hash ", input$dataset, "-->"))
         api$artifact(input$dataset, type='dataset')
     }, label = "ts_ar")
+
+    #ts_ar <- eventReactive(input$dataset, {
+    #    req(input$dataset)
+    #    print(paste0("--> eventReactive ts_ar | Update dataset artifact  | stride ", input$stride, "| hash ", input$dataset, "-->"))
+    #    dataset <- api$artifact(input$dataset, type='dataset')
+    #    if(anyDuplicated(rownames(dataset))) {
+    #        print("eventReactive ts_ar | Update dataset artifact | delete duplicated rows")
+    #        dataset <- dataset[!duplicated(rownames(dataset)), ]
+    #    }
+    #    dataset
+    #}, label = "ts_ar")
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
@@ -421,11 +432,13 @@ shinyServer(function(input, output, session) {
             }, 
             warning = function(w){
             print(paste0("reactive tsdf |2| Warning ", w))
+            data.frame()
         }
             )
         }, 
         warning = function(w){
             print(paste0("reactive tsdf | Warning ", w))
+            data.frame()
         }
         )
         #on.exit(print("reactive tsdf | Object loaded"))

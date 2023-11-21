@@ -121,7 +121,7 @@ RUN chmod u+x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
-ARG JUPYTER_TOKEN
+ARG JUPYTER_TOKEN=${JUPYTER_TOKEN}
 RUN echo "token:"${JUPYTER_TOKEN}
 # default command will be to launch JupyterLab server for development
 CMD [ "jupyter", "lab", "--no-browser", "--ip", "0.0.0.0", "--ContentsManager.allow_hidden=True", "--NotebookApp.token=${JUPYTER_TOKEN}"]

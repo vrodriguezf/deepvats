@@ -7,6 +7,7 @@ services:
         - uid=${USER_ID}
         - gid=${GROUP_ID}
         - CUDA_VERSION=12.2.0-devel-ubuntu20.04
+        - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       context: ../
       dockerfile: docker/Dockerfile.jupyter
     image: dvats-jupyter:12.2.0-devel-ubuntu20.04
@@ -31,9 +32,12 @@ services:
     tty: true
     deploy:
       resources:
-        reservations:
+        reservations:          
           devices:
-            - capabilities: [gpu]
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+            
   rstudio-server-macu:
       build:
           context: ../

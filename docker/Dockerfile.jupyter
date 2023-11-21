@@ -125,7 +125,5 @@ ARG JUPYTER_TOKEN
 ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
 RUN echo "token:"${JUPYTER_TOKEN}
 # default command will be to launch JupyterLab server for development
-#ARG set_password=--NotebookApp.token=${JUPYTER_TOKEN}
-#CMD [ "jupyter", "lab", "--no-browser", "--ip", "0.0.0.0", "--ContentsManager.allow_hidden=True", "$set_password"]
-#CMD "jupyter lab --no-browser --ip 0.0.0.0 --ContentsManager.allow_hidden=True --NotebookApp.token=$JUPYTER_TOKEN"
+
 CMD ["sh", "-c", "jupyter lab --no-browser --ip 0.0.0.0 --ContentsManager.allow_hidden=True --NotebookApp.token=$JUPYTER_TOKEN"]

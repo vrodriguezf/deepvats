@@ -298,9 +298,16 @@ shinyServer(function(input, output, session) {
     X <- reactive({
         print("--> Reactive X | Update Sliding Window")
         req(input$wlen != 0, input$stride != 0, tsdf())
-        print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride))
-        tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
-        #on.exit(print("Reactive X | Update Sliding Window -->"))
+        print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
+        #tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
+        enc_input <- tsai_data$prepare_forecasting_data(tsdf(), fcst_history = input$wlen)[[1]]
+        print(paste0("reactive X | Apply stride | enc_input ~ ", dim(enc_input)))
+        indexes <- seq(1, dim(enc_input)[1], input$stride)
+        print(paste0("reactive X | Apply stride | stride ", input$stride,  " | first 5 indexes ~ ", indexes[1:5] ))
+        enc_input <- enc_input[indexes, , ]
+        print(paste0("reactive X | enc_input ~", dim(enc_input)))
+        enc_input
+        on.exit(print("Reactive X | Update Sliding Window -->"))
     })
     
     # Time series artifact

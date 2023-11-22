@@ -24,7 +24,8 @@ torch <- reticulate::import("torch")
 #options(shiny.trace = TRUE)
 if(torch$cuda$is_available()){
   print(paste0("CUDA AVAILABLE. Num devices: ", torch$cuda$device_count()))
-  torch$cuda$set_device(as.integer(1))
+  torch$cuda$set_device(as.integer(0))
+  #torch$cuda$set_device(as.integer(1))
   #print(torch$cuda$memory_summary())
   print(Sys.getenv("PYTORCH_CUDA_ALLOC_CONF"))
 } else {

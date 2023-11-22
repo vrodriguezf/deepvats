@@ -114,6 +114,18 @@ def get_artifact_config_MVP_auxiliar_variables(print_flag):
     mvp_ws = (mvp_ws1,mvp_ws2)
     return user, project, version, data, config, train_artifact_, mvp_ws, user_preferences
 
+def get_artifact_config_MVP_auxiliar_variables_SWV(print_flag):
+    #Get neccesary variables
+    user, project, version, data = get_project_data(print_flag)
+    config          = get_config(print_flag, "02c-encoder_mvp-sliding_window_view")
+    user_preferences = config.user_preferences
+    config = config.configuration
+    train_artifact_ = get_train_artifact(user,project,data)    
+    mvp_ws1         = config.specifications.mvp.ws1
+    mvp_ws2         = config.specifications.mvp.ws2
+    mvp_ws = (mvp_ws1,mvp_ws2)
+    return user, project, version, data, config, train_artifact_, mvp_ws, user_preferences
+
 def check_project_and_entity(user, project):
     os_entity = os.environ['WANDB_ENTITY']
     os_project = os.environ['WANDB_PROJECT']
@@ -135,6 +147,32 @@ def get_artifact_config_MVP_check_errors(artifact_config, user, project):
 
 def get_artifact_config_MVP(print_flag=False):
     user, project, version, data, config, train_artifact_, mvp_ws, user_preferences = get_artifact_config_MVP_auxiliar_variables(print_flag)
+
+    artifact_config = AttrDict(
+        alias                   = config.alias,
+        analysis_mode           = config.wandb.mode, 
+        batch_size              = config.specifications.batch_size,
+        epochs                  = config.specifications.n_epoch,
+        mask_future             = config.specifications.mask.future,
+        mask_stateful           = config.specifications.mask.stateful,
+        mask_sync               = config.specifications.mask.sync,
+        mvp_ws                  = mvp_ws, 
+        norm_by_sample          = config.specifications.mvp.normalize.by_sample,
+        norm_use_single_batch   = config.specifications.mvp.normalize.use_single_batch,
+        r                       = config.specifications.mvp.r,
+        stride                  = config.specifications.sliding_windows.stride, 
+        train_artifact          = train_artifact_, 
+        valid_artifact          = None, 
+        use_wandb               = user_preferences.use_wandb, 
+        valid_size              = config.specifications.mvp.valid_size,
+        w                       = config.specifications.sliding_windows.size, 
+        wandb_group             = config.wandb.group
+    )
+    get_artifact_config_MVP_check_errors(artifact_config, user, project)
+    return user, project, version, data, artifact_config, config.job_type
+
+def get_artifact_config_MVP_SWV(print_flag=False):
+    user, project, version, data, config, train_artifact_, mvp_ws, user_preferences = get_artifact_config_MVP_auxiliar_variables_SWV(print_flag)
 
     artifact_config = AttrDict(
         alias                   = config.alias,
@@ -245,7 +283,26 @@ def get_artifact_config_DCAE(print_flag=False):
 # 03 - EMBEDDINGS    #
 ######################
 def get_artifact_config_embeddings(print_flag=False):
-    config = get_config(print_flag, "03-embeddings")
+    config = get_config(print_flag, "03a-embeddings")
+    job_type=config.job_type
+    version = config.user_preferences.wdb.version
+    enc_artifact = build_enc_artifact(config, print_flag)
+    config = config.configuration
+    artifact_config = AttrDict(
+        use_wandb       = config.wandb.use,
+        wandb_group     = config.wandb.group,
+        wandb_entity    = config.wandb.entity,
+        wandb_project   = config.wandb.project,
+        enc_artifact    = enc_artifact,
+        input_ar        = config.specifications.input_ar,
+        cpu             = config.specifications.cpu
+    )
+    check_project_and_entity(artifact_config.wandb_entity, artifact_config.wandb_project)
+    return artifact_config, job_type
+
+
+def get_artifact_config_embeddings_SWV(print_flag=False):
+    config = get_config(print_flag, "03b-embeddings-sliding_window_view")
     job_type=config.job_type
     version = config.user_preferences.wdb.version
     enc_artifact = build_enc_artifact(config, print_flag)

@@ -24,8 +24,9 @@ def recursive_attrdict(d):
         return AttrDict({k: recursive_attrdict(v) for k, v in d.items()})
     return d
 
-def replace_includes_with_content(filename, path = "./"):
-    print("... About to replace includes with content")
+def replace_includes_with_content(filename, path = "./", print_flag = False):
+    if (print_flag):
+        print("... About to replace includes with content")
     with open(path+filename, 'r') as f:
         content = f.read()
         
@@ -56,11 +57,12 @@ def get_config(print_flag=False, filename="base"):
         current_directory = os.getcwd()
         print("Current: " + current_directory)
         print("yml: "+ path + filename)
-    print("yml: "+ path + filename)
     yaml.add_constructor('!join', join_constructor)
-    print("Getting content"+ path + filename)
-    full_content = replace_includes_with_content(filename, path)
-    print("Load content"+ path + filename)
+    if (print_flag): 
+        print("Getting content"+ path + filename)
+    full_content = replace_includes_with_content(filename, path, print_flag)
+    if (print_flag):
+        print("Load content"+ path + filename)
     config = yaml.load(full_content, Loader=yaml.FullLoader)
     return recursive_attrdict(config)
 
@@ -103,7 +105,7 @@ def get_train_artifact(user, project, data):
 def get_artifact_config_MVP_auxiliar_variables(print_flag):
     #Get neccesary variables
     user, project, version, data = get_project_data(print_flag)
-    config          = get_config(print_flag, "02a-encoder_mvp")
+    config          = get_config(print_flag, "02b-encoder_mvp")
     user_preferences = config.user_preferences
     config = config.configuration
     train_artifact_ = get_train_artifact(user,project,data)    
@@ -211,7 +213,7 @@ def get_artifact_config_sd2a(print_flag=False):
 # 02a - ENCODER DCAE #
 ######################
 def get_artifact_config_DCAE(print_flag=False):
-    config = get_config(print_flag, "02b-encoder_dcae")
+    config = get_config(print_flag, "02a-encoder_dcae")
     print("Antes de leer configuration " + str(config))
     enc_artifact = build_enc_artifact(config, print_flag)
     config = config.configuration

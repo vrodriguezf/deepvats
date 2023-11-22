@@ -21,19 +21,20 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder:  &path '~/data/'
-    fname: &fname 'sunspot_dataset_with_missing_values'
+    #fname: &fname 'sunspot_dataset_with_missing_values'
     #fname:   &fname 'ETTh1'
     #fname:   &fname 'solar_4_seconds_dataset'
-    #ftype:   &ftype '.csv' #ETTh1
-    ftype:   &ftype '.tsf' #solar_4_seconds, sunspot
+    fname: &fname 'Semantic_Segmentation_TiltABP'
+    ftype:   &ftype '.csv' #ETTh1
+    #ftype:   &ftype '.tsf' #solar_4_seconds, sunspot
     cols:    &cols []
     freq: &freq '1s'
     #freq:    &freq '4s' #solar_4_seconds, sunspot
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
     #alias: &alias 'ETTh1'
-    alias: &alias 'sunspot'
-    #alias: &alias 'Monash-solar_4_seconds'
+    #alias: &alias 'sunspot'
+    alias: &alias 'TitlABP'
     algorithm: &alg 'mvp'
   directories:
     # Folder to store temporary files
@@ -83,9 +84,9 @@ data:
     test_split: null
     # List or int with the idx(s) of the column containing the timestamp
     # (null if there is no timestamp column)
-    time_col: null #Solar_4_seconds sunspot
+    time_col: null #Solar_4_seconds sunspot TitlABP
     #time_col: 1
-    #time_col: 0 #ETTh1
+    #time_col: 0 #ETTh1 
 
 ########################
 # Wandb specifications #

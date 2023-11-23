@@ -393,24 +393,28 @@ shinyServer(function(input, output, session) {
         )
         print("eventReactive enc | load encoder | Get dataset batchsize")
         dataset_logged_by <- enc_ar$logged_by()
-        enc$bs = dataset_logged_by$config$batch_size
+        enc$bs <- dataset_logged_by$config$batch_size
         print(paste0("eventReactive enc | load encoder | Batchsize: ", enc$bs))
         enc
     })
     
     embs = reactive({
-      req(X(), enc())
-      print("--> reactive embs | get embeddings")
+      req(X(), enc_l <- enc())
+      print(paste0("--> reactive embs | get embeddings | enc_l.bs ", enc_l$bs ))
       if (torch$cuda$is_available()){
-        print(paste0("CUDA devices: ", torch$cuda$device_count))
+        print(paste0("CUDA devices: ", torch$cuda$device_count()))
       } else {
         print("CUDA NOT AVAILABLE")
       }
-      #print(X()) #--
-      #print(enc()) #--
       t_init <- Sys.time()
-      
-      result <- dvats$get_enc_embs(X = X(), enc_learn = enc(), cpu = F)
+      print(
+        paste0(
+            "--> reactive embs | get embeddings | Just about to get embedings. Device number: ", 
+            torch$cuda$current_device(), 
+            " Batch size: ", enc_l$bs
+        )
+    )
+      result <- dvats$get_enc_embs(X = X(), enc_learn = enc_l, cpu = F)
       t_end <- Sys.time()
       diff <- t_end - t_init
       diff_secs <- as.numeric(diff, units = "secs")

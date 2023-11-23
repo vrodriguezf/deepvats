@@ -306,7 +306,7 @@ shinyServer(function(input, output, session) {
         print(dim(enc_input))
         print(dim(enc_input)[1])
         indexes <- seq(1, dim(enc_input)[1], input$stride)
-        print(indexes)
+        print(indexes[1:5])
         enc_input <- enc_input[indexes, , ,drop = FALSE]
         t_fin <- Sys.time()
         t_sliding_window <- t_medio - t_init
@@ -383,8 +383,19 @@ shinyServer(function(input, output, session) {
     
     # Encoder
     enc = eventReactive(enc_ar(), {
+        req(input$dataset, enc_ar <- enc_ar())
         print("--> eventReactive enc | load encoder -->")
-        py_load_object(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, enc_ar()$metadata$ref$hash))
+        enc <- py_load_object(
+            file.path(
+                DEFAULT_PATH_WANDB_ARTIFACTS, 
+                enc_ar$metadata$ref$hash
+            )
+        )
+        print("eventReactive enc | load encoder | Get dataset batchsize")
+        dataset_logged_by <- enc_ar$logged_by()
+        enc$bs = dataset_logged_by$config$batch_size
+        print(paste0("eventReactive enc | load encoder | Batchsize: ", enc$bs))
+        enc
     })
     
     embs = reactive({
@@ -398,6 +409,7 @@ shinyServer(function(input, output, session) {
       #print(X()) #--
       #print(enc()) #--
       t_init <- Sys.time()
+      
       result <- dvats$get_enc_embs(X = X(), enc_learn = enc(), cpu = F)
       t_end <- Sys.time()
       diff <- t_end - t_init

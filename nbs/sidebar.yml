@@ -1,0 +1,9 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - dr.ipynb
+      - encoder.ipynb
+      - load.ipynb
+      - utils.ipynb
+      - visualization.ipynb

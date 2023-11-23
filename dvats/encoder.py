@@ -85,14 +85,14 @@ def get_enc_embs(X, enc_learn, module=None, cpu=False, average_seq_dim=True, to_
         - `average_seq_dim`: Whether to aggregate the embeddings in the sequence dimensions
         - `to_numpy`: Whether to return the result as a numpy array (if false returns a tensor)
     """
-    # Ensure empty cache
-    torch.cuda.empty_cache()
-    ######################
+    print("--> Check CUDA")
     if cpu:
         print("--> Get enc embs CPU")
         enc_learn.dls.cpu()
         enc_learn.cpu()
     else:
+        print("--> Ensure empty cache")
+        torch.cuda.empty_cache()
         print("--> Use CUDA |Get enc embs GPU ")
         enc_learn.dls.cuda()
         enc_learn.cuda()
@@ -110,14 +110,18 @@ def get_enc_embs(X, enc_learn, module=None, cpu=False, average_seq_dim=True, to_
     aux_dl = enc_learn.dls.valid.new_dl(X=X)
     aux_dl.bs = enc_learn.dls.bs if enc_learn.dls.bs>0 else 64
     print("--> Get module")
-    module = nested_attr(enc_learn.model,
-                         ENCODER_EMBS_MODULE_NAME[type(enc_learn.model)]) \
-                if module is None else module
-    #Get embeddings
+    module = nested_attr(enc_learn.model,ENCODER_EMBS_MODULE_NAME[type(enc_learn.model)]) if module is None else module
+
     print("--> Get enc embs bs: ", aux_dl.bs)
-    embs = [get_acts_and_grads(model=enc_learn.model,
-                               modules=module,
-                               x=xb[0], cpu=cpu)[0] for xb in aux_dl]
+    embs = [
+        get_acts_and_grads(
+            model=enc_learn.model,
+            modules=module,
+            x=xb[0], 
+            cpu=cpu
+        )[0] 
+        for xb in aux_dl
+    ]
     print("--> Concat")
     if not cpu:
         total_emb_size = sum([emb.element_size() * emb.nelement() for emb in embs])
@@ -126,6 +130,7 @@ def get_enc_embs(X, enc_learn, module=None, cpu=False, average_seq_dim=True, to_
             print("Fit in GPU")
             embs=[emb.cuda() for emb in embs]
         else:
+            print("Dont fit in GPU --> Go to CPU")
             embs=[emb.cpu() for emb in embs]
     embs = to_concat(embs)
     print("--> reduce")

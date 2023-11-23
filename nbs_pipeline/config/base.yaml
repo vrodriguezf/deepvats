@@ -36,7 +36,7 @@ user_preferences:
     #alias: &alias 'sunspot'
     #alias: &alias 'TitlABP'
     alias: &alias 'solar_4_seconds'
-    algorithm: &alg 'mvp'
+    algorithm: &alg 'mvp-SWV'
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 

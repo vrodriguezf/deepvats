@@ -299,15 +299,25 @@ shinyServer(function(input, output, session) {
         print("--> Reactive X | Update Sliding Window")
         req(input$wlen != 0, input$stride != 0, tsdf())
         print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
-        #tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
+        t_init <- Sys.time()
+        enc_input1 <- tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
+        t_medio <- Sys.time()
         enc_input <- tsai_data$prepare_forecasting_data(tsdf(), fcst_history = input$wlen)[[1]]
-        print(paste0("reactive X | Apply stride | enc_input ~ ", dim(enc_input)))
+        print(dim(enc_input))
+        print(dim(enc_input)[1])
         indexes <- seq(1, dim(enc_input)[1], input$stride)
-        print(paste0("reactive X | Apply stride | stride ", input$stride,  " | first 5 indexes ~ ", indexes[1:5] ))
-        enc_input <- enc_input[indexes, , ]
-        print(paste0("reactive X | enc_input ~", dim(enc_input)))
+        print(indexes)
+        enc_input <- enc_input[indexes, , ,drop = FALSE]
+        t_fin <- Sys.time()
+        t_sliding_window <- t_medio - t_init
+        t_sliding_window_view <- t_fin - t_medio
+        diff <- t_sliding_window-t_sliding_window_view
+        diff_secs <- as.numeric(diff, units = "secs")
+        diff_mins <- as.numeric(diff, units = "mins")
+        print(paste0("SW: ", t_sliding_window, "SWV: ", t_sliding_window_view, "SW-SWV", diff_secs, " secs thus ", diff_mins, " mins"))
+        print(paste0("reactive X | Apply stride | enc_input ~ ", dim(enc_input)))
         enc_input
-        on.exit(print("Reactive X | Update Sliding Window -->"))
+        #on.exit(print("Reactive X | Update Sliding Window -->"))
     })
     
     # Time series artifact
@@ -387,7 +397,14 @@ shinyServer(function(input, output, session) {
       }
       #print(X()) #--
       #print(enc()) #--
-      dvats$get_enc_embs(X = X(), enc_learn = enc(), cpu = F)
+      t_init <- Sys.time()
+      result <- dvats$get_enc_embs(X = X(), enc_learn = enc(), cpu = F)
+      t_end <- Sys.time()
+      diff <- t_end - t_init
+      diff_secs <- as.numeric(diff, units = "secs")
+      diff_mins <- as.numeric(diff, units = "mins")
+      print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
+        result
       #on.exit(print("reactive embs | get embeddings -->"))
     })
     

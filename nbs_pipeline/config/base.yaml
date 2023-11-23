@@ -13,28 +13,29 @@ user_preferences:
   # Whether to use or not wandb for experiment tracking
   use_wandb: &use_wandb true
   wdb:
-    user:         &wdb_user mi-santamaria 
+    user: &wdb_user mi-santamaria
     project_name: &wdb_project deepvats
-    version:      &wdb_version 'latest' #'6'
+    version: &wdb_version 'latest' #'6'
     # 'online' if the model will be tested on future data, or 'offline' if not
-    mode:         &wdb_mode 'offline'
+    mode: &wdb_mode 'offline'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
-    folder:  &path '~/data/'
+    folder: &path '~/data/'
     #fname: &fname 'sunspot_dataset_with_missing_values'
     #fname:   &fname 'ETTh1'
-    #fname:   &fname 'solar_4_seconds_dataset'
-    fname: &fname 'Semantic_Segmentation_TiltABP'
-    ftype:   &ftype '.csv' #ETTh1
-    #ftype:   &ftype '.tsf' #solar_4_seconds, sunspot
-    cols:    &cols []
-    freq: &freq '1s'
-    #freq:    &freq '4s' #solar_4_seconds, sunspot
+    fname: &fname 'solar_4_seconds_dataset'
+    #fname: &fname 'Semantic_Segmentation_TiltABP'
+    #ftype:   &ftype '.csv' #ETTh1
+    ftype: &ftype '.tsf' #solar_4_seconds, sunspot
+    cols: &cols []
+    #freq: &freq '1s'
+    freq: &freq '4s' #solar_4_seconds, sunspot
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
     #alias: &alias 'ETTh1'
     #alias: &alias 'sunspot'
-    alias: &alias 'TitlABP'
+    #alias: &alias 'TitlABP'
+    alias: &alias 'solar_4_seconds'
     algorithm: &alg 'mvp'
   directories:
     # Folder to store temporary files
@@ -49,7 +50,7 @@ data:
     # Name of the data file. Must be pickle, csv or tsf file
     path: *data_path
     # Name of the artifact to be created
-    alias: *alias 
+    alias: *alias
     # Put here the idxs of the columns of interest ([] for all)
     cols: *cols
     # CSV file config ({} if this setting is not required)
@@ -84,9 +85,9 @@ data:
     test_split: null
     # List or int with the idx(s) of the column containing the timestamp
     # (null if there is no timestamp column)
-    time_col: null #Solar_4_seconds sunspot TitlABP
+    time_col: null #Solar_4_seconds sunspot 
     #time_col: 1
-    #time_col: 0 #ETTh1 
+    #time_col: 0 #ETTh1 TitlABP
 
 ########################
 # Wandb specifications #

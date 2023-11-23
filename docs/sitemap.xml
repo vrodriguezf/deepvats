@@ -1,24 +1,27 @@
----
-layout: none
-search: exclude
----
-
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  {% for post in site.posts %}
-  {% unless post.search == "exclude" %}
   <url>
-    <loc>{{site.url}}{{post.url}}</loc>
+    <loc>https://vrodriguezf.github.io/dvats/utils.html</loc>
+    <lastmod>2023-11-22T22:58:32.544Z</lastmod>
   </url>
-  {% endunless %}
-  {% endfor %}
-
-
-  {% for page in site.pages %}
-  {% unless page.search == "exclude" %}
   <url>
-    <loc>{{site.url}}{{ page.url}}</loc>
+    <loc>https://vrodriguezf.github.io/dvats/dr.html</loc>
+    <lastmod>2023-11-22T22:58:31.280Z</lastmod>
   </url>
-  {% endunless %}
-  {% endfor %}
+  <url>
+    <loc>https://vrodriguezf.github.io/dvats/encoder.html</loc>
+    <lastmod>2023-11-22T22:58:30.200Z</lastmod>
+  </url>
+  <url>
+    <loc>https://vrodriguezf.github.io/dvats/visualization.html</loc>
+    <lastmod>2023-11-22T22:58:29.200Z</lastmod>
+  </url>
+  <url>
+    <loc>https://vrodriguezf.github.io/dvats/load.html</loc>
+    <lastmod>2023-11-22T22:58:30.800Z</lastmod>
+  </url>
+  <url>
+    <loc>https://vrodriguezf.github.io/dvats/index.html</loc>
+    <lastmod>2023-11-22T22:58:31.804Z</lastmod>
+  </url>
 </urlset>

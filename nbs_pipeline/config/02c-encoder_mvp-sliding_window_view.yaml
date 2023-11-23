@@ -20,7 +20,7 @@ configuration:
     group: null
   specifications:
     #batch_size: 1024 #512 #1024
-    batch_size: 2048 #32
+    batch_size: 1024 #32
     # Number of epochs to train for
     n_epoch: 100
     mask:

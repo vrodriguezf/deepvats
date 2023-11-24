@@ -164,7 +164,7 @@ def get_train_artifact(user: str, project: str, data: str) -> str:
 ##############################
 # 01 - DATAFRAME TO ARTIFACT #
 ##############################
-def get__artifact_config_sd2a_get_auxiliar_variables(print_flag: bool) -> Tuple[str, str, str, AttrDict, bool, str]:
+def get_artifact_config_sd2a_get_auxiliar_variables(print_flag: bool) -> Tuple[str, str, str, AttrDict, bool, str]:
     """
     Retrieves auxiliary variables necessary for the dataset artifact configuration. 
     Gathers user, project, version, and data details, along with preferences for using wandb and the wandb artifacts path.

@@ -10,8 +10,10 @@ services:
         - LOCKS_PATH=/home/${USER_NAME}
         - SPLIT_ENV=1 #0 otherwise
         - CUDA_VERSION=12.2.0-devel-ubuntu20.04
+        - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       context: ../
       dockerfile: docker/Dockerfile.jupyter
+    image: dvats-jupyter:12.2.0-devel-ubuntu20.04
     ports:
       - "${JUPYTER_PORT}:8888"
     environment:
@@ -33,9 +35,12 @@ services:
     tty: true
     deploy:
       resources:
-        reservations:
+        reservations:          
           devices:
-            - capabilities: [gpu]
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+            
   rstudio-server:
       build:
           context: ../
@@ -58,7 +63,7 @@ services:
           - GROUPID=${GROUP_ID} #*
           - PASSWORD=${RSTUDIO_PASSWD} #*
           - ROOT=FALSE
-          - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+          - CUDA_VISIBLE_DEVICES=0,1,2
           - GH_TOKEN=${GH_TOKEN} #*
           # TODO (28/03/2023): I don't know why it is not working without this
           - ENV_VARS=WANDB_ENTITY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES
@@ -66,14 +71,18 @@ services:
          - ../r_shiny_app:/home/${USER_NAME}/app #*
          - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
          - ../dvats:/home/${USER_NAME}/dvats
-         - conda-env:/home/${USER_NAME}/env:ro
-         - miniconda:/home/${USER_NAME}/miniconda3:ro
-         - lib:/home/${USER_NAME}/lib:ro
+         - conda-env:/home/${USER_NAME}/env
+         - miniconda:/home/${USER_NAME}/miniconda3 #:ro
+         - lib:/home/${USER_NAME}/lib
       deploy:
         resources:
+          limits:
+            cpus: '0.75'
           reservations:
             devices:
-              - capabilities: [gpu]
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
 
 volumes:
   conda-env:

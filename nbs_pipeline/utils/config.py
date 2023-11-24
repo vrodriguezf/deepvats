@@ -1,8 +1,9 @@
 import os
 import yaml
 import sys
-sys.path.append(os.path.abspath('..'))
 from tsai.basics import *
+sys.path.append(os.path.abspath('..'))
+
 
 ### Only if !join not defined -- start
 def join_constructor(loader, node):

@@ -17,7 +17,7 @@ configuration:
     project: *wdb_project
   artifacts:
     # complete training artifact path
-    train_prefix: enc_prefix: !join [ *wdb_user, '/', *wdb_project, '/', *alg]
+    enc_prefix: !join [ *wdb_user, '/', *wdb_project, '/', *alg]
     #!join [ *wdb_user, '/', *wdb_project, '/', *fname, ':v', *wdb_version]
     # complete name (None for random validation set)
     valid:

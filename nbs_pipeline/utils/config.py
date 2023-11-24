@@ -362,16 +362,17 @@ def get_artifact_config_DCAE(print_flag: bool = False) -> Tuple[AttrDict, str]:
     Validates the configuration to ensure correct project and entity setup and 
     returns the artifact configuration as an AttrDict along with the job type.
     """
+    user, project, version, data = get_project_data(print_flag)
     config = get_config(print_flag, "02a-encoder_dcae")
     print("Antes de leer configuration " + str(config))
-    enc_artifact = build_enc_artifact(config, print_flag)
     config = config.configuration
+
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use,
         wandb_group         = config.wandb.group,
         wandb_entity        = config.wandb.entity,
         wandb_project       = config.wandb.project,
-        train_artifact      = enc_artifact,
+        train_artifact      = get_train_artifact(user,project,data),
         valid_artifact      = config.artifacts.valid.data,
         valid_size          = config.artifacts.valid.size,
         w                   = config.specifications.sliding_windows.size,

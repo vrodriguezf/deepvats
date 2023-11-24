@@ -20,6 +20,7 @@ library(stringr)
 #library(reactlog)
 #reactlog::reactlog_enable()
 #options(shiny.trace = TRUE)
+
 torch <- reticulate::import("torch")
 #options(shiny.trace = TRUE)
 if(torch$cuda$is_available()){
@@ -34,12 +35,24 @@ if(torch$cuda$is_available()){
 #################QUITAR CUANDO YA TIRE
 
 # Python dependencies
-tsai_data = import("tsai.data.all")
-wandb = import("wandb")
-pd = import("pandas")
-hdbscan = import("hdbscan")
-dvats = import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
- 
+#tsai_data = import("tsai.data.all")
+#wandb = import("wandb")
+#pd = import("pandas")
+#hdbscan = import("hdbscan")
+#dvats = import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
+############Just in case. Trying to get why get_enc_embs gets freezed
+# Python dependencies
+tsai_data = reticulate::import("tsai.data.all")
+wandb = reticulate::import("wandb")
+pd = reticulate::import("pandas")
+hdbscan = reticulate::import("hdbscan")
+dvats = reticulate::import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
+
+
+print("--> py_config ")
+print(reticulate::py_config())
+print("py_config -->")
+
 #############
 # CONFIG #
 #############

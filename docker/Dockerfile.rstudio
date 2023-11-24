@@ -1,3 +1,13 @@
+#############################
+# RSTUDIO-SERVER            #
+# VOLUME DOCKERFILE         #
+#***************************#
+# Set up a jupyter-lab for  #
+# developing using deepvats #
+#############################
+##############
+# Base image #
+##############
 #FROM vrodriguezf/rstudio-server-shiny-development
 # Adds rstudio server, tiyverse, devtools to rocker/cuda
 FROM rocker/ml:4.2

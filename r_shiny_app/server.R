@@ -382,50 +382,103 @@ shinyServer(function(input, output, session) {
     }, ignoreInit = T)
     
     # Encoder
-    enc = eventReactive(enc_ar(), {
-        req(input$dataset, enc_ar <- enc_ar())
-        print("--> eventReactive enc | load encoder -->")
-        enc <- py_load_object(
-            file.path(
-                DEFAULT_PATH_WANDB_ARTIFACTS, 
-                enc_ar$metadata$ref$hash
-            )
-        )
-        print("eventReactive enc | load encoder | Get dataset batchsize")
-        dataset_logged_by <- enc_ar$logged_by()
-        enc$bs <- dataset_logged_by$config$batch_size
-        print(paste0("eventReactive enc | load encoder | Batchsize: ", enc$bs))
-        enc
-    })
-    
-    embs = reactive({
-      req(X(), enc_l <- enc())
-      print(paste0("--> reactive embs | get embeddings | enc_l.bs ", enc_l$bs ))
-      if (torch$cuda$is_available()){
-        print(paste0("CUDA devices: ", torch$cuda$device_count()))
-      } else {
-        print("CUDA NOT AVAILABLE")
-      }
-      t_init <- Sys.time()
-      print(
-        paste0(
-            "--> reactive embs | get embeddings | Just about to get embedings. Device number: ", 
-            torch$cuda$current_device(), 
-            " Batch size: ", enc_l$bs
-        )
-    )
-      result <- dvats$get_enc_embs(X = X(), enc_learn = enc_l, cpu = F)
-      t_end <- Sys.time()
-      diff <- t_end - t_init
-      diff_secs <- as.numeric(diff, units = "secs")
-      diff_mins <- as.numeric(diff, units = "mins")
-      print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
-        result
-      #on.exit(print("reactive embs | get embeddings -->"))
-    })
-    
-    
+#    enc = eventReactive(enc_ar(), {
+#        req(input$dataset, enc_ar <- enc_ar())
+#        print("--> eventReactive enc | load encoder -->")
+#        enc <- py_load_object(
+#            file.path(
+#                DEFAULT_PATH_WANDB_ARTIFACTS, 
+#                enc_ar$metadata$ref$hash
+#            )
+#        )
+#        print("eventReactive enc | load encoder | Get dataset batchsize")
+#        dataset_logged_by <- enc_ar$logged_by()
+#        enc$bs <- dataset_logged_by$config$batch_size
+#        print(paste0("eventReactive enc | load encoder | Batchsize: ", enc$bs))
+#        enc
+#    })
+#    
+#    embs = reactive({
+#      req(X(), enc_l <- enc())
+#      print(paste0("--> reactive embs | get embeddings | enc_l.bs ", enc_l$bs ))
+#      if (torch$cuda$is_available()){
+#        print(paste0("CUDA devices: ", torch$cuda$device_count()))
+#      } else {
+#        print("CUDA NOT AVAILABLE")
+#      }
+#      t_init <- Sys.time()
+#      print(
+#        paste0(
+#            "--> reactive embs | get embeddings | Just about to get embedings. Device number: ", 
+#            torch$cuda$current_device(), 
+#            " Batch size: ", enc_l$bs
+#        )
+#    )
+#      result <- dvats$get_enc_embs(X = X(), enc_learn = enc_l, cpu = F)
+#      t_end <- Sys.time()
+#      diff <- t_end - t_init
+#      diff_secs <- as.numeric(diff, units = "secs")
+#      diff_mins <- as.numeric(diff, units = "mins")
+#      print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
+#        result
+#      #on.exit(print("reactive embs | get embeddings -->"))
+#    })
 
+#enc = py_load_object(
+#    os.path.join(
+#        DEFAULT_PATH_WANDB_ARTIFACTS, 
+#        hash
+#    )
+#)
+mbs_py_code <- "
+import os
+from dvats.all import get_enc_embs
+from torch import cuda
+from time import time
+
+
+path = os.path.join(wandb, hash)
+print(path)
+with open(wandb/hash, 'rb') as f:
+    enc = pickle.load(f)
+print('reactive embs | load encoder | Get dataset batchsize')
+dataset_logged_by = enc_ar.logged_by()
+enc.bs = dataset_logged_by.config.batch_size
+print('reactive embs | load encoder | Batchsize: ', enc.bs)
+print('--> reactive embs | get embeddings | enc.bs ', enc.bs )
+if cuda.is_available():
+    print('CUDA devices: ', cuda.device_count())
+else:
+    print('CUDA NOT AVAILABLE')
+t_init = time()
+print(
+    '--> reactive embs | get embeddings | Just about to get embedings. Device number: ', 
+    cuda.current_device(), 
+    ' Batch size: ', enc.bs
+)
+result = get_enc_embs(X = enc_input, enc_learn = enc, cpu = False)
+t_end = time()
+diff = t_end - t_init
+diff_secs = diff
+diff_mins = diff / 60
+"   
+
+embs = reactive({
+    req(input$dataset, X())
+    print("--> reactive embs | get embeddings -->")
+    enc_ar <- req(enc_ar())
+    hash <- enc_ar$metadata$ref$hash
+    print(paste0("reactive embs | get embeddings | hash ", hash))
+    py$wandb_path <- DEFAULT_PATH_WANDB_ARTIFACTS
+    py$hash <- hash
+    py$enc_input <- X()
+    py_run_string(embs_py_code)
+    diff_secs <- py$diff_secs
+    diff_mins <- py$diff_mins
+    result <- py$result
+    print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
+    result
+})
     
     
     prj_object <- reactive({

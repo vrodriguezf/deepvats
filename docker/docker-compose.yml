@@ -74,8 +74,8 @@ services:
          - lib:/home/${USER_NAME}/lib
       deploy:
         resources:
-          limits:
-            cpus: '0.75'
+          #limits:
+            #cpus: '0.75'
           reservations:
             devices:
               - driver: nvidia

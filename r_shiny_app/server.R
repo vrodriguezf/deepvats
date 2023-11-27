@@ -7,7 +7,6 @@
 #    http://shiny.rstudio.com/
 #
 
-
 shinyServer(function(input, output, session) {
     options(shiny.verbose = TRUE)
     #options(shiny.error = function() {
@@ -132,8 +131,9 @@ shinyServer(function(input, output, session) {
     # Obtener el valor de stride
     enc_ar_stride = reactive({
         print("--> reactive enc_ar_stride")
-        req(enc_ar())$metadata$stride
-        on.exit("reactive_enc_ar_stride -->")
+        stride <- enc_ar()$metadata$stride
+        on.exit(print(paste0("reactive_enc_ar_stride | --> ", stride)))
+        stride
     })
         
     observeEvent(input$wlen, {
@@ -323,17 +323,17 @@ shinyServer(function(input, output, session) {
         diff_secs <- as.numeric(diff, units = "secs")
         diff_mins <- as.numeric(diff, units = "mins")
         print(paste0("SW: ", t_sliding_window, "SWV: ", t_sliding_window_view, "SW-SWV", diff_secs, " secs thus ", diff_mins, " mins"))
-        print(paste0("reactive X | Apply stride | enc_input ~ ", dim(enc_input)))
+        on.exit(print(paste0("reactive X | Update sliding window | Apply stride | enc_input ~ ", dim(enc_input))))
         enc_input
-        #on.exit(print("Reactive X | Update Sliding Window -->"))
     })
     
     # Time series artifact
     ts_ar = eventReactive(input$dataset, {
         req(input$dataset)
         print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset, "-->"))
-        api$artifact(input$dataset, type='dataset')
+        ar <- api$artifact(input$dataset, type='dataset')
         on.exit(print("eventReactive ts_ar -->"))
+        ar
     }, label = "ts_ar")
 
     #ts_ar <- eventReactive(input$dataset, {
@@ -523,19 +523,21 @@ shinyServer(function(input, output, session) {
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
         {
+            print("--> reactive tsdf | Before req 1")
             req(
                 input$wlen > 0, 
                 input$stride > 0, 
                 input$dataset, 
                 input$encoder
             )
+            print("reactive tsdf | Before req 2 - get ts_ar")
             #req(input$dataset, input$encoder, input$stride != 0)
-            print(paste0("--> reactive tsdf | ts artifact ", ts_ar))
             ts_ar <- req(ts_ar())
+            print(paste0("--> reactive tsdf | ts artifact ", ts_ar))
             # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
             # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
             # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
-            tryCatch({
+            tsdf_ <-  tryCatch({
                 ts_ar_hash=ts_ar$metadata$TS$hash
                 print(paste0("reactive tsdf | py_load_object ", DEFAULT_PATH_WANDB_ARTIFACTS, " hash ", ts_ar_hash ))
                 py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)) %>% 
@@ -566,6 +568,7 @@ shinyServer(function(input, output, session) {
         }
         )
         on.exit(print("reactive tsdf | Object loaded --> "))
+        tsdf_
     })
     
     # Auxiliary object for the interaction ts->projections
@@ -619,27 +622,38 @@ shinyServer(function(input, output, session) {
     
     # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
-        req(tsdf(), prj_object(), input$wlen != 0, input$stride, ts_variables)
-        print("ts_plot")
-        tsdf_data <- tsdf()
-        ts_plt <- dygraph(tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px") %>%
-                    dyRangeSelector() %>%
-                    dyHighlight(hideOnMouseOut = TRUE) %>%
-                    dyOptions(labelsUTC = FALSE ) %>%
-                    dyCrosshair(direction = "vertical")%>%
-                    dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
-                    dyUnzoom() %>%
-                    dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
-                    dyCSS(
-                        textConnection(
-                            ".dygraph-legend > span { display: none; }
-                             .dygraph-legend > span.highlight { display: inline; }"
-                        )
-                    )
-        
+        print("--> ts_plot | Before req 1")
+        #req(tsdf(), prj_object(), input$wlen != 0, input$stride, ts_variables)
+        tsdf_data <- req(tsdf())
+        print("--> ts_plot | Before req 2")
+        req(prj_object())
+        print("--> ts_plot | Before req 3")
+        req(ts_variables)
+        print("--> ts_plot | Before req 4")
+        req(input$wlen != 0, input$stride)
+
+        print("ts_plot | 1st ts_plt <-")
+        ts_plt <- dygraph(
+            tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px"
+            ) %>% dyRangeSelector() %>%
+            dyHighlight(hideOnMouseOut = TRUE) %>%
+            dyOptions(labelsUTC = FALSE ) %>%
+            dyCrosshair(direction = "vertical")%>%
+            dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
+            dyUnzoom() %>%
+            dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
+            dyCSS(
+                textConnection(
+                    ".dygraph-legend > span { display: none; }
+                    .dygraph-legend > span.highlight { display: inline; }"
+                )
+            )
+        print("ts_plot | bs")
         bp <- brushedPoints(prj_object(), input$projections_brush, allRows = TRUE)
+        print("ts_plot | embedings idxs ")
         embedding_idxs <- bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
+        print("ts_plot | Before if")
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
             # Get the window indices
             window_indices <- get_window_indices(embedding_idxs, input$wlen, input$stride)
@@ -685,7 +699,7 @@ shinyServer(function(input, output, session) {
             # }
             # ts_plt <- vec_dyShading(ts_plt,rects_ini, rects_fin,"red", rownames(tsdf()))
         }
-        
+        on.exit(print("ts_plot -->"))
         ts_plt
     })
     

@@ -401,7 +401,7 @@ shinyServer(function(input, output, session) {
         enc_ar(), 
     {
         req(input$dataset, input$encoder)
-        print("--> eventReactive enc | load encoder -->")
+        print("--> eventReactive enc | load encoder ")
         encoder_artifact <- enc_ar()
         enc <- py_load_object(
             file.path(
@@ -409,10 +409,12 @@ shinyServer(function(input, output, session) {
                 encoder_artifact$metadata$ref$hash
             )
         )
-        print("eventReactive enc | load encoder | Get dataset batchsize")
+        print("eventReactive enc | load encoder | Get dataset artifcact")
         dataset_logged_by <- encoder_artifact$logged_by()
+        print(paste0("eventReactive enc | load encoder | dataset: ", dataset_logged_by, " | Get dataset batchsize"))
         enc$bs <- dataset_logged_by$config$batch_size
-        on.exit(paste0("eventReactive enc | load encoder | Batchsize: ", enc$bs))
+        on.exit(paste0("eventReactive enc | load encoder | Batchsize: ", enc$bs, "-->"))
+        enc
     })
     
     embs = reactive({
@@ -559,17 +561,14 @@ shinyServer(function(input, output, session) {
                 warning = function(w){
                 print(paste0("reactive tsdf |2| Warning ", w))
                 data.frame()
-            }
-            )
-        }, 
-        warning = function(w){
-            print(paste0("reactive tsdf | Warning ", w))
-            data.frame()
-        }
-        )
-        on.exit(print("reactive tsdf | Object loaded --> "))
-        tsdf_
-    })
+                }
+            )}, warning = function(w){
+                print(paste0("reactive tsdf | Warning ", w))
+                data.frame()
+            } )
+            on.exit(print("reactive tsdf | Object loaded --> "))
+            tsdf_
+        })
     
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({

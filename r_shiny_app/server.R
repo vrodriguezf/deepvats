@@ -308,21 +308,24 @@ shinyServer(function(input, output, session) {
         req(input$wlen != 0, input$stride != 0, tsdf())
         print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
         t_init <- Sys.time()
-        enc_input1 <- tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
-        t_medio <- Sys.time()
+        #enc_input1 <- tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
+        #t_medio <- Sys.time()
         enc_input <- tsai_data$prepare_forecasting_data(tsdf(), fcst_history = input$wlen)[[1]]
-        print(dim(enc_input))
-        print(dim(enc_input)[1])
-        indexes <- seq(1, dim(enc_input)[1], input$stride)
-        print(indexes[1:5])
-        enc_input <- enc_input[indexes, , ,drop = FALSE]
+        #print(dim(enc_input))
+        #print(dim(enc_input)[1])
+        #indexes <- seq(1, dim(enc_input)[1], input$stride)
+        #print(indexes[1:5])
+        #enc_input <- enc_input[indexes, , ,drop = FALSE]
         t_fin <- Sys.time()
-        t_sliding_window <- t_medio - t_init
-        t_sliding_window_view <- t_fin - t_medio
-        diff <- t_sliding_window-t_sliding_window_view
-        diff_secs <- as.numeric(diff, units = "secs")
-        diff_mins <- as.numeric(diff, units = "mins")
-        print(paste0("SW: ", t_sliding_window, "SWV: ", t_sliding_window_view, "SW-SWV", diff_secs, " secs thus ", diff_mins, " mins"))
+        #t_sliding_window <- t_medio - t_init
+        #t_sliding_window_view <- t_fin - t_medio
+        #t_sliding_window_view <- t_fin - t_init
+        #diff <- t_sliding_window-t_sliding_window_view
+        #diff_secs <- as.numeric(diff, units = "secs")
+        #diff_mins <- as.numeric(diff, units = "mins")
+        #print(paste0("SW: ", t_sliding_window, "SWV: ", t_sliding_window_view, "SW-SWV", diff_secs, " secs thus ", diff_mins, " mins"))
+        t_sliding_window_view = t_fin - t_init
+        print(paste0("SWV: ", t_sliding_window_view, " secs "))
         on.exit(print(paste0("reactive X | Update sliding window | Apply stride | enc_input ~ ", dim(enc_input))))
         enc_input
     })
@@ -409,17 +412,15 @@ shinyServer(function(input, output, session) {
                 encoder_artifact$metadata$ref$hash
             )
         )
-        print("eventReactive enc | load encoder | Get dataset artifcact")
-        dataset_logged_by <- encoder_artifact$logged_by()
-        print(paste0("eventReactive enc | load encoder | dataset: ", dataset_logged_by, " | Get dataset batchsize"))
-        enc$bs <- dataset_logged_by$config$batch_size
-        on.exit(paste0("eventReactive enc | load encoder | Batchsize: ", enc$bs, "-->"))
+        on.exit(print("eventReactive enc | load encoder -->"))
         enc
     })
+
+    
     
     embs <- reactive({
         req(X(), enc_l <- enc())
-        print(paste0("--> reactive embs | get embeddings | enc_l.bs ", enc_l$bs ))
+        print("--> reactive embs | get embeddings")
         if (torch$cuda$is_available()){
             print(paste0("CUDA devices: ", torch$cuda$device_count()))
           } else {
@@ -428,13 +429,19 @@ shinyServer(function(input, output, session) {
         t_init <- Sys.time()
         print(
             paste0(
-                "--> reactive embs | get embeddings | Just about to get embedings. Device number: ", 
-                torch$cuda$current_device(), 
-                " Batch size: ", enc_l$bs
+                "reactive embs | get embeddings | Just about to get embedings. Device number: ", 
+                torch$cuda$current_device() 
             )
         )
-        print(reticulate::py_config())
-        result <- dvats$get_enc_embs(X = X(), enc_learn = enc_l, cpu = F)
+        
+        print("reactive embs | get embeddings | Get batch size and dataset")
+
+        dataset_logged_by <- enc_ar()$logged_by()
+        bs = dataset_logged_by$config$batch_size
+        stride = input$stride 
+        
+        print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
+        result <- dvats$get_enc_embs_set_stride_set_batch_size(X = X(), enc_learn = enc_l, stride = input$stride, batch_size = bs, cpu = F, print_flag = T)
         t_end <- Sys.time()
         diff <- t_end - t_init
         diff_secs <- as.numeric(diff, units = "secs")

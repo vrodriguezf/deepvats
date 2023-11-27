@@ -417,31 +417,31 @@ shinyServer(function(input, output, session) {
         enc
     })
     
-    embs = reactive({
-      req(X(), enc_l <- enc())
-      print(paste0("--> reactive embs | get embeddings | enc_l.bs ", enc_l$bs ))
-      if (torch$cuda$is_available()){
-        print(paste0("CUDA devices: ", torch$cuda$device_count()))
-      } else {
-        print("CUDA NOT AVAILABLE")
-      }
-      t_init <- Sys.time()
-      print(
-        paste0(
-            "--> reactive embs | get embeddings | Just about to get embedings. Device number: ", 
-            torch$cuda$current_device(), 
-            " Batch size: ", enc_l$bs
+    embs <- reactive({
+        req(X(), enc_l <- enc())
+        print(paste0("--> reactive embs | get embeddings | enc_l.bs ", enc_l$bs ))
+        if (torch$cuda$is_available()){
+            print(paste0("CUDA devices: ", torch$cuda$device_count()))
+          } else {
+            print("CUDA NOT AVAILABLE")
+        }
+        t_init <- Sys.time()
+        print(
+            paste0(
+                "--> reactive embs | get embeddings | Just about to get embedings. Device number: ", 
+                torch$cuda$current_device(), 
+                " Batch size: ", enc_l$bs
+            )
         )
-    )
-      print(reticulate::py_config())
-      result <- dvats$get_enc_embs(X = X(), enc_learn = enc_l, cpu = F)
-      t_end <- Sys.time()
-      diff <- t_end - t_init
-      diff_secs <- as.numeric(diff, units = "secs")
-      diff_mins <- as.numeric(diff, units = "mins")
-      print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
+        print(reticulate::py_config())
+        result <- dvats$get_enc_embs(X = X(), enc_learn = enc_l, cpu = F)
+        t_end <- Sys.time()
+        diff <- t_end - t_init
+        diff_secs <- as.numeric(diff, units = "secs")
+        diff_mins <- as.numeric(diff, units = "mins")
+        print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
+        on.exit(print("reactive embs | get embeddings -->"))
         result
-      #on.exit(print("reactive embs | get embeddings -->"))
     })
 #enc = py_load_object(
 #    os.path.join(
@@ -511,7 +511,7 @@ shinyServer(function(input, output, session) {
     
     prj_object <- reactive({
       embs = req(embs(), input$dr_method)
-      print("prj_object")
+      print("--> prj_object")
       #print(embs) #--
       res = switch(input$dr_method,
              UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)),
@@ -519,6 +519,7 @@ shinyServer(function(input, output, session) {
              PCA = dvats$get_PCA_prjs(X = embs, cpu=F, random_state=as.integer(1234)))
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
       colnames(res) = c("xcoord", "ycoord")
+      on.exit(print(" prj_object -->"))
       res
     })
     
@@ -578,11 +579,11 @@ shinyServer(function(input, output, session) {
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
+      print("--> Projections")
       req(prj_object(), embs(), input$dr_method)
 
       #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
       prjs <- prj_object()
-      print("projections")
       req(input$dataset, input$encoder, input$wlen, input$stride)
       
       switch(clustering_options$selected,
@@ -599,6 +600,7 @@ shinyServer(function(input, output, session) {
                                            metric = clusters_config$metric_hdbscan)$fit(prjs)
                prjs$cluster <- clusters$labels_
              })
+        on.exit(print("Projections -->"))
       prjs
     })
     
@@ -743,9 +745,11 @@ shinyServer(function(input, output, session) {
        
     # Generate projections plot
     output$projections_plot <- renderPlot({
-        req(input$dataset, input$encoder, input$wlen, input$stride)
+        print("--> projections_plot before req 1")
+        #req(input$dataset, input$encoder, input$wlen, input$stride)
+        print("projections_plot before req 2")
         prjs_ <- req(projections())
-        print("projections_plot")
+        print("projections_plot | Prepare column highlights")
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
             selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
@@ -758,7 +762,7 @@ shinyServer(function(input, output, session) {
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
         if(!("cluster" %in% names(prjs_)))
             prjs_$cluster = FALSE
-        
+        print("projections_plot | GoGo Plot!")
         plt <- ggplot(data = prjs_) + 
             aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
             scale_colour_manual(name = "clusters", values = req(update_palette())) +
@@ -771,6 +775,7 @@ shinyServer(function(input, output, session) {
             theme_void() + 
             theme(legend.position = "none")
 
+        print("projections_plot | GoGo Save!")
         observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
             req(input$dataset, input$encoder)
             #print("!-- CUDA?: ", torch$cuda$is_available())
@@ -789,13 +794,14 @@ shinyServer(function(input, output, session) {
     output$projections_plot_ui <- renderUI(
         {
             print("--> output projections_plot_UI")
-            plotOutput(
+            ppui <- plotOutput(
                 "projections_plot", 
                 click = "projections_click",
                 brush = "projections_brush",
                 height = input$embedding_plot_height
             ) %>% withSpinner()
             on.exit(print("output projections_plot_UI -->"))      
+            ppui
         }
     )
     

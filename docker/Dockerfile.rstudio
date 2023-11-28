@@ -40,6 +40,10 @@ RUN adduser --disabled-password \
     --home $HOME \
     $USER
 
+RUN adduser $USER sudo
+RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+
 ARG RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
 ARG RETICULATE_PYTHON_ENV=/usr/virtualenvs/venv_shiny_app
 ENV RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/

@@ -175,11 +175,24 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
     if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Get module")
     module = nested_attr(enc_learn.model,ENCODER_EMBS_MODULE_NAME[type(enc_learn.model)]) if module is None else module
     
-    if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Get acts and grads ")
+    if (print_flag): 
+        print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | module ", module)
+        print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl len", len(aux_dl))
+        print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl.batch_len ", len(next(iter(aux_dl))))
+        print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl.bs ", aux_dl.bs)
+        if (not cpu):
+            total = torch.cuda.get_device_properties(device).total_memory
+            used = torch.cuda.memory_allocated(torch.cuda.current_device())
+            reserved = torch.cuda.memory_reserved(torch.cuda.current_device())
+            print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | total_mem ", total)
+            print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | used_mem ", used)
+            print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | reserved_mem ", reserved)
+            print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | available_mem ", total-reserved)
+                                              
     embs = [
         get_acts_and_grads(
             model=enc_learn.model,
-            modules=module,
+            modules=module, 
             x=xb[0], 
             cpu=cpu
         )[0] 

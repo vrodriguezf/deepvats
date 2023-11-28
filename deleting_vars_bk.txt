@@ -1,0 +1,20 @@
+import torch
+torch.cuda.empty_cache()
+
+del wandb_api
+del config
+del job_type
+del path
+del name 
+del runname 
+del run
+del artifacts_gettr
+del enc_artifact
+del enc_learner 
+del enc_run 
+del enc_artifact_train
+del input_ar 
+del df 
+del embs
+
+torch.cuda.empty_cache()

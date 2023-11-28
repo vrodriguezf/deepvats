@@ -13,6 +13,7 @@ from tsai.models.InceptionTimePlus import InceptionTimePlus
 from tsai.models.explainability import get_acts_and_grads
 from tsai.models.layers import *
 from tsai.data.validation import combine_split_data
+import time
 
 # %% ../nbs/encoder.ipynb 6
 class DCAE_torch(Module):
@@ -128,7 +129,7 @@ def get_enc_embs(X, enc_learn, module=None, cpu=False, average_seq_dim=True, to_
     return embs
 
 # %% ../nbs/encoder.ipynb 11
-def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, module=None, cpu=False, average_seq_dim=True, to_numpy=True, print_flag = False):
+def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, module=None, cpu=False, average_seq_dim=True, to_numpy=True, print_flag = False, time_flag=False):
     """
         Get the embeddings of X from an encoder, passed in `enc_learn as a fastai
         learner. By default, the embeddings are obtained from the last layer
@@ -138,6 +139,8 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
         - `average_seq_dim`: Whether to aggregate the embeddings in the sequence dimensions
         - `to_numpy`: Whether to return the result as a numpy array (if false returns a tensor)
     """
+    if time_flag:
+        t_start = time.time()
     if print_flag:
         print("--> get_enc_embs_set_stride_set_batch_size")
         print("get_enc_embs_set_stride_set_batch_size | Check versions")
@@ -219,6 +222,13 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
         else: 
             embs = embs.cpu().numpy()
             torch.cuda.empty_cache()
-    
-    if (print_flag): print("get_enc_embs_set_stride_set_batch_size -->")
+    if time_flag:
+        t = time.time()-t_start
+        if (print_flag):
+            print("get_enc_embs_set_stride_set_batch_size " + str(t) + " seconds -->")
+        else:
+            print("get_enc_embs_set_stride_set_batch_size " + str(t) + " seconds")
+    else:
+        if (print_flag): 
+            print("get_enc_embs_set_stride_set_batch_size -->")
     return embs

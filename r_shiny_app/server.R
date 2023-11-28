@@ -441,12 +441,12 @@ shinyServer(function(input, output, session) {
         stride = input$stride 
         
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
-        result <- dvats$get_enc_embs_set_stride_set_batch_size(X = X(), enc_learn = enc_l, stride = input$stride, batch_size = bs, cpu = F, print_flag = T)
+        result <- dvats$get_enc_embs_set_stride_set_batch_size(X = X(), enc_learn = enc_l, stride = input$stride, batch_size = bs, cpu = F, print_flag = F, time_flag = T)
         t_end <- Sys.time()
         diff <- t_end - t_init
         diff_secs <- as.numeric(diff, units = "secs")
         diff_mins <- as.numeric(diff, units = "mins")
-        print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
+        print(paste0("get_enc_embs total time: ", diff_secs, " secs thus ", diff_mins, " mins"))
         on.exit(print("reactive embs | get embeddings -->"))
         result
     })
@@ -587,7 +587,7 @@ shinyServer(function(input, output, session) {
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
       print("--> Projections")
-      req(prj_object(), embs(), input$dr_method)
+      req(prj_object(), input$dr_method)
 
       #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
       prjs <- prj_object()

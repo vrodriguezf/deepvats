@@ -152,7 +152,7 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
     X = X[::stride]
     enc_learn.dls.bs = batch_size 
     
-    print("get_enc_embs_set_stride_set_batch_size | Check CUDA")
+    if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Check CUDA")
     if cpu:
         if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Get enc embs CPU")
         enc_learn.dls.cpu()

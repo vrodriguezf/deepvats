@@ -213,6 +213,12 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
     if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Reduce")
     if embs.ndim == 3 and average_seq_dim: embs = embs.mean(axis=2)
     if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Convert to numpy")
-    if to_numpy: embs = embs.numpy() if cpu else embs.cpu().numpy()
+    if to_numpy: 
+        if cpu:
+            embs = embs.numpy() 
+        else: 
+            embs = embs.cpu().numpy()
+            torch.cuda.empty_cache()
+    
     if (print_flag): print("get_enc_embs_set_stride_set_batch_size -->")
     return embs

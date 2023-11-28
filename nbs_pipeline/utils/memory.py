@@ -11,6 +11,6 @@ def get_gpu_memory(device):
 
 def gpu_memory_status(device):
     used, total, percentage = get_gpu_memory(device)
-    print(f"Memoria usada: {used}")
-    print(f"Memoria total: {total}")
-    print(f"Porcentaje de memoria usada: {percentage}%")
+    print(f"Used mem: {used}")
+    print(f"Used mem: {total}")
+    print(f"Used mem: {percentage}%")

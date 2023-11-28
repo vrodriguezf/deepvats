@@ -783,15 +783,15 @@ shinyServer(function(input, output, session) {
             theme(legend.position = "none")
 
         print("projections_plot | GoGo Save!")
-        observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
-            req(input$dataset, input$encoder)
+        #observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
+            #req(input$dataset, input$encoder)
             #print("!-- CUDA?: ", torch$cuda$is_available())
-            prjs_ <- req(projections())
-            filename <- prjs_plot_name()
+            #prjs_ <- req(projections())
+            #filename <- prjs_plot_name()
             #print(paste("saving embedding plot to ",filename))
-            ggsave(filename = filename, plot = plt, path="../data/plots/") 
+            #ggsave(filename = filename, plot = plt, path="../data/plots/") 
             #print("Embeding plot saved")
-        })
+        #})
         
         plt
     })

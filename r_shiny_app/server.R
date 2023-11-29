@@ -518,10 +518,14 @@ shinyServer(function(input, output, session) {
     
     prj_object <- reactive({
       embs = req(embs(), input$dr_method)
+      embs = embs[complete.cases(embs),]
       print("--> prj_object")
       #print(embs) #--
+      
       res = switch(input$dr_method,
-             UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234)),
+            #### Comprobando parametros para saber por qué salen diferentes los embeddings
+            ######### Comprobando los parámetros
+             UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
              TSNE = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)),
              PCA = dvats$get_PCA_prjs(X = embs, cpu=F, random_state=as.integer(1234)))
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
@@ -773,14 +777,18 @@ shinyServer(function(input, output, session) {
         plt <- ggplot(data = prjs_) + 
             aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
             scale_colour_manual(name = "clusters", values = req(update_palette())) +
-            geom_point(shape = 21,alpha = config_style$point_alpha, linewidth = config_style$point_size) + 
+            geom_point(shape = 21,alpha = config_style$point_alpha, size = config_style$point_size) + 
             scale_shape(solid = FALSE) +
-            geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha) + 
+            #geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha) + 
             guides() + 
             scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA"))+
             coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE)+
             theme_void() + 
             theme(legend.position = "none")
+        
+        if (input$show_lines){
+            plt <- plt + geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
+        }
 
         print("projections_plot | GoGo Save!")
         #observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   

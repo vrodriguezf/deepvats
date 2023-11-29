@@ -21,20 +21,22 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder: &path '~/data/'
-    fname: &fname 'sunspot_dataset_with_missing_values'
+    fname: &fname 'toy'
+    #fname: &fname 'sunspot_dataset_with_missing_values'
     #fname:   &fname 'ETTh1'
     #fname: &fname 'solar_4_seconds_dataset'
     #fname: &fname 'Semantic_Segmentation_TiltABP'
-    #ftype:   &ftype '.csv' #ETTh1
-    ftype: &ftype '.tsf' #solar_4_seconds, sunspot
+    ftype:   &ftype '.csv' #ETTh1 Toy 
+    #ftype: &ftype '.tsf' #solar_4_seconds, sunspot
     cols: &cols []
-    #freq: &freq '1s'
+    freq: &freq '1s' 
     #freq: &freq '4s' #solar_4_seconds
-    freq: &freq '1d' #sunspot
+    #freq: &freq '1d' #sunspot
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
+    alias: &alias 'toy'
     #alias: &alias 'ETTh1'
-    alias: &alias 'sunspot'
+    #alias: &alias 'sunspot'
     #alias: &alias 'TitlABP'
     #alias: &alias 'solar_4_seconds'
     algorithm: &alg 'mvp-SWV'

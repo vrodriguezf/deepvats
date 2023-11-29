@@ -39,8 +39,10 @@ configuration:
       #ws2: 30 #TitlABP
       #ws1: 15 #Solar_4_seconds
       #ws2: 21600 #Solar_4_seconds
-      ws1: 7 #sunspot
-      ws2: &wlen 365 #sunspot
+      #ws1: 7 #sunspot
+      #ws2: &wlen 365 #sunspot
+      ws1: 10 #toy
+      ws2: &wlen 30 #toy
       # probability of masking in MVP
       r: 0.710
       valid_size: 0.2
@@ -50,7 +52,8 @@ configuration:
         use_single_batch: false
     sliding_windows:
       # n datapoints the window is moved ahead along the sequence in the sliding window
-      stride: 900 #15 #1 min en 1 min #900 1h en 1h
+      #stride: 900 #15 #1 min en 1 min #900 1h en 1h Sunspot
+      stride: 1 #toy
       # This will set the percentage of items that go to val 
       # window size for the sliding window (taxi=48, steamflow=640)
       #w

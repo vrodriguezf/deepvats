@@ -198,7 +198,7 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
     module = nested_attr(enc_learn.model,ENCODER_EMBS_MODULE_NAME[type(enc_learn.model)]) if module is None else module
     
     if (print_flag): 
-        print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | module ", module)
+        #print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | module ", module)
         print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl len", len(aux_dl))
         print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl.batch_len ", len(next(iter(aux_dl))))
         print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl.bs ", aux_dl.bs)
@@ -210,6 +210,7 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
             print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | used_mem ", used)
             print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | reserved_mem ", reserved)
             print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | available_mem ", total-reserved)
+            sys.stdout.flush()
                                               
     if (cpu or ( chunk_size == 0 )):
         embs = [
@@ -226,25 +227,32 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
         embs = []
         if print_flag:
             total_chunks=max(1,round(len(X)/chunk_size))
-            if print_flag: print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl len | " + str(len(X)) + " chunk size: " + str(chunk_size) + " => " + str(total_chunks) + " chunks")
+            if print_flag: 
+                print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl len | " + str(len(X)) + " chunk size: " + str(chunk_size) + " => " + str(total_chunks) + " chunks")
             for i in range(0, total_chunks):
             #for i in range(0, len(aux_dl), chunk_size):
-                if print_flag: print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | Chunk [ " + str(i) + "/"+str(total_chunks)+"] => " + str(round(i*100/total_chunks)) + "%")
+                if print_flag: 
+                    print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | Chunk [ " + str(i) + "/"+str(total_chunks)+"] => " + str(round(i*100/total_chunks)) + "%")
+                    gpu_memory_status()
+                    sys.stdout.flush()
                 chunk = [batch for (n, batch) in enumerate(aux_dl) if (chunk_size*i <= n  and chunk_size*(i+1) > n) ]
                 chunk_embs = [
                     get_acts_and_grads(
                         model=enc_learn.model,
-                        modules=module, 
+                        modules=module,
                         x=xb[0], 
                         cpu=cpu
-                    )[0] 
+                    )[0]
                     for xb in chunk
                 ]
                 # Mueve los embeddings del bloque a la CPU
                 chunk_embs = [emb.cpu() for emb in chunk_embs]
                 embs.extend(chunk_embs)
+                torch.cuda.empty_cache()
             chunk = True
-            if print_flag: print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | 100%")
+            if print_flag: 
+                print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | 100%")
+                sys.stdout.flush()
         
     if print_flag: print("get_enc_embs_set_stride_set_batch_size | concat embeddings")
     embs = to_concat(embs)
@@ -252,7 +260,7 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
     if embs.ndim == 3 and average_seq_dim: embs = embs.mean(axis=2)
     if print_flag: print("get_enc_embs_set_stride_set_batch_size | Convert to numpy")
     if to_numpy: 
-        if cpu:
+        if cpu or chunk_size > 0:
             embs = embs.numpy() 
         else: 
             embs = embs.cpu().numpy()

@@ -441,7 +441,15 @@ shinyServer(function(input, output, session) {
         stride = input$stride 
         
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
-        result <- dvats$get_enc_embs_set_stride_set_batch_size(X = X(), enc_learn = enc_l, stride = input$stride, batch_size = bs, cpu = F, print_flag = T, time_flag = T)
+        enc_input = X()
+        chunk_max = 10000000000
+        shape <- dim(enc_input)
+        print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
+        chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))
+        N = floor(chunk_size_/32)
+        chunk_size = N*32
+        print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size, " | shape[0]*shape[1]: ", shape[0]*shape[1] ))
+        result <- dvats$get_enc_embs_set_stride_set_batch_size(X = enc_input, enc_learn = enc_l, stride = input$stride, batch_size = bs, cpu = F, print_flag = T, time_flag = T, chunk_size = chunk_size)
         t_end <- Sys.time()
         diff <- t_end - t_init
         diff_secs <- as.numeric(diff, units = "secs")

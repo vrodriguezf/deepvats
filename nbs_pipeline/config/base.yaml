@@ -21,20 +21,24 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder: &path '~/data/'
-    fname: &fname 'toy'
+    fname: &fname 'kaggle_web_traffic_dataset_with_missing_values' #Wikipedia
+    #fname: &fname 'traffic_hourly_dataset' #Traffic_SF
     #fname: &fname 'sunspot_dataset_with_missing_values'
     #fname:   &fname 'ETTh1'
     #fname: &fname 'solar_4_seconds_dataset'
     #fname: &fname 'Semantic_Segmentation_TiltABP'
-    ftype:   &ftype '.csv' #ETTh1 Toy 
-    #ftype: &ftype '.tsf' #solar_4_seconds, sunspot
-    cols: &cols []
+    #ftype:   &ftype '.csv' #ETTh1 Toy 
+    ftype: &ftype '.tsf' #solar_4_seconds, sunspot , traffic san francisco
+    #cols: &cols []
+    cols: &cols [0,1,2,3, 4] #WWikipedia
     freq: &freq '1s' 
     #freq: &freq '4s' #solar_4_seconds
     #freq: &freq '1d' #sunspot
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    alias: &alias 'toy'
+    alias: &alias 'Wikipedia'
+    #alias: &alias 'Traffic_SF'
+    #alias: &alias 'toy'
     #alias: &alias 'ETTh1'
     #alias: &alias 'sunspot'
     #alias: &alias 'TitlABP'

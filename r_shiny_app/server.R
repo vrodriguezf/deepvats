@@ -441,7 +441,7 @@ shinyServer(function(input, output, session) {
         stride = input$stride 
         
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
-        result <- dvats$get_enc_embs_set_stride_set_batch_size(X = X(), enc_learn = enc_l, stride = input$stride, batch_size = bs, cpu = F, print_flag = F, time_flag = T)
+        result <- dvats$get_enc_embs_set_stride_set_batch_size(X = X(), enc_learn = enc_l, stride = input$stride, batch_size = bs, cpu = F, print_flag = T, time_flag = T)
         t_end <- Sys.time()
         diff <- t_end - t_init
         diff_secs <- as.numeric(diff, units = "secs")
@@ -525,7 +525,8 @@ shinyServer(function(input, output, session) {
       res = switch(input$dr_method,
             #### Comprobando parametros para saber por qué salen diferentes los embeddings
             ######### Comprobando los parámetros
-             UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
+             #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
+             UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234), print_flag = T),
              TSNE = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)),
              PCA = dvats$get_PCA_prjs(X = embs, cpu=F, random_state=as.integer(1234)))
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
@@ -620,6 +621,7 @@ shinyServer(function(input, output, session) {
         prjs <- req(projections())
         if ("cluster" %in% names(prjs)) {
             unique_labels <- unique(prjs$cluster)
+            print(unique_labels)
             ## IF the value "-1" exists, assign the first element of mycolors to #000000, if not, assign the normal colorRampPalette
             if (as.integer(-1) %in% unique_labels) 
                 colour_palette <- append("#000000", colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels)-1))

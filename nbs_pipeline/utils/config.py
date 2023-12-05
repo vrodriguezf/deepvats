@@ -575,6 +575,26 @@ traffic_san_francisco_0 = AttrDict(
 )
 
 #| export
+# Monash solar 10 minutes dataset
+# Multi-dimensional
+monash_solar_10_minutes_0 = AttrDict(
+    alias ="Monash-Solar_10_minutes",
+    fname ="solar_10_minutes_dataset",
+    #5 univariate timeseries. 0-4 can be used 1 each time
+    #137 columns (each one 1 different timeserie)
+    cols =[0],
+    ftype ='.tsf',
+    freq ='10min',
+    time_col = None,
+    mvp = AttrDict(
+        batch_size = 512,
+        n_epoch = 100,
+        ws = [1,4320], #10 min - 1 month #TODO: Check
+        stride = 144 #1d by 1d
+    )
+)
+
+#| export
 etth1_0 = AttrDict(
     alias="ETTh1",
     fname="ETTh1",
@@ -617,7 +637,7 @@ stumpy_toy_0 = AttrDict(
     mvp = AttrDict(
         batch_size = 512,
         n_epoch = 100,
-        ws = [10,30], 
+        ws = [10,1008], 
         stride = 1
     )
 )
@@ -627,6 +647,7 @@ tested_configs = {
     'monash_solar_4_seconds_0': monash_solar_4_seconds_0,
     'wikipedia_0': wikipedia_0,
     'traffic_san_francisco_0': traffic_san_francisco_0,
+    'monash_solar_10_minutes_0': monash_solar_10_minutes_0,
     'etth1_0': etth1_0,
     'stumpy_abp_0':  stumpy_abp_0,
     'stumpy_toy_0': stumpy_toy_0
@@ -703,7 +724,7 @@ def force_artifact_config_sd2a(
         print("Selecting ", list(tested_configs.items())[id][0])
     config.artifact_name = to_set.alias
     config.data_cols = to_set.cols
-    config.data_fpath= "~/data/"+to_set.fname+to_set.ftype,
+    config.data_fpath= "~/data/"+to_set.fname+to_set.ftype
     config.freq=to_set.freq
     config.time_col = to_set.time_col
     if print_flag: 
@@ -737,6 +758,7 @@ def force_artifact_config_mvp(
     config.batch_size = to_set.mvp.batch_size
     config.epochs = to_set.mvp.n_epoch
     config.mvp_ws= to_set.mvp.ws
+    config.w = config.mvp_ws[1]
     config.stride=to_set.mvp.stride
     path,_,version = split_artifact_string(config.train_artifact)
     config.train_artifact=path+config.artifact_name+":"+version

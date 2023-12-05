@@ -22,7 +22,7 @@ user_preferences:
   data:
     folder: &path '~/data/'
     fname: &fname "australian_electricity_demand_dataset"
-    ftype: &ftype 'tsf'
+    ftype: &ftype '.tsf'
     cols: &cols [0]
     freq: &freq '1h'
   artifact:

@@ -442,7 +442,7 @@ shinyServer(function(input, output, session) {
         
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
         enc_input = X()
-        chunk_max = 10000000000
+        chunk_max = 10000000
         shape <- dim(enc_input)
         print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
         chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))

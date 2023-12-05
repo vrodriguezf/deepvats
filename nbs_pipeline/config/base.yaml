@@ -21,28 +21,13 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder: &path '~/data/'
-    fname: &fname 'kaggle_web_traffic_dataset_with_missing_values' #Wikipedia
-    #fname: &fname 'traffic_hourly_dataset' #Traffic_SF
-    #fname: &fname 'sunspot_dataset_with_missing_values'
-    #fname:   &fname 'ETTh1'
-    #fname: &fname 'solar_4_seconds_dataset'
-    #fname: &fname 'Semantic_Segmentation_TiltABP'
-    #ftype:   &ftype '.csv' #ETTh1 Toy 
-    ftype: &ftype '.tsf' #solar_4_seconds, sunspot , traffic san francisco
-    #cols: &cols []
-    cols: &cols [0,1,2,3, 4] #WWikipedia
-    freq: &freq '1s' 
-    #freq: &freq '4s' #solar_4_seconds
-    #freq: &freq '1d' #sunspot
+    fname: &fname "australian_electricity_demand_dataset"
+    ftype: &ftype 'tsf'
+    cols: &cols [0]
+    freq: &freq '1h'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    alias: &alias 'Wikipedia'
-    #alias: &alias 'Traffic_SF'
-    #alias: &alias 'toy'
-    #alias: &alias 'ETTh1'
-    #alias: &alias 'sunspot'
-    #alias: &alias 'TitlABP'
-    #alias: &alias 'solar_4_seconds'
+    alias: &alias 'Monash-Australian_electricity_demand'
     algorithm: &alg 'mvp-SWV'
   directories:
     # Folder to store temporary files
@@ -92,9 +77,7 @@ data:
     test_split: null
     # List or int with the idx(s) of the column containing the timestamp
     # (null if there is no timestamp column)
-    time_col: null #Solar_4_seconds sunspot 
-    #time_col: 1
-    #time_col: 0 #ETTh1 TitlABP
+    time_col: null
 
 ########################
 # Wandb specifications #

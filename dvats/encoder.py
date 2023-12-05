@@ -147,7 +147,10 @@ def get_enc_embs(X, enc_learn, module=None, cpu=False, average_seq_dim=True, to_
     return embs
 
 # %% ../nbs/encoder.ipynb 13
-def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, module=None, cpu=False, average_seq_dim=True, to_numpy=True, print_flag = False, time_flag=False, chunk_size = 0):
+def get_enc_embs_set_stride_set_batch_size(
+    X, enc_learn, stride, batch_size, module=None, cpu=False, average_seq_dim=True, to_numpy=True, 
+    print_flag = False, time_flag=False, chunk_size = 0
+):
     """
         Get the embeddings of X from an encoder, passed in `enc_learn as a fastai
         learner. By default, the embeddings are obtained from the last layer
@@ -161,17 +164,18 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
         t_start = time.time()
     if print_flag:
         print("--> get_enc_embs_set_stride_set_batch_size")
-        gpu_memory_status()
-        print("get_enc_embs_set_stride_set_batch_size | Check versions")
+        #gpu_memory_status()
+        #print("get_enc_embs_set_stride_set_batch_size | Check versions")
         #import sys
-        print("get_enc_embs_set_stride_set_batch_size | Check versions | Python version", sys.version)
-        print("get_enc_embs_set_stride_set_batch_size | Check versions | PyTorch version", torch.__version__)
-        print("get_enc_embs_set_stride_set_batch_size | Check versions | CUDA version", torch.version.cuda)
-        print("get_enc_embs_set_stride_set_batch_size | Apply stride & batch size")
+        #print("get_enc_embs_set_stride_set_batch_size | Check versions | Python version", sys.version)
+        #print("get_enc_embs_set_stride_set_batch_size | Check versions | PyTorch version", torch.__version__)
+        #print("get_enc_embs_set_stride_set_batch_size | Check versions | CUDA version", torch.version.cuda)
+        #print("get_enc_embs_set_stride_set_batch_size | Apply stride & batch size")
+    
     X = X[::stride]
     enc_learn.dls.bs = batch_size 
     
-    if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Check CUDA")
+    if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Check CUDA | X ~ ", X.shape[0])
     if cpu:
         if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Get enc embs CPU")
         enc_learn.dls.cpu()
@@ -233,7 +237,7 @@ def get_enc_embs_set_stride_set_batch_size(X, enc_learn, stride, batch_size, mod
             #for i in range(0, len(aux_dl), chunk_size):
                 if print_flag: 
                     print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | Chunk [ " + str(i) + "/"+str(total_chunks)+"] => " + str(round(i*100/total_chunks)) + "%")
-                    gpu_memory_status()
+#                    gpu_memory_status()
                     sys.stdout.flush()
                 chunk = [batch for (n, batch) in enumerate(aux_dl) if (chunk_size*i <= n  and chunk_size*(i+1) > n) ]
                 chunk_embs = [

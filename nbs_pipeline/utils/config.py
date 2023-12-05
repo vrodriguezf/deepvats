@@ -490,3 +490,259 @@ def get_artifact_config_xai_shap(print_flag: bool = False) -> Tuple[AttrDict, st
         random_state        = config.encoder.umap.random_state
     )
     return artifact_config, job_type
+
+#| export
+# Monash australian electricity demand
+monash_australian_electricity_demand_0 = AttrDict(
+    alias ="Monash-Australian_electricity_demand",
+    fname ="australian_electricity_demand_dataset",
+    #5 univariate timeseries. 0-4 can be used 1 each time
+    cols =[0],
+    ftype ='.tsf',
+    freq ='30min', 
+    time_col = None,
+    mvp = AttrDict(
+        batch_size = 512,
+        n_epoch = 100,
+        ws = [2,336], #1h-1week | TODO: Check to ensure freq sense
+        stride = 48 #Day2Day TODO: Check
+    )
+)
+
+#| export
+# Monash sunspot:
+monash_sunspot_0 = AttrDict(
+    alias = "sunspot",
+    fname = "sunspot_dataset_with_missing_values",
+    ftype = ".tsf",
+    cols = [],
+    freq ='1d',
+    time_col = None,
+    mvp = AttrDict(
+        batch_size = 512,
+        n_epoch = 100,
+        ws = [7,365], #1week-1year
+        stride = 30 #1 month TODO: Check
+    )
+)
+
+#| export
+monash_solar_4_seconds_0 = AttrDict(
+    alias =  'solar_4_seconds',
+    fname = 'solar_4_seconds_dataset',
+    ftype = '.tsf',
+    freq = '4s',
+    cols = [],
+    time_col= None,
+    mvp = AttrDict(
+        batch_size = 512,
+        n_epoch = 100,
+        ws = [15,450], #1 min - 30 min (15*60=900 = 1hora intervalos 4 secs)
+        stride = 15 #1 min TODO: Check
+    )
+)
+
+#| export
+wikipedia_0 = AttrDict(
+    alias="Wikipedia",
+    fname="kaggle_web_traffic_dataset_with_missing_values",
+    cols=[0, 1, 2, 3, 4],
+    ftype=".tsf",
+    freq = '1d',
+    time_col=None,
+    mvp = AttrDict(
+        batch_size = 512,
+        n_epoch = 100,
+        ws = [1,365], #1d-1año
+        stride = 1 #TODO: Check
+    )
+)
+
+#| export
+traffic_san_francisco_0 = AttrDict(
+    alias="Traffic_SF",
+    fname="traffic_hourly_dataset",
+    ftype=".tsf",
+    cols=[],
+    time_col=None,
+    freq='1h',
+    mvp = AttrDict(
+        batch_size = 512,
+        n_epoch = 100,
+        ws = [1,720], #1h-1week TODO: Check
+        stride = 24 #1 day TODO: Check
+    )
+)
+
+#| export
+etth1_0 = AttrDict(
+    alias="ETTh1",
+    fname="ETTh1",
+    ftype=".csv",
+    cols=[],
+    time_col=0,
+    freq='1h',
+    mvp = AttrDict(
+        batch_size = 512,
+        n_epoch = 100,
+        ws = [1,720], #1 h - 1 month TODO:Check
+        stride = 24 #1 day TODO: Check
+    )
+)
+
+#| export
+stumpy_abp_0 = AttrDict(
+    alias="TitlABP",
+    fname="Semantic_Segmentation_TiltABP",
+    ftype=".csv",
+    cols=[],
+    freq="1s",
+    time_col=0, 
+    mvp = AttrDict(
+        batch_size = 512,
+        n_epoch = 100,
+        ws = [60,3600], #1min-1h TODO:Check
+        stride = 60 #1 min TODO: Check
+    )
+)
+
+#| export
+stumpy_toy_0 = AttrDict(
+    alias="toy",
+    fname="toy",
+    ftype=".csv",
+    cols=[],
+    freq="1s",
+    time_col=None,
+    mvp = AttrDict(
+        batch_size = 512,
+        n_epoch = 100,
+        ws = [10,30], 
+        stride = 1
+    )
+)
+
+tested_configs = {
+    'monash_australian_electricity_demand_0': monash_australian_electricity_demand_0,
+    'monash_solar_4_seconds_0': monash_solar_4_seconds_0,
+    'wikipedia_0': wikipedia_0,
+    'traffic_san_francisco_0': traffic_san_francisco_0,
+    'etth1_0': etth1_0,
+    'stumpy_abp_0':  stumpy_abp_0,
+    'stumpy_toy_0': stumpy_toy_0
+}
+
+#| export
+def show_attrdict(dict: AttrDict):
+    for key, value in dict.items():
+        print(f"{key}: {value}")
+
+#| export
+def show_available_configs():
+    print("Available datasets: ")
+    i = 0
+    for key, val in tested_configs.items():
+        print(f"{i} - {key}")
+        i+=1
+
+
+#| export
+def show_config(id: int = 0):
+    show_attrdict(list(tested_configs.items())[id][1])
+
+#| export
+def get_tested_config(
+    id: int = 0,
+    print_flag=False
+):
+    if print_flag: show_config(id)
+    return list(tested_configs.items())[id][1]
+
+
+#| export
+def print_colored(
+    key, 
+    modified_val, 
+    modified, 
+    both:bool=False, 
+    original_val=0):
+    color = "\033[94m" if modified else ""
+    reset = "\033[0m"
+    if modified and both:
+        print(f"{color}{key}: {original_val}{reset} -> {modified_val}{reset}")
+    else:
+        print(f"{color}{key}: {modified_val}{reset}")
+
+#| export
+def diff_attrdict(
+    dict_original: AttrDict, 
+    dict_modified: AttrDict,
+    both: bool = False
+):
+    for key in dict_original:
+        modified = dict_original[key] != dict_modified[key]
+        print_colored(
+            key, 
+            modified_val = dict_modified[key], 
+            modified = modified, 
+            both = both, 
+            original_val=dict_original[key]
+        )
+
+#| export
+from copy import deepcopy
+def force_artifact_config_sd2a(
+    config: AttrDict,
+    id:int = 0, 
+    print_flag = False,
+    both = False,
+):
+    to_set = get_tested_config(id)
+    if print_flag: 
+        config_before = deepcopy(config)
+        print("Selecting ", list(tested_configs.items())[id][0])
+    config.artifact_name = to_set.alias
+    config.data_cols = to_set.cols
+    config.data_fpath= "~/data/"+to_set.fname+to_set.ftype,
+    config.freq=to_set.freq
+    config.time_col = to_set.time_col
+    if print_flag: 
+        diff_attrdict(
+            dict_original=config_before, 
+            dict_modified=config, 
+            both = both)
+
+#| export
+def split_artifact_string(s:string) -> tuple[string, string, string]:
+    # Divide la cadena en dos partes usando ':'
+    path, version = s.split(':')
+
+    # Divide la parte del path en sus componentes
+    parts = path.rsplit('/', 1)
+
+    # Retorna los componentes separados
+    return parts[0] + '/', parts[1], version
+
+#| Export 
+def force_artifact_config_mvp(
+    config: AttrDict,
+    id:int = 0, 
+    print_flag = False,
+    both = False,
+):
+    to_set = get_tested_config(id)
+    if print_flag: 
+        config_before = deepcopy(config)
+    force_artifact_config_sd2a(config, id, False, False)
+    config.batch_size = to_set.mvp.batch_size
+    config.epochs = to_set.mvp.n_epoch
+    config.mvp_ws= to_set.mvp.ws
+    config.stride=to_set.mvp.stride
+    path,_,version = split_artifact_string(config.train_artifact)
+    config.train_artifact=path+config.artifact_name+":"+version
+    if print_flag: 
+        diff_attrdict(
+            dict_original=config_before, 
+            dict_modified=config, 
+            both = both
+        )

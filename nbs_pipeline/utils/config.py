@@ -537,8 +537,12 @@ monash_solar_4_seconds_0 = AttrDict(
     mvp = AttrDict(
         batch_size = 512,
         n_epoch = 100,
-        ws = [15,450], #1 min - 30 min (15*60=900 = 1hora intervalos 4 secs)
-        stride = 15 #1 min TODO: Check
+        #1 4 seconds
+        #15 1 min
+        #450 30 min - Too small for G4-0
+        #900 1h
+        ws = [450,900], #1 min - 30 min (15*60=900 = 1hora intervalos 4 secs)
+        stride = 10800 #1 min TODO: Check
     )
 )
 
@@ -589,7 +593,11 @@ monash_solar_10_minutes_0 = AttrDict(
     mvp = AttrDict(
         batch_size = 512,
         n_epoch = 100,
-        ws = [1,4320], #10 min - 1 month #TODO: Check
+        #1 month 4320 -> Too big for G4 (GPU-0)
+        #1 day 144 -> Ok
+        #1 week 1008 -> Ok
+        #15 days 2160 -> Ok
+        ws = [1,2160],
         stride = 144 #1d by 1d
     )
 )

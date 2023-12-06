@@ -9,8 +9,28 @@ def get_gpu_memory(device):
     percentage = round((used_memory / total_memory) * 100)
     return used_memory, total_memory, percentage
 
+
+def color_for_percentage(percentage):
+    if percentage < 20:
+        return "\033[90m"  # Gray
+    elif percentage < 40:
+        return "\033[94m"  # Blue
+    elif percentage < 60:
+        return "\033[92m"  # Green
+    elif percentage < 80:
+        return "\033[93m"  # Orange
+    else:
+        return "\033[91m"  # Red
+        
+def create_bar(percentage, length=20):
+    filled_length = int(length * percentage // 100)
+    bar = "█" * filled_length + "-" * (length - filled_length)
+    return bar
+
 def gpu_memory_status(device):
     used, total, percentage = get_gpu_memory(device)
+    bar = create_bar(percentage)
+    color_code = color_for_percentage(percentage)
     print(f"Used mem: {used}")
     print(f"Used mem: {total}")
-    print(f"Used mem: {percentage}%")
+    print(f"Memory Usage: [{bar}] {percentage}%")

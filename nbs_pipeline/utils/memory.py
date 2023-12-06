@@ -22,15 +22,15 @@ def color_for_percentage(percentage):
     else:
         return "\033[91m"  # Red
         
-def create_bar(percentage, length=20):
+def create_bar(percentage, color_code, length=20):
     filled_length = int(length * percentage // 100)
     bar = "█" * filled_length + "-" * (length - filled_length)
-    return bar
+    return color_code + bar + "\033[0m"  # Apply color and reset after bar
 
 def gpu_memory_status(device):
     used, total, percentage = get_gpu_memory(device)
-    bar = create_bar(percentage)
     color_code = color_for_percentage(percentage)
+    bar = create_bar(percentage, color_code)
     print(f"Used mem: {used}")
     print(f"Used mem: {total}")
-    print(f"Memory Usage: [{bar}] {percentage}%")
+    print(f"Memory Usage: [{bar}] {color_code}{percentage}%\033[0m")

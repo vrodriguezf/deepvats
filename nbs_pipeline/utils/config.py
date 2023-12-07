@@ -542,7 +542,8 @@ monash_solar_4_seconds_0 = AttrDict(
         #450 30 min - Too small for G4-0
         #900 1h
         ws = [450,900], #1 min - 30 min (15*60=900 = 1hora intervalos 4 secs)
-        stride = 10800 #1 min TODO: Check
+        stride = 450
+        #stride = 10800 #1 min TODO: Check
     )
 )
 
@@ -735,6 +736,17 @@ def force_artifact_config_sd2a(
     config.data_fpath= "~/data/"+to_set.fname+to_set.ftype
     config.freq=to_set.freq
     config.time_col = to_set.time_col
+    config.csv_config = {}
+    joining_train_test= False,
+    missing_values_constant= None,
+    missing_values_technique= None,
+    normalize_training= False,
+    range_testing= None,
+    range_training= None,
+    resampling_freq= None,
+    start_date= None,
+    test_split= None,
+
     if print_flag: 
         diff_attrdict(
             dict_original=config_before, 
@@ -762,14 +774,29 @@ def force_artifact_config_mvp(
     to_set = get_tested_config(id)
     if print_flag: 
         config_before = deepcopy(config)
+
     force_artifact_config_sd2a(config, id, False, False)
+
+    config.alias = to_set.alias
     config.batch_size = to_set.mvp.batch_size
     config.epochs = to_set.mvp.n_epoch
-    config.mvp_ws= to_set.mvp.ws
-    config.w = config.mvp_ws[1]
+
+    config.mask_future = False 
+    config.mask_stateful = True
+    config.mask_sync = False
+    config.norm_by_sample = False
+    config.norm_use_by_single_batch = False,
+    config.r = 0.71
+
     config.stride=to_set.mvp.stride
     path,_,version = split_artifact_string(config.train_artifact)
     config.train_artifact=path+config.artifact_name+":"+version
+
+    config.valid_size = 0.2
+
+    config.mvp_ws= to_set.mvp.ws
+    config.w = config.mvp_ws[1]
+
     if print_flag: 
         diff_attrdict(
             dict_original=config_before, 

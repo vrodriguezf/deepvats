@@ -88,6 +88,9 @@ shinyServer(function(input, output, session) {
             #map(~ .$metadata$enc_artifact) %>% 
             names
         )
+        ### TODO: Ver cómo poner bien esta ñapa para que no se actualizen los gráficos antes que el stride
+        updateSliderInput(session, "stride", value = 0)
+        ################
         on.exit(print("observeEvent input_dataset | update encoder list -->"))
     }, label = "input_encoder")
     
@@ -310,7 +313,10 @@ shinyServer(function(input, output, session) {
         t_init <- Sys.time()
         #enc_input1 <- tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
         #t_medio <- Sys.time()
-        enc_input <- tsai_data$prepare_forecasting_data(tsdf(), fcst_history = input$wlen)[[1]]
+        enc_input <- tsai_data$prepare_forecasting_data(
+            tsdf(), 
+            fcst_history = input$wlen
+        )[[1]]
         #print(dim(enc_input))
         #print(dim(enc_input)[1])
         #indexes <- seq(1, dim(enc_input)[1], input$stride)
@@ -446,15 +452,26 @@ shinyServer(function(input, output, session) {
         shape <- dim(enc_input)
         print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
         chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))
-        N = floor(chunk_size_/32)
+        N = max(3200,floor(chunk_size_/32))
         chunk_size = N*32
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size, " | shape[0]*shape[1]: ", shape[0]*shape[1] ))
-        result <- dvats$get_enc_embs_set_stride_set_batch_size(X = enc_input, enc_learn = enc_l, stride = input$stride, batch_size = bs, cpu = F, print_flag = T, time_flag = T, chunk_size = chunk_size)
+        result <- dvats$get_enc_embs_set_stride_set_batch_size(
+            X = enc_input, 
+            enc_learn = enc_l, 
+            stride = input$stride, 
+            batch_size = bs, 
+            cpu = F, 
+            print_flag = T, 
+            time_flag = T, 
+            chunk_size = chunk_size,
+            check_memory_usage = T
+        )
         t_end <- Sys.time()
         diff <- t_end - t_init
         diff_secs <- as.numeric(diff, units = "secs")
         diff_mins <- as.numeric(diff, units = "mins")
         print(paste0("get_enc_embs total time: ", diff_secs, " secs thus ", diff_mins, " mins"))
+        browser()
         on.exit(print("reactive embs | get embeddings -->"))
         result
     })
@@ -522,24 +539,46 @@ shinyServer(function(input, output, session) {
 #    print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
 #    result
 #})
-    
-    
+
+
+
     prj_object <- reactive({
-      embs = req(embs(), input$dr_method)
-      embs = embs[complete.cases(embs),]
-      print("--> prj_object")
-      #print(embs) #--
-      
-      res = switch(input$dr_method,
+        embs = req(embs(), input$dr_method)
+        embs = embs[complete.cases(embs),]
+        print("--> prj_object")
+        #print(embs) #--
+        #print(paste0("--> prj_object | UMAP params ", str(umap_params_)))
+        print("--> prj_object | UMAP params ")
+        
+        res = switch( input$dr_method,
             #### Comprobando parametros para saber por qué salen diferentes los embeddings
             ######### Comprobando los parámetros
-             #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
-             UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, random_state=as.integer(1234), print_flag = T),
-             TSNE = dvats$get_TSNE_prjs(X = embs, cpu=F, random_state=as.integer(1234)),
-             PCA = dvats$get_PCA_prjs(X = embs, cpu=F, random_state=as.integer(1234)))
+            #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
+            UMAP = dvats$get_UMAP_prjs(
+                input_data  = embs, 
+                use_cpu         = F, 
+                print_flag  = T,
+                n_neighbors = input$prj_n_neighbors, 
+                min_dist    = input$prj_min_dist, 
+                random_state= as.integer(input$prj_random_state)
+            ),
+            TSNE = dvats$get_TSNE_prjs(
+                X = embs, 
+                cpu=F, 
+                random_state=as.integer(prj_random_state)
+            ),
+            PCA = dvats$get_PCA_prjs(
+                X = embs, 
+                cpu=F, 
+                random_state=as.integer(prj_random_state)
+            )
+        )
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
       colnames(res) = c("xcoord", "ycoord")
       on.exit(print(" prj_object -->"))
+      flush.console()
+      Sys.sleep(5)
+      browser()
       res
     })
     

@@ -32,6 +32,11 @@ shinyUI(fluidPage(
       # sliderInput("points_emb", "Select range of points to plot in the projections", 
       #             min = 0, max = 0, value = 0, step = 1, ticks = FALSE),
       #uiOutput("points_prj_controls"),
+      #### TODO: Check. Added for debugging solar 4_secs
+      sliderInput("prj_n_neighbors", "Projections n_neighbors:", min = 1, max = 50, value = 15),
+      sliderInput("prj_min_dist", "Projections min_dist:", min = 0.0001, max = 1, value = 0.1),
+      sliderInput("prj_random_state", "Projections random_state:", min = 1234, max = 822569775, value = 1234),
+      ################
       radioButtons("dr_method", "Projection method:", c("UMAP", "TSNE", "PCA"), selected="UMAP", inline=T),
       br(),
       radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",

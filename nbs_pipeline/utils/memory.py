@@ -1,6 +1,6 @@
 import subprocess
 
-def get_gpu_memory(device):
+def get_gpu_memory(device=0):
     total_memory = subprocess.check_output(["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits", "--id=" + str(device)])
     total_memory = int(total_memory.decode().split('\n')[0])
     used_memory = subprocess.check_output(["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits",  "--id=" + str(device)])
@@ -27,7 +27,7 @@ def create_bar(percentage, color_code, length=20):
     bar = "█" * filled_length + "-" * (length - filled_length)
     return color_code + bar + "\033[0m"  # Apply color and reset after bar
 
-def gpu_memory_status(device):
+def gpu_memory_status(device=0):
     used, total, percentage = get_gpu_memory(device)
     color_code = color_for_percentage(percentage)
     bar = create_bar(percentage, color_code)

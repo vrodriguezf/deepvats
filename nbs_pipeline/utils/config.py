@@ -695,11 +695,24 @@ def print_colored(
     modified_val, 
     modified, 
     both:bool=False, 
-    original_val=0):
-    color = "\033[94m" if modified else ""
+    original_val=0,
+    missing_in_modified=False,
+    missing_in_original=False
+):
+    if missing_in_modified:
+        color = "\033[91m\033[1m"  # Red and bold
+    elif missing_in_original:
+        color = "\033[93m\033[1m"  # Orange and bold
+    else:
+        color = "\033[94m" if modified else ""
     reset = "\033[0m"
+
     if modified and both:
         print(f"{color}{key}: {original_val}{reset} -> {modified_val}{reset}")
+    elif missing_in_modified:
+        print(f"{color}{key} is missing in modified dict | {original_val} {reset}")
+    elif missing_in_original:
+        print(f"{color}{key} is missing in original dict | {modified_val} {reset}")
     else:
         print(f"{color}{key}: {modified_val}{reset}")
 
@@ -709,15 +722,26 @@ def diff_attrdict(
     dict_modified: AttrDict,
     both: bool = False
 ):
-    for key in dict_original:
-        modified = dict_original[key] != dict_modified[key]
-        print_colored(
-            key, 
-            modified_val = dict_modified[key], 
-            modified = modified, 
-            both = both, 
-            original_val=dict_original[key]
-        )
+    all_keys = set(dict_original.keys()) | set(dict_modified.keys())
+    for key in all_keys:
+        in_original = key in dict_original
+        in_modified = key in dict_modified
+
+        if in_original and in_modified:
+            modified = dict_original[key] != dict_modified[key]
+            print_colored(
+                key, 
+                modified_val = dict_modified[key], 
+                modified = modified, 
+                both = both, 
+                original_val=dict_original[key]
+            )
+        elif in_original:
+            # Key is missing in dict_modified
+            print_colored(key, modified_val=None, modified=True, missing_in_modified=True)
+        else:
+            # Key is missing in dict_original
+            print_colored(key, modified_val=dict_modified[key], modified=True, missing_in_original=True)
 
 #| export
 from copy import deepcopy

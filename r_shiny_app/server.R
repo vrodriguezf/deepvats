@@ -471,7 +471,6 @@ shinyServer(function(input, output, session) {
         diff_secs <- as.numeric(diff, units = "secs")
         diff_mins <- as.numeric(diff, units = "mins")
         print(paste0("get_enc_embs total time: ", diff_secs, " secs thus ", diff_mins, " mins"))
-        browser()
         on.exit(print("reactive embs | get embeddings -->"))
         result
     })
@@ -556,7 +555,7 @@ shinyServer(function(input, output, session) {
             #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
-                use_cpu         = F, 
+                cpu         = F, 
                 print_flag  = T,
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
@@ -578,7 +577,7 @@ shinyServer(function(input, output, session) {
       on.exit(print(" prj_object -->"))
       flush.console()
       Sys.sleep(5)
-      browser()
+      #browser()
       res
     })
     
@@ -836,7 +835,8 @@ shinyServer(function(input, output, session) {
             theme(legend.position = "none")
         
         if (input$show_lines){
-            plt <- plt + geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
+            #plt <- plt + geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
+            plt <- plt + geom_path(linewidth=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
         }
 
         print("projections_plot | GoGo Save!")

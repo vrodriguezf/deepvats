@@ -539,7 +539,45 @@ shinyServer(function(input, output, session) {
 #    result
 #})
 
-
+ prj_object_cpu <- reactive({
+        embs = req(embs(), input$dr_method)
+        embs = embs[complete.cases(embs),]
+        print("--> prj_object")
+        #print(embs) #--
+        #print(paste0("--> prj_object | UMAP params ", str(umap_params_)))
+        print("--> prj_object | UMAP params ")
+        
+        res = switch( input$dr_method,
+            #### Comprobando parametros para saber por qué salen diferentes los embeddings
+            ######### Comprobando los parámetros
+            #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
+            UMAP = dvats$get_UMAP_prjs(
+                input_data  = embs, 
+                cpu         = TRUE, 
+                print_flag  = TRUE,
+                n_neighbors = input$prj_n_neighbors, 
+                min_dist    = input$prj_min_dist, 
+                random_state= as.integer(input$prj_random_state)
+            ),
+            TSNE = dvats$get_TSNE_prjs(
+                X = embs, 
+                cpu = TRUE, 
+                random_state=as.integer(prj_random_state)
+            ),
+            PCA = dvats$get_PCA_prjs(
+                X = embs, 
+                cpu = TRUE, 
+                random_state=as.integer(prj_random_state)
+            )
+        )
+      res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
+      colnames(res) = c("xcoord", "ycoord")
+      on.exit(print(" prj_object -->"))
+      flush.console()
+      Sys.sleep(5)
+      #browser()
+      res
+    })
 
     prj_object <- reactive({
         embs = req(embs(), input$dr_method)
@@ -555,20 +593,20 @@ shinyServer(function(input, output, session) {
             #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
-                cpu         = F, 
-                print_flag  = T,
+                cpu         = FALSE, 
+                print_flag  = TRUE,
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
                 random_state= as.integer(input$prj_random_state)
             ),
             TSNE = dvats$get_TSNE_prjs(
                 X = embs, 
-                cpu=F, 
+                cpu=FALSE, 
                 random_state=as.integer(prj_random_state)
             ),
             PCA = dvats$get_PCA_prjs(
                 X = embs, 
-                cpu=F, 
+                cpu=FALSE, 
                 random_state=as.integer(prj_random_state)
             )
         )
@@ -637,27 +675,45 @@ shinyServer(function(input, output, session) {
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-      print("--> Projections")
-      req(prj_object(), input$dr_method)
-
-      #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
-      prjs <- prj_object()
-      req(input$dataset, input$encoder, input$wlen, input$stride)
+        print("--> Projections")
+        req(prj_object(), input$dr_method)
+        #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
+        prjs <- prj_object()
+        req(input$dataset, input$encoder, input$wlen, input$stride)
       
-      switch(clustering_options$selected,
-             precomputed_clusters={
+        switch(clustering_options$selected,
+            precomputed_clusters = {
                filename <- req(selected_clusters_labels_ar())$metadata$ref$hash
                clusters_labels <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, filename))
                #prjs$cluster <- clusters_labels[input$points_emb[[1]]:input$points_emb[[2]]]
                prjs$cluster <- clusters_labels
-             },
-             calculate_clusters={
-               clusters <- hdbscan$HDBSCAN(min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
-                                           min_samples = as.integer(clusters_config$min_samples_hdbscan),
-                                           cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
-                                           metric = clusters_config$metric_hdbscan)$fit(prjs)
-               prjs$cluster <- clusters$labels_
+            },
+            calculate_clusters = {
+                clusters = hdbscan$HDBSCAN(
+                    min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
+                    min_samples = as.integer(clusters_config$min_samples_hdbscan),
+                    cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
+                    metric = clusters_config$metric_hdbscan
+                )$fit(prjs)
+                score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
+                print(paste0("--> Projections | Score ", score))
+                if (score <= 0) {
+                    print(paste0("--> Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                    prjs <- prj_object_cpu()
+                    clusters = hdbscan$HDBSCAN(
+                        min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
+                        min_samples = as.integer(clusters_config$min_samples_hdbscan),
+                        cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
+                        metric = clusters_config$metric_hdbscan
+                    )$fit(prjs)
+                    score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
+                    print(paste0("--> Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                }
+                prjs$cluster <- clusters$labels_
+
+
              })
+        
         on.exit(print("Projections -->"))
       prjs
     })

@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['get_gpu_memory', 'color_for_percentage', 'create_bar', 'gpu_memory_status', 'check_compatibility', 'get_UMAP_prjs',
-           'get_PCA_prjs', 'get_TSNE_prjs']
+           'get_PCA_prjs', 'get_TSNE_prjs', 'cluster_score']
 
 # %% ../nbs/dr.ipynb 2
 import subprocess
@@ -157,3 +157,10 @@ def get_TSNE_prjs(X, cpu=False, **kwargs):
         reducer = cuml.TSNE(**kwargs)
     projections = reducer.fit_transform(X)
     return projections
+
+# %% ../nbs/dr.ipynb 18
+from sklearn.metrics import silhouette_score
+def cluster_score(prjs, clusters_labels, print_flag):
+    score = silhouette_score(prjs, clusters_labels)
+    if print_flag: print("Silhouette_score:", score)
+    return score

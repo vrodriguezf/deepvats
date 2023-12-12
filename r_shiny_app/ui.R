@@ -144,7 +144,13 @@ shinyUI(fluidPage(
           ),
           fluidRow(
             column(12,
-                   dygraphOutput("ts_plot_dygraph") %>% withSpinner()
+              sliderInput(
+                "nrows", "Select initial data range:", 
+                min = 0, max = 10000, 
+                value = c(0,0),
+                step = 1000000
+              ),
+              dygraphOutput("ts_plot_dygraph") %>% withSpinner()
             )
           )
           #verbatimTextOutput("projections_plot_interaction_info"),

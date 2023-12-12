@@ -198,14 +198,6 @@ shinyServer(function(input, output, session) {
             selected = ts_variables$selected
         )
 
-        print(paste0("observeEvent tsdf | Update nrows slider", dim(tsdf())[1]))
-        updateSliderInput(
-            session = session, inputId = "nrows",
-            min     = 1,
-            max     = dim(tsdf())[1],
-            value   = c(1,1),
-            step    = 1000000
-        )
 
 
         on.exit(print("--> observeEvent tsdf | update select variables -->"))
@@ -762,16 +754,9 @@ shinyServer(function(input, output, session) {
         print("ts_plot | Before req 4")
         req(input$wlen != 0, input$stride)
         
-        req(input$nrows[1] != 0, input$nrows[2] != 0, input$nrows[1] != input$nrows[2])
-        
-        #tsdf_subset = tsdf_data %>% slice(input$nrows[1], input$nrows[2])
-
-        print(paste0("ts_plot | 1st ts_plt  nrows ~ ", input$nrows))
-        print(paste0("ts_plot | 1st ts_plt  tsdf_subset ~ ", dim(tsdf_subset)))
 
         ts_plt = dygraph(
-            #tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px"
-            tsdf_subset %>% select(ts_variables$selected), width="100%", height = "400px"
+            tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px"
             ) %>% dyRangeSelector() %>%
             dyHighlight(hideOnMouseOut = TRUE) %>%
             dyOptions(labelsUTC = FALSE ) %>%

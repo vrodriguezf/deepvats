@@ -306,15 +306,17 @@ shinyServer(function(input, output, session) {
     ###############
     #  REACTIVES  #
     ###############
+    wlen_debounced <- reactive(input$wlen) %>% debounce(500)
+
     X <- reactive({
+        req(wlen_debounced() != 0, input$stride != 0, tsdf())
         print("--> Reactive X | Update Sliding Window")
-        req(input$wlen != 0, input$stride != 0, tsdf())
-        print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
-        freezeReactiveValue(input, "wlen")
+        print(paste0("reactive X | wlen ", wlen_debounced(), " | stride ", input$stride, " | Let's prepare data"))
+        
         t_init <- Sys.time()
         enc_input <- tsai_data$prepare_forecasting_data(
-            isolate(tsdf()), #Probando si mejora el rendimiento
-            fcst_history = input$wlen
+            tsdf(),
+            fcst_history = wlen_debounced()
         )[[1]]
         t_fin <- Sys.time()
         t_sliding_window_view = t_fin - t_init
@@ -324,7 +326,9 @@ shinyServer(function(input, output, session) {
     })
     
     # Time series artifact
-    ts_ar = eventReactive(input$dataset, {
+    ts_ar <- eventReactive(
+        input$dataset, 
+        {
         req(input$dataset)
         print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset, "-->"))
         ar <- api$artifact(input$dataset, type='dataset')
@@ -567,12 +571,14 @@ shinyServer(function(input, output, session) {
     })
 
     prj_object <- reactive({
-        embs = req(embs(), input$dr_method)
-        embs = embs[complete.cases(embs),]
         print("--> prj_object")
+        embs = req(embs(), input$dr_method)
+        
+        print("prj_object | Before complete cases ")
+        embs = embs[complete.cases(embs),]
         #print(embs) #--
         #print(paste0("--> prj_object | UMAP params ", str(umap_params_)))
-        print("--> prj_object | UMAP params ")
+        print("prj_object | Before switch ")
         
         res = switch( input$dr_method,
             #### Comprobando parametros para saber por qué salen diferentes los embeddings
@@ -609,16 +615,16 @@ shinyServer(function(input, output, session) {
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
         {
-            print("--> reactive tsdf | Before req 1")
+            
             req(
                 input$wlen > 0, 
                 input$stride > 0, 
                 input$dataset, 
                 input$encoder
             )
-            print("reactive tsdf | Before req 2 - get ts_ar")
             #req(input$dataset, input$encoder, input$stride != 0)
             ts_ar <- req(ts_ar())
+            print("--> reactive tsdf | Before req 2 - get ts_ar")
             print(paste0("reactive tsdf | ts artifact ", ts_ar))
             # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
             # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
@@ -665,9 +671,10 @@ shinyServer(function(input, output, session) {
         print("--> Projections")
         req(prj_object(), input$dr_method)
         #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
+        print("Projections | before prjs")
         prjs <- prj_object()
         req(input$dataset, input$encoder, input$wlen, input$stride)
-      
+        print("Projections | before switch")
         switch(clustering_options$selected,
             precomputed_clusters = {
                filename <- req(selected_clusters_labels_ar())$metadata$ref$hash

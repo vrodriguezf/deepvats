@@ -197,6 +197,17 @@ shinyServer(function(input, output, session) {
             choices = ts_variables$selected,
             selected = ts_variables$selected
         )
+
+        print(paste0("observeEvent tsdf | Update nrows slider", dim(tsdf())[1]))
+        updateSliderInput(
+            session = session, inputId = "nrows",
+            min     = 1,
+            max     = dim(tsdf())[1],
+            value   = c(1,1),
+            step    = 1000000
+        )
+
+
         on.exit(print("--> observeEvent tsdf | update select variables -->"))
     }, label = "select_variables")
     
@@ -321,6 +332,9 @@ shinyServer(function(input, output, session) {
         t_fin <- Sys.time()
         t_sliding_window_view = t_fin - t_init
         print(paste0("SWV: ", t_sliding_window_view, " secs "))
+            #value   = c(as.integer(1), as.integer(max(10000,length(enc_input)))))
+        
+
         on.exit(print(paste0("reactive X | Update sliding window | Apply stride | enc_input ~ ", dim(enc_input))))
         enc_input
     })
@@ -573,7 +587,6 @@ shinyServer(function(input, output, session) {
     prj_object <- reactive({
         print("--> prj_object")
         embs = req(embs(), input$dr_method)
-        
         print("prj_object | Before complete cases ")
         embs = embs[complete.cases(embs),]
         #print(embs) #--
@@ -624,39 +637,42 @@ shinyServer(function(input, output, session) {
             )
             #req(input$dataset, input$encoder, input$stride != 0)
             ts_ar <- req(ts_ar())
-            print("--> reactive tsdf | Before req 2 - get ts_ar")
-            print(paste0("reactive tsdf | ts artifact ", ts_ar))
+            print("--> Reactive tsdf | Before req 2 - get ts_ar")
+            print(paste0("Reactive tsdf | ts artifact ", ts_ar))
             # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
             # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
             # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
             tsdf_ <-  tryCatch({
                 ts_ar_hash=ts_ar$metadata$TS$hash
-                print(paste0("reactive tsdf | py_load_object ", DEFAULT_PATH_WANDB_ARTIFACTS, " hash ", ts_ar_hash ))
+                print(paste0("Reactive tsdf | py_load_object ", DEFAULT_PATH_WANDB_ARTIFACTS, " hash ", ts_ar_hash ))
                 py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)) %>% 
                 rownames_to_column("timeindex") %>% 
                 column_to_rownames(var = "timeindex")
                 # slice(first_data_index:last_data_index) %>% 
             }, error = function(e){
-                print(paste0("reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
-                print("Retry TimeSeries load")
+                print(paste0("Reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
+                print("Reactive tsdf | Retry TimeSeries load")
                 tryCatch({
                     py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)) %>% 
                     rownames_to_column("timeindex") %>% 
                     # slice(first_data_index:last_data_index) %>%
                     column_to_rownames(var = "timeindex")
                 }, error = function(e){
-                    print(paste0("reactive tsdf |2| Error while loading TimeSeries object. Exit. Error:", e$message))
+                    print(paste0("Reactive tsdf |2| Error while loading TimeSeries object. Exit. Error:", e$message))
                     data.frame()
                 }, 
                 warning = function(w){
-                print(paste0("reactive tsdf |2| Warning ", w))
+                print(paste0("Reactive tsdf |2| Warning ", w))
                 data.frame()
                 }
             )}, warning = function(w){
-                print(paste0("reactive tsdf | Warning ", w))
+                print(paste0("Reactive tsdf | Warning ", w))
                 data.frame()
             } )
-            on.exit(print("reactive tsdf | Object loaded --> "))
+
+            
+
+            on.exit(print("Reactive tsdf | Object loaded --> "))
             tsdf_
         })
     
@@ -730,21 +746,32 @@ shinyServer(function(input, output, session) {
         colour_palette
     })
     
+
+
+    
+
     # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
         print("--> ts_plot | Before req 1")
         #req(tsdf(), prj_object(), input$wlen != 0, input$stride, ts_variables)
-        tsdf_data <- req(tsdf())
-        print("ts_plot | Before req 2")
+        tsdf_data = req(tsdf())
+        print(paste0("ts_plot | Before req 2 tsdf ~ ", dim(tsdf_data)))
         req(prj_object())
         print("ts_plot | Before req 3")
         req(ts_variables)
         print("ts_plot | Before req 4")
         req(input$wlen != 0, input$stride)
+        
+        req(input$nrows[1] != 0, input$nrows[2] != 0, input$nrows[1] != input$nrows[2])
+        
+        #tsdf_subset = tsdf_data %>% slice(input$nrows[1], input$nrows[2])
 
-        print("ts_plot | 1st ts_plt <-")
-        ts_plt <- dygraph(
-            tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px"
+        print(paste0("ts_plot | 1st ts_plt  nrows ~ ", input$nrows))
+        print(paste0("ts_plot | 1st ts_plt  tsdf_subset ~ ", dim(tsdf_subset)))
+
+        ts_plt = dygraph(
+            #tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px"
+            tsdf_subset %>% select(ts_variables$selected), width="100%", height = "400px"
             ) %>% dyRangeSelector() %>%
             dyHighlight(hideOnMouseOut = TRUE) %>%
             dyOptions(labelsUTC = FALSE ) %>%

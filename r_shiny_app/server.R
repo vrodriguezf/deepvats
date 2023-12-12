@@ -619,7 +619,7 @@ shinyServer(function(input, output, session) {
             print("reactive tsdf | Before req 2 - get ts_ar")
             #req(input$dataset, input$encoder, input$stride != 0)
             ts_ar <- req(ts_ar())
-            print(paste0("--> reactive tsdf | ts artifact ", ts_ar))
+            print(paste0("reactive tsdf | ts artifact ", ts_ar))
             # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
             # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
             # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
@@ -683,9 +683,9 @@ shinyServer(function(input, output, session) {
                     metric = clusters_config$metric_hdbscan
                 )$fit(prjs)
                 score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
-                print(paste0("--> Projections | Score ", score))
+                print(paste0("Projections | Score ", score))
                 if (score <= 0) {
-                    print(paste0("--> Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                    print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
                     prjs <- prj_object_cpu()
                     clusters = hdbscan$HDBSCAN(
                         min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
@@ -694,7 +694,7 @@ shinyServer(function(input, output, session) {
                         metric = clusters_config$metric_hdbscan
                     )$fit(prjs)
                     score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
-                    print(paste0("--> Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                    print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
                 }
                 prjs$cluster <- clusters$labels_
 
@@ -728,11 +728,11 @@ shinyServer(function(input, output, session) {
         print("--> ts_plot | Before req 1")
         #req(tsdf(), prj_object(), input$wlen != 0, input$stride, ts_variables)
         tsdf_data <- req(tsdf())
-        print("--> ts_plot | Before req 2")
+        print("ts_plot | Before req 2")
         req(prj_object())
-        print("--> ts_plot | Before req 3")
+        print("ts_plot | Before req 3")
         req(ts_variables)
-        print("--> ts_plot | Before req 4")
+        print("ts_plot | Before req 4")
         req(input$wlen != 0, input$stride)
 
         print("ts_plot | 1st ts_plt <-")

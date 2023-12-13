@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
-           'get_wandb_artifacts', 'get_pickle_artifact']
+           'get_wandb_artifacts', 'get_pickle_artifact', 'pickled_file']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -133,3 +133,13 @@ def get_pickle_artifact(filename):
         df = pickle.load(f)
     
     return df
+
+# %% ../nbs/utils.ipynb 41
+def pickled_file(function, filename=None, hash_code = None, include_hash_code = True):
+    filename_is_none = filename is None
+    if filename_is_none:
+        filename = f"result_{function.__name__}"
+    if not hash_code is None and (include_hash_code or filename_is_none):
+        filename = f"{filename}_{hash_code}"
+    filename = f"{filename}.pickle"
+    return filename

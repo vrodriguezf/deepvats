@@ -928,10 +928,10 @@ shinyServer(function(input, output, session) {
             plt <- plt + geom_path(linewidth=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
         }
 
-        output$downloadPlot <- downloadHandler(
-            filename = prjs_plot_name(),
+        observeEvent(input$savePlot, {
+            plt <- plt + theme(plot.background = element_rect(fill = "white"))
             ggsave(filename = prjs_plot_name(), plot = plt, path = "../data/plots/")
-        )       
+        })
         #observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
             #req(input$dataset, input$encoder)
             #print("!-- CUDA?: ", torch$cuda$is_available())

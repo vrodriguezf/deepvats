@@ -87,7 +87,7 @@ shinyUI(fluidPage(
                        sliderInput("point_size", label = "point_size",
                                    value = DEFAULT_VALUES$point_size, min=0, max=10, step = 0.5),
                        checkboxInput("show_lines", "Show lines", value = TRUE),
-                       downloadButton('downloadPlot', 'Download embedding projections plot'),
+                       actionButton('savePlot', 'Save embedding projections plot'),
 
                        actionBttn(inputId = "update_prj_graph",label = "Update aestethics",style = "simple",
                                   color = "primary",icon = icon("bar-chart"),size = "xs", block = TRUE),

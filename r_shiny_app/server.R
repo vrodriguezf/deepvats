@@ -928,7 +928,10 @@ shinyServer(function(input, output, session) {
             plt <- plt + geom_path(linewidth=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
         }
 
-        print("projections_plot | GoGo Save!")
+        output$downloadPlot <- downloadHandler(
+            filename = prjs_plot_name(),
+            ggsave(filename = prjs_plot_name(), plot = plt, path = "../data/plots/")
+        )       
         #observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
             #req(input$dataset, input$encoder)
             #print("!-- CUDA?: ", torch$cuda$is_available())
@@ -1017,7 +1020,7 @@ shinyServer(function(input, output, session) {
         } else {
             plt_name <- paste0(plt_name, "_prjs.png")
         }
-        #print(paste0("embeddings plot name", plt_name))
+        print(paste0("embeddings plot name", plt_name))
         plt_name
     }
 

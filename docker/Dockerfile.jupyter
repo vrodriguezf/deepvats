@@ -30,7 +30,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get update --fix-missing \
     #if errors with libtiff library
     #&& apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev \
-    && apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev \
+    && apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev zsh\
     #Otherwise
  #   && apt-get install -y wget bzip2 curl git sudo \
     && apt-get clean  \

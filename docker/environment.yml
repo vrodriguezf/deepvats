@@ -65,3 +65,4 @@ dependencies:
   - conda-forge::wandb=0.14.2=pyhd8ed1ab_0
   - fastai::fastai>=2.7.9
   - timeseriesai::tsai
+  - conda-forge::feather-format

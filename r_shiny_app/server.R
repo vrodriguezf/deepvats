@@ -644,7 +644,7 @@ shinyServer(function(input, output, session) {
             path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)
             tsdf_ <-  tryCatch({
                 print(paste0("Reactive tsdf | read_feather ", path ))
-                read_feather(path) %>% rownames_to_column("timeindex") %>% column_to_rownames(var = "timeindex")
+                read_feather(path) %>% rownames_to_column("tgimeindex") %>% column_to_rownames(var = "timeindex")
                 # slice(first_data_index:last_data_index) %>% 
             }, error = function(e){
                 print(paste0("Reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
@@ -753,6 +753,7 @@ shinyServer(function(input, output, session) {
         start_date = rownames(tsdf())[1]
         end_date = rownames(tsdf())[1000000]
         end_date = min(end_date, nrow(tsdf()))
+        print(tsdf()[1])
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
 
         ts_plt = dygraph(

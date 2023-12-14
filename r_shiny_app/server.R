@@ -641,11 +641,9 @@ shinyServer(function(input, output, session) {
             
             t_init <- Sys.time()
             ts_ar_hash=ts_ar$metadata$TS$hash
-            filename = paste0(ts_ar_hash,".feather")
-            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, filename)
+            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)
             tsdf_ <-  tryCatch({
-                
-                print(paste0("Reactive tsdf | py_load_object ", path ))
+                print(paste0("Reactive tsdf | read_feather ", path ))
                 read_feather(path) %>% rownames_to_column("timeindex") %>% column_to_rownames(var = "timeindex")
                 # slice(first_data_index:last_data_index) %>% 
             }, error = function(e){

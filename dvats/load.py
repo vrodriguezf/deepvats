@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from .imports import *
 from .utils import *
 import pickle
+import pyarrow.feather as ft
 
 # %% ../nbs/load.ipynb 7
 class TSArtifact(wandb.Artifact):
@@ -112,7 +113,7 @@ class TSArtifact(wandb.Artifact):
         # Hash and save
         hash_code = str(pd.util.hash_pandas_object(df).sum()) # str(hash(df.values.tobytes()))
         path = obj.default_storage_path/f'{hash_code}' if path is None else Path(path)/f'{hash_code}'
-        df.to_pickle(path)
+        ft.write_feather(df, path)
         obj.metadata['TS']['hash'] = hash_code
         obj.add_file(str(path))
 
@@ -130,7 +131,8 @@ def to_df(self:wandb.apis.public.Artifact):
     dir = Path(self.download())
     if self.metadata['TS']['created'] == 'from-df':
         # Call read_pickle with the single file from dir
-        return pd.read_pickle(dir.ls()[0])
+        #return pd.read_pickle(dir.ls()[0])
+        return ft.read_feather(dir.ls()[0])
     else:
         print("ERROR: Only from_df method is allowed yet")
 

@@ -23,6 +23,7 @@ RUN apt-get install -y python3-venv libxt-dev
 
 RUN R -e "install.packages(c('shiny', 'pals', 'shinyWidgets', 'dygraphs', 'shinycssloaders', 'shinyjs', 'Rcpp', 'reactlog', 'pals',  'feather'))"
 RUN R -e "remotes::install_github('r-lib/later')"
+RUN R -e "remotes::install_github('apache/arrow/r')"
 
 ## Install reticulate and create virtual environment using default Ubuntu installed Python
 RUN R -e "install.packages('reticulate')"

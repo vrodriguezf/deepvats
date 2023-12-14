@@ -587,13 +587,15 @@ shinyServer(function(input, output, session) {
         #print(paste0("--> prj_object | UMAP params ", str(umap_params_)))
         print("prj_object | Before switch ")
         
+        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+
         res = switch( input$dr_method,
             #### Comprobando parametros para saber por qué salen diferentes los embeddings
             ######### Comprobando los parámetros
             #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
-                cpu         = FALSE, 
+                cpu         = cpu_flag, 
                 print_flag  = TRUE,
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
@@ -782,7 +784,7 @@ shinyServer(function(input, output, session) {
         req(tsdf(), ts_variables, input$wlen != 0, input$stride)
 
         ts_plt = ts_plot_base()   
-        
+
         print("ts_plot | bp")
         #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)
         bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000

@@ -741,62 +741,37 @@ shinyServer(function(input, output, session) {
     })
     
 
-
-    
-    initial_data <- reactive({
-        tsdf_data = req(tsdf())
-        tsdf_data %>% sample_frac(0.125)
+    ts_plot_base <- reactive({
+        req(tsdf_data(), ts_variables$selected)
+        ts_plt = dygraph(
+            selected_tsdf_data(),
+            width="100%", height = "400px"
+        )
     })
 
 
     # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
         print("--> ts_plot | Before req 1")
-        print(gc())
-        #req(tsdf(), prj_object(), input$wlen != 0, input$stride, ts_variables)
-        tsdf_data = req(tsdf())
-        print(paste0("ts_plot | Before req 2 tsdf ~ ", dim(tsdf_data)))
-        req(prj_object())
-        print("ts_plot | Before req 3")
-        req(ts_variables)
-        print("ts_plot | Before req 4")
-        req(input$wlen != 0, input$stride)
-        
-        if (dim(tsdf_data)[1] > 100000) {
-            print("Take care on size. More than 100000 data detected. Selecting 0.125 points of the time serie")
-            ts_plt = dygraph(
-                initial_data() %>% select(ts_variables$selected), width="100%", height = "400px"
-                ) %>% dyRangeSelector() %>%
-                dyHighlight(hideOnMouseOut = TRUE) %>%
-                dyOptions(labelsUTC = FALSE, sigFigs = 2, drawPoints = TRUE, strokeWidth = 0.5  ) %>%
-                dyCrosshair(direction = "vertical")%>%
-                dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
-                dyUnzoom() %>%
-                dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
-                dyCSS(
-                    textConnection(
-                        ".dygraph-legend > span { display: none; }
-                        .dygraph-legend > span.highlight { display: inline; }"
-                    )
-                )
-            print(gc())
-        } else {
-            ts_plt = dygraph(
-                tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px"
-                ) %>% dyRangeSelector() %>%
-                dyHighlight(hideOnMouseOut = TRUE) %>%
-                dyOptions(labelsUTC = FALSE  ) %>%
-                dyCrosshair(direction = "vertical")%>%
-                dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
-                dyUnzoom() %>%
-                dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
-                dyCSS(
-                    textConnection(
-                        ".dygraph-legend > span { display: none; }
-                        .dygraph-legend > span.highlight { display: inline; }"
-                    )
-                )
-        }
+        req(tsdf(), prj_object(), ts_variables, input$wlen != 0, input$stride, ts_plot_base())
+        tsdf_data = tsdf()
+        freezeReactiveValue(tsdf(), prj_object())
+
+        #new_shading <- list(from = start_time, to = end_time, color = "#CCEBD6")
+        #graph_data$shading <- c(graph_data$shading, list(new_shading))
+        ts_plt = ts_plot_base %>% dyRangeSelector() %>%
+        dyHighlight(hideOnMouseOut = TRUE) %>%
+        dyOptions(labelsUTC = FALSE  ) %>%
+        dyCrosshair(direction = "vertical")%>%
+        dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
+        dyUnzoom() %>%
+        dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
+        dyCSS(
+            textConnection(
+                ".dygraph-legend > span { display: none; }
+                .dygraph-legend > span.highlight { display: inline; }"
+            )
+        )
         print("ts_plot | bs")
         bp <- brushedPoints(prj_object(), input$projections_brush, allRows = TRUE)
         print("ts_plot | embedings idxs ")

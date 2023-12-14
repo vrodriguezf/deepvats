@@ -18,6 +18,9 @@ library(pals)
 library(stringr)
 ##################QUITAR CUANDO YA TIRE
 library(reactlog)
+library(feather)
+library(arrow)
+
 reactlog::reactlog_enable()
 #options(shiny.trace = TRUE)
 

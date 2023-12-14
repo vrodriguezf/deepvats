@@ -112,7 +112,7 @@ class TSArtifact(wandb.Artifact):
 
         # Hash and save
         hash_code = str(pd.util.hash_pandas_object(df).sum()) # str(hash(df.values.tobytes()))
-        path = obj.default_storage_path/f'{hash_code}' if path is None else Path(path)/f'{hash_code}'
+        path = obj.default_storage_path/f'{hash_code}' if path is None else Path(path)/f'{hash_code}.feather'
         ft.write_feather(df, path)
         obj.metadata['TS']['hash'] = hash_code
         obj.add_file(str(path))

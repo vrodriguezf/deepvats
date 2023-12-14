@@ -636,6 +636,7 @@ shinyServer(function(input, output, session) {
             # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
             # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
             # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
+            t_init <- Sys.time()
             tsdf_ <-  tryCatch({
                 ts_ar_hash=ts_ar$metadata$TS$hash
                 print(paste0("Reactive tsdf | py_load_object ", DEFAULT_PATH_WANDB_ARTIFACTS, " hash ", ts_ar_hash ))
@@ -664,8 +665,8 @@ shinyServer(function(input, output, session) {
                 data.frame()
             } )
 
-            
-
+            t_fin  <- Sys.time()
+            print(paste0("Reactive tsdf | Execution time: ", t_fin - t_init, " seconds"))
             on.exit(print("Reactive tsdf | Object loaded --> "))
             tsdf_
         })
@@ -743,12 +744,19 @@ shinyServer(function(input, output, session) {
 
     
     ts_plot_base <- reactive({
-        req(tsdf(), ts_variables$selected)
+        print("--> ts_plot_base")
+        on.exit(print("ts_plot_base -->"))
+
+        start_date = rownames(tsdf())[1]
+        end_date = rownames(tsdf())[1000000]
+        end_date = min(end_date, nrow(tsdf()))
+        print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
+
         ts_plt = dygraph(
             tsdf() %>% select(ts_variables$selected),
             width="100%", height = "400px"
         ) %>% 
-        dyRangeSelector() %>% 
+        dyRangeSelector(c(start_date, end_date)) %>% 
         dyHighlight(hideOnMouseOut = TRUE) %>%
         dyOptions(labelsUTC = FALSE  ) %>%
         dyCrosshair(direction = "vertical")%>%
@@ -769,8 +777,12 @@ shinyServer(function(input, output, session) {
     # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
         print("--> ts_plot | Before req 1")
-        req(tsdf(), ts_variables, input$wlen != 0, input$stride, ts_plot_base())
+        on.exit(print("ts_plot -->"))
+
+        req(tsdf(), ts_variables, input$wlen != 0, input$stride)
+
         ts_plt = ts_plot_base()   
+        
         print("ts_plot | bp")
         #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)
         bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
@@ -827,7 +839,7 @@ shinyServer(function(input, output, session) {
             # }
             # ts_plt <- vec_dyShading(ts_plt,rects_ini, rects_fin,"red", rownames(tsdf()))
         }
-        on.exit(print("ts_plot -->"))
+        
         ts_plt
     })
     

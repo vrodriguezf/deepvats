@@ -451,17 +451,17 @@ shinyServer(function(input, output, session) {
         chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))
         N = max(3200,floor(chunk_size_/32))
         chunk_size = N*32
-        print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size, " | shape[0]*shape[1]: ", shape[0]*shape[1] ))
+        print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size, " | shape[1]*shape[2]: ", shape[1]*shape[2] ))
         result <- dvats$get_enc_embs_set_stride_set_batch_size(
             X = enc_input, 
             enc_learn = enc_l, 
             stride = input$stride, 
             batch_size = bs, 
-            cpu = F, 
-            print_flag = T, 
-            time_flag = T, 
+            cpu = FALSE, 
+            print_flag = FALSE, 
+            time_flag = TRUE, 
             chunk_size = chunk_size,
-            check_memory_usage = T
+            check_memory_usage = TRUE
         )
         t_end <- Sys.time()
         diff <- t_end - t_init
@@ -561,12 +561,12 @@ shinyServer(function(input, output, session) {
             TSNE = dvats$get_TSNE_prjs(
                 X = embs, 
                 cpu = TRUE, 
-                random_state=as.integer(prj_random_state)
+                random_state=as.integer(input$prj_random_state)
             ),
             PCA = dvats$get_PCA_prjs(
                 X = embs, 
                 cpu = TRUE, 
-                random_state=as.integer(prj_random_state)
+                random_state=as.integer(input$prj_random_state)
             )
         )
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
@@ -602,12 +602,12 @@ shinyServer(function(input, output, session) {
             TSNE = dvats$get_TSNE_prjs(
                 X = embs, 
                 cpu=FALSE, 
-                random_state=as.integer(prj_random_state)
+                random_state=as.integer(input$prj_random_state)
             ),
             PCA = dvats$get_PCA_prjs(
                 X = embs, 
                 cpu=FALSE, 
-                random_state=as.integer(prj_random_state)
+                random_state=as.integer(input$prj_random_state)
             )
         )
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
@@ -741,25 +741,14 @@ shinyServer(function(input, output, session) {
     })
     
 
+    
     ts_plot_base <- reactive({
-        req(tsdf_data(), ts_variables$selected)
+        req(tsdf(), ts_variables$selected)
         ts_plt = dygraph(
-            selected_tsdf_data(),
+            tsdf() %>% select(ts_variables$selected),
             width="100%", height = "400px"
-        )
-    })
-
-
-    # Generate timeseries data for dygraph dygraph
-    ts_plot <- reactive({
-        print("--> ts_plot | Before req 1")
-        req(tsdf(), prj_object(), ts_variables, input$wlen != 0, input$stride, ts_plot_base())
-        tsdf_data = tsdf()
-        freezeReactiveValue(tsdf(), prj_object())
-
-        #new_shading <- list(from = start_time, to = end_time, color = "#CCEBD6")
-        #graph_data$shading <- c(graph_data$shading, list(new_shading))
-        ts_plt = ts_plot_base %>% dyRangeSelector() %>%
+        ) %>% 
+        dyRangeSelector() %>% 
         dyHighlight(hideOnMouseOut = TRUE) %>%
         dyOptions(labelsUTC = FALSE  ) %>%
         dyCrosshair(direction = "vertical")%>%
@@ -772,8 +761,21 @@ shinyServer(function(input, output, session) {
                 .dygraph-legend > span.highlight { display: inline; }"
             )
         )
-        print("ts_plot | bs")
-        bp <- brushedPoints(prj_object(), input$projections_brush, allRows = TRUE)
+    })
+
+    
+    
+
+    # Generate timeseries data for dygraph dygraph
+    ts_plot <- reactive({
+        print("--> ts_plot | Before req 1")
+        req(tsdf(), ts_variables, input$wlen != 0, input$stride, ts_plot_base())
+        ts_plt = ts_plot_base()   
+        print("ts_plot | bp")
+        #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)
+        bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
+        #if (!is.data.frame(bp)) {bp = bp_}
+
         print("ts_plot | embedings idxs ")
         embedding_idxs <- bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
@@ -801,9 +803,11 @@ shinyServer(function(input, output, session) {
             }
             # # Plot the windows
             for(ts_idxs in reduced_window_list) {
-                ts_plt <- ts_plt %>% dyShading(from = rownames(tsdf_data)[head(ts_idxs, 1)],
-                                         to = rownames(tsdf_data)[tail(ts_idxs, 1)],
-                                         color = "#CCEBD6")
+                ts_plt <- ts_plt %>% dyShading(
+                    from = rownames(tsdf())[head(ts_idxs, 1)],
+                    to = rownames(tsdf())[tail(ts_idxs, 1)],
+                    color = "#CCEBD6"
+                )
             }
             
             # NOTE: This code block allows you to plot shadyng at once. 

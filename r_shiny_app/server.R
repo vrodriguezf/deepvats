@@ -189,8 +189,11 @@ shinyServer(function(input, output, session) {
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
         print("--> observeEvent tsdf | update select variables")
+        on.exit(print("--> observeEvent tsdf | update select variables -->"))
         freezeReactiveValue(input, "select_variables")
-        ts_variables$selected <- names(tsdf())
+        #ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
+        ts_variables$selected = names(tsdf())
+        print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         updateCheckboxGroupInput(
             session = session,
             inputId = "select_variables",
@@ -200,7 +203,6 @@ shinyServer(function(input, output, session) {
 
 
 
-        on.exit(print("--> observeEvent tsdf | update select variables -->"))
     }, label = "select_variables")
     
     # Update slider_range reactive values with current samples range
@@ -309,24 +311,61 @@ shinyServer(function(input, output, session) {
     ###############
     #  REACTIVES  #
     ###############
-    wlen_debounced <- reactive(input$wlen) %>% debounce(500)
 
     X <- reactive({
-        req(wlen_debounced() != 0, input$stride != 0, tsdf())
+        #req(input$wlen != 0, input$stride != 0, tsdf())
+        req(input$wlen != 0, input$stride != 0)
         print("--> Reactive X | Update Sliding Window")
-        print(paste0("reactive X | wlen ", wlen_debounced(), " | stride ", input$stride, " | Let's prepare data"))
+        print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
         
         t_init <- Sys.time()
-        enc_input <- tsai_data$prepare_forecasting_data(
-            tsdf(),
-            fcst_history = wlen_debounced()
-        )[[1]]
+#python_string = paste0("
+#import dvats.all as dvats
+#dvats.exec_with_feather_k_output(
+#    function_name = 'prepare_forecasting_data',
+#    module_name   = 'tsai.data.preparation',
+#    path_input ='", file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),"',
+#    #X = enc_input, 
+#    k_output = 0, #as.integer(0),
+#    print_flag = True, 
+#    time_flag = True, 
+#    fcst_history = ", input$wlen, "
+#)
+#")
+#
+#        shell_script <- tempfile()
+#        writeLines(c(
+#            "#!/bin/bash",
+#            #"source ~/env/bin/activate",
+#            sprintf("python -c \"%s\"", python_string)
+#        ), shell_script)
+#        Sys.chmod(shell_script, "755")
+#
+##        home_directory <- path.expand("~")
+#        # Sustituye 'python' con la ruta completa a tu intérprete de Python si es necesario
+# 
+#        
+#        enc_input <- system(shell_script, intern = TRUE)
+#        unlink(shell_script)
+
+        
+        enc_input = dvats$exec_with_feather_k_output(
+            function_name = "prepare_forecasting_data",
+            module_name   = "tsai.data.preparation",
+            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
+            k_output = as.integer(0),
+            print_flag = TRUE,
+            time_flag = TRUE,
+            #tsdf(), #%>%select(-"timeindex"),
+            fcst_history = input$wlen
+        )
+        
         t_fin <- Sys.time()
         t_sliding_window_view = t_fin - t_init
         print(paste0("SWV: ", t_sliding_window_view, " secs "))
             #value   = c(as.integer(1), as.integer(max(10000,length(enc_input)))))
         
-
+        print(paste0("reactive X | Update sliding window | Apply stride | enc_input ",  enc_input))
         on.exit(print(paste0("reactive X | Update sliding window | Apply stride | enc_input ~ ", dim(enc_input))))
         enc_input
     })
@@ -445,24 +484,57 @@ shinyServer(function(input, output, session) {
         
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
         enc_input = X()
-        chunk_max = 10000000
-        shape <- dim(enc_input)
-        print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
-        chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))
-        N = max(3200,floor(chunk_size_/32))
-        chunk_size = N*32
-        print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size, " | shape[1]*shape[2]: ", shape[1]*shape[2] ))
-        result <- dvats$get_enc_embs_set_stride_set_batch_size(
-            X = enc_input, 
-            enc_learn = enc_l, 
-            stride = input$stride, 
-            batch_size = bs, 
-            cpu = FALSE, 
-            print_flag = FALSE, 
-            time_flag = TRUE, 
-            chunk_size = chunk_size,
-            check_memory_usage = TRUE
-        )
+        #chunk_max = 10000000
+        #shape <- dim(enc_input)
+        #print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
+        #chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))
+        #N = max(3200,floor(chunk_size_/32))
+        chunk_size = 10000000 #N*32
+        #print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size, " | shape[1]*shape[2]: ", shape[1]*shape[2] ))
+        print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
+#        python_string = paste0("
+#import dvats.all
+    
+    result = dvats$get_enc_embs_set_stride_set_batch_size(
+        k_output = as.integer(0),
+        print_flag = TRUE,
+        time_flag = TRUE,
+        enc_learn = enc_l, 
+        stride =  input$stride, , 
+        batch_size = bs, 
+        cpu = input$cpu_flag, 
+        print_flag = False, 
+        time_flag = TRUE, 
+        chunk_size = chunk_size,
+        check_memory_usage = TRUE
+    )
+#exec_with_feather_k_output(
+#    function_name = 'get_enc_embs_set_stride_set_batch_size',
+#    module_name   = 'dvats.encoder',
+#    path = enc_input,
+#    #X = enc_input, 
+#    k_output = 0, #as.integer(0),
+#    print_flag = True,
+#    time_flag = True,
+#    enc_learn = enc_l, 
+#    stride = ", input$stride, ", 
+#    batch_size = bs, 
+#    cpu = ", input$cpu_flag, ", 
+#    print_flag = False, 
+#    time_flag = True, 
+#    chunk_size = chunk_size,
+#    check_memory_usage = True
+#)
+#")
+    
+        #home_directory <- path.expand("~")
+        ## Sustituye 'python' con la ruta completa a tu intérprete de Python si es necesario
+        #comand <- sprintf(paste0(path.expand("~"), "/env -c \"%s\""), python_string)
+        #print(paste0("COMAND: ", comand))
+        #result <- system(comand, intern = TRUE)
+
+        
+        #result <- system(python_string)
         t_end <- Sys.time()
         diff <- t_end - t_init
         diff_secs <- as.numeric(diff, units = "secs")
@@ -579,8 +651,9 @@ shinyServer(function(input, output, session) {
     })
 
     prj_object <- reactive({
+        req(embs(), input$dr_method)
         print("--> prj_object")
-        embs = req(embs(), input$dr_method)
+        embs = req(embs())
         print("prj_object | Before complete cases ")
         embs = embs[complete.cases(embs),]
         #print(embs) #--
@@ -645,15 +718,14 @@ shinyServer(function(input, output, session) {
             tsdf_ <-  tryCatch({
                 print(paste0("Reactive tsdf | read_feather ", path ))
                 read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% 
-                rename('timeindex' = `__index_level_0__`) %>% 
+                rename('timeindex' = `__index_level_0__`) %>%
                 column_to_rownames(var = "timeindex")
             }, error = function(e){
                 print(paste0("Reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
                 print("Reactive tsdf | Retry TimeSeries load")
                 tryCatch({
-                    read_feather(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, filename)) %>%
-                    rownames_to_column("timeindex") %>% 
-                    # slice(first_data_index:last_data_index) %>%
+                    read_feather(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash))  %>% 
+                    rename('timeindex' = `__index_level_0__`)  %>%
                     column_to_rownames(var = "timeindex")
                 }, error = function(e){
                     print(paste0("Reactive tsdf |2| Error while loading TimeSeries object. Exit. Error:", e$message))
@@ -750,15 +822,14 @@ shinyServer(function(input, output, session) {
     ts_plot_base <- reactive({
         print("--> ts_plot_base")
         on.exit(print("ts_plot_base -->"))
-
-        start_date = rownames(tsdf())[1]
+        start_date =rownames(tsdf())[1]
         end_date = rownames(tsdf())[1000000]
-        end_date = min(end_date, nrow(tsdf()))
-        print(tsdf()[1])
+        end_date = min(end_date, rownames(tsdf())[nrow(tsdf())])
+        tsdf_ <- tsdf() %>% select(ts_variables$selected)
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
-
+        
         ts_plt = dygraph(
-            tsdf() %>% select(ts_variables$selected),
+            tsdf_ %>% select(ts_variables$selected),
             width="100%", height = "400px"
         ) %>% 
         dyRangeSelector(c(start_date, end_date)) %>% 
@@ -823,6 +894,7 @@ shinyServer(function(input, output, session) {
                 ts_plt <- ts_plt %>% dyShading(
                     from = rownames(tsdf())[head(ts_idxs, 1)],
                     to = rownames(tsdf())[tail(ts_idxs, 1)],
+                    #to = rownames(tsdf())[tail(ts_idxs, 1)],
                     color = "#CCEBD6"
                 )
             }

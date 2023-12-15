@@ -2,7 +2,8 @@
 
 # %% auto 0
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
-           'get_wandb_artifacts', 'get_pickle_artifact']
+           'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
+           'exec_with_feather_k_output', 'exec_with_and_feather_k_output']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -133,3 +134,64 @@ def get_pickle_artifact(filename):
         df = pickle.load(f)
     
     return df
+
+# %% ../nbs/utils.ipynb 41
+import pyarrow.feather as ft
+import pickle
+
+# %% ../nbs/utils.ipynb 42
+def exec_with_feather(function, path = None, print_flag = False, *args, **kwargs):
+    result = None
+    if not (path is none):
+        if print_flag: print("--> Exec with feather | reading input from ", path)
+        input = ft.read_feather(path)
+        if print_flag: print("--> Exec with feather | Apply function ", path)
+        result = function(input, *args, **kwargs)
+        if print_flag: print("Exec with feather --> ", path)
+    return result
+
+# %% ../nbs/utils.ipynb 43
+def py_function(module_name, function_name, print_flag = False):
+    try:
+        function = getattr(__import__('__main__'), function_name)
+    except:
+        module = __import__(module_name, fromlist=[''])
+        function = getattr(module, function_name)
+    print("py function: ", function_name, ": ", function)
+    return function
+
+# %% ../nbs/utils.ipynb 46
+import time
+def exec_with_feather_k_output(function_name, module_name = "main", path = None, k_output = 0, print_flag = False, time_flag = False, *args, **kwargs):
+    result = None
+    function = py_function(module_name, function_name, print_flag)
+    if time_flag: t_start = time.time()
+    if not (path is None):
+        if print_flag: print("--> Exec with feather | reading input from ", path)
+        input = ft.read_feather(path)
+        if print_flag: print("--> Exec with feather | Apply function ", path)
+        result = function(input, *args, **kwargs)[k_output]
+    if time_flag:
+        t_end = time.time()
+        print("Exec with feather | time: ", t_end-t_start)
+    if print_flag: print("Exec with feather --> ", path)
+    return result
+
+# %% ../nbs/utils.ipynb 47
+def exec_with_and_feather_k_output(function_name, module_name = "main", path_input = None, path_output = None, k_output = 0, print_flag = False, time_flag = False, *args, **kwargs):
+    result = None
+    function = py_function(module_name, function_name, print_flag)
+    if time_flag: t_start = time.time()
+    if not (path_input is None):
+        if print_flag: print("--> Exec with feather | reading input from ", path_input)
+        input = ft.read_feather(path_input)
+        if print_flag: 
+            print("--> Exec with feather | Apply function ", function_name, "input type: ", type(input))
+        
+        result = function(input, *args, **kwargs)[k_output]
+        ft.write_feather(df, path, compression = 'lz4')
+    if time_flag:
+        t_end = time.time()
+        print("Exec with feather | time: ", t_end-t_start)
+    if print_flag: print("Exec with feather --> ", path_output)
+    return path_output

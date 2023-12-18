@@ -191,8 +191,8 @@ shinyServer(function(input, output, session) {
         print("--> observeEvent tsdf | update select variables")
         on.exit({print("--> observeEvent tsdf | update select variables -->"); flush.console()})
         freezeReactiveValue(input, "select_variables")
-        #ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
-        ts_variables$selected = names(tsdf())
+        ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
+        #ts_variables$selected = names(tsdf())
         print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         updateCheckboxGroupInput(
             session = session,
@@ -683,15 +683,15 @@ shinyServer(function(input, output, session) {
             tsdf_ <-  tryCatch({
                 print(paste0("Reactive tsdf | read_feather ", path ))
                 read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% 
-                rename('timeindex' = `__index_level_0__`) %>%
-                column_to_rownames(var = "timeindex")
+                rename('timeindex' = `__index_level_0__`) #%>%
+                #column_to_rownames(var = "timeindex")
             }, error = function(e){
                 print(paste0("Reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
                 print("Reactive tsdf | Retry TimeSeries load")
                 tryCatch({
                     read_feather(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash))  %>% 
-                    rename('timeindex' = `__index_level_0__`)  %>%
-                    column_to_rownames(var = "timeindex")
+                    rename('timeindex' = `__index_level_0__`)  #%>%
+                    #column_to_rownames(var = "timeindex")
                 }, error = function(e){
                     print(paste0("Reactive tsdf |2| Error while loading TimeSeries object. Exit. Error:", e$message))
                     stop()
@@ -787,14 +787,15 @@ shinyServer(function(input, output, session) {
     ts_plot_base <- reactive({
         print("--> ts_plot_base")
         on.exit({print("ts_plot_base -->"); flush.console()})
-        start_date =rownames(tsdf())[1]
-        end_date = rownames(tsdf())[1000000]
-        end_date = min(end_date, rownames(tsdf())[nrow(tsdf())])
+        start_date = tsdf()$timeindex[1]
+        end_date_id = as.integer(min(1000000, nrow(tsdf())))
+        end_date = tsdf()$timeindex[end_date_id]
         tsdf_ <- tsdf() %>% select(ts_variables$selected)
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         
         ts_plt = dygraph(
             tsdf_ %>% select(ts_variables$selected),
+            xlab = "timeindex",
             width="100%", height = "400px"
         ) %>% 
         dyRangeSelector(c(start_date, end_date)) %>% 
@@ -857,9 +858,8 @@ shinyServer(function(input, output, session) {
             # # Plot the windows
             for(ts_idxs in reduced_window_list) {
                 ts_plt <- ts_plt %>% dyShading(
-                    from = rownames(tsdf())[head(ts_idxs, 1)],
-                    to = rownames(tsdf())[tail(ts_idxs, 1)],
-                    #to = rownames(tsdf())[tail(ts_idxs, 1)],
+                    from = tsdf()$timeindex[head(ts_idxs, 1)],
+                    to = tsdf()$timeindex[tail(ts_idxs, 1)],
                     color = "#CCEBD6"
                 )
             }

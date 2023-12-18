@@ -192,7 +192,7 @@ shinyServer(function(input, output, session) {
         on.exit({print("--> observeEvent tsdf | update select variables -->"); flush.console()})
         freezeReactiveValue(input, "select_variables")
         #ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
-        ts_variables$selected = names(tsdf())
+        ts_variables$selected = names(isolate(tsdf()))
         print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         updateCheckboxGroupInput(
             session = session,
@@ -290,7 +290,7 @@ shinyServer(function(input, output, session) {
     # Observe to check/uncheck all variables
     observeEvent(input$selectall,{
         req(tsdf)
-        ts_variables$selected <- names(tsdf())
+        ts_variables$selected <- names(isolate(tsdf()))
         #ts_variables$selected <- names(req(tsdf()))
         if(input$selectall %%2 == 0){
             updateCheckboxGroupInput(session = session, 
@@ -671,8 +671,7 @@ shinyServer(function(input, output, session) {
             )
             #req(input$dataset, input$encoder, input$stride != 0)
             ts_ar <- req(ts_ar())
-            print("--> Reactive tsdf | Before req 2 - get ts_ar")
-            print(paste0("Reactive tsdf | ts artifact ", ts_ar))
+            print(paste0("--> Reactive tsdf | ts artifact ", ts_ar, " | Called by ", sys.call(-11)))
             # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
             # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
             # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
@@ -706,6 +705,7 @@ shinyServer(function(input, output, session) {
 
                 #print(systemInfo)
 
+                print("Reactive tsdf | --> Make conversion ")
                 result <- parallel::clusterApply(cl, chunks, function(chunk) {
                     cat("Processing chunk\n")
                     flush.console()
@@ -713,15 +713,16 @@ shinyServer(function(input, output, session) {
                     as.POSIXct(chunk)
                 })
                 stopCluster(cl)
+                print("Reactive tsdf | Make conversion -->")
                 t_end = Sys.time()
                 print(paste0("Reactive tsdf | Make conversion | Parallel part execution time: ", t_end - t_init, " seconds"))
                 df$timeindex = unlist(result)
-                #df$timeindex = as.POSIXct(unlist(result), format = "%Y-%m-%d %H:%M:%S")
-                start_date =rownames(tsdf())[1]
+
                 print(paste0("Reactive tsdf | Make conversion | Unlisted: ", df$timeindex[1]))
                 df <- df %>% column_to_rownames(var = "timeindex")
                 t_end = Sys.time()
                 print(paste0("Reactive tsdf | Make conversion | Execution time: ", t_end - t_init, " seconds"))
+                df
             }, error = function(e){
                 print(paste0("Reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
                 print("Reactive tsdf | Retry TimeSeries load")
@@ -753,7 +754,7 @@ shinyServer(function(input, output, session) {
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
       req(input$wlen != 0, input$stride != 0)
-      get_window_indices(1:nrow(req(projections())), w = input$wlen, s = input$stride)
+      get_window_indices(1:nrow(isolate(projections())), w = input$wlen, s = input$stride)
     })
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
@@ -804,7 +805,7 @@ shinyServer(function(input, output, session) {
     
     # Update the colour palette for the clusters
     update_palette <- reactive({
-        prjs <- req(projections())
+        prjs <- isolate(projections())
         if ("cluster" %in% names(prjs)) {
             unique_labels <- unique(prjs$cluster)
             print(unique_labels)
@@ -821,17 +822,24 @@ shinyServer(function(input, output, session) {
     })
     
 
-    
+    start_date <- reactive({
+        rownames(isolate(tsdf()))[1]
+    })
+
+    end_date <- reactive({
+        end_date_id = 1000000
+        end_date_id = min(end_date_id, nrow(tsdf()))
+        end_date = rownames(isolate(tsdf()))[end_date_id]
+    })
+
     ts_plot_base <- reactive({
         print("--> ts_plot_base")
         on.exit({print("ts_plot_base -->"); flush.console()})
-        start_date =rownames(tsdf())[1]
-        end_date_id = 1000000
-        end_date_id = min(end_date_id, nrow(tsdf()))
-        end_date = rownames(tsdf())[end_date_id]
-        tsdf_ <- tsdf() %>% select(ts_variables$selected)
+        start_date =isolate(start_date())
+        end_date = isolate(end_date())
+        tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected)
+
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
-        
         ts_plt = dygraph(
             tsdf_ %>% select(ts_variables$selected),
             width="100%", height = "400px"
@@ -965,9 +973,8 @@ shinyServer(function(input, output, session) {
        
     # Generate projections plot
     output$projections_plot <- renderPlot({
-        print("--> projections_plot before req 1")
-        #req(input$dataset, input$encoder, input$wlen, input$stride)
-        print("projections_plot before req 2")
+        req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
+        print("--> Projections_plot")
         prjs_ <- req(projections())
         print("projections_plot | Prepare column highlights")
         # Prepare the column highlight to color data

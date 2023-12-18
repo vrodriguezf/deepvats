@@ -330,8 +330,8 @@ shinyServer(function(input, output, session) {
             fcst_history = input$wlen
         )
         
-        t_fin <- Sys.time()
-        t_sliding_window_view = t_fin - t_init
+        t_end <- Sys.time()
+        t_sliding_window_view = t_end - t_init
         print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
         on.exit({print(paste0("reactive X | Update sliding window | Apply stride | enc_input ~ ", dim(enc_input), "-->")); flush.console()})
         enc_input
@@ -680,18 +680,56 @@ shinyServer(function(input, output, session) {
             t_init <- Sys.time()
             ts_ar_hash=ts_ar$metadata$TS$hash
             path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash)
+
             tsdf_ <-  tryCatch({
-                print(paste0("Reactive tsdf | read_feather ", path ))
-                read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% 
-                rename('timeindex' = `__index_level_0__`) %>%
-                column_to_rownames(var = "timeindex")
+                print(paste0("Reactive tsdf | Read feather ", path ))
+                df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
+                t_end = Sys.time()
+                print(paste0("Reactive tsdf | Read feather | Execution time: ", t_end - t_init, " seconds"))
+                
+                
+                chunk_size = 100000
+                num_chunks = ceiling(nrow(df)/chunk_size)
+                chunks=split(df$timeindex, ceiling(seq_along(df$timeindex)/chunk_size))
+                
+                print(paste0("Reactive tsdf | Make conversion | Chunks: ", num_chunks))
+
+                cl = parallel::makeCluster(4)
+                parallel::clusterEvalQ(cl, library(fasttime))
+                
+                print(paste0("Reactive tsdf | Make conversion | Cluster ", cl, " of ", detectCores()))
+                flush.console()
+
+                #testFunction <- function(x) {Sys.info()}
+
+                #systemInfo <- parallel::clusterApply(cl, 1:4, testFunction)
+
+                #print(systemInfo)
+
+                result <- parallel::clusterApply(cl, chunks, function(chunk) {
+                    cat("Processing chunk\n")
+                    flush.console()
+                    #fasttime::fastPOSIXct(chunk, format = "%Y-%m-%d %H:%M:%S")
+                    as.POSIXct(chunk)
+                })
+                stopCluster(cl)
+                t_end = Sys.time()
+                print(paste0("Reactive tsdf | Make conversion | Parallel part execution time: ", t_end - t_init, " seconds"))
+                df$timeindex = unlist(result)
+                #df$timeindex = as.POSIXct(unlist(result), format = "%Y-%m-%d %H:%M:%S")
+                start_date =rownames(tsdf())[1]
+                print(paste0("Reactive tsdf | Make conversion | Unlisted: ", df$timeindex[1]))
+                df <- df %>% column_to_rownames(var = "timeindex")
+                t_end = Sys.time()
+                print(paste0("Reactive tsdf | Make conversion | Execution time: ", t_end - t_init, " seconds"))
             }, error = function(e){
                 print(paste0("Reactive tsdf | Error while loading TimeSeries object. Error:", e$message))
                 print("Reactive tsdf | Retry TimeSeries load")
                 tryCatch({
-                    read_feather(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar_hash))  %>% 
-                    rename('timeindex' = `__index_level_0__`)  %>%
-                    column_to_rownames(var = "timeindex")
+                    print(paste0("Reactive tsdf | read_feather 2 ", path ))
+                    df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
+                    #df$timeindex = fasttime::fastPOSIXct(df$timeindex) 
+                    df <- df %>% column_to_rownames(var = "timeindex")
                 }, error = function(e){
                     print(paste0("Reactive tsdf |2| Error while loading TimeSeries object. Exit. Error:", e$message))
                     stop()
@@ -706,8 +744,8 @@ shinyServer(function(input, output, session) {
                 data.frame()
             } )
 
-            t_fin  <- Sys.time()
-            print(paste0("Reactive tsdf | Execution time: ", t_fin - t_init, " seconds"))
+            t_end  <- Sys.time()
+            print(paste0("Reactive tsdf | Execution time: ", t_end - t_init, " seconds"))
             on.exit({print("Reactive tsdf | Object loaded --> "); flush.console()})
             tsdf_
         })
@@ -788,8 +826,9 @@ shinyServer(function(input, output, session) {
         print("--> ts_plot_base")
         on.exit({print("ts_plot_base -->"); flush.console()})
         start_date =rownames(tsdf())[1]
-        end_date = rownames(tsdf())[1000000]
-        end_date = min(end_date, rownames(tsdf())[nrow(tsdf())])
+        end_date_id = 1000000
+        end_date_id = min(end_date_id, nrow(tsdf()))
+        end_date = rownames(tsdf())[end_date_id]
         tsdf_ <- tsdf() %>% select(ts_variables$selected)
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         

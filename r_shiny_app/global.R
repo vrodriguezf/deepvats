@@ -20,6 +20,9 @@ library(stringr)
 library(reactlog)
 library(feather)
 library(arrow)
+library(fasttime)
+library(parallel)
+
 
 reactlog::reactlog_enable()
 #options(shiny.trace = TRUE)

@@ -789,7 +789,7 @@ shinyServer(function(input, output, session) {
     
     # Update the colour palette for the clusters
     update_palette <- reactive({
-        prjs <- isolate(projections())
+        prjs <- req(projections())
         if ("cluster" %in% names(prjs)) {
             unique_labels <- unique(prjs$cluster)
             print(unique_labels)

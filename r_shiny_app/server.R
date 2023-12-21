@@ -885,8 +885,12 @@ shinyServer(function(input, output, session) {
                 reduced_window_list[[i]]<- c(unlist_window_indices[idx_window_limits[i]+1],
                                    unlist_window_indices[idx_window_limits[i+1]])
             }
-            start_date = min(sapply(reduced_window_list, function(x) min(x)))
-            end_date = max(sapply(reduced_window_list, function(x) max(x)))
+            print(paste0("ts_plot | reduced_window_list[1] = ", reduced_window_list[1]))
+            start_indices = sapply(reduced_window_list, function(x) x[1])
+            end_indices = sapply(reduced_window_list, function(x) x[2])
+
+            start_date = min(rownames(tsdf())[start_indices])
+            end_date = max(rownames(tsdf())[end_indices])
             print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")"))
             
             # # Plot the windows

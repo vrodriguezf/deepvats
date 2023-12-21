@@ -24,7 +24,7 @@ library(fasttime)
 library(parallel)
 
 reactlog::reactlog_enable()
-options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")
+#options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")
 
 torch <- reticulate::import("torch")
 #options(shiny.trace = TRUE)

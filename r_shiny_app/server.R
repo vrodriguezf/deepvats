@@ -892,7 +892,7 @@ shinyServer(function(input, output, session) {
                     to = rownames(tsdf())[tail(ts_idxs, 1)],
                     #to = rownames(tsdf())[tail(ts_idxs, 1)],
                     color = "#CCEBD6"
-                )
+                ) %> dyRangeSelector(c(start_date, end_date))
             }
             
             # NOTE: This code block allows you to plot shadyng at once. 

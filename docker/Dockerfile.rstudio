@@ -21,12 +21,21 @@ RUN python3 -m pip install --upgrade pip
 RUN apt-get install -y python3-venv libxt-dev
 ## Install R packages
 
-RUN R -e "install.packages(c('shiny', 'pals', 'shinyWidgets', 'dygraphs', 'shinycssloaders', 'shinyjs', 'Rcpp', 'reactlog', 'pals',  'feather'))"
-RUN R -e "remotes::install_github('r-lib/later')"
-RUN R -e "remotes::install_github('apache/arrow/r')"
+#COPY docker/DESCRIPTION /tmp/
+COPY --chown=${UID}:${GID} docker/DESCRIPTION /tmp/
+
+RUN ls -la /tmp/ && sleep 5
+
+#RUN R -e "install.packages(deps_path = '/tmp/DESCRIPTION', remotes::dev_package_deps(dependencies = TRUE), repos = NULL)"
+
+RUN R -e "devtools::install_deps('/tmp/', dependencies = TRUE)"
+
+#RUN R -e "install.packages(c('shiny', 'pals', 'shinyWidgets', 'dygraphs', 'shinycssloaders', 'shinyjs', 'Rcpp', 'reactlog', 'pals',  'feather', 'fasttime', 'zoo', 'shinyWidgets'))"
+#RUN R -e "remotes::install_github('r-lib/later')"
+#RUN R -e "remotes::install_github('apache/arrow/r')"
 
 ## Install reticulate and create virtual environment using default Ubuntu installed Python
-RUN R -e "install.packages('reticulate')"
+#RUN R -e "install.packages('reticulate')"
 
 ARG USER=user
 ARG UID=1000

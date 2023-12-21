@@ -885,6 +885,10 @@ shinyServer(function(input, output, session) {
                 reduced_window_list[[i]]<- c(unlist_window_indices[idx_window_limits[i]+1],
                                    unlist_window_indices[idx_window_limits[i+1]])
             }
+            start_date = min(sapply(reduced_window_list, function(x) min(x)))
+            end_date = max(sapply(reduced_window_list, function(x) max(x)))
+            print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")"))
+            
             # # Plot the windows
             for(ts_idxs in reduced_window_list) {
                 ts_plt <- ts_plt %>% dyShading(
@@ -892,9 +896,10 @@ shinyServer(function(input, output, session) {
                     to = rownames(tsdf())[tail(ts_idxs, 1)],
                     #to = rownames(tsdf())[tail(ts_idxs, 1)],
                     color = "#CCEBD6"
-                ) %> dyRangeSelector(c(start_date, end_date))
-            }
+                ) 
+            }   
             
+            ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date)) 
             # NOTE: This code block allows you to plot shadyng at once. 
             #       The traditional method has to plot the dygraph n times 
             #       (n being the number of rectangles to plot). With the adjacent

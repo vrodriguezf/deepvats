@@ -901,22 +901,41 @@ shinyServer(function(input, output, session) {
             
             if (view_size > max_size) {
                 end_date = rownames(tsdf())[start_indices + max_size - 1]
-                range_color = "#FF0000" # Red
-            } else {
-                range_color = "#CCEBD6" # Original
-            }
+                #range_color = "#FF0000" # Red
+            } 
+            
+            range_color = "#CCEBD6" # Original
+            
 
             # # Plot the windows
+            count = 0
             for(ts_idxs in reduced_window_list) {
+                count = count + 1
+                start_event_date = rownames(tsdf())[head(ts_idxs, 1)]
+                end_event_date = rownames(tsdf())[tail(ts_idxs, 1)]
                 ts_plt <- ts_plt %>% dyShading(
-                    from = rownames(tsdf())[head(ts_idxs, 1)],
-                    to = rownames(tsdf())[tail(ts_idxs, 1)],
-                    #to = rownames(tsdf())[tail(ts_idxs, 1)],
+                    from = start_event_date,
+                    to = end_event_date,
                     color = range_color
                 ) 
+            ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
+                #%>% dyEvent(
+                #    start_event_date, 
+                #    label = paste0("SW-", count), 
+                #    labelLoc="bottom" ,
+                #    strokePattern = "solid",
+                #    color = range_color 
+                #    ) %>% dyEvent(
+                #    end_event_date, 
+                #    label = paste0("SW-",paste0("SW-", count), 
+                #    labelLoc="bottom",
+                #    strokePattern = "solid"),
+                #    color = range_color
+                #    )
+
             }   
             
-            ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date)) 
+            ts_plt <- ts_plt 
             # NOTE: This code block allows you to plot shadyng at once. 
             #       The traditional method has to plot the dygraph n times 
             #       (n being the number of rectangles to plot). With the adjacent

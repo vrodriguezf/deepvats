@@ -843,7 +843,36 @@ shinyServer(function(input, output, session) {
         )
     })
 
-    
+    embedding_ids <- reactive({
+        print("--> embedding idx")
+        bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
+        bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
+    })
+    window_list <- reactive({
+        print("--> window_list")
+        # Get the window indices
+        embedding_idxs = embedding_ids()
+        window_indices = get_window_indices(embedding_idxs, input$wlen, input$stride)
+        # Put all the indices in one list and remove duplicates
+        unlist_window_indices = unique(unlist(window_indices))
+        # Calculate a vector of differences to detect idx where a new window should be created 
+        diff_vector <- diff(unlist_window_indices,1)
+        # Take indexes where the difference is greater than one (that represent a change of window)
+        idx_window_limits <- which(diff_vector!=1)
+        # Include the first and last index to have a whole set of indexes.
+        idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
+        # Create a reduced window list
+        reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
+        # Populate the first element of the list with the idx of the first window.
+        reduced_window_list[[1]] <- c(unlist_window_indices[idx_window_limits[1]],
+                            unlist_window_indices[idx_window_limits[1+1]])
+        # Populate the rest of the list
+        for (i in 2:(length(idx_window_limits)-1)){
+            reduced_window_list[[i]]<- c(unlist_window_indices[idx_window_limits[i]+1],
+                               unlist_window_indices[idx_window_limits[i+1]])
+        }
+        reduced_window_list
+    })
     
 
     # Generate timeseries data for dygraph dygraph
@@ -857,34 +886,14 @@ shinyServer(function(input, output, session) {
 
         print("ts_plot | bp")
         #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)
-        bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
+        
         #if (!is.data.frame(bp)) {bp = bp_}
-
         print("ts_plot | embedings idxs ")
-        embedding_idxs <- bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
+        embedding_idxs = embedding_ids()
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
         print("ts_plot | Before if")
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
-            # Get the window indices
-            window_indices <- get_window_indices(embedding_idxs, input$wlen, input$stride)
-            # Put all the indices in one list and remove duplicates
-            unlist_window_indices <- unique(unlist(window_indices))
-            # Calculate a vector of differences to detect idx where a new window should be created 
-            diff_vector <- diff(unlist_window_indices,1)
-            # Take indexes where the difference is greater than one (that represent a change of window)
-            idx_window_limits <- which(diff_vector!=1)
-            # Include the first and last index to have a whole set of indexes.
-            idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
-            # Create a reduced window list
-            reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
-            # Populate the first element of the list with the idx of the first window.
-            reduced_window_list[[1]] <- c(unlist_window_indices[idx_window_limits[1]],
-                                unlist_window_indices[idx_window_limits[1+1]])
-            # Populate the rest of the list
-            for (i in 2:(length(idx_window_limits)-1)){
-                reduced_window_list[[i]]<- c(unlist_window_indices[idx_window_limits[i]+1],
-                                   unlist_window_indices[idx_window_limits[i+1]])
-            }
+            reduced_window_list = req(window_list())
             print(paste0("ts_plot | reduced_window_list[1] = ", reduced_window_list[1]))
             start_indices = min(sapply(reduced_window_list, function(x) x[1]))
             end_indices = max(sapply(reduced_window_list, function(x) x[2]))

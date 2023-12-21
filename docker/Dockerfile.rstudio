@@ -21,11 +21,17 @@ RUN python3 -m pip install --upgrade pip
 RUN apt-get install -y python3-venv libxt-dev
 ## Install R packages
 
-RUN R -e "install.packages(c('shiny', 'pals', 'shinyWidgets', 'dygraphs', 'shinycssloaders', 'shinyjs', 'Rcpp'))"
-RUN R -e "remotes::install_github('r-lib/later')"
+#COPY docker/DESCRIPTION /tmp/
+COPY --chown=${UID}:${GID} docker/DESCRIPTION /tmp/
+
+RUN ls -la /tmp/ && sleep 5
+
+#RUN R -e "install.packages(deps_path = '/tmp/DESCRIPTION', remotes::dev_package_deps(dependencies = TRUE), repos = NULL)"
+
+RUN R -e "devtools::install_deps('/tmp/', dependencies = TRUE)"
 
 ## Install reticulate and create virtual environment using default Ubuntu installed Python
-RUN R -e "install.packages('reticulate')"
+#RUN R -e "install.packages('reticulate')"
 
 ARG USER=user
 ARG UID=1000
@@ -39,6 +45,10 @@ RUN adduser --disabled-password \
     --gid $GID \
     --home $HOME \
     $USER
+
+RUN adduser $USER sudo
+RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
 
 ARG RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
 ARG RETICULATE_PYTHON_ENV=/usr/virtualenvs/venv_shiny_app
@@ -57,7 +67,6 @@ RUN echo "WANDB_API_KEY=${WANDB_API_KEY}" >> /${HOME}/.Renviron
 
 # use an entrypoint script to insure conda environment is properly activated at runtime
 
-RUN echo "CHOWN"
 COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
 ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]

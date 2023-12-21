@@ -890,7 +890,7 @@ shinyServer(function(input, output, session) {
             end_indices = max(sapply(reduced_window_list, function(x) x[2]))
 
             view_size = end_indices-start_indices+1
-            max_size = 100000
+            max_size = 10000
 
 
             start_date = rownames(tsdf())[start_indices]

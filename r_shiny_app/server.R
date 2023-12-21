@@ -886,20 +886,33 @@ shinyServer(function(input, output, session) {
                                    unlist_window_indices[idx_window_limits[i+1]])
             }
             print(paste0("ts_plot | reduced_window_list[1] = ", reduced_window_list[1]))
-            start_indices = sapply(reduced_window_list, function(x) x[1])
-            end_indices = sapply(reduced_window_list, function(x) x[2])
+            start_indices = min(sapply(reduced_window_list, function(x) x[1]))
+            end_indices = max(sapply(reduced_window_list, function(x) x[2]))
 
-            start_date = min(rownames(tsdf())[start_indices])
-            end_date = max(rownames(tsdf())[end_indices])
-            print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")"))
+            view_size = end_indices-start_indices+1
+            max_size = 100000
+
+
+            start_date = rownames(tsdf())[start_indices]
+            end_date = rownames(tsdf())[end_indices]
+            #start_date = min(rownames(tsdf())[start_indices])
+            #end_date = max(rownames(tsdf())[end_indices])
+            print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
             
+            if (view_size > max_size) {
+                end_date = rownames(tsdf())[start_indices + max_size - 1]
+                range_color = "#FF0000" # Red
+            } else {
+                range_color = "#CCEBD6" # Original
+            }
+
             # # Plot the windows
             for(ts_idxs in reduced_window_list) {
                 ts_plt <- ts_plt %>% dyShading(
                     from = rownames(tsdf())[head(ts_idxs, 1)],
                     to = rownames(tsdf())[tail(ts_idxs, 1)],
                     #to = rownames(tsdf())[tail(ts_idxs, 1)],
-                    color = "#CCEBD6"
+                    color = range_color
                 ) 
             }   
             

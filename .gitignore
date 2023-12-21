@@ -27,6 +27,9 @@ _tmp*
 tmp*
 tags
 
+#Macu
+app/shiny_logs
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

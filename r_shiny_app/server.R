@@ -845,11 +845,13 @@ shinyServer(function(input, output, session) {
 
     embedding_ids <- reactive({
         print("--> embedding idx")
+        on.exit(print("embedding idx -->"))
         bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
         bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
     })
     window_list <- reactive({
         print("--> window_list")
+        on.exit(print("window_list -->"))
         # Get the window indices
         req(length(embedding_ids() > 0))
         embedding_idxs = embedding_ids()
@@ -968,36 +970,105 @@ shinyServer(function(input, output, session) {
     })
     
 
-    output$windows_plot <- renderPlot({
-        req(length(embedding_ids()) > 0)
-        reduced_window_list = req(window_list())
-        print(paste0("--> windows_plot | reduced_window_list[1] = ", reduced_window_list[1]))
-        start_indices = min(sapply(reduced_window_list, function(x) x[1]))
-        print(paste0("windows_plot | start = ", start_indices))
-        end_indices = max(sapply(reduced_window_list, function(x) x[2]))
-        start_date = rownames(tsdf())[start_indices]
-        end_date = rownames(tsdf())[end_indices]
-
-        reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
-            d_start = as.POSIXct(rownames(tsdf())[x[1]], origin = "1970-01-01") 
-            d_end = as.POSIXct(rownames(tsdf())[x[2]], origin = "1970-01-01")
-            data.frame(start = d_start, end = d_end)
-        }))
-
-        ggplot(reduced_window_df, aes(x=start, xend=end, y=1, yend=1)) +
-        geom_segment() + 
-        scale_x_datetime(
-            limits=c(min(reduced_window_df$start), max(reduced_window_df$end))) +
-        theme_minimal() +
-        theme(axis.text.y=element_blank(),
-            axis.ticks.y=element_blank(),
-            axis.title.y=element_blank())
-    })
-    
-    
     #############
     #  OUTPUTS  #
     #############
+    #output$windows_plot <- renderPlot({
+    #    req(length(embedding_ids()) > 0)
+    #    reduced_window_list = req(window_list())
+    #    print(paste0("--> windows_plot | reduced_window_list[1] = ", reduced_window_list[1]))
+    #    start_indices = min(sapply(reduced_window_list, function(x) x[1]))
+    #    print(paste0("windows_plot | start = ", start_indices))
+    #    end_indices = max(sapply(reduced_window_list, function(x) x[2]))
+    #    start_date = rownames(tsdf())[start_indices]
+    #    end_date = rownames(tsdf())[end_indices]
+#
+    #    reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
+    #        d_start = as.POSIXct(rownames(tsdf())[x[1]], origin = "1970-01-01") 
+    #        d_end = as.POSIXct(rownames(tsdf())[x[2]], origin = "1970-01-01")
+    #        data.frame(start = d_start, end = d_end)
+    #    }))
+#
+    #    ggplot(reduced_window_df, aes(x=start, xend=end, y=1, yend=1)) +
+    #    geom_segment() + 
+    #    scale_x_datetime(
+    #        limits=c(min(reduced_window_df$start), max(reduced_window_df$end))) +
+    #    theme_minimal() +
+    #    theme(axis.text.y=element_blank(),
+    #        axis.ticks.y=element_blank(),
+    #        axis.title.y=element_blank())
+    #})
+    
+    output$windows_plot <- renderPlot({
+    req(length(embedding_ids()) > 0)
+    reduced_window_list = req(window_list())
+
+    # Convertir a fechas POSIXct
+    reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
+        data.frame(
+            start = as.POSIXct(rownames(tsdf())[x[1]], origin = "1970-01-01"),
+            end = as.POSIXct(rownames(tsdf())[x[2]], origin = "1970-01-01")
+        )
+    }))
+
+    # Establecer límites basados en los datos
+    first_date = min(reduced_window_df$start)
+    last_date = max(reduced_window_df$end)
+    #start_indices = min(sapply(reduced_window_list, function(x) x[1]))
+    #print(paste0("windows_plot | start = ", start_indices))
+    #end_indices = max(sapply(reduced_window_list, function(x) x[2]))
+    
+
+    left = as.POSIXct(rownames(tsdf())[1],  origin = "1970-01-01")
+    right = as.POSIXct(rownames(tsdf())[nrow(tsdf())], origin = "1970-01-01")
+
+    # Configuración del gráfico base
+    par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
+    plot(
+        NA, 
+        xlim = c(left, right), 
+        ylim = c(0, 1), 
+        type = "n", 
+        xaxt = "n", yaxt = "n", 
+        xlab = "", ylab = "", 
+        bty = "n")
+    f = "%F %H:%M:%S"
+    axis(1, at = as.numeric(c(left, right)), labels = c(format(first_date, f), format(last_date, f)), cex.axis = 0.7)
+
+    # Añadir líneas verticales
+    abline(v = as.numeric(reduced_window_df$start), col = "blue", lwd = 1)
+    abline(v = as.numeric(reduced_window_df$end), col = "blue", lwd = 1)
+    colors = c("green", "blue")
+    for(i in 1:nrow(reduced_window_df)) {
+        print(paste0("i ", i, " color ", colors[(i %% length(colors)) + 1]))
+        segments(x0 = as.numeric(reduced_window_df$start[i]), 
+                 y0 = 0, 
+                 x1 = as.numeric(reduced_window_df$end[i]), 
+                 y1 = 0, 
+                 col = colors[(i %% length(colors)) + 1], 
+                 lwd = 1) 
+        text(x = as.numeric(reduced_window_df$start[i]), y = 0, labels = paste0("SW-", i), srt=90, adj=c(1, 0.5), cex = 1, xpd=TRUE)
+    }
+    points(x = as.numeric(left),y = 0, col = "black", pch = 20, cex = 1)
+    points(x = as.numeric(right),y = 0, col = "black", pch = 20, cex = 1)
+}, height=200)  
+
+output$windows_text <- renderUI({
+    req(length(embedding_ids()) > 0)
+    reduced_window_list = req(window_list())
+
+    # Crear un conjunto de etiquetas de texto con información de las ventanas
+    window_info <- lapply(1:length(reduced_window_list), function(i) {
+        window <- reduced_window_list[[i]]
+        start <- format(as.POSIXct(rownames(tsdf())[window[1]], origin = "1970-01-01"), "%b %d")
+        end <- format(as.POSIXct(rownames(tsdf())[window[2]], origin = "1970-01-01"), "%b %d")
+        color <- ifelse(i %% 2 == 0, "green", "blue")
+        HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+    })
+
+    # Devuelve todos los elementos de texto como una lista de HTML
+    do.call(tagList, window_info)
+})
     
     # Generate encoder info table
     #output$enc_info = renderDataTable({

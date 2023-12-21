@@ -153,7 +153,8 @@ shinyUI(fluidPage(
                 #step = 1000000
               #),
               dygraphOutput("ts_plot_dygraph") %>% withSpinner(),
-              plotOutput("windows_plot")
+              plotOutput("windows_plot"),
+              uiOutput("windows_text")
             )
           )
           #verbatimTextOutput("projections_plot_interaction_info"),

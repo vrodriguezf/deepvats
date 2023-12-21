@@ -1,0 +1,17 @@
+Depends:
+    R (>= 3.6.0),
+    shiny,
+    pals,
+    shinyWidgets,
+    dygraphs,
+    shinycssloaders,
+    shinyjs,
+    Rcpp,
+    reactlog,
+    feather,
+    fasttime,
+    zoo,
+    reticulate
+Remotes: 
+    r-lib/later,
+    apache/arrow/r

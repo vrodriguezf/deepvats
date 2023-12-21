@@ -8,6 +8,14 @@
 #
 
 shinyUI(fluidPage(
+  #tags$head(
+  #  tags$script(HTML("
+  #    Shiny.addCustomMessageHandler('markRange', function(message) {
+  #      // Mark range selector
+  #      // Windows
+  #    });
+  #  "))
+  #),
   
   # Application title
   titlePanel("DeepVATS"),

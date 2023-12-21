@@ -811,7 +811,7 @@ shinyServer(function(input, output, session) {
     })
 
     end_date <- reactive({
-        end_date_id = 1000000
+        end_date_id = 100000
         end_date_id = min(end_date_id, nrow(tsdf()))
         end_date = rownames(isolate(tsdf()))[end_date_id]
     })
@@ -851,6 +851,7 @@ shinyServer(function(input, output, session) {
     window_list <- reactive({
         print("--> window_list")
         # Get the window indices
+        req(length(embedding_ids() > 0))
         embedding_idxs = embedding_ids()
         window_indices = get_window_indices(embedding_idxs, input$wlen, input$stride)
         # Put all the indices in one list and remove duplicates
@@ -966,6 +967,32 @@ shinyServer(function(input, output, session) {
         ts_plt
     })
     
+
+    output$windows_plot <- renderPlot({
+        req(length(embedding_ids()) > 0)
+        reduced_window_list = req(window_list())
+        print(paste0("--> windows_plot | reduced_window_list[1] = ", reduced_window_list[1]))
+        start_indices = min(sapply(reduced_window_list, function(x) x[1]))
+        print(paste0("windows_plot | start = ", start_indices))
+        end_indices = max(sapply(reduced_window_list, function(x) x[2]))
+        start_date = rownames(tsdf())[start_indices]
+        end_date = rownames(tsdf())[end_indices]
+
+        reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
+            d_start = as.POSIXct(rownames(tsdf())[x[1]], origin = "1970-01-01") 
+            d_end = as.POSIXct(rownames(tsdf())[x[2]], origin = "1970-01-01")
+            data.frame(start = d_start, end = d_end)
+        }))
+
+        ggplot(reduced_window_df, aes(x=start, xend=end, y=1, yend=1)) +
+        geom_segment() + 
+        scale_x_datetime(
+            limits=c(min(reduced_window_df$start), max(reduced_window_df$end))) +
+        theme_minimal() +
+        theme(axis.text.y=element_blank(),
+            axis.ticks.y=element_blank(),
+            axis.title.y=element_blank())
+    })
     
     
     #############

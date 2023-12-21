@@ -8,15 +8,6 @@
 #
 
 shinyUI(fluidPage(
-  #tags$head(
-  #  tags$script(HTML("
-  #    Shiny.addCustomMessageHandler('markRange', function(message) {
-  #      // Mark range selector
-  #      // Windows
-  #    });
-  #  "))
-  #),
-  
   # Application title
   titlePanel("DeepVATS"),
   
@@ -161,7 +152,8 @@ shinyUI(fluidPage(
                 #value = c(0,0),
                 #step = 1000000
               #),
-              dygraphOutput("ts_plot_dygraph") %>% withSpinner()
+              dygraphOutput("ts_plot_dygraph") %>% withSpinner(),
+              plotOutput("windows_plot")
             )
           )
           #verbatimTextOutput("projections_plot_interaction_info"),

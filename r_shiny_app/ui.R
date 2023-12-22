@@ -8,6 +8,7 @@
 #
 
 shinyUI(fluidPage(
+  #theme = shinythemes::shinytheme("cerulean"),
   # Application title
   titlePanel("DeepVATS"),
   

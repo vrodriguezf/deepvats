@@ -729,7 +729,7 @@ shinyServer(function(input, output, session) {
             flush.console()
             #df <- parallel_posfix(df)
             #df <- df %>% column_to_rownames(var = "timeindex")
-            df = as.data.frame(parallel_column_to_rownames(df, "timeindex"))
+            #df = as.data.frame(parallel_column_to_rownames(df, "timeindex"))
             t_end = Sys.time()
             on.exit({print(paste0("Reactive tsdf | Column to index | Execution time: ", t_end - t_init, " seconds"));flush.console()})
             df
@@ -822,10 +822,11 @@ shinyServer(function(input, output, session) {
         start_date =isolate(start_date())
         end_date = isolate(end_date())
         tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected)
-
+        tsdf_xts <- xts(tsdf()%>%select(ts_variables$selected)[, -which(names(tsdf()) == "timeindex")], order.by = tsdf()$timeindex)
+        
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         ts_plt = dygraph(
-            tsdf_ %>% select(ts_variables$selected),
+            tsdf_,
             width="100%", height = "400px"
         ) %>% 
         dyRangeSelector(c(start_date, end_date)) %>% 

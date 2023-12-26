@@ -1,0 +1,62 @@
+include: !include "base.yaml"
+#########################################################
+########### NBS - PIPELINE CONFIGURATION FILE ###########
+########### 02b - ENCODER MVP                 ###########
+#########################################################
+###### Author: Maria Inmaculada Santamaria-Valenzuela   #
+###### Date: 08-2023                                    #
+#########################################################
+#MVP = Masked Value Predition
+
+#####################
+# 02b - ENCODER MVP #
+#####################
+configuration:
+  job_type: 'encoder_MVP'
+  alias: *alias
+  wandb:
+    mode: *wdb_mode
+    # Whether to group this run in a wandb group (for sweeps)
+    group: null
+  specifications:
+    batch_size: 512 #512 #1024
+    #batch_size: 512 #1024 #32
+    # Number of epochs to train for
+    n_epoch: 100
+    mask:
+      # Mask future samplesx
+      future: false
+      # True: mask stateful samples, False: mask individual time steps
+      stateful: true
+      # (only for multivariate ts) mask all variables at once
+      sync: false
+    mvp:
+      # Tuple (min_w, max_x) to train MVP with adaptable window sizes. Usually max_w = config.w
+      # Set to null to train MVP with fixed window size
+      #ws1: 15 #TitlABP
+      #ws2: 30 #TitlABP
+      #ws1: 7 #sunspot
+      #ws2: &wlen 365 #sunspot
+      #ws1: 10 #toy
+      #ws2: &wlen 30 #toy
+      ws1: 1 #Monash-Australian_electricity_demand
+      ws2: 365 #Monash-Australian_electricity_demand
+      # probability of masking in MVP
+      r: 0.710
+      valid_size: 0.2
+      normalize:
+        by_sample: false
+        # Whether to use a single batch or not for the normalization (TSStandardize)
+        use_single_batch: false
+    sliding_windows:
+      # n datapoints the window is moved ahead along the sequence in the sliding window
+      #stride: 15 #15 #1 min en 1 min #1
+      stride: 900 #sunspot
+      #stride: 1 #toy
+      # This will set the percentage of items that go to val 
+      # window size for the sliding window (taxi=48, steamflow=640)
+      #w
+      size: *wlen
+      #size: 30 #TitlABP
+      #size: 450
+      #size: 21600 #1h 900 1 dia 21600 

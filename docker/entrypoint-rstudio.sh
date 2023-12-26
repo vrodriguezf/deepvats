@@ -18,6 +18,8 @@ for ENV_VAR_NAME in "${ENV_VAR_NAMES[@]}"; do
   echo "$ENV_VAR_NAME=$ENV_VAR_VALUE" >> ${HOME}/.Renviron
 done
 
+ulimit -s 16384
+
 # start rstudio server
 /init
 exec "$@"

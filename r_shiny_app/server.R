@@ -675,7 +675,7 @@ shinyServer(function(input, output, session) {
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
         {
-            req(input$wlen > 0, input$stride > 0, input$encoder, ts_ar())
+            req(input$encoder, ts_ar())
             ts_ar = ts_ar()
             print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
             flush.console()
@@ -687,9 +687,11 @@ shinyServer(function(input, output, session) {
             path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
             print(paste0("Reactive tsdf | Read feather ", path ))
             flush.console()
+            print("About to read")
             df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
+            print("Just read")
             t_1 = Sys.time()
-            print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(tsdf())))
+            print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(df)))
             df_ = df 
             df_ <- column_to_rownames(df_, var = "timeindex")
             t_2 = Sys.time()

@@ -244,7 +244,7 @@ shinyServer(function(input, output, session) {
       list_used_arts$artifact_name = ts_ar$name
       list_used_arts$id = ts_ar$id
       list_used_arts$created_at = ts_ar$created_at
-      list_used_arts
+      list_used_arts    
     })
     
     # selected_embs_ar = eventReactive(input$embs_ar, {
@@ -271,6 +271,7 @@ shinyServer(function(input, output, session) {
     
     # Encoder
     enc = eventReactive(enc_ar(), {
+        print(paste0("ENCODER | hash ", enc_ar()$metadata$ref$hash))
       py_load_object(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, enc_ar()$metadata$ref$hash))
     })
     
@@ -304,10 +305,15 @@ shinyServer(function(input, output, session) {
       # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
       # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
       # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
-      py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
-        rownames_to_column("timeindex") %>% 
+      print(paste0("DATASET | hash: ", ts_ar()$metadata$TS$hash))
+      time_0 = Sys.time()
+      tsdf_ <- py_load_object(filename = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash)) %>% 
+        rownames_to_column("timeindex") 
+        time_1 = Sys.time()
         # slice(first_data_index:last_data_index) %>%
-        column_to_rownames(var = "timeindex")
+        print(paste0("DATASET | Load time: ", time_1-time_0))  
+        tsdf_ %>% column_to_rownames(var = "timeindex")
+        tsdf_
     })
     
     # Auxiliary object for the interaction ts->projections
@@ -359,8 +365,8 @@ shinyServer(function(input, output, session) {
     # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
         req(tsdf(), prj_object(), input$wlen != 0, input$stride, ts_variables)
-        print("ts_plot")
         tsdf_data <- tsdf()
+        print("ts_plot | NUM ELEMENTS: ", nrow(tsdf_data))
         ts_plt <- dygraph(tsdf_data %>% select(ts_variables$selected), width="100%", height = "400px") %>%
                     dyRangeSelector() %>%
                     dyHighlight(hideOnMouseOut = TRUE) %>%

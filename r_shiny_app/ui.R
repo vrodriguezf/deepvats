@@ -8,7 +8,7 @@
 #
 
 shinyUI(fluidPage(
-  
+  #theme = shinythemes::shinytheme("cerulean"),
   # Application title
   titlePanel("DeepVATS"),
   
@@ -27,11 +27,18 @@ shinyUI(fluidPage(
       selectizeInput("encoder", label = "Encoder", choices = NULL),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
-      sliderInput("wlen", "Select window size", min = 0, max = 0, value = 0, step = 1),
+      sliderInput("wlen", "Select window size", min = 0, max = 0, value =0 , step = 1),
       sliderInput("stride", "Select stride", min = 0, max = 0, value = 0, step = 1),
       # sliderInput("points_emb", "Select range of points to plot in the projections", 
       #             min = 0, max = 0, value = 0, step = 1, ticks = FALSE),
       #uiOutput("points_prj_controls"),
+      #### TODO: Check. Added for debugging solar 4_secs
+      sliderInput("prj_n_neighbors", "Projections n_neighbors:", min = 1, max = 50, value = 15),
+      sliderInput("prj_min_dist", "Projections min_dist:", min = 0.0001, max = 1, value = 0.1),
+      #sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2^32-1, value = 1234),
+      sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2000, value = 1234),
+      ################
+      radioButtons("cpu_flag", "Use: ", c("GPU", "CPU"), selected = "GPU", inline = T),
       radioButtons("dr_method", "Projection method:", c("UMAP", "TSNE", "PCA"), selected="UMAP", inline=T),
       br(),
       radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
@@ -45,7 +52,7 @@ shinyUI(fluidPage(
       #     textOutput("clusters_labels_ar_desc")
       # ),
       conditionalPanel(
-        condition = "input.clustering_options == 'calculate_clusters'",
+          condition = "input.clustering_options == 'calculate_clusters'",
         selectInput("metric_hdbscan", label = "Metric", choices = DEFAULT_VALUES$metric_hdbscan),
         sliderInput("min_cluster_size_hdbscan", label = "min_cluster_size_hdbscan", 
                     value = DEFAULT_VALUES$min_cluster_size_hdbscan, min=0, max=200, step = 1),
@@ -80,6 +87,9 @@ shinyUI(fluidPage(
                                    value = DEFAULT_VALUES$point_alpha, min=0, max=1, step = 0.01),
                        sliderInput("point_size", label = "point_size",
                                    value = DEFAULT_VALUES$point_size, min=0, max=10, step = 0.5),
+                       checkboxInput("show_lines", "Show lines", value = TRUE),
+                       actionButton('savePlot', 'Save embedding projections plot'),
+
                        actionBttn(inputId = "update_prj_graph",label = "Update aestethics",style = "simple",
                                   color = "primary",icon = icon("bar-chart"),size = "xs", block = TRUE),
                        circle = FALSE, status = "primary",
@@ -137,7 +147,15 @@ shinyUI(fluidPage(
           ),
           fluidRow(
             column(12,
-                   dygraphOutput("ts_plot_dygraph") %>% withSpinner()
+              #sliderInput(
+                #"nrows", "Select initial data range:", 
+                #min = 0, max = 10000, 
+                #value = c(0,0),
+                #step = 1000000
+              #),
+              dygraphOutput("ts_plot_dygraph") %>% withSpinner(),
+              plotOutput("windows_plot"),
+              uiOutput("windows_text")
             )
           )
           #verbatimTextOutput("projections_plot_interaction_info"),
@@ -156,4 +174,6 @@ shinyUI(fluidPage(
       )
     )
   )
+
+  
 ))

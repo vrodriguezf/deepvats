@@ -16,13 +16,50 @@ library(shinyWidgets)
 library(RColorBrewer)
 library(pals)
 library(stringr)
+##################QUITAR CUANDO YA TIRE
+library(reactlog)
+library(feather)
+library(arrow)
+library(fasttime)
+library(parallel)
+#library(shinythemes)
+library(xts)
+
+reactlog::reactlog_enable()
+#options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")
+
+torch <- reticulate::import("torch")
+#options(shiny.trace = TRUE)
+if(torch$cuda$is_available()){
+  print(paste0("CUDA AVAILABLE. Num devices: ", torch$cuda$device_count()))
+  torch$cuda$set_device(as.integer(0))
+  #torch$cuda$set_device(as.integer(1))
+  #torch$cuda$set_device(as.integer(2))
+  #print(torch$cuda$memory_summary())
+  print(Sys.getenv("PYTORCH_CUDA_ALLOC_CONF"))
+} else {
+  print("CUDA NOT AVAILABLE")
+}
+#################QUITAR CUANDO YA TIRE
 
 # Python dependencies
-tsai_data = import("tsai.data.all")
-wandb = import("wandb")
-pd = import("pandas")
-hdbscan = import("hdbscan")
-dvats = import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
+#tsai_data = import("tsai.data.all")
+#wandb = import("wandb")
+#pd = import("pandas")
+#hdbscan = import("hdbscan")
+#dvats = import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
+############Just in case. Trying to get why get_enc_embs gets freezed
+# Python dependencies
+tsai_data = reticulate::import("tsai.data.all")
+wandb = reticulate::import("wandb")
+pd = reticulate::import("pandas")
+hdbscan = reticulate::import("hdbscan")
+dvats = reticulate::import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
+
+
+print("--> py_config ")
+print(reticulate::py_config())
+print("py_config -->")
 
 #############
 # CONFIG #

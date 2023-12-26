@@ -14,7 +14,6 @@ FROM rocker/ml:4.2
 
 SHELL [ "/bin/bash", "--login", "-c" ]
 
-RUN echo "AQUI 1"
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC 
 RUN apt-get update
 RUN apt-get install -y python3-pip
@@ -59,7 +58,7 @@ RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 ARG RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
 ARG RETICULATE_PYTHON_ENV=/usr/virtualenvs/venv_shiny_app
 ENV RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/
-RUN echo "AQUI 3"
+
 #RUN R -e "reticulate::virtualenv_create(envname='${RETICULATE_PYTHON_ENV}', python='/usr/bin/python3')"
 #RUN R -e "reticulate::virtualenv_install(c('numpy', 'pandas', 'wandb', 'hdbscan'), envname='${RETICULATE_PYTHON_ENV}')"
 

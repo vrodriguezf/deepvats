@@ -26,7 +26,7 @@ library(parallel)
 library(xts)
 
 reactlog::reactlog_enable()
-  
+
 #options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")
 
 torch <- reticulate::import("torch")
@@ -141,6 +141,13 @@ make_individual_dygraph <- function(i){
       dyRangeSelector(height = 20, strokeColor = "")
   }
   plt
+}
+
+log_print <- function(mssg) {
+  # Obtener la hora actual con milisegundos
+  time <- format(Sys.time(), "%H:%M:%OS3")
+  # Imprimir la hora y el mensaje
+  cat(time, "::::", mssg, "\n")
 }
 
 

@@ -317,7 +317,7 @@ shinyServer(function(input, output, session) {
         print("--> Reactive X | Update Sliding Window")
         print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
         
-        t_init <- Sys.time()
+        t_x_0 <- Sys.time()
         
         enc_input = dvats$exec_with_feather_k_output(
             function_name = "prepare_forecasting_data",
@@ -330,8 +330,8 @@ shinyServer(function(input, output, session) {
             fcst_history = input$wlen
         )
         
-        t_end <- Sys.time()
-        t_sliding_window_view = t_end - t_init
+        t_x_1 <- Sys.time()
+        t_sliding_window_view = t_x_1 - t_x_0
         print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
         on.exit({print(paste0("reactive X | Update sliding window | Apply stride | enc_input ~ ", dim(enc_input), "-->")); flush.console()})
         enc_input
@@ -351,7 +351,7 @@ shinyServer(function(input, output, session) {
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
         print("--> reactive ts_ar_config | List used artifacts")
-        ts_ar <- req(ts_ar())
+        ts_ar = req(ts_ar())
         print(paste0("reactive ts_ar_config | List used artifacts | hash", ts_ar$hash))
         list_used_arts = ts_ar$metadata$TS
         list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
@@ -424,7 +424,7 @@ shinyServer(function(input, output, session) {
           } else {
             print("CUDA NOT AVAILABLE")
         }
-        t_init <- Sys.time()
+        t_embs_0 <- Sys.time()
         print(
             paste0(
                 "reactive embs | get embeddings | Just about to get embedings. Device number: ", 
@@ -440,17 +440,13 @@ shinyServer(function(input, output, session) {
         
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
         enc_input = X()
-        #chunk_max = 10000000
-        #shape <- dim(enc_input)
-        #print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
-        #chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))
-        #N = max(3200,floor(chunk_size_/32))
+
         chunk_size = 10000000 #N*32
-        #print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size, " | shape[1]*shape[2]: ", shape[1]*shape[2] ))
+        
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
-#        python_string = paste0("
-#import dvats.all   
+
     cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+    
     result = dvats$get_enc_embs_set_stride_set_batch_size(
         X = X(),
         print_flag = TRUE,
@@ -490,8 +486,8 @@ shinyServer(function(input, output, session) {
 
         
         #result <- system(python_string)
-        t_end <- Sys.time()
-        diff <- t_end - t_init
+        t_embs_1 <- Sys.time()
+        diff <- t_embs_1 - t_embs_0
         diff_secs <- as.numeric(diff, units = "secs")
         diff_mins <- as.numeric(diff, units = "mins")
         print(paste0("get_enc_embs total time: ", diff_secs, " secs thus ", diff_mins, " mins"))
@@ -607,6 +603,7 @@ shinyServer(function(input, output, session) {
     prj_object <- reactive({
         req(embs(), input$dr_method)
         print("--> prj_object")
+        t_prj_0 = Sys.time()
         embs = req(embs())
         print("prj_object | Before complete cases ")
         embs = embs[complete.cases(embs),]
@@ -641,10 +638,9 @@ shinyServer(function(input, output, session) {
         )
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
       colnames(res) = c("xcoord", "ycoord")
-      on.exit({print(" prj_object -->"); flush.console()})
       flush.console()
-      Sys.sleep(5)
-      #browser()
+      t_prj_1 = Sys.time()
+      on.exit({print(paste0(" prj_object | cpu_flag: ",input$cpu_flag, " | Execution time: ", t_prj_1-t_prj_0 , " seconds -->")); flush.console()})
       res
     })
     
@@ -671,8 +667,7 @@ shinyServer(function(input, output, session) {
         })
         stopCluster(cl)
         print("Reactive tsdf | Make conversion -->")
-        t_end = Sys.time()
-        print(paste0("Reactive tsdf | Make conversion | Parallel part execution time: ", t_end - t_init, " seconds"))
+        print("Reactive tsdf | Make conversion ")
         flush.console()
         return(unlist(result))
     }
@@ -680,26 +675,27 @@ shinyServer(function(input, output, session) {
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
         {
-            
-            req(input$wlen > 0, input$stride > 0, input$dataset, input$encoder)
-            ts_ar <- req(ts_ar())
+            req(input$wlen > 0, input$stride > 0, input$encoder, ts_ar())
+            ts_ar = ts_ar()
             print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
             flush.console()
             # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
             # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
             # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
             
-            t_init <- Sys.time()
+            t_0 <- Sys.time()
             path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
             print(paste0("Reactive tsdf | Read feather ", path ))
             flush.console()
             df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
-            t_end = Sys.time()
-            print(paste0("Reactive tsdf | Read feather | Execution time: ", t_end - t_init, " seconds"))
+            t_1 = Sys.time()
+            print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(tsdf())))
+            df_ = df 
+            df_ <- column_to_rownames(df_, var = "timeindex")
+            t_2 = Sys.time()
+            print(paste0("Reactive tsdf | Read feather | Column to index time: ", t_2 - t_0, " seconds"))
             flush.console()
-
-            t_end = Sys.time()
-            on.exit({print(paste0("Reactive tsdf | Column to index | Execution time: ", t_end - t_init, " seconds"));flush.console()})
+            on.exit({print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds"));flush.console()})
             df
         })
     
@@ -781,8 +777,8 @@ shinyServer(function(input, output, session) {
 
     end_date <- reactive({
         end_date_id = 100000
-        end_date_id = min(end_date_id, nrow(tsdf()))
-        isolate(tsdf()$timeindex[end_date_id])
+        end_date_id = min(end_date_id, nrow(isolate(tsdf())))
+        isolate(tsdf())$timeindex[end_date_id]
     })
 
     ts_plot_base <- reactive({
@@ -791,11 +787,11 @@ shinyServer(function(input, output, session) {
         start_date =isolate(start_date())
         end_date = isolate(end_date())
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
-        t_init <- Sys.time()
+        t_ts_plot_0 <- Sys.time()
         tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected, - "timeindex")
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
-        t_end <- Sys.time()
-        print(paste0("ts_plot_base | tsdf_xts time", t_end-t_init)) 
+        t_ts_plot_1 <- Sys.time()
+        print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_0-t_ts_plot_1)) 
         print(head(tsdf_xts))
         print(tail(tsdf_xts))
         ts_plt = dygraph(
@@ -849,8 +845,8 @@ shinyServer(function(input, output, session) {
             reduced_window_list[[i]]<- c(
                 #unlist_window_indices[idx_window_limits[i]+1],
                 #unlist_window_indices[idx_window_limits[i+1]]
-                            as.Date(tsdf()$timeindex[unlist_window_indices[idx_window_limits[i]+1]]),
-                            as.Date(tsdf()$timeindex[unlist_window_indices[idx_window_limits[i+1]]])
+                            as.Date(isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]]),
+                            as.Date(isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]])
                                )
         }
         reduced_window_list
@@ -883,13 +879,13 @@ shinyServer(function(input, output, session) {
             view_size = end_indices-start_indices+1
             max_size = 10000
 
-            start_date = tsdf()$timeindex[start_indices]
-            end_date = tsdf()$timeindex[end_indices]
+            start_date = isolate(tsdf())$timeindex[start_indices]
+            end_date = isolate(tsdf())$timeindex[end_indices]
 
             print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
             
             if (view_size > max_size) {
-                end_date = tsdf()$timeindex[start_indices + max_size - 1]
+                end_date = isolate(tsdf())$timeindex[start_indices + max_size - 1]
                 #range_color = "#FF0000" # Red
             } 
             
@@ -900,8 +896,8 @@ shinyServer(function(input, output, session) {
             count = 0
             for(ts_idxs in reduced_window_list) {
                 count = count + 1
-                start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
-                end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
+                start_event_date = isolate(tsdf())$timeindex[head(ts_idxs, 1)]
+                end_event_date = isolate(tsdf())$timeindex[tail(ts_idxs, 1)]
                 ts_plt <- ts_plt %>% dyShading(
                     from = start_event_date,
                     to = end_event_date,
@@ -962,8 +958,8 @@ shinyServer(function(input, output, session) {
         # Convertir a fechas POSIXct
         reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
             data.frame(
-                start = as.POSIXct(tsdf()$timeindex[x[1]], origin = "1970-01-01"),
-                end = as.POSIXct(tsdf()$timeindex[x[2]], origin = "1970-01-01")
+                start = as.POSIXct(isolate(tsdf())$timeindex[x[1]], origin = "1970-01-01"),
+                end = as.POSIXct(isolate(tsdf())$timeindex[x[2]], origin = "1970-01-01")
             )
         }))
 
@@ -971,8 +967,8 @@ shinyServer(function(input, output, session) {
         first_date = min(reduced_window_df$start)
         last_date = max(reduced_window_df$end)
     
-        left = as.POSIXct(tsdf()$timeindex[1],  origin = "1970-01-01")
-        right = as.POSIXct(tsdf()$timeindex[nrow(tsdf())], origin = "1970-01-01")
+        left = as.POSIXct(isolate(tsdf())$timeindex[1],  origin = "1970-01-01")
+        right = as.POSIXct(isolate(tsdf())$timeindex[nrow(isolate(tsdf()))], origin = "1970-01-01")
 
         # Configuración del gráfico base
         par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
@@ -1031,8 +1027,8 @@ output$windows_text <- renderUI({
     # Crear un conjunto de etiquetas de texto con información de las ventanas
     window_info <- lapply(1:length(reduced_window_list), function(i) {
         window <- reduced_window_list[[i]]
-        start <- format(as.POSIXct(tsdf()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
-        end <- format(as.POSIXct(tsdf()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+        start <- format(as.POSIXct(isolate(tsdf())$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+        end <- format(as.POSIXct(isolate(tsdf())$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
         color <- ifelse(i %% 2 == 0, "green", "blue")
         HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
     })

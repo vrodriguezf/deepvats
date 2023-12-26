@@ -1,0 +1,60 @@
+[1] "CUDA AVAILABLE. Num devices: 3"
+[1] ""
+[1] "--> py_config "
+python:         /home/macu/env/bin/python
+libpython:      /home/macu/env/lib/libpython3.10.so
+pythonhome:     /home/macu/env:/home/macu/env
+version:        3.10.13 | packaged by conda-forge | (main, Oct 26 2023, 18:07:37) [GCC 12.3.0]
+numpy:          /home/macu/env/lib/python3.10/site-packages/numpy
+numpy_version:  1.26.2
+torch:          /home/macu/env/lib/python3.10/site-packages/torch
+
+NOTE: Python version was forced by RETICULATE_PYTHON
+[1] "py_config -->"
+[1] "Querying encoders"
+[1] "Done!"
+19:20:13.446 :::: observeEvent encoders list enc_l | update dataset list | after freeze 
+19:20:13.456 :::: observeEvent encoders list encs_l | update dataset list --> 
+19:20:13.461 :::: --> observeEvent input_encoder | update wlen 
+19:20:13.462 :::: observeEvent input_encoder | update wlen | Before enc_ar 
+19:20:13.473 :::: --> Observe clustering options 
+19:20:13.474 :::: Observe clustering options --> 
+19:20:13.479 :::: --> observeEvent zoom_btn 
+19:20:13.497 :::: --> embedding idx 
+19:20:13.500 :::: embedding idx --> 
+19:20:13.677 :::: --> observeEvent input_dataset | update encoder list 
+19:20:13.677 :::: mi-santamaria/deepvats/solar_4_seconds:latest 
+19:20:13.683 :::: observeEvent input_dataset | update encoders for dataset mi-santamaria/deepvats/solar_4_seconds:latest 
+19:20:13.692 :::: observeEvent input_dataset | update encoder list --> 
+19:20:14.098 :::: --> observeEvent input_encoder | update wlen 
+19:20:14.105 :::: observeEvent input_encoder | update wlen | Before enc_ar 
+19:20:14.107 :::: eventReactive enc_ar | Enc. Artifact: mi-santamaria/deepvats/mvp-SWV:v37 
+19:20:14.383 :::: envent reactive enc_ar --> 
+19:20:14.385 :::: observeEvent input_encoder | update wlen | enc_ar: <Artifact QXJ0aWZhY3Q6Njc1MDk5OTEx> 
+19:20:14.385 :::: observeEvent input_encoder | update wlen | Set wlen slider values 
+19:20:14.386 :::: observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 450 observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 900 
+19:20:14.388 :::: observeEvent input_encoder | update wlen | Update slider input (450, 900 ) -> 900 
+19:20:14.389 :::: observeEvent input_encoder | update wlen --> 
+19:20:14.396 :::: --> eventReactive ts_ar | Update dataset artifact | hash mi-santamaria/deepvats/solar_4_seconds:latest--> 
+19:20:14.555 :::: eventReactive ts_ar --> 
+19:20:14.560 :::: --> Reactive tsdf | ts artifact <Artifact QXJ0aWZhY3Q6NjY3Mjk4OTIx> 
+19:20:14.561 :::: Reactive tsdf | Read feather /home/macu/data/wandb_artifacts/-2535364569820284064 
+19:20:14.562 :::: About to read 
+19:20:14.792 :::: Just read 
+19:20:14.793 :::: Reactive tsdf | Read feather | Load time: 0.231831550598145 seconds | N elements: 7397222 
+19:20:46.193 :::: Reactive tsdf | Read feather | Column to index time: 31.6319711208344 seconds 
+19:20:46.193 :::: Reactive tsdf | Execution time: 0.231831550598145 seconds 
+19:20:46.205 :::: --> observeEvent tsdf | update select variables 
+19:20:46.209 :::: observeEvent tsdf | select variables 0 observeEvent tsdf | select variables timeindex 
+19:20:46.213 :::: --> observeEvent tsdf | update select variables --> 
+19:20:46.252 :::: --> embedding idx 
+19:20:46.300 :::: embedding idx --> 
+19:20:46.437 :::: --> observeEvent input_wlen | update slide stride value | wlen 900 
+19:20:46.440 :::: --> reactive enc_ar_stride 
+19:20:46.441 :::: reactive_enc_ar_stride | --> 450 
+19:20:46.444 :::: oserveEvent input_wlen | update slide stride value | Update stride to 450 
+19:20:46.450 :::: --> embedding idx 
+19:20:46.454 :::: embedding idx --> 
+19:20:46.587 :::: --> embedding idx 
+19:20:46.589 :::: --> Reactive X | Update Sliding Window 
+19:20:46.589 :::: reactive X | wlen 900 | stride 450 | Let's prepare data 

@@ -13,7 +13,7 @@ shinyServer(function(input, output, session) {
         print("--> Log message")
         new_log = paste0(logMessages(), Sys.time(), " - ", message, "\n")
         logMessages(new_log)
-        print(new_log)
+        #print(new_log)
         invalidateLater(10, session)
         print(paste0("Log Message |  ", message, "-->"))
     }
@@ -140,7 +140,22 @@ shinyServer(function(input, output, session) {
                 max = wmax,
                 value = wlen
             )
-            on.exit({log_print("observeEvent input_encoder | update wlen -->"); flush.console()})
+            updateSliderInput(
+                session = session, inputId = "stride", 
+                min = 1, max = input$wlen, 
+                value = enc_ar_stride()
+            )
+            on.exit({
+                log_print(
+                    paste0(
+                        "observeEvent input_encoder | update wlen ",
+                        input$wlen,
+                        " | stride ",
+                        input$stride,
+                        " -->"
+                        )
+            ); flush.console()
+            })
         }
     )
 
@@ -153,12 +168,13 @@ shinyServer(function(input, output, session) {
     })
         
     observeEvent(input$wlen, {
-        req(input$wlen != 0)
+        req(input$wlen)
         log_print(paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen))
         tryCatch({
             old_value = input$stride
-            if (input$stride == 0){
+            if (input$stride == 0 | input$stride == 1){
                 old_value = enc_ar_stride()
+                print(paste0("enc_ar_stride: ", old_value))
             }
             freezeReactiveValue(input, "stride")
             log_print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value))
@@ -322,8 +338,9 @@ shinyServer(function(input, output, session) {
     ###############
 
     X <- reactive({
+        #send_log("X_start")
         #req(input$wlen != 0, input$stride != 0, tsdf())
-        req(input$wlen != 0, input$stride != 0)
+        req(input$wlen != 0, input$stride != 0, input$stride != 1)
         log_print("--> Reactive X | Update Sliding Window")
         log_print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
         
@@ -343,7 +360,16 @@ shinyServer(function(input, output, session) {
         t_x_1 <- Sys.time()
         t_sliding_window_view = t_x_1 - t_x_0
         log_print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
-        on.exit({log_print(paste0("reactive X | Update sliding window | Apply stride | enc_input ~ ", dim(enc_input), "-->")); flush.console()})
+        on.exit({
+            log_print(paste0(
+                "reactive X | Update sliding window | Apply stride ", 
+                input$stride,
+                " | enc_input ~ ", 
+                dim(enc_input), 
+                "-->"
+            )); flush.console()
+        })
+        #send_log("X_end")
         enc_input
     })
     
@@ -420,13 +446,19 @@ shinyServer(function(input, output, session) {
                 encoder_artifact$metadata$ref$hash
             )
         )
-        on.exit({log_print("eventReactive enc | load encoder -->"); flush.console()})
+        
+        on.exit({log_print(paste0(
+            "eventReactive enc | load encoder | stride ", 
+            input$stride, 
+            "-->"
+        )); flush.console()})
         enc
     })
 
     
     
     embs <- reactive({
+        #send_log("embs_start")
         req(X(), enc_l <- enc())
         log_print("--> reactive embs | get embeddings")
         if (torch$cuda$is_available()){
@@ -455,45 +487,20 @@ shinyServer(function(input, output, session) {
         
         log_print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
 
-    cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
     
-    result = dvats$get_enc_embs_set_stride_set_batch_size(
-        X = X(),
-        print_flag = TRUE,
-        enc_learn = enc_l,
-        stride =  input$stride,  
-        batch_size = bs, 
-        cpu = cpu_flag, 
-        print_flag = FALSE, 
-        time_flag = TRUE, 
-        chunk_size = chunk_size,
-        check_memory_usage = TRUE
-    )
-#exec_with_feather_k_output(
-#    function_name = 'get_enc_embs_set_stride_set_batch_size',
-#    module_name   = 'dvats.encoder',
-#    path = enc_input,
-#    #X = enc_input, 
-#    k_output = 0, #as.integer(0),
-#    print_flag = True,
-#    time_flag = True,
-#    enc_learn = enc_l, 
-#    stride = ", input$stride, ", 
-#    batch_size = bs, 
-#    cpu = ", input$cpu_flag, ", 
-#    print_flag = False, 
-#    time_flag = True, 
-#    chunk_size = chunk_size,
-#    check_memory_usage = True
-#)
-#")
-    
-        #home_directory <- path.expand("~")
-        ## Sustituye 'python' con la ruta completa a tu intérprete de Python si es necesario
-        #comand <- sprintf(paste0(path.expand("~"), "/env -c \"%s\""), python_string)
-        #log_print(paste0("COMAND: ", comand))
-        #result <- system(comand, intern = TRUE)
-
+        result = dvats$get_enc_embs_set_stride_set_batch_size(
+            X = X(),
+            print_flag = TRUE,
+            enc_learn = enc_l,
+            stride =  input$stride,  
+            batch_size = bs, 
+            cpu = cpu_flag, 
+            print_flag = FALSE, 
+            time_flag = TRUE, 
+            chunk_size = chunk_size,
+            check_memory_usage = TRUE
+        )
         
         #result <- system(python_string)
         t_embs_1 <- Sys.time()
@@ -505,6 +512,7 @@ shinyServer(function(input, output, session) {
         gc(verbose=TRUE)
         on.exit({log_print("reactive embs | get embeddings -->"); flush.console()})
         result
+        #send_log("embs_end")
     })
 #enc = py_load_object(
 #    os.path.join(
@@ -685,6 +693,7 @@ shinyServer(function(input, output, session) {
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
         {
+            #send_log("tsdf_start")
             req(input$encoder, ts_ar())
             ts_ar = ts_ar()
             log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
@@ -709,6 +718,7 @@ shinyServer(function(input, output, session) {
             flush.console()
             on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds"));flush.console()})
             df
+            #send_log("tsdf_end")
         })
     
     # Auxiliary object for the interaction ts->projections
@@ -719,6 +729,7 @@ shinyServer(function(input, output, session) {
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
+        #send_log("projections_start")
         log_print("--> Projections")
         req(prj_object(), input$dr_method)
         #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
@@ -760,6 +771,7 @@ shinyServer(function(input, output, session) {
              })
         
         on.exit({log_print("Projections -->"); flush.console()})
+        #send_log("projections_end")
       prjs
     })
     
@@ -966,6 +978,7 @@ shinyServer(function(input, output, session) {
         space = "Lab" # Option used when colors do not represent a quantitative scale
     )
     output$windows_plot <- renderPlot({
+        #send_log("windows_plot_start")
         req(length(embedding_ids()) > 0)
         reduced_window_list = req(window_list())
 
@@ -986,7 +999,7 @@ shinyServer(function(input, output, session) {
 
         # Configuración del gráfico base
         par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
-        plot(
+        plt <- plot(
             NA, 
             xlim = c(left, right), 
             ylim = c(0, 1), 
@@ -1030,6 +1043,8 @@ shinyServer(function(input, output, session) {
 
             points(x = as.numeric(left),y = 0, col = "black", pch = 20, cex = 1)
             points(x = as.numeric(right),y = 0, col = "black", pch = 20, cex = 1)
+            #send_log("windows_plot_start")
+            plt
         }, 
         height=200
     )  
@@ -1086,6 +1101,7 @@ shinyServer(function(input, output, session) {
        
     # Generate projections plot
     output$projections_plot <- renderPlot({
+        #send_log("Projections plot_start")
         req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
         log_print("--> Projections_plot")
         t_pp_0 = Sys.time()
@@ -1136,6 +1152,7 @@ shinyServer(function(input, output, session) {
         #})
         t_pp_1 = Sys.time()
         log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0))
+        #send_log("Projections plot_end")
         plt
     })
     
@@ -1143,12 +1160,14 @@ shinyServer(function(input, output, session) {
     # Render projections plot
     output$projections_plot_ui <- renderUI(
         {
+            #send_log("Projections plot ui_start")
             plotOutput(
                 "projections_plot", 
                 click = "projections_click",
                 brush = "projections_brush",
                 height = input$embedding_plot_height
             ) %>% withSpinner()
+            #send_log("Projections plot ui_end")
         }
     )
     
@@ -1191,6 +1210,7 @@ shinyServer(function(input, output, session) {
                 input$wlen != 0, 
                 input$stride != 0
             )
+            #send_log("TsPlot dygraph_start")
             log_print("ts_plot dygraph")
             tspd_0 = Sys.time()
             #log_print("Saving time series plot")
@@ -1200,6 +1220,7 @@ shinyServer(function(input, output, session) {
             #log_print(paste0("Time series plot saved to", save_path))
             tspd_1 = Sys.time()
             log_print(paste0("ts_lot dygraph | Execution_time: ", tspd_1 - tspd_0))
+            #send_log("TsPlot dygraph_end")
             ts_plot
             #req(ts_plot())
         }   

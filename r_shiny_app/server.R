@@ -673,6 +673,7 @@ shinyServer(function(input, output, session) {
     }
 
     # Load and filter TimeSeries object from wandb
+    profvis({
     tsdf <- reactive(
         {
             req(input$encoder, ts_ar())
@@ -1024,22 +1025,22 @@ shinyServer(function(input, output, session) {
         height=200
     )  
 
-output$windows_text <- renderUI({
-    req(length(embedding_ids()) > 0)
-    reduced_window_list = req(window_list())
+    output$windows_text <- renderUI({
+        req(length(embedding_ids()) > 0)
+        reduced_window_list = req(window_list())
 
-    # Crear un conjunto de etiquetas de texto con información de las ventanas
-    window_info <- lapply(1:length(reduced_window_list), function(i) {
-        window <- reduced_window_list[[i]]
-        start <- format(as.POSIXct(isolate(tsdf())$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
-        end <- format(as.POSIXct(isolate(tsdf())$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
-        color <- ifelse(i %% 2 == 0, "green", "blue")
-        HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+        # Crear un conjunto de etiquetas de texto con información de las ventanas
+        window_info <- lapply(1:length(reduced_window_list), function(i) {
+            window <- reduced_window_list[[i]]
+            start <- format(as.POSIXct(isolate(tsdf())$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+            end <- format(as.POSIXct(isolate(tsdf())$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+            color <- ifelse(i %% 2 == 0, "green", "blue")
+            HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+        })
+
+        # Devuelve todos los elementos de texto como una lista de HTML
+        do.call(tagList, window_info)
     })
-
-    # Devuelve todos los elementos de texto como una lista de HTML
-    do.call(tagList, window_info)
-})
     
     # Generate encoder info table
     #output$enc_info = renderDataTable({
@@ -1093,7 +1094,7 @@ output$windows_text <- renderUI({
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
         if(!("cluster" %in% names(prjs_)))
             prjs_$cluster = FALSE
-        log_print(paste0("projections_plot | GoGo Plot!", prjs_.shape))
+        log_print(paste0("projections_plot | GoGo Plot!", nrow(prjs_)))
         plt <- ggplot(data = prjs_) + 
             aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
             scale_colour_manual(name = "clusters", values = req(update_palette())) +
@@ -1181,16 +1182,21 @@ output$windows_text <- renderUI({
                 input$wlen != 0, 
                 input$stride != 0
             )
+            log_print("ts_plot dygraph")
+            tspd_0 = Sys.time()
             #log_print("Saving time series plot")
             ts_plot <- req(ts_plot())
             #save_path <- file.path("..", "data", "plots", ts_plot_name())
             #htmlwidgets::saveWidget(ts_plot, file = save_path, selfcontained=TRUE)
             #log_print(paste0("Time series plot saved to", save_path))
+            tspd_1 = Sys.time()
+            log_print(paste0("ts_lot dygraph | Execution_time: ", tspd_1 - tspd_0))
             ts_plot
             #req(ts_plot())
         }   
     )
 
+    }, output_file = "app/witc2024_5.Rprofvis")
 
     ########### Saving graphs in local
     get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster){

@@ -35,6 +35,22 @@ shinyUI(fluidPage(
         showLogs();
       });
     });
+    var timers = {
+      'projections_plot': false,
+      'ts_plot_dygraph': false
+    }
+    $(document).on('shiny:outputinvalidated', function(event) {
+      if (timers.hasOwnProperty(event.target.id) && !timers[event.target.id]) {
+        console.time('Tiempo de Renderizado de ' + event.target.id);
+        timers[event.target.id] = true; // Marcar este temporizador como activo
+      }
+    });
+    $(document).on('shiny:value', function(event) {
+      if (timers.hasOwnProperty(event.target.id) && timers[event.target.id]) {
+        console.timeEnd('Tiempo de Renderizado de ' + event.target.id);
+        timers[event.target.id] = false; // Marcar este temporizador como no activo
+    }
+    });
   "))
   ),
   #theme = shinythemes::shinytheme("cerulean"),

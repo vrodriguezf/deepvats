@@ -8,6 +8,17 @@
 #
 ###########3 devtools::install_github("apache/arrow/r", ref = "tags/apache-arrow-14.0.0", subdir = "arrow/r")
 shinyServer(function(input, output, session) {
+    logMessages <- reactiveVal("")
+    send_log <- function(message) {
+        print("--> Log message")
+        new_log = paste0(logMessages(), Sys.time(), " - ", message, "\n")
+        logMessages(new_log)
+        print(new_log)
+        invalidateLater(10, session)
+        print(paste0("Log Message |  ", message, "-->"))
+    }
+
+
     options(shiny.verbose = TRUE)
     #options(shiny.error = function() {
     #    traceback()
@@ -188,6 +199,7 @@ shinyServer(function(input, output, session) {
 
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
+        send_log("tsdf_start")
         log_print("--> observeEvent tsdf | update select variables")
         on.exit({log_print("--> observeEvent tsdf | update select variables -->"); flush.console()})
         freezeReactiveValue(input, "select_variables")
@@ -200,9 +212,7 @@ shinyServer(function(input, output, session) {
             choices = ts_variables$selected,
             selected = ts_variables$selected
         )
-
-
-
+        send_log("tsdf_end")
     }, label = "select_variables")
     
     # Update slider_range reactive values with current samples range
@@ -673,7 +683,6 @@ shinyServer(function(input, output, session) {
     }
 
     # Load and filter TimeSeries object from wandb
-    profvis({
     tsdf <- reactive(
         {
             req(input$encoder, ts_ar())
@@ -1196,8 +1205,6 @@ shinyServer(function(input, output, session) {
         }   
     )
 
-    }, output_file = "app/witc2024_5.Rprofvis")
-
     ########### Saving graphs in local
     get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster){
         #log_print("Getting embedding plot name")
@@ -1229,6 +1236,12 @@ shinyServer(function(input, output, session) {
         encoder_name <- basename(input$encoder)
         get_ts_plot_name(dataset_name, encoder_name)
     })
+
+    ###################################
+    ########## JSCript Logs ###########
+    ###################################
+    output$logsOutput <- renderText({
+        logMessages()
+    })
     
 })
-

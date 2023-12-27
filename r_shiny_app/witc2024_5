@@ -11,12 +11,4 @@ torch:          /home/macu/env/lib/python3.10/site-packages/torch
 
 NOTE: Python version was forced by RETICULATE_PYTHON
 [1] "py_config -->"
-08:09:44.326 :::: Querying encoders 
-08:09:58.359 :::: Done! 
-08:10:07.726 :::: observeEvent encoders list enc_l | update dataset list | after freeze 
-08:10:07.732 :::: observeEvent encoders list encs_l | update dataset list --> 
-08:10:07.737 :::: --> observeEvent input_encoder | update wlen 
-08:10:07.738 :::: observeEvent input_encoder | update wlen | Before enc_ar 
-08:10:07.751 :::: --> Observe clustering options 
-08:10:07.752 :::: Observe clustering options --> 
-08:10:07.757 :::: --> observeEvent zoom_btn 
+09:00:48.873 :::: Querying encoders 

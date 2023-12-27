@@ -8,6 +8,35 @@
 #
 
 shinyUI(fluidPage(
+  ################################################
+  ################## JScript Logs ################
+  ################################################
+  tags$head(
+  tags$script(HTML("
+    function saveLogInLocalStorage(functionName, timeDiff) {
+      var filename = 'app/witc2024_6';
+      var existingLogs = localStorage.getItem(filename);
+      existingLogs = existingLogs ? JSON.parse(existingLogs) : [];
+      existingLogs.push({ functionName: functionName, timeDiff: timeDiff, timestamp: new Date().toISOString() });
+      localStorage.setItem(filename, JSON.stringify(existingLogs));
+    }
+
+    function showLogs() {
+      var filename = 'app/witc2024_6';
+      var logs = localStorage.getItem(filename);
+      if (logs) {
+        // Mostrar los logs en el contenedor de la UI
+        Shiny.setInputValue('logData', logs);
+      }
+    }
+
+    $(document).ready(function() {
+      Shiny.addCustomMessageHandler('showLogs', function(message) {
+        showLogs();
+      });
+    });
+  "))
+  ),
   #theme = shinythemes::shinytheme("cerulean"),
   # Application title
   titlePanel("DeepVATS"),
@@ -171,9 +200,15 @@ shinyUI(fluidPage(
             dataTableOutput("enc_info")
           )
         ),
+        ######################## JSCript Logs button ###############################
+        tabPanel(
+          "Logs",
+          fluidRow(
+            h3("Logs"),
+            verbatimTextOutput("logsOutput")
+          )
+        ),
       )
     )
   )
-
-  
 ))

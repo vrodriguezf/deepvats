@@ -145,9 +145,9 @@ make_individual_dygraph <- function(i){
 }
 
 log_print <- function(mssg) {
-  # Obtener la hora actual con milisegundos
+  # Miliseconds timestamp
   time <- format(Sys.time(), "%H:%M:%OS3")
-  # Imprimir la hora y el mensaje
+  # Print mssg with timestamp
   cat(time, "::::", mssg, "\n")
 }
 

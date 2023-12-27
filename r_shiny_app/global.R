@@ -24,6 +24,7 @@ library(fasttime)
 library(parallel)
 #library(shinythemes)
 library(xts)
+library(profvis)
 
 reactlog::reactlog_enable()
 
@@ -157,7 +158,7 @@ log_print <- function(mssg) {
 
 api <- wandb$Api()
 
-print("Querying encoders")
+log_print("Querying encoders")
 encs_l <- dvats$get_wandb_artifacts(project_path = glue(WANDB_ENTITY, "/", WANDB_PROJECT), 
                                     type = "learner", 
                                     last_version=F) %>% 
@@ -165,4 +166,4 @@ encs_l <- dvats$get_wandb_artifacts(project_path = glue(WANDB_ENTITY, "/", WANDB
 encs_l <- encs_l %>% set_names(encs_l %>% map(~ glue(WANDB_ENTITY, "/", WANDB_PROJECT, "/", .$name)))
   #discard(~ str_detect(.$name, "dcae"))
 
-print("Done!")
+log_print("Done!")

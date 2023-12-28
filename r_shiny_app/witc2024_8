@@ -1,0 +1,111 @@
+[1] "CUDA AVAILABLE. Num devices: 3"
+[1] ""
+[1] "--> py_config "
+python:         /home/macu/env/bin/python
+libpython:      /home/macu/env/lib/libpython3.10.so
+pythonhome:     /home/macu/env:/home/macu/env
+version:        3.10.13 | packaged by conda-forge | (main, Oct 26 2023, 18:07:37) [GCC 12.3.0]
+numpy:          /home/macu/env/lib/python3.10/site-packages/numpy
+numpy_version:  1.26.2
+torch:          /home/macu/env/lib/python3.10/site-packages/torch
+
+NOTE: Python version was forced by RETICULATE_PYTHON
+[1] "py_config -->"
+[1] "Querying encoders"
+[1] "Done!"
+[1] "observeEvent encoders list enc_l | update dataset list | after freeze"
+[1] "observeEvent encoders list encs_l | update dataset list -->"
+[1] "--> observeEvent input_encoder | update wlen"
+[1] "observeEvent input_encoder | update wlen | Before enc_ar"
+[1] "--> Observe clustering options"
+[1] "Observe clustering options -->"
+[1] "--> observeEvent zoom_btn"
+[1] "--> embedding idx"
+[1] "embedding idx -->"
+[1] "--> observeEvent input_dataset | update encoder list"
+[1] "mi-santamaria/deepvats/solar_4_seconds-20s:latest"
+[1] "observeEvent input_dataset | update encoders for dataset mi-santamaria/deepvats/solar_4_seconds-20s:latest"
+[1] "observeEvent input_dataset | update encoder list -->"
+[1] "--> observeEvent input_encoder | update wlen"
+[1] "observeEvent input_encoder | update wlen | Before enc_ar"
+[1] "eventReactive enc_ar | Enc. Artifact: mi-santamaria/deepvats/mvp-SWV:v38"
+[1] "envent reactive enc_ar -->"
+[1] "observeEvent input_encoder | update wlen | enc_ar: <Artifact QXJ0aWZhY3Q6Njc1MTIzODAy>"
+[1] "observeEvent input_encoder | update wlen | Set wlen slider values"
+[1] "observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 450" "observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 900"
+[1] "observeEvent input_encoder | update wlen | Update slider input (450, 900 ) -> 900"
+[1] "observeEvent input_encoder | update wlen -->"
+[1] "--> embedding idx"
+[1] "embedding idx -->"
+[1] "--> observeEvent input_wlen | update slide stride value | wlen 900"
+[1] "--> reactive enc_ar_stride"
+[1] "reactive_enc_ar_stride | --> 450"
+[1] "oserveEvent input_wlen | update slide stride value | Update stride to 450"
+[1] "--> embedding idx"
+[1] "embedding idx -->"
+[1] "--> eventReactive ts_ar | Update dataset artifact | hash mi-santamaria/deepvats/solar_4_seconds-20s:latest-->"
+[1] "eventReactive ts_ar -->"
+[1] "--> Reactive tsdf | ts artifact <Artifact QXJ0aWZhY3Q6Njc1MTIyODkz>"
+[1] "Reactive tsdf | Read feather /home/macu/data/wandb_artifacts/-4045435823724665494"
+[1] "Reactive tsdf | Read feather | Execution time: 0.047898530960083 seconds"
+[1] "Reactive tsdf | Column to index | Execution time: 0.0483255386352539 seconds"
+[1] "--> observeEvent tsdf | update select variables"
+[1] "observeEvent tsdf | select variables 0"         "observeEvent tsdf | select variables timeindex"
+[1] "--> observeEvent tsdf | update select variables -->"
+[1] "--> embedding idx"
+[1] "--> Reactive X | Update Sliding Window"
+[1] "reactive X | wlen 900 | stride 450 | Let's prepare data"
+[1] "reactive X | SWV: 14.2078740596771 secs "
+[1] "reactive X | Update sliding window | Apply stride | enc_input ~ 1478545-->" "reactive X | Update sliding window | Apply stride | enc_input ~ 1-->"      
+[3] "reactive X | Update sliding window | Apply stride | enc_input ~ 900-->"    
+[1] "--> eventReactive enc | load encoder "
+[1] "eventReactive enc | load encoder -->"
+[1] "--> reactive embs | get embeddings"
+[1] "CUDA devices: 3"
+[1] "reactive embs | get embeddings | Just about to get embedings. Device number: 0"
+[1] "reactive embs | get embeddings | Get batch size and dataset"
+[1] "reactive embs | get embeddings (set stride set batch size) | Stride 450 | batch size: 512"
+[1] "reactive embs | get embeddings (set stride set batch size) | Chunk_size 1e+07"
+[1] "get_enc_embs total time: 2.14007806777954 secs thus 0.0356679677963257 mins"
+[1] "reactive embs | get embeddings -->"
+[1] "--> prj_object"
+[1] "prj_object | Before complete cases "
+[1] "prj_object | Before switch "
+[1] " prj_object -->"
+[1] "embedding idx -->"
+[1] "--> ts_plot | Before req 1"
+[1] "--> ts_plot_base"
+[1] "ts_plot_base | start_date: 2019-08-01 00:00:03 end_date: 2019-08-24 03:33:03"
+[1] "ts_plot_base | tsdf_xts time0.0617856979370117"
+                    0
+2019-08-01 00:00:03 0
+2019-08-01 00:00:23 0
+2019-08-01 00:00:43 0
+2019-08-01 00:01:03 0
+2019-08-01 00:01:23 0
+2019-08-01 00:01:43 0
+                    0
+2020-07-08 11:06:23 0
+2020-07-08 11:06:43 0
+2020-07-08 11:07:03 0
+2020-07-08 11:07:23 0
+2020-07-08 11:07:43 0
+2020-07-08 11:08:03 0
+[1] "ts_plot_base -->"
+[1] "ts_plot | bp"
+[1] "ts_plot | embedings idxs "
+[1] "ts_plot | Before if"
+[1] "ts_plot -->"
+[1] "--> Projections_plot"
+[1] "--> Projections"
+[1] "Projections | before prjs"
+[1] "Projections | before switch"
+[1] "Projections -->"
+[1] "projections_plot | Prepare column highlights"
+[1] "projections_plot | GoGo Plot!"
+[1] "--> Encoder artiffactmi-santamaria/deepvats/mvp-SWV:v38"
+[1] "Encoder artiffact | encoder metadata mi-santamaria/deepvats/mvp-SWV:v38"
+[1] "Encoder artiffact -->"
+[1] "--> reactive ts_ar_config | List used artifacts"
+[1] "reactive ts_ar_config | Artifact hash-4045435823724665494"
+[1] "reactive ts_ar_config -->"

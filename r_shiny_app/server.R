@@ -215,7 +215,7 @@ shinyServer(function(input, output, session) {
 
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
-        send_log("tsdf_start")
+        send_log("Update tsdf select variables_start")
         log_print("--> observeEvent tsdf | update select variables")
         on.exit({log_print("--> observeEvent tsdf | update select variables -->"); flush.console()})
         freezeReactiveValue(input, "select_variables")
@@ -228,7 +228,7 @@ shinyServer(function(input, output, session) {
             choices = ts_variables$selected,
             selected = ts_variables$selected
         )
-        send_log("tsdf_end")
+        send_log("Update tsdf select variables_end")
     }, label = "select_variables")
     
     # Update slider_range reactive values with current samples range
@@ -240,9 +240,11 @@ shinyServer(function(input, output, session) {
     
     # Update precomputed_clusters reactive value when the input changes
     observeEvent(input$clusters_labels_name, {
+        send_log("Precomputed clusters_start")
         log_print("--> observe | precomputed_cluster selected ")
         precomputed_clusters$selected <- req(input$clusters_labels_name)
         log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected))
+        send_log("Precomputed clusters_end")
     })
     
     
@@ -256,18 +258,20 @@ shinyServer(function(input, output, session) {
     
     # Update clusters_config reactive values when user clicks on "calculate_clusters" button
     observeEvent(input$calculate_clusters, {
+        send_log("Clusters config_start")
         log_print("--> observe event calculate_clusters | update clusters_config")
         clusters_config$metric_hdbscan <- req(input$metric_hdbscan)
         clusters_config$min_cluster_size_hdbscan <- req(input$min_cluster_size_hdbscan)
         clusters_config$min_samples_hdbscan <- req(input$min_samples_hdbscan)
         clusters_config$cluster_selection_epsilon_hdbscan <- req(input$cluster_selection_epsilon_hdbscan)
-        #on.exit({log_print("observe event calculate_clusters | update clusters_config -->"))
+        send_log("Clusters config_end")
+        on.exit({log_print("observe event calculate_clusters | update clusters_config -->")})
     })
     
     
     # Observe the events related to zoom the projections graph
     observeEvent(input$zoom_btn, {
-        
+        send_log("Zoom btn_start")
         log_print("--> observeEvent zoom_btn")
         brush <- input$projections_brush
         if (!is.null(brush)) {
@@ -283,11 +287,13 @@ shinyServer(function(input, output, session) {
             ranges$x <- NULL
             ranges$y <- NULL
         }
+        send_log("Zoom btn_end")
     })
     
     
     # Observe the events related to change the appearance of the projections graph
     observeEvent(input$update_prj_graph,{
+        send_log("Update prj graph_start")
         style_values <- list(path_line_size = input$path_line_size ,
                              path_alpha = input$path_alpha,
                              point_alpha = input$point_alpha,
@@ -304,6 +310,7 @@ shinyServer(function(input, output, session) {
             config_style$point_alpha <- NULL
             config_style$point_size <- NULL
         }
+        send_log("Update prj graph_end")
     })
     
     
@@ -315,6 +322,7 @@ shinyServer(function(input, output, session) {
     
     # Observe to check/uncheck all variables
     observeEvent(input$selectall,{
+        send_log("Select all variables_start")
         req(tsdf)
         ts_variables$selected <- names(isolate(tsdf()))
         #ts_variables$selected <- names(req(tsdf()))
@@ -329,6 +337,7 @@ shinyServer(function(input, output, session) {
                                      choices = ts_variables$selected, 
                                      selected = NULL)
         }
+        send_log("Select all variables_end")
     })
     
     
@@ -387,8 +396,9 @@ shinyServer(function(input, output, session) {
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
         log_print("--> reactive ts_ar_config | List used artifacts")
+        on.exit({log_print("reactive ts_ar_config -->"); flush.console()})
         ts_ar = req(ts_ar())
-        log_print(paste0("reactive ts_ar_config | List used artifacts | hash", ts_ar$hash))
+        log_print(paste0("reactive ts_ar_config | List used artifacts | hash", ts_ar$metadata$TS$hash))
         list_used_arts = ts_ar$metadata$TS
         list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
         list_used_arts$name = ts_ar$name
@@ -397,7 +407,6 @@ shinyServer(function(input, output, session) {
         list_used_arts$id = ts_ar$id
         list_used_arts$created_at = ts_ar$created_at
         list_used_arts
-        on.exit({log_print("reactive ts_ar_config -->"); flush.console()})
     })
     
     # selected_embs_ar = eventReactive(input$embs_ar, {
@@ -511,8 +520,8 @@ shinyServer(function(input, output, session) {
         X <- NULL
         gc(verbose=TRUE)
         on.exit({log_print("reactive embs | get embeddings -->"); flush.console()})
-        result
         #send_log("embs_end")
+        result
     })
 #enc = py_load_object(
 #    os.path.join(
@@ -1080,24 +1089,21 @@ shinyServer(function(input, output, session) {
     #})
     output$enc_info = renderDataTable({
         selected_encoder_name <- req(input$encoder)
+        on.exit({log_print("Encoder artiffact -->"); flush.console()})
         log_print(paste0("--> Encoder artiffact", selected_encoder_name))
         selected_encoder <- encs_l[[selected_encoder_name]]
         encoder_metadata <- req(selected_encoder$metadata)
         log_print(paste0("Encoder artiffact | encoder metadata ", selected_encoder_name))
-        encoder_metadata %>%
-        enframe()
-        on.exit({log_print("Encoder artiffact -->"); flush.console()})
+        encoder_metadata %>%enframe()
     })
     
     # Generate time series info table
     output$ts_ar_info = renderDataTable({
-        ts_ar_config() %>% 
-            enframe()
+        log_print("--> ts_ar_info")
+        on.exit(log_print("ts_ar_info -->"))
+        print(ts_ar_config())
+        ts_ar_config() %>% enframe()
     })
-
-
-
-    
        
     # Generate projections plot
     output$projections_plot <- renderPlot({

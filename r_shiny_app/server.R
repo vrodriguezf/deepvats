@@ -1293,6 +1293,7 @@ shinyServer(function(input, output, session) {
     observe({
     
     renderTime <- input$renderTime
+    log_print(paste0("RenderTime ", renderTime$id))
     if (!is.null(renderTime)) {
         mssg = paste(renderTime$id, renderTime$time, sep=", ")
         log_print(paste0("| JS PLOT RENDER | ", mssg), TRUE, log_path())

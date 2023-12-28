@@ -35,34 +35,26 @@ shinyUI(fluidPage(
         showLogs();
       });
     });
-    //var timers = {
-    //  'projections_plot': false,
-    //  'ts_plot_dygraph': false
-    //}
-    //$(document).on('shiny:outputinvalidated', function(event) {
-    //  if (timers.hasOwnProperty(event.target.id) && !timers[event.target.id]) {
-    //    console.time('Render time ' + event.target.id);
-    //    timers[event.target.id] = true; // Marcar este temporizador como activo
-    //  }
-    //});
+  
 
-    var timers_ = {
-      'projections_plot': false,
-      'ts_plot_dygraph': false
+    var timers = {
+      'projections_plot': null,
+      'ts_plot_dygraph': null
     }
-    $(document).on('shiny:value', function(event) {
-      if (timers_.hasOwnProperty(event.target.id) && timers_[event.target.id]) {
-        console.timeEnd('Render time ' + event.target.id);
-        timers_[event.target.id] = false; 
+    $(document).on('shiny:outputinvalidated', function(event) {
+      if (timers.hasOwnProperty(event.target.id)) {
+        timers[event.target.id] = new Date().getTime();
+        console.log('Start rendering ' + event.target.id);
       }
     });
 
     $(document).on('shiny:value', function(event) {
-      if (timers_.hasOwnProperty(event.target.id) && timers_[event.target.id]) {
+      if (timers.hasOwnProperty(event.target.id) && timers[event.target.id] != null) {
           var endTime = new Date().getTime();
-          var timeTaken = endTime - timers_[event.target.id];
+          var timeTaken = endTime - timers[event.target.id];
           Shiny.setInputValue('renderTime', {id: event.target.id, time: timeTaken});
-          timers_[event.target.id] = false; // Marcar este temporizador como no activo
+          console.log('Render time for ' + event.target.id + ': ' + timeTaken + ' ms');
+          timers[event.target.id] = null;
         }
       }); 
     "))

@@ -1054,6 +1054,7 @@ output$windows_text <- renderUI({
     #    enframe()
     #})
     output$enc_info = renderDataTable({
+        on.exit({print("Encoder artiffact -->"); flush.console()})
         selected_encoder_name <- req(input$encoder)
         print(paste0("--> Encoder artiffact", selected_encoder_name))
         selected_encoder <- encs_l[[selected_encoder_name]]
@@ -1061,7 +1062,6 @@ output$windows_text <- renderUI({
         print(paste0("Encoder artiffact | encoder metadata ", selected_encoder_name))
         encoder_metadata %>%
         enframe()
-        on.exit({print("Encoder artiffact -->"); flush.console()})
     })
     
     # Generate time series info table

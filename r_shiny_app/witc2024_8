@@ -11,150 +11,129 @@ torch:          /home/macu/env/lib/python3.10/site-packages/torch
 
 NOTE: Python version was forced by RETICULATE_PYTHON
 [1] "py_config -->"
-08:54:13.436 :::: Querying encoders 
-08:54:29.329 :::: Done! 
-08:54:31.778 :::: observeEvent encoders list enc_l | update dataset list | after freeze 
-08:54:31.783 :::: observeEvent encoders list encs_l | update dataset list --> 
-08:54:31.787 :::: --> observeEvent input_encoder | update wlen 
-08:54:31.788 :::: observeEvent input_encoder | update wlen | Before enc_ar 
-08:54:31.796 :::: --> Observe clustering options 
-08:54:31.797 :::: Observe clustering options --> 
+13:44:49.880::::Querying encoders
+13:45:02.296::::Done!
+13:45:03.755::::observeEvent encoders list enc_l | update dataset list | after freeze
+13:45:03.762::::observeEvent encoders list encs_l | update dataset list -->
+13:45:03.767::::--> observeEvent input_encoder | update wlen
+13:45:03.768::::observeEvent input_encoder | update wlen | Before enc_ar
+13:45:03.778::::--> Observe clustering options
+13:45:03.779::::Observe clustering options -->
 [1] "--> Log message"
 [1] "Log Message |  Zoom btn_start-->"
-08:54:31.803 :::: --> observeEvent zoom_btn 
+13:45:03.785::::--> observeEvent zoom_btn
 [1] "--> Log message"
 [1] "Log Message |  Zoom btn_end-->"
-08:54:31.818 :::: --> embedding idx 
-08:54:31.821 :::: embedding idx --> 
-08:54:31.895 :::: --> observeEvent input_dataset | update encoder list 
-08:54:31.895 :::: mi-santamaria/deepvats/solar_4_seconds-20s:latest 
-08:54:31.899 :::: observeEvent input_dataset | update encoders for dataset mi-santamaria/deepvats/solar_4_seconds-20s:latest 
-08:54:31.907 :::: observeEvent input_dataset | update encoder list --> 
-08:54:32.001 :::: --> observeEvent input_encoder | update wlen 
-08:54:32.007 :::: observeEvent input_encoder | update wlen | Before enc_ar 
-08:54:32.008 :::: eventReactive enc_ar | Enc. Artifact: mi-santamaria/deepvats/mvp-SWV:v38 
-08:54:32.317 :::: envent reactive enc_ar --> 
-08:54:32.319 :::: observeEvent input_encoder | update wlen | enc_ar: <Artifact QXJ0aWZhY3Q6Njc1MTIzODAy> 
-08:54:32.319 :::: observeEvent input_encoder | update wlen | Set wlen slider values 
-08:54:32.320 :::: observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 450 observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 900 
-08:54:32.323 :::: observeEvent input_encoder | update wlen | Update slider input (450, 900 ) -> 900 
-08:54:32.325 :::: --> reactive enc_ar_stride 
-08:54:32.326 :::: reactive_enc_ar_stride | --> 450 
-08:54:32.334 :::: --> eventReactive ts_ar | Update dataset artifact | hash mi-santamaria/deepvats/solar_4_seconds-20s:latest--> 
-08:54:32.477 :::: eventReactive ts_ar --> 
-08:54:32.478 :::: --> Reactive tsdf | ts artifact <Artifact QXJ0aWZhY3Q6Njc1MTIyODkz> 
-08:54:32.479 :::: Reactive tsdf | Read feather /home/macu/data/wandb_artifacts/-4045435823724665494 
-08:54:32.480 :::: About to read 
-08:54:32.529 :::: Just read 
-08:54:32.529 :::: Reactive tsdf | Read feather | Load time: 0.0500452518463135 seconds | N elements: 1479445 
-08:54:36.443 :::: Reactive tsdf | Read feather | Column to index time: 3.96391582489014 seconds 
-08:54:36.443 :::: Reactive tsdf | Execution time: 0.0500452518463135 seconds 
+13:45:03.789::::--> observeEvent zoom_btn FALSE
+13:45:03.803::::--> embedding idx
+13:45:03.807::::embedding idx -->
+13:45:03.883::::--> observeEvent input_dataset | update encoder list
+13:45:03.883::::mi-santamaria/deepvats/solar_4_seconds-32s:latest
+13:45:03.888::::observeEvent input_dataset | update encoders for dataset mi-santamaria/deepvats/solar_4_seconds-32s:latest
+13:45:03.899::::observeEvent input_dataset | update encoder list -->
+13:45:03.903::::--> eventReactive ts_ar | Update dataset artifact | hash mi-santamaria/deepvats/solar_4_seconds-32s:latest-->
+13:45:04.174::::eventReactive ts_ar -->
+[1] "Log path: solar_4_seconds-32s:v0.log"
+13:45:04.292::::--> observeEvent input_encoder | update wlen
+13:45:04.299::::observeEvent input_encoder | update wlen | Before enc_ar
+13:45:04.300::::eventReactive enc_ar | Enc. Artifact: mi-santamaria/deepvats/mvp-SWV:v41
+13:45:04.444::::envent reactive enc_ar -->
+13:45:04.445::::observeEvent input_encoder | update wlen | enc_ar: <Artifact QXJ0aWZhY3Q6Njc2MDQ5MDU0>
+13:45:04.446::::observeEvent input_encoder | update wlen | Set wlen slider values
+13:45:04.446::::observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 450
+ 13:45:04.446::::observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 900
+13:45:04.449::::observeEvent input_encoder | update wlen | Update slider input (450, 900 ) -> 900
+13:45:04.451::::--> reactive enc_ar_stride
+13:45:04.452::::reactive_enc_ar_stride | --> 450
+13:45:04.458::::--> Reactive tsdf | ts artifact <Artifact QXJ0aWZhY3Q6Njc2MDQ4MzMx>
+13:45:04.458::::Reactive tsdf | Read feather | Before | /home/macu/data/wandb_artifacts/3967977247651105648
+13:45:04.501::::Reactive tsdf | Read feather | After | /home/macu/data/wandb_artifacts/3967977247651105648
+13:45:04.501::::Reactive tsdf | Read feather | Load time: 0.0426006317138672 seconds | N elements: 924653
+13:45:04.502::::Reactive tsdf | Column to rowname | Before | /home/macu/data/wandb_artifacts/3967977247651105648
+13:45:06.666::::Reactive tsdf | Column to rowname | After | /home/macu/data/wandb_artifacts/3967977247651105648
+13:45:06.666::::Reactive tsdf | Read feather | Rownames: 2.16472244262695 seconds
+13:45:06.667::::Reactive tsdf | Execution time: 0.0426006317138672 seconds
 [1] "--> Log message"
 [1] "Log Message |  Update tsdf select variables_start-->"
-08:54:36.447 :::: --> observeEvent tsdf | update select variables 
-08:54:36.449 :::: observeEvent tsdf | select variables 0 observeEvent tsdf | select variables timeindex 
+13:45:06.672::::--> observeEvent tsdf | update select variables
+13:45:06.676::::observeEvent tsdf | select variables 0
+ 13:45:06.676::::observeEvent tsdf | select variables timeindex
 [1] "--> Log message"
 [1] "Log Message |  Update tsdf select variables_end-->"
-08:54:36.454 :::: --> observeEvent tsdf | update select variables --> 
-08:54:36.492 :::: --> embedding idx 
-08:54:36.495 :::: embedding idx --> 
-08:54:36.541 :::: --> Encoder artiffactmi-santamaria/deepvats/mvp-SWV:v38 
-08:54:36.542 :::: Encoder artiffact | encoder metadata mi-santamaria/deepvats/mvp-SWV:v38 
-08:54:36.542 :::: Encoder artiffact --> 
-08:54:36.544 :::: --> ts_ar_info 
-08:54:36.545 :::: --> reactive ts_ar_config | List used artifacts 
-08:54:36.545 :::: reactive ts_ar_config | List used artifacts | hash-4045435823724665494 
-08:54:36.550 :::: reactive ts_ar_config --> 
-$ed
-[1] "2020-07-08 11:08:03"
-
-$sd
-[1] "2019-08-01 00:00:03"
-
-$freq
-[1] "<20 * Seconds>"
-
-$hash
-[1] "-4045435823724665494"
-
-$vars
-[1] "0"
-
-$n_vars
-[1] 1
-
-$created
-[1] "from-df"
-
-$n_samples
-[1] 1479445
-
-$has_missing_values
-[1] "False"
-
-$handle_missing_values_technique
-[1] "None"
-
-$name
-[1] "solar_4_seconds-20s:v0"
-
-$aliases
-[1] "latest" "all"   
-
-$artifact_name
-[1] "solar_4_seconds-20s:v0"
-
-$id
-[1] "QXJ0aWZhY3Q6Njc1MTIyODkz"
-
-$created_at
-[1] "2023-12-26T19:54:38"
-
-08:54:36.551 :::: ts_ar_info --> 
-08:54:36.618 :::: --> observeEvent input_wlen | update slide stride value | wlen 900 
+13:45:06.685::::--> observeEvent tsdf | update select variables -->
+13:45:06.744::::--> embedding idx
+13:45:06.771::::embedding idx -->
+13:45:06.939::::--> observeEvent input_wlen | update slide stride value | wlen 900
 [1] "enc_ar_stride: 450"
-08:54:36.623 :::: oserveEvent input_wlen | update slide stride value | Update stride to 450 
-08:54:36.630 :::: --> embedding idx 
-08:54:36.633 :::: embedding idx --> 
-08:54:36.729 :::: --> embedding idx 
-08:54:36.731 :::: --> Reactive X | Update Sliding Window 
-08:54:36.731 :::: reactive X | wlen 900 | stride 450 | Let's prepare data 
-08:54:49.549 :::: reactive X | SWV: 12.8174471855164 secs  
-08:54:49.549 :::: reactive X | Update sliding window | Apply stride 450 | enc_input ~ 1478545--> reactive X | Update sliding window | Apply stride 450 | enc_input ~ 1--> reactive X | Update sliding window | Apply stride 450 | enc_input ~ 900--> 
-08:54:51.539 :::: --> eventReactive enc | load encoder  
-08:54:51.557 :::: eventReactive enc | load encoder | stride 450--> 
-08:54:51.558 :::: --> reactive embs | get embeddings 
-08:54:51.559 :::: CUDA devices: 3 
-08:54:51.559 :::: reactive embs | get embeddings | Just about to get embedings. Device number: 0 
-08:54:51.559 :::: reactive embs | get embeddings | Get batch size and dataset 
-08:54:52.279 :::: reactive embs | get embeddings (set stride set batch size) | Stride 450 | batch size: 512 
-08:54:52.280 :::: reactive embs | get embeddings (set stride set batch size) | Chunk_size 1e+07 
-08:54:54.077 :::: get_enc_embs total time: 2.51747441291809 secs thus 0.0419579068819682 mins 
-08:54:58.477 :::: reactive embs | get embeddings --> 
-08:54:58.484 :::: --> prj_object 
-08:54:58.484 :::: prj_object | Before complete cases  
-08:54:58.487 :::: prj_object | Before switch  
-08:54:58.765 ::::  prj_object | cpu_flag: GPU | Execution time: 0.281211376190186 seconds --> 
-08:54:58.778 :::: embedding idx --> 
-08:54:58.800 :::: ts_plot dygraph 
-08:54:58.801 :::: --> ts_plot | Before req 1 
-08:54:58.802 :::: --> ts_plot_base 
-08:54:58.805 :::: ts_plot_base | start_date: 2019-08-01 00:00:03 end_date: 2019-08-24 03:33:03 
-08:54:58.866 :::: ts_plot_base | tsdf_xts time-0.0610826015472412 
-08:54:58.866 :::: 0 0 0 0 0 0 
-08:54:58.871 :::: 0 0 0 0 0 0 
-08:55:00.047 :::: ts_plot_base --> 
-08:55:00.047 :::: ts_plot | bp 
-08:55:00.047 :::: ts_plot | embedings idxs  
-08:55:00.047 :::: ts_plot | Before if 
-08:55:00.048 :::: ts plot | Execution time: 1.24725794792175 
-08:55:00.048 :::: ts_plot --> 
-08:55:00.049 :::: ts_lot dygraph | Execution_time: 1.24803495407104 
-08:55:01.447 :::: --> Projections_plot 
-08:55:01.448 :::: --> Projections 
-08:55:01.448 :::: Projections | before prjs 
-08:55:01.449 :::: Projections | before switch 
-08:55:01.450 :::: Projections --> 
-08:55:01.450 :::: projections_plot | Prepare column highlights 
-08:55:01.450 :::: projections_plot | GoGo Plot!3286 
-08:55:01.470 :::: projections_plot | Projections Plot time: 0.0223829746246338 
+13:45:06.944::::oserveEvent input_wlen | update slide stride value | Update stride to 450
+13:45:06.952::::--> embedding idx
+13:45:06.955::::embedding idx -->
+13:45:07.043::::--> embedding idx
+13:45:07.045::::--> Reactive X | Update Sliding Window
+13:45:07.045::::reactive X | wlen 900 | stride 450 | Let's prepare data
+13:45:07.045::::reactive X | SWV
+13:45:16.952::::reactive X | SWV: 9.9062602519989 secs 
+13:45:16.953::::reactive X | Update sliding window | Apply stride 450 | enc_input ~ 923753-->
+ 13:45:16.953::::reactive X | Update sliding window | Apply stride 450 | enc_input ~ 1-->
+ 13:45:16.953::::reactive X | Update sliding window | Apply stride 450 | enc_input ~ 900-->
+13:45:19.419::::--> eventReactive enc | load encoder 
+13:45:19.455::::eventReactive enc | load encoder | stride 450-->
+13:45:19.456::::--> reactive embs | get embeddings
+13:45:19.457::::CUDA devices: 3
+13:45:19.457::::reactive embs | get embeddings | Just about to get embedings. Device number: 0
+13:45:19.457::::reactive embs | get embeddings | Get batch size and dataset
+13:45:19.825::::reactive embs | get embeddings (set stride set batch size) | Stride 450 | batch size: 512
+13:45:19.826::::reactive embs | get embeddings (set stride set batch size) | Chunk_size 1e+07
+13:45:19.829::::reactive embs | get_enc_embs_set_stride_set_batch_size | GPU | Before
+13:45:21.609::::reactive embs | get_enc_embs_set_stride_set_batch_size | GPU | After
+13:45:21.610::::get_enc_embs_set_stride_set_batch_size | GPU | total time: 2.15285539627075 secs thus 0.0358809232711792 mins
+13:45:25.497::::reactive embs | get embeddings -->
+13:45:25.503::::--> prj_object
+13:45:25.504::::prj_object | Before complete cases 
+13:45:25.506::::prj_object | Before switch 
+13:45:25.748:::: prj_object | cpu_flag: GPU | UMAP | Execution time: 0.244532346725464 seconds -->
+13:45:25.762::::embedding idx -->
+13:45:25.785::::ts_plot dygraph
+13:45:25.785::::--> ts_plot | Before req 1
+13:45:25.786::::--> ts_plot_base
+13:45:25.790::::ts_plot_base | start_date: 2019-08-01 00:00:03 end_date: 2019-09-07 00:52:51
+13:45:25.840::::ts_plot_base | tsdf_xts time-0.049799919128418
+13:45:25.840::::0
+ 13:45:25.840::::0
+ 13:45:25.840::::0
+ 13:45:25.840::::0
+ 13:45:25.840::::0
+ 13:45:25.840::::0
+13:45:25.848::::0
+ 13:45:25.848::::0
+ 13:45:25.848::::0
+ 13:45:25.848::::0
+ 13:45:25.848::::0
+ 13:45:25.848::::0
+13:45:26.717::::ts_plot_base -->
+13:45:26.717::::ts_plot | bp
+13:45:26.717::::ts_plot | embedings idxs 
+13:45:26.717::::ts_plot | Before if
+13:45:26.719::::ts plot | Execution time: 0.933557271957397
+13:45:26.719::::ts_plot -->
+13:45:26.719::::ts_plot dygraph | Execution_time: 0.934524536132812
+13:45:27.759::::--> Projections_plot
+13:45:27.759::::--> Projections
+13:45:27.760::::Projections | before prjs
+13:45:27.760::::Projections | before switch
+13:45:27.760::::Calculate clusters | before
+13:45:27.762::::Calculate clusters | Execution time 0.00108933448791504
+13:45:27.762::::Projections -->
+13:45:27.762::::projections_plot | Prepare column highlights
+13:45:27.763::::projections_plot | GoGo Plot!2053
+13:45:27.785::::projections_plot | Projections Plot time: 0.0259802341461182
+13:46:04.809::::--> embedding idx
+13:46:04.817::::embedding idx -->
+13:46:04.837::::ts_plot dygraph
+13:46:04.891::::--> ts_plot | Before req 1
+13:46:04.892::::ts_plot | bp
+13:46:04.892::::ts_plot | embedings idxs 
+13:46:04.892::::ts_plot | Before if
+13:46:04.892::::ts plot | Execution time: 0.00138330459594727
+13:46:04.893::::ts_plot -->
+13:46:04.893::::ts_plot dygraph | Execution_time: 0.0559566020965576

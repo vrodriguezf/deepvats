@@ -144,11 +144,16 @@ make_individual_dygraph <- function(i){
   plt
 }
 
-log_print <- function(mssg) {
-  # Miliseconds timestamp
+log_print <- function(mssg, file_flag = FALSE, file_path = "") {
   time <- format(Sys.time(), "%H:%M:%OS3")
-  # Print mssg with timestamp
-  cat(time, "::::", mssg, "\n")
+  formated_mssg = paste0(time, "::::", mssg, "\n")
+  print(formated_mssg)
+  if (file_flag && file_path != "") {
+    if (!file.exists(file_path)) {
+      file.create(file_path)
+    }
+    cat(formated_mssg, file = file_path, append = TRUE)
+  }
 }
 
 

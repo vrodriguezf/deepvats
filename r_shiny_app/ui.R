@@ -35,24 +35,39 @@ shinyUI(fluidPage(
         showLogs();
       });
     });
-    var timers = {
+    //var timers = {
+    //  'projections_plot': false,
+    //  'ts_plot_dygraph': false
+    //}
+    //$(document).on('shiny:outputinvalidated', function(event) {
+    //  if (timers.hasOwnProperty(event.target.id) && !timers[event.target.id]) {
+    //    console.time('Render time ' + event.target.id);
+    //    timers[event.target.id] = true; // Marcar este temporizador como activo
+    //  }
+    //});
+
+    var timers_ = {
       'projections_plot': false,
       'ts_plot_dygraph': false
     }
-    $(document).on('shiny:outputinvalidated', function(event) {
-      if (timers.hasOwnProperty(event.target.id) && !timers[event.target.id]) {
-        console.time('Tiempo de Renderizado de ' + event.target.id);
-        timers[event.target.id] = true; // Marcar este temporizador como activo
+    $(document).on('shiny:value', function(event) {
+      if (timers_.hasOwnProperty(event.target.id) && timers_[event.target.id]) {
+        console.timeEnd('Render time ' + event.target.id);
+        timers_[event.target.id] = false; 
       }
     });
+
     $(document).on('shiny:value', function(event) {
-      if (timers.hasOwnProperty(event.target.id) && timers[event.target.id]) {
-        console.timeEnd('Tiempo de Renderizado de ' + event.target.id);
-        timers[event.target.id] = false; // Marcar este temporizador como no activo
-    }
-    });
-  "))
+      if (timers_.hasOwnProperty(event.target.id) && timers_[event.target.id]) {
+          var endTime = new Date().getTime();
+          var timeTaken = endTime - timers_[event.target.id];
+          Shiny.setInputValue('renderTime', {id: event.target.id, time: timeTaken});
+          timers_[event.target.id] = false; // Marcar este temporizador como no activo
+        }
+      }); 
+    "))
   ),
+
   #theme = shinythemes::shinytheme("cerulean"),
   # Application title
   titlePanel("DeepVATS"),

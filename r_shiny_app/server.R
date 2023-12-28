@@ -351,8 +351,9 @@ shinyServer(function(input, output, session) {
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
         print("--> reactive ts_ar_config | List used artifacts")
+        on.exit({print("reactive ts_ar_config -->"); flush.console()})
         ts_ar <- req(ts_ar())
-        print(paste0("reactive ts_ar_config | List used artifacts | hash", ts_ar$hash))
+        print(paste0("reactive ts_ar_config | Artifact hash", ts_ar$metadata$TS$hash))
         list_used_arts = ts_ar$metadata$TS
         list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
         list_used_arts$name = ts_ar$name
@@ -361,7 +362,6 @@ shinyServer(function(input, output, session) {
         list_used_arts$id = ts_ar$id
         list_used_arts$created_at = ts_ar$created_at
         list_used_arts
-        on.exit({print("reactive ts_ar_config -->"); flush.console()})
     })
     
     # selected_embs_ar = eventReactive(input$embs_ar, {

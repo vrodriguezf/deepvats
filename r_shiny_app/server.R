@@ -11,7 +11,7 @@ shinyServer(function(input, output, session) {
     logMessages <- reactiveVal("")
     send_log <- function(message) {
         print("--> Log message")
-        new_log = paste0(logMessages(), Sys.time(), " - ", message, "\n")
+        new_log = paste0(logMessages(), Sys.time(), " - ", message)
         logMessages(new_log)
         #print(new_log)
         invalidateLater(10, session)
@@ -372,10 +372,13 @@ shinyServer(function(input, output, session) {
         t_sliding_window_view = t_x_1 - t_x_0
         log_print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "), TRUE, log_path(), log_header())
         temp_log <<- log_add(
-            log_mssg = temp_log, 
-            mssg = "SWV",
-            time = t_sliding_window_view, 
-            header = "SWV"
+            log_mssg            = isolate(temp_log), 
+            function_           = "Reactive X | SWV",
+            dr_method           = isolate(input$dr_method),
+            clustering_options  = isolate(input$clustering_options),
+            zoom                = isolate(input$zoom_btn),
+            time                = t_sliding_window_view,
+            mssg                = "Compute Sliding Window View"
         )
         on.exit({
             log_print(paste0(
@@ -403,21 +406,28 @@ shinyServer(function(input, output, session) {
 
     log_path <- reactiveVal() 
     log_header <- reactiveVal()
+    
     temp_log <- data.frame(
-            timestamp = character(),
-            header = character(),
-            time = character(),
-            mssg = character()
-            #stringAsFactors = FALSE
+        timestamp           = character(),
+        function_           = character(),
+        dr_method           = character(),
+        clustering_options  = character(),
+        zoom                = logical(),
+        time                = numeric(),
+        mssg                = character()
     )
 
     log_df <- reactiveVal(
         data.frame( 
-            timestamp = character(),
-            execution_id = character(),
-            header = character(),
-            time = character(),
-            mssg = character()
+            timestamp           = character(),
+            execution_id        = numeric(),
+            function_           = character(),
+            cpu_flag            = character(),
+            dr_method           = character(),
+            clustering_options  = character(),
+            zoom                = logical(),
+            mssg                = character(),
+            time                = numeric()
         )
     )
 
@@ -450,7 +460,11 @@ shinyServer(function(input, output, session) {
 
     
     observe({
-        log_header_ = paste0(ts_ar()$name, " | ", execution_id ," | ", input$cpu_flag, " | ", input$dr_method, " | ", input$clustering_options, " | ", input$zoom_btn)
+        log_header_ = paste0(
+            ts_ar()$name, " | ", 
+            execution_id ," | ", 
+            input$cpu_flag, " | ", 
+            input$dr_method, " | ", input$clustering_options, " | ", input$zoom_btn)
         print(paste0("Log header: ", log_header_))
         log_header(log_header_)  # Actualiza log_path
     })
@@ -581,10 +595,13 @@ shinyServer(function(input, output, session) {
         diff_mins <- as.numeric(diff, units = "mins")
         log_print(paste0("get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | total time: ", diff_secs, " secs thus ", diff_mins, " mins"), TRUE, log_path(), log_header())
         temp_log <<- log_add(
-            log_mssg = temp_log, 
-            mssg = paste0("Embeddings | ", log_header()), 
-            time = diff, 
-            header = "Embeddings"
+            log_mssg            = temp_log, 
+            function_           = "Embeddings",
+            dr_method           = isolate(input$dr_method),
+            clustering_options  = isolate(input$clustering_options),
+            zoom                = isolate(input$zoom_btn),
+            time                = diff, 
+            mssg                = "Get encoder embeddings"
         )
         X <- NULL
         gc(verbose=TRUE)
@@ -740,10 +757,13 @@ shinyServer(function(input, output, session) {
             " seconds -->"
             ), TRUE, log_path(), log_header()
         ); temp_log <<- log_add(
-            log_mssg = temp_log,
-            mssg = paste0("Get projections | ", input$cpu_flag, " | ", input$dr_method), 
-            time = t_prj_1-t_prj_0, 
-            header = "Compute Projections"
+            log_mssg            = temp_log,
+            function_           = "PRJ Object",
+            dr_method           = isolate(input$dr_method),
+            clustering_options  = isolate(input$clustering_options),
+            zoom                = isolate(input$zoom_btn),
+            time                =  t_prj_1-t_prj_0, 
+            mssg                = "Compute projections" 
         ); flush.console()
 
     })
@@ -807,16 +827,22 @@ shinyServer(function(input, output, session) {
             log_print(paste0("Reactive tsdf | Read feather | Rownames: ", t_2 - t_1, " seconds"), TRUE, log_path(), log_header())
             
             temp_log <<- log_add(
-                log_mssg = temp_log, 
-                mssg = "Read feather", 
-                time = t_1-t_0, 
-                header = "Read feather"
+                log_mssg            = temp_log, 
+                function_           = "TSDF",
+                dr_method           = isolate(input$dr_method),
+                clustering_options  = isolate(input$clustering_options),
+                zoom                = isolate(input$zoom_btn),
+                time                = t_1-t_0, 
+                mssg                = "Read feather"
             )
             temp_log <<- log_add(
-                log_mssg = temp_log, 
-                mssg = "Rownames", 
-                time = t_2-t_1, 
-                header = "Rownames"
+                log_mssg            = temp_log, 
+                function_           = "TSDF | Read feather",
+                dr_method           = isolate(input$dr_method),
+                clustering_options  = isolate(input$clustering_options),
+                zoom                = isolate(input$zoom_btn),
+                mssg                = "Load dataset",
+                time                = t_2-t_1
             )
             
             flush.console()
@@ -872,16 +898,19 @@ shinyServer(function(input, output, session) {
                     log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
                 }
                 prjs$cluster <- clusters$labels_
-
+                log_print(paste0("Compute clusters | Execution time ", tcl_1 - tcl_0), TRUE, log_path(), log_header())
+                temp_log <<- log_add(
+                    log_mssg                = temp_log, 
+                    function_               = "Projections | Hdbscan",
+                    dr_method               = input$dr_method,
+                    clustering_options      = input$clustering_options,
+                    zoom                    = input$zoom,
+                    time                    = tcl_1-tcl_0, 
+                    header                  = "Compute clusters"
+                )
+                prjs$cluster
              })
         tcl_1 = Sys.time()
-        log_print(paste0("Calculate clusters | Execution time ", tcl_1 - tcl_0), TRUE, log_path(), log_header())
-        temp_log <<- log_add(
-            log_mssg = temp_log, 
-            mssg = "Hdbscan", 
-            time = tcl_1-tcl_0, 
-            header = "Hdbscan"
-        )
         
         on.exit({log_print("Projections -->"); flush.console()})
         #send_log("projections_end")
@@ -1264,10 +1293,13 @@ shinyServer(function(input, output, session) {
         t_pp_1 = Sys.time()
         log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, log_path(), log_header())
         temp_log <<- log_add(
-            log_mssg = temp_log, 
-            mssg = paste0("Projections Plot | R time", log_header()), 
-            time = t_pp_1-t_pp_0, 
-            header = "Projections Plot R"
+            log_mssg                = temp_log, 
+            function_               = "Projections Plot",
+            dr_method               = input$dr_method,
+            clustering_options      = input$clustering_options,
+            zoom                    = input$zoom_btn,
+            time                    = t_pp_1-t_pp_0, 
+            mssg                    = "R execution time"
         )
         #send_log("Projections plot_end")
         plt
@@ -1338,10 +1370,13 @@ shinyServer(function(input, output, session) {
             tspd_1 = Sys.time()
             log_print(paste0("ts_plot dygraph | Execution_time: ", tspd_1 - tspd_0), TRUE, log_path(), log_header())
             temp_log <<- log_add(
-                log_mssg = temp_log, 
-                mssg = paste0("TS plot | R time | ", log_header()), 
-                time = tspd_1-tspd_0, 
-                header = "TS Plot R"
+                log_mssg                = temp_log, 
+                function_               = "TS Plot Dygraph",
+                dr_method               = isolate(input$dr_method),
+                clustering_options      = isolate(input$clustering_options),
+                zoom                    = isolate(input$zoom),
+                mssg                    = "R execution time",
+                time                    = tspd_1-tspd_0
             )
             #send_log("TsPlot dygraph_end")
             ts_plot
@@ -1391,16 +1426,27 @@ shinyServer(function(input, output, session) {
     observe({
         req(input$renderTimes)
         renderTimes <- fromJSON(input$renderTimes)
-  
         for (plot_id in names(renderTimes)) {
-            last_time = renderTimes[[plot_id]][length(renderTimes[[plot_id]])]
+            last_time = as.double(renderTimes[[plot_id]][length(renderTimes[[plot_id]])])
             mssg <- paste(plot_id, last_time, sep=", ")
             log_print(paste0("| JS PLOT RENDER | ", mssg), TRUE, log_path(), log_header())
             temp_log <<- log_add(
-                log_mssg = temp_log, 
-                mssg = paste0("JS Plot render | ", plot_id, " | ", log_header()), 
-                time = last_time, 
-                header = paste0("JS | ", plot_id)
+                log_mssg                = temp_log,
+                function_               = paste0("JS Plot Render ", plot_id),
+                dr_method               = isolate(input$dr_method),
+                clustering_options      = isolate(input$clustering_options),
+                zoom                    = isolate(input$zoom_btn),
+                time                    = last_time,
+                mssg                    = paste0(plot_id, "renderization time (milisecs)")
+            )
+            temp_log <<- log_add(
+                log_mssg                = temp_log,
+                function_               = paste0("JS Plot Render ", plot_id),
+                dr_method               = isolate(input$dr_method),
+                clustering_options      = isolate(input$clustering_options),
+                zoom                    = isolate(input$zoom_btn),
+                time                    = last_time/1000,   
+                mssg                    = paste0(plot_id, "renderization time (secs)")
             )
         } 
     })
@@ -1410,12 +1456,26 @@ shinyServer(function(input, output, session) {
         update_trigger = !update_trigger
     })
 
+    timestamp_min_max <- reactive({
+        data <- log_df()  # Obtén tus datos aquí
+        min_max <- range(data$timestamp, na.rm = TRUE)
+        return(min_max)
+    })
+
     output$log_output <- renderDataTable({
         trigger <- update_trigger()
         logs = log_df()
         if (nrow(logs) == 0) {
             return(dataTableOutput("No available log."))
+        } else {
+            logs_filtered <- logs %>%
+            filter(
+                timestamp >= as.Date(input$timestamp_range[1]) & 
+                timestamp <= as.Date(input$timestamp_range[2])
+            )
+
         }
+
         logs 
     })
 
@@ -1427,6 +1487,16 @@ shinyServer(function(input, output, session) {
             write.csv(log_df(), file)
         }
     )
+
+
+    output$timestamp_range_ui <- renderUI({
+        min_max <- timestamp_min_max()
+        dateRangeInput(
+            "timestamp_range", "Select timestamp range:",
+            start = min_max[1], end = min_max[2],
+            min = min_max[1], max = min_max[2]
+        )
+    })
 
     
 })

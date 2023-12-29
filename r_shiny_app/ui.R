@@ -247,6 +247,7 @@ shinyUI(fluidPage(
             h3("Log dataframe"),
             shiny::actionButton("update_logs", label = "Update logs", icon = icon("refresh")),
             shiny::downloadButton("download_data", "Download logs as CSV"),
+            uiOutput("timestamp_range_ui"),
             dataTableOutput("log_output")
           )
         ),

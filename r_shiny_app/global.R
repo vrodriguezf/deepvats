@@ -28,6 +28,8 @@ library(profvis)
 
 reactlog::reactlog_enable()
 
+options(scipen = 999) #Show decimals, no scientific notation (for logs)
+
 #options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")
 
 torch <- reticulate::import("torch")
@@ -156,14 +158,27 @@ log_print <- function(mssg, file_flag = FALSE, file_path = "", log_header = "") 
   }
 }
 
-log_add <- function(log_mssg, mssg, time, header) {
+log_add <- function(
+  log_mssg, 
+  function_,
+  dr_method,
+  clustering_options,
+  zoom,
+  mssg, 
+  time
+) {
+  if (is.null(time)) {print("Time is empty! Check it out")}
   new_mssg = data.frame(
-    timestamp = Sys.time(), 
-    time = time, 
-    mssg = mssg, 
-    header = header 
+    timestamp           = Sys.time(),
+    function_           = function_,
+    dr_method           = dr_method,
+    clustering_options  = clustering_options,
+    zoom                = ifelse(is.null(zoom), FALSE, zoom),
+    time                = ifelse(is.null(time), 0, time),
+    mssg                = ifelse(is.null(mssg), "", mssg),
+    stringsAsFactors    = FALSE  # Evitar factores
   )
-  print(paste0("Log add", header))
+  print(paste0("Log add | ", function_))
   new_mssg = rbind(log_mssg, new_mssg)
   return(new_mssg) 
 }

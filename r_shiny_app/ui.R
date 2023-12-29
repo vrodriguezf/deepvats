@@ -41,6 +41,17 @@ shinyUI(fluidPage(
       'projections_plot': null,
       'ts_plot_dygraph': null
     }
+
+    var timeTaken = {
+      'projections_plot': null,
+      'ts_plot_dygraph': null
+    }
+
+    var renderTimes = {
+      'projections_plot': [],
+      'ts_plot_dygraph': []
+    }
+
     $(document).on('shiny:outputinvalidated', function(event) {
       if (timers.hasOwnProperty(event.target.id)) {
         timers[event.target.id] = new Date().getTime();
@@ -51,10 +62,14 @@ shinyUI(fluidPage(
     $(document).on('shiny:value', function(event) {
       if (timers.hasOwnProperty(event.target.id) && timers[event.target.id] != null) {
           var endTime = new Date().getTime();
-          var timeTaken = endTime - timers[event.target.id];
-          Shiny.setInputValue('renderTime', {id: event.target.id, time: timeTaken});
-          console.log('Render time for ' + event.target.id + ': ' + timeTaken + ' ms');
+          var timeDiff = endTime - timers[event.target.id];
+          console.log('Pushing time for ' + event.target.id + ': ' + timeDiff + ' ms');
+          renderTimes[event.target.id].push(timeDiff);
+          Shiny.setInputValue('renderTimes', JSON.stringify(renderTimes)); // Enviar el objeto como un string JSON
+          console.log('Render time for ' + event.target.id + ': ' + timeDiff + ' ms');
+          
           timers[event.target.id] = null;
+          timeTaken[event.target.id] = null;
         }
       }); 
     "))
@@ -228,7 +243,10 @@ shinyUI(fluidPage(
           "Logs",
           fluidRow(
             h3("Logs"),
-            verbatimTextOutput("logsOutput")
+            verbatimTextOutput("logsOutput"),
+            h3("Log dataframe"),
+            shiny::actionButton("update_logs", label = "Update logs", icon = icon("refresh")),
+            dataTableOutput("log_output")
           )
         ),
       )

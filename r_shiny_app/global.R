@@ -144,9 +144,9 @@ make_individual_dygraph <- function(i){
   plt
 }
 
-log_print <- function(mssg, file_flag = FALSE, file_path = "") {
+log_print <- function(mssg, file_flag = FALSE, file_path = "", log_header = "") {
   time <- format(Sys.time(), "%H:%M:%OS3")
-  formated_mssg = paste0(time, "::::", mssg, "\n")
+  formated_mssg = paste0(time, "::::", log_header, "::::", mssg, "\n")
   print(formated_mssg)
   if (file_flag && file_path != "") {
     if (!file.exists(file_path)) {
@@ -156,6 +156,34 @@ log_print <- function(mssg, file_flag = FALSE, file_path = "") {
   }
 }
 
+log_add <- function(log_mssg, mssg, time, header) {
+  new_mssg = data.frame(
+    timestamp = Sys.time(), 
+    time = time, 
+    mssg =mssg, 
+    header = header 
+  )
+  print(paste0("Log add", header))
+  new_mssg = rbind(log_mssg, new_mssg)
+  return(new_mssg) 
+}
+
+
+
+# Función para leer o inicializar el ID de ejecución
+get_execution_id <- function(file) {
+  if (file.exists(file)) {
+    # Lee el ID actual y lo incrementa
+    id = as.numeric(readLines(file)) + 1
+  } else {
+    # Inicializa el ID si el archivo no existe
+    id = 1
+  }
+  # Guarda el ID actualizado en el archivo
+  writeLines(as.character(id), file)
+  print(paste0("Execution id: ", id))
+  return(id)
+}
 
 ##############################################
 # RETRIEVE WANDB RUNS & ARTIFACTS #
@@ -172,3 +200,8 @@ encs_l <- encs_l %>% set_names(encs_l %>% map(~ glue(WANDB_ENTITY, "/", WANDB_PR
   #discard(~ str_detect(.$name, "dcae"))
 
 log_print("Done!")
+
+
+toguether = TRUE
+header = "witc2024"
+id_file = "execution_id.txt"

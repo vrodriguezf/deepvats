@@ -295,6 +295,8 @@ shinyServer(function(input, output, session) {
     # Observe the events related to change the appearance of the projections graph
     observeEvent(input$update_prj_graph,{
         send_log("Update prj graph_start")
+        log_print("Update prj graph", TRUE, log_path(), log_header())
+        
         style_values <- list(path_line_size = input$path_line_size ,
                              path_alpha = input$path_alpha,
                              point_alpha = input$point_alpha,
@@ -368,7 +370,13 @@ shinyServer(function(input, output, session) {
         
         t_x_1 <- Sys.time()
         t_sliding_window_view = t_x_1 - t_x_0
-        log_print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "), TRUE, log_path())
+        log_print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "), TRUE, log_path(), log_header())
+        temp_log <<- log_add(
+            log_mssg = temp_log, 
+            mssg = "SWV",
+            time = t_sliding_window_view, 
+            header = "SWV"
+        )
         on.exit({
             log_print(paste0(
                 "reactive X | Update sliding window | Apply stride ", 
@@ -394,12 +402,55 @@ shinyServer(function(input, output, session) {
     }, label = "ts_ar")
 
     log_path <- reactiveVal() 
-     
+    log_header <- reactiveVal()
+    temp_log <- data.frame(
+            timestamp = character(),
+            header = character(),
+            time = character(),
+            mssg = character()
+            #stringAsFactors = FALSE
+    )
+
+    log_df <- reactiveVal(
+        data.frame( 
+            timestamp = character(),
+            header = character(),
+            time = character(),
+            mssg = character()
+        )
+    )
+
     observe({
-        new_log_path <- paste0(ts_ar()$name, ".log")  # Construye el nuevo log_path
-        #new_log_path <- paste0("app/", ts_ar()$name, ".log")  # Construye el nuevo log_path
-        print(paste0("Log path: ", new_log_path))
-        log_path(new_log_path)  # Actualiza log_path
+        if (nrow(temp_log) > 0) {
+            log_df(temp_log)
+            temp_log <<- data.frame(timestamp = character(), header = character(), time = character(), mssg = character(), stringsAsFactors = FALSE)
+        }
+        invalidateLater(10000)
+    })
+
+    
+    
+
+    execution_id = get_execution_id(id_file)
+
+    observe({
+        toguether_log_path = header
+        #toguether_log_path = paste0(header, "_", execution_id())
+        if (toguether){
+            log_path(toguether_log_path)
+            print(paste0("Log path: ", toguether_log_path))   
+        } else {
+            new_log_path <- paste0(toguether_log_path, "-", ts_ar()$name, ".log")  # Construye el nuevo log_path
+            log_path(new_log_path)
+            print(paste0("Log path: ", new_log_path))   
+        }
+    })
+
+    
+    observe({
+        log_header_ = paste0(ts_ar()$name, " | ", execution_id ," | ", input$cpu_flag, " | ", input$dr_method, " | ", input$clustering_options, " | ", input$zoom_btn)
+        print(paste0("Log header: ", log_header_))
+        log_header(log_header_)  # Actualiza log_path
     })
     
     # Get timeseries artifact metadata
@@ -526,7 +577,13 @@ shinyServer(function(input, output, session) {
         diff <- t_embs_1 - t_embs_0
         diff_secs <- as.numeric(diff, units = "secs")
         diff_mins <- as.numeric(diff, units = "mins")
-        log_print(paste0("get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | total time: ", diff_secs, " secs thus ", diff_mins, " mins"), TRUE, log_path())
+        log_print(paste0("get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | total time: ", diff_secs, " secs thus ", diff_mins, " mins"), TRUE, log_path(), log_header())
+        temp_log <<- log_add(
+            log_mssg = temp_log, 
+            mssg = paste0("Embeddings | ", log_header()), 
+            time = diff, 
+            header = "Embeddings"
+        )
         X <- NULL
         gc(verbose=TRUE)
         on.exit({log_print("reactive embs | get embeddings -->"); flush.console()})
@@ -630,7 +687,6 @@ shinyServer(function(input, output, session) {
       colnames(res) = c("xcoord", "ycoord")
       on.exit({log_print(" prj_object -->"); flush.console()})
       flush.console()
-      #browser()
       res
     })
 
@@ -680,8 +736,15 @@ shinyServer(function(input, output, session) {
             input$cpu_flag, " | ", input$dr_method, 
             " | Execution time: ", t_prj_1-t_prj_0 , 
             " seconds -->"
-            ), TRUE, log_path()
-        ); flush.console()})
+            ), TRUE, log_path(), log_header()
+        ); temp_log <<- log_add(
+            log_mssg = temp_log,
+            mssg = paste0("Get projections | ", input$cpu_flag, " | ", input$dr_method), 
+            time = t_prj_1-t_prj_0, 
+            header = "Compute Projections"
+        ); flush.console()
+
+    })
       res
     })
     
@@ -730,16 +793,30 @@ shinyServer(function(input, output, session) {
             flush.console()
             log_print(paste0("Reactive tsdf | Read feather | Before | ", path))
             t_0 <- Sys.time()
-            df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
+            df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`)
             t_1 = Sys.time()
             log_print(paste0("Reactive tsdf | Read feather | After | ", path))
-            log_print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(df)), TRUE, log_path())
+            log_print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(df)), TRUE, log_path(), log_header())
             log_print(paste0("Reactive tsdf | Column to rowname | Before | ", path))
             df_ = df 
             df_ <- column_to_rownames(df_, var = "timeindex")
             t_2 = Sys.time()
             log_print(paste0("Reactive tsdf | Column to rowname | After | ", path))
-            log_print(paste0("Reactive tsdf | Read feather | Rownames: ", t_2 - t_1, " seconds"), TRUE, log_path())
+            log_print(paste0("Reactive tsdf | Read feather | Rownames: ", t_2 - t_1, " seconds"), TRUE, log_path(), log_header())
+            
+            temp_log <<- log_add(
+                log_mssg = temp_log, 
+                mssg = "Read feather", 
+                time = t_1-t_0, 
+                header = "Read feather"
+            )
+            temp_log <<- log_add(
+                log_mssg = temp_log, 
+                mssg = "Rownames", 
+                time = t_2-t_1, 
+                header = "Rownames"
+            )
+            
             flush.console()
             on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds"));flush.console()})
             df
@@ -796,7 +873,13 @@ shinyServer(function(input, output, session) {
 
              })
         tcl_1 = Sys.time()
-        log_print(paste0("Calculate clusters | Execution time ", tcl_1 - tcl_0), TRUE, log_path())
+        log_print(paste0("Calculate clusters | Execution time ", tcl_1 - tcl_0), TRUE, log_path(), log_header())
+        temp_log <<- log_add(
+            log_mssg = temp_log, 
+            mssg = "Hdbscan", 
+            time = tcl_1-tcl_0, 
+            header = "Hdbscan"
+        )
         
         on.exit({log_print("Projections -->"); flush.console()})
         #send_log("projections_end")
@@ -925,7 +1008,7 @@ shinyServer(function(input, output, session) {
         log_print("ts_plot | Before if")
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
             reduced_window_list = req(window_list())
-            log_print(paste0("ts_plot | reduced_window_list[1] = ", reduced_window_list[1]))
+            log_print(paste0("ts_plot | Selected projections ", reduced_window_list[1]), TRUE, log_path(), log_header())
             start_indices = min(sapply(reduced_window_list, function(x) x[1]))
             end_indices = max(sapply(reduced_window_list, function(x) x[2]))
 
@@ -1134,6 +1217,7 @@ shinyServer(function(input, output, session) {
         log_print("projections_plot | Prepare column highlights")
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
+            log_print("Selected ts time points" , TRUE, log_path(), log_header())
             selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
             projections_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
             prjs_$highlight = projections_idxs
@@ -1176,7 +1260,13 @@ shinyServer(function(input, output, session) {
             #log_print("Embeding plot saved")
         #})
         t_pp_1 = Sys.time()
-        log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, log_path())
+        log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, log_path(), log_header())
+        temp_log <<- log_add(
+            log_mssg = temp_log, 
+            mssg = paste0("Projections Plot | R time", log_header()), 
+            time = t_pp_1-t_pp_0, 
+            header = "Projections Plot R"
+        )
         #send_log("Projections plot_end")
         plt
     })
@@ -1244,7 +1334,13 @@ shinyServer(function(input, output, session) {
             #htmlwidgets::saveWidget(ts_plot, file = save_path, selfcontained=TRUE)
             #log_print(paste0("Time series plot saved to", save_path))
             tspd_1 = Sys.time()
-            log_print(paste0("ts_plot dygraph | Execution_time: ", tspd_1 - tspd_0), TRUE, log_path())
+            log_print(paste0("ts_plot dygraph | Execution_time: ", tspd_1 - tspd_0), TRUE, log_path(), log_header())
+            temp_log <<- log_add(
+                log_mssg = temp_log, 
+                mssg = paste0("TS plot | R time | ", log_header()), 
+                time = tspd_1-tspd_0, 
+                header = "TS Plot R"
+            )
             #send_log("TsPlot dygraph_end")
             ts_plot
             #req(ts_plot())
@@ -1291,13 +1387,36 @@ shinyServer(function(input, output, session) {
     })
 
     observe({
+        req(input$renderTimes)
+        renderTimes <- fromJSON(input$renderTimes)
+  
+        for (plot_id in names(renderTimes)) {
+            last_time = renderTimes[[plot_id]][length(renderTimes[[plot_id]])]
+            mssg <- paste(plot_id, last_time, sep=", ")
+            log_print(paste0("| JS PLOT RENDER | ", mssg), TRUE, log_path(), log_header())
+            temp_log <<- log_add(
+                log_mssg = temp_log, 
+                mssg = paste0("JS Plot render | ", plot_id, " | ", log_header()), 
+                time = last_time, 
+                header = paste0("JS | ", plot_id)
+            )
+        } 
+    })
     
-    renderTime <- input$renderTime
-    log_print(paste0("RenderTime ", renderTime$id))
-    if (!is.null(renderTime)) {
-        mssg = paste(renderTime$id, renderTime$time, sep=", ")
-        log_print(paste0("| JS PLOT RENDER | ", mssg), TRUE, log_path())
-    }
-  })
+    update_trigger <- reactiveVal(FALSE)
+    observeEvent(input$update_logs, {
+        update_trigger = !update_trigger
+    })
+
+    output$log_output <- renderDataTable({
+        trigger <- update_trigger()
+        logs = log_df()
+        if (nrow(logs) == 0) {
+            return(dataTableOutput("No available log."))
+        }
+        logs 
+    })
+
     
 })
+

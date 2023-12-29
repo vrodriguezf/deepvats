@@ -160,7 +160,7 @@ log_add <- function(log_mssg, mssg, time, header) {
   new_mssg = data.frame(
     timestamp = Sys.time(), 
     time = time, 
-    mssg =mssg, 
+    mssg = mssg, 
     header = header 
   )
   print(paste0("Log add", header))

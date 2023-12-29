@@ -625,3 +625,41 @@
 12:50:37.116::::solar_4_seconds-32s:v0 | 19 | GPU | UMAP | no_clusters | FALSE::::projections_plot | Projections Plot time: 0.0258870124816895
 12:51:08.974::::solar_4_seconds-32s:v0 | 19 | GPU | UMAP | no_clusters | FALSE::::| JS PLOT RENDER | projections_plot, 24406
 12:51:08.976::::solar_4_seconds-32s:v0 | 19 | GPU | UMAP | no_clusters | FALSE::::| JS PLOT RENDER | ts_plot_dygraph, 24410
+12:52:30.149::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE::::Reactive tsdf | Read feather | Load time: 0.0384654998779297 seconds | N elements: 924653
+12:52:32.393::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE::::Reactive tsdf | Read feather | Rownames: 2.24366188049316 seconds
+12:52:44.637::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE::::reactive X | SWV: 11.8936402797699 secs 
+12:52:49.038::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE::::get_enc_embs_set_stride_set_batch_size | GPU | total time: 2.19762754440308 secs thus 0.0366271257400513 mins
+12:52:50.901::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE:::: prj_object | cpu_flag: GPU | UMAP | Execution time: 0.245758771896362 seconds -->
+12:52:52.134::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE::::ts_plot dygraph | Execution_time: 1.20183706283569
+12:52:53.445::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE::::Calculate clusters | Execution time 0.00117349624633789
+12:52:53.476::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE::::projections_plot | Projections Plot time: 0.0341572761535645
+12:53:11.254::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE::::| JS PLOT RENDER | projections_plot, 29487
+12:53:11.257::::solar_4_seconds-32s:v0 | 20 | GPU | UMAP | no_clusters | FALSE::::| JS PLOT RENDER | ts_plot_dygraph, 29496
+12:56:35.295::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE::::Reactive tsdf | Read feather | Load time: 0.0409905910491943 seconds | N elements: 924653
+12:56:37.629::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE::::Reactive tsdf | Read feather | Rownames: 2.33410501480103 seconds
+12:57:51.497::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE::::reactive X | SWV: 8.75609445571899 secs 
+12:57:55.025::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE::::get_enc_embs_set_stride_set_batch_size | GPU | total time: 1.89820885658264 secs thus 0.0316368142763774 mins
+12:57:56.992::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE:::: prj_object | cpu_flag: GPU | UMAP | Execution time: 0.227427959442139 seconds -->
+12:57:57.031::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE::::Calculate clusters | Execution time 0.000881671905517578
+12:57:57.054::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE::::projections_plot | Projections Plot time: 0.0260906219482422
+12:57:58.026::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE::::ts_plot dygraph | Execution_time: 0.783739566802979
+12:58:18.198::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE::::| JS PLOT RENDER | projections_plot, 100342
+12:58:18.201::::solar_4_seconds-32s:v0 | 21 | GPU | UMAP | no_clusters | FALSE::::| JS PLOT RENDER | ts_plot_dygraph, 90989
+13:02:09.026::::solar_4_seconds-32s:v0 | 22 | GPU | UMAP | no_clusters | FALSE::::Reactive tsdf | Read feather | Load time: 0.0381338596343994 seconds | N elements: 924653
+13:02:11.608::::solar_4_seconds-32s:v0 | 22 | GPU | UMAP | no_clusters | FALSE::::Reactive tsdf | Read feather | Rownames: 2.58157300949097 seconds
+13:02:22.508::::solar_4_seconds-32s:v0 | 22 | GPU | UMAP | no_clusters | FALSE::::reactive X | SWV: 10.569287776947 secs 
+13:02:26.102::::solar_4_seconds-32s:v0 | 22 | GPU | UMAP | no_clusters | FALSE::::get_enc_embs_set_stride_set_batch_size | GPU | total time: 1.93524122238159 secs thus 0.0322540203730265 mins
+13:02:27.762::::solar_4_seconds-32s:v0 | 22 | GPU | UMAP | no_clusters | FALSE:::: prj_object | cpu_flag: GPU | UMAP | Execution time: 0.217092752456665 seconds -->
+13:02:28.618::::solar_4_seconds-32s:v0 | 22 | GPU | UMAP | no_clusters | FALSE::::ts_plot dygraph | Execution_time: 0.820109367370605
+13:02:29.524::::solar_4_seconds-32s:v0 | 22 | GPU | UMAP | no_clusters | FALSE::::Calculate clusters | Execution time 0.000938892364501953
+13:02:29.546::::solar_4_seconds-32s:v0 | 22 | GPU | UMAP | no_clusters | FALSE::::projections_plot | Projections Plot time: 0.0248203277587891
+13:06:16.507::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE::::Reactive tsdf | Read feather | Load time: 0.037726879119873 seconds | N elements: 924653
+13:06:19.108::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE::::Reactive tsdf | Read feather | Rownames: 2.60077619552612 seconds
+13:06:29.252::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE::::reactive X | SWV: 9.827073097229 secs 
+13:06:33.435::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE::::get_enc_embs_set_stride_set_batch_size | GPU | total time: 2.23635292053223 secs thus 0.0372725486755371 mins
+13:06:35.394::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE:::: prj_object | cpu_flag: GPU | UMAP | Execution time: 0.253986597061157 seconds -->
+13:06:36.247::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE::::ts_plot dygraph | Execution_time: 0.817697525024414
+13:06:37.129::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE::::Calculate clusters | Execution time 0.000818967819213867
+13:06:37.150::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE::::projections_plot | Projections Plot time: 0.0233075618743896
+13:06:47.084::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE::::| JS PLOT RENDER | projections_plot, 26592
+13:06:47.087::::solar_4_seconds-32s:v0 | 23 | GPU | UMAP | no_clusters | FALSE::::| JS PLOT RENDER | ts_plot_dygraph, 26596

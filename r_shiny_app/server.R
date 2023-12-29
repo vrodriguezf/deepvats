@@ -414,6 +414,7 @@ shinyServer(function(input, output, session) {
     log_df <- reactiveVal(
         data.frame( 
             timestamp = character(),
+            execution_id = character(),
             header = character(),
             time = character(),
             mssg = character()
@@ -422,7 +423,8 @@ shinyServer(function(input, output, session) {
 
     observe({
         if (nrow(temp_log) > 0) {
-            log_df(temp_log)
+            new_record <- cbind(execution_id = execution_id, temp_log)
+            log_df(rbind(new_record, log_df()))
             temp_log <<- data.frame(timestamp = character(), header = character(), time = character(), mssg = character(), stringsAsFactors = FALSE)
         }
         invalidateLater(10000)
@@ -1416,6 +1418,15 @@ shinyServer(function(input, output, session) {
         }
         logs 
     })
+
+    output$download_data <- downloadHandler(
+        filename = function() {
+            paste("logs-", Sys.Date(), ".csv", sep="")
+        },
+        content = function(file) {
+            write.csv(log_df(), file)
+        }
+    )
 
     
 })

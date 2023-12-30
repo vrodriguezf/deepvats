@@ -11,7 +11,7 @@ shinyServer(function(input, output, session) {
     logMessages <- reactiveVal("")
     send_log <- function(message) {
         print("--> Log message")
-        new_log = paste0(logMessages(), Sys.time(), " - ", message)
+        new_log = paste0(logMessages(), Sys.time(), " - ", message, "\n")
         logMessages(new_log)
         #print(new_log)
         invalidateLater(10, session)
@@ -218,9 +218,9 @@ shinyServer(function(input, output, session) {
         send_log("Update tsdf select variables_start")
         log_print("--> observeEvent tsdf | update select variables")
         on.exit({log_print("--> observeEvent tsdf | update select variables -->"); flush.console()})
-        freezeReactiveValue(input, "select_variables")
-        #ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
-        ts_variables$selected = names(isolate(tsdf()))
+#        freezeReactiveValue(input, "select_variables")
+        ts_variables$selected = names(isolate(tsdf()))[names(tsdf()) != "timeindex"]
+        #ts_variables$selected = names(isolate(tsdf()))
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         updateCheckboxGroupInput(
             session = session,
@@ -374,6 +374,7 @@ shinyServer(function(input, output, session) {
         temp_log <<- log_add(
             log_mssg            = isolate(temp_log), 
             function_           = "Reactive X | SWV",
+            cpu_flag            = isolate(input$cpu_flag),
             dr_method           = isolate(input$dr_method),
             clustering_options  = isolate(input$clustering_options),
             zoom                = isolate(input$zoom_btn),
@@ -410,6 +411,7 @@ shinyServer(function(input, output, session) {
     temp_log <- data.frame(
         timestamp           = character(),
         function_           = character(),
+        cpu_flag            = character(),
         dr_method           = character(),
         clustering_options  = character(),
         zoom                = logical(),
@@ -597,6 +599,7 @@ shinyServer(function(input, output, session) {
         temp_log <<- log_add(
             log_mssg            = temp_log, 
             function_           = "Embeddings",
+            cpu_flag            = isolate(input$cpu_flag),
             dr_method           = isolate(input$dr_method),
             clustering_options  = isolate(input$clustering_options),
             zoom                = isolate(input$zoom_btn),
@@ -759,6 +762,7 @@ shinyServer(function(input, output, session) {
         ); temp_log <<- log_add(
             log_mssg            = temp_log,
             function_           = "PRJ Object",
+            cpu_flag            = isolate(input$cpu_flag),
             dr_method           = isolate(input$dr_method),
             clustering_options  = isolate(input$clustering_options),
             zoom                = isolate(input$zoom_btn),
@@ -829,6 +833,7 @@ shinyServer(function(input, output, session) {
             temp_log <<- log_add(
                 log_mssg            = temp_log, 
                 function_           = "TSDF",
+                cpu_flag            = isolate(input$cpu_flag),
                 dr_method           = isolate(input$dr_method),
                 clustering_options  = isolate(input$clustering_options),
                 zoom                = isolate(input$zoom_btn),
@@ -838,6 +843,7 @@ shinyServer(function(input, output, session) {
             temp_log <<- log_add(
                 log_mssg            = temp_log, 
                 function_           = "TSDF | Read feather",
+                cpu_flag            = isolate(input$cpu_flag),
                 dr_method           = isolate(input$dr_method),
                 clustering_options  = isolate(input$clustering_options),
                 zoom                = isolate(input$zoom_btn),
@@ -902,6 +908,7 @@ shinyServer(function(input, output, session) {
                 temp_log <<- log_add(
                     log_mssg                = temp_log, 
                     function_               = "Projections | Hdbscan",
+                    cpu_flag                = isolate(input$cpu_flag),
                     dr_method               = input$dr_method,
                     clustering_options      = input$clustering_options,
                     zoom                    = input$zoom,
@@ -1295,6 +1302,7 @@ shinyServer(function(input, output, session) {
         temp_log <<- log_add(
             log_mssg                = temp_log, 
             function_               = "Projections Plot",
+            cpu_flag                = isolate(input$cpu_flag),
             dr_method               = input$dr_method,
             clustering_options      = input$clustering_options,
             zoom                    = input$zoom_btn,
@@ -1372,6 +1380,7 @@ shinyServer(function(input, output, session) {
             temp_log <<- log_add(
                 log_mssg                = temp_log, 
                 function_               = "TS Plot Dygraph",
+                cpu_flag                = isolate(input$cpu_flag),
                 dr_method               = isolate(input$dr_method),
                 clustering_options      = isolate(input$clustering_options),
                 zoom                    = isolate(input$zoom),
@@ -1433,6 +1442,7 @@ shinyServer(function(input, output, session) {
             temp_log <<- log_add(
                 log_mssg                = temp_log,
                 function_               = paste0("JS Plot Render ", plot_id),
+                cpu_flag                = isolate(input$cpu_flag),
                 dr_method               = isolate(input$dr_method),
                 clustering_options      = isolate(input$clustering_options),
                 zoom                    = isolate(input$zoom_btn),
@@ -1442,6 +1452,7 @@ shinyServer(function(input, output, session) {
             temp_log <<- log_add(
                 log_mssg                = temp_log,
                 function_               = paste0("JS Plot Render ", plot_id),
+                cpu_flag                = isolate(input$cpu_flag),
                 dr_method               = isolate(input$dr_method),
                 clustering_options      = isolate(input$clustering_options),
                 zoom                    = isolate(input$zoom_btn),
@@ -1458,7 +1469,12 @@ shinyServer(function(input, output, session) {
 
     timestamp_min_max <- reactive({
         data <- log_df()  # Obtén tus datos aquí
-        min_max <- range(data$timestamp, na.rm = TRUE)
+        if (nrow(data) == 0){
+            min_max = c("Loading...","Loading...")
+        } else {
+            min_max <- range(data$timestamp, na.rm = TRUE)
+            if (min_max[1] == min_max[2]) {min_max[2] = min_max[1]+10}
+        }
         return(min_max)
     })
 
@@ -1470,8 +1486,8 @@ shinyServer(function(input, output, session) {
         } else {
             logs_filtered <- logs %>%
             filter(
-                timestamp >= as.Date(input$timestamp_range[1]) & 
-                timestamp <= as.Date(input$timestamp_range[2])
+                timestamp >= as.numeric(input$timestamp_range[1]) & 
+                timestamp <= as.numeric(input$timestamp_range[2])
             )
 
         }
@@ -1488,16 +1504,51 @@ shinyServer(function(input, output, session) {
         }
     )
 
-
-    output$timestamp_range_ui <- renderUI({
-        min_max <- timestamp_min_max()
-        dateRangeInput(
-            "timestamp_range", "Select timestamp range:",
-            start = min_max[1], end = min_max[2],
-            min = min_max[1], max = min_max[2]
-        )
-    })
-
-    
+    #output$res <- renderPrint(str(input$timestamp_range))
+#
+    #observe({
+    #    min_max = req(timestamp_min_max())  # Asegúrate de que esto se ejecuta cuando log_df() cambie
+    #    current_values = input$timestamp_range
+    #    if (identical(current_values, c("Loading...","Loading..."))) {
+    #        current_values = min_max
+    #    } 
+    #    if (
+    #        !identical(current_values, c("Loading...","Loading..."))
+    #    ) {
+    #        min_val = as.numeric(as.POSIXct(min_max[1]))
+    #        max_val = as.numeric(as.POSIXct(min_max[2]))
+    #        browser()
+    #        current_values[1] = as.numeric(as.POSIXct(current_values[1]))#, format = "%Y-%m-%d %H:%M:%OS3", tz="UTC"))
+    #        current_values[2] = as.numeric(as.POSIXct(current_values[2]))#, format = "%Y-%m-%d %H:%M:%OS3", tz="UTC"))
+    #        sequence = seq(min_val, max_val, length.out = 5)
+    #        sequence = unique(as.numeric(c(sequence, current_values)))
+    #        browser()
+    #        labels_ = setNames(
+    #            lapply(
+    #                sequence, 
+    #                function(time) {
+    #                    format(
+    #                        as.POSIXct(time, origin = "1970-01-01", tx="UTC"), 
+    #                        "%Y-%m-%d %H:%M:%S.%OS3" 
+    #                    )
+    #            }),
+    #            sequence
+    #        )
+    #        current_values[1] = format(as.POSIXct(as.numeric(current_values[1]), origin = "1970-01-01", tx="UTC"), "%Y-%m-%d %H:%M:%S.%OS3")
+    #        current_values[2] = format(as.POSIXct(as.numeric(current_values[2]), origin = "1970-01-01", tx="UTC"), "%Y-%m-%d %H:%M:%S.%OS3")
+    #        print("--> Update Slider Text Input")
+    #        shinyWidgets::updateSliderTextInput(
+    #            session,
+    #            inputId = "timestamp_range", 
+    #            label   = "- Select initial and final timestamps",
+    #            choices = labels_, #setNames(as.character(seq(min_val, max_val, length.out=5)), labels),
+    #            selected = current_values
+    #        )
+    #        print("Update Slider Text Input -->")
+    #    }
+    #    browser()
+    ##}, ignoreInit = FALSE)
+    #})
+    #
 })
 

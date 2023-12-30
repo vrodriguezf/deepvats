@@ -33,7 +33,7 @@ options(scipen = 999) #Show decimals, no scientific notation (for logs)
 #options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")
 
 torch <- reticulate::import("torch")
-#options(shiny.trace = TRUE)
+#options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", error=browser)
 if(torch$cuda$is_available()){
   print(paste0("CUDA AVAILABLE. Num devices: ", torch$cuda$device_count()))
   torch$cuda$set_device(as.integer(0))
@@ -161,6 +161,7 @@ log_print <- function(mssg, file_flag = FALSE, file_path = "", log_header = "") 
 log_add <- function(
   log_mssg, 
   function_,
+  cpu_flag,
   dr_method,
   clustering_options,
   zoom,
@@ -168,9 +169,11 @@ log_add <- function(
   time
 ) {
   if (is.null(time)) {print("Time is empty! Check it out")}
+  timestamp = format(as.POSIXct(Sys.time(), origin = "1970-01-01"), "%Y-%m-%d %H:%M:%OS3")
   new_mssg = data.frame(
-    timestamp           = Sys.time(),
+    timestamp           = timestamp,
     function_           = function_,
+    cpu_flag            = cpu_flag,
     dr_method           = dr_method,
     clustering_options  = clustering_options,
     zoom                = ifelse(is.null(zoom), FALSE, zoom),
@@ -207,9 +210,10 @@ get_execution_id <- function(file) {
 api <- wandb$Api()
 
 log_print("Querying encoders")
-encs_l <- dvats$get_wandb_artifacts(project_path = glue(WANDB_ENTITY, "/", WANDB_PROJECT), 
-                                    type = "learner", 
-                                    last_version=F) %>% 
+encs_l <- dvats$get_wandb_artifacts(
+  project_path = glue(WANDB_ENTITY, "/", WANDB_PROJECT), 
+  type = "learner", 
+  last_version=F) %>% 
   discard(~ is_empty(.$aliases) | is_empty(.$metadata$train_artifact))
 encs_l <- encs_l %>% set_names(encs_l %>% map(~ glue(WANDB_ENTITY, "/", WANDB_PROJECT, "/", .$name)))
   #discard(~ str_detect(.$name, "dcae"))

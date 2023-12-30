@@ -247,7 +247,14 @@ shinyUI(fluidPage(
             h3("Log dataframe"),
             shiny::actionButton("update_logs", label = "Update logs", icon = icon("refresh")),
             shiny::downloadButton("download_data", "Download logs as CSV"),
-            uiOutput("timestamp_range_ui"),
+            #shinyWidgets::sliderTextInput(
+            #  "timestamp_range", 
+            #  "Select Time Range:",
+            #  choices = c("Loading..."="Loading..."), #setNames(as.character(seq(0,10,1)), seq(0,10,1)),
+            #  selected = c("Loading...", "Loading..."),
+            #  animate = TRUE
+            #),
+            #verbatimTextOutput(outputId = "res"),
             dataTableOutput("log_output")
           )
         ),

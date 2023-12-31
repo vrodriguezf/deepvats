@@ -36,7 +36,7 @@ torch <- reticulate::import("torch")
 #options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", error=browser)
 if(torch$cuda$is_available()){
   print(paste0("CUDA AVAILABLE. Num devices: ", torch$cuda$device_count()))
-  torch$cuda$set_device(as.integer(0))
+  torch$cuda$set_device(as.integer(1))
   #torch$cuda$set_device(as.integer(1))
   #torch$cuda$set_device(as.integer(2))
   #print(torch$cuda$memory_summary())
@@ -151,6 +151,7 @@ log_print <- function(mssg, file_flag = FALSE, file_path = "", log_header = "") 
   formated_mssg = paste0(time, "::::", log_header, "::::", mssg, "\n")
   print(formated_mssg)
   if (file_flag && file_path != "") {
+    file_path = paste0 ("../data/", file_path)
     if (!file.exists(file_path)) {
       file.create(file_path)
     }

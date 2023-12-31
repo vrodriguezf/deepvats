@@ -448,8 +448,8 @@ shinyServer(function(input, output, session) {
     execution_id = get_execution_id(id_file)
 
     observe({
-        toguether_log_path = header
-        #toguether_log_path = paste0(header, "_", execution_id())
+        #toguether_log_path = header
+        toguether_log_path = paste0(header, "-", execution_id)
         if (toguether){
             log_path(toguether_log_path)
             print(paste0("Log path: ", toguether_log_path))   
@@ -832,7 +832,7 @@ shinyServer(function(input, output, session) {
             
             temp_log <<- log_add(
                 log_mssg            = temp_log, 
-                function_           = "TSDF",
+                function_           = "TSDF | Load dataset | Read feather",
                 cpu_flag            = isolate(input$cpu_flag),
                 dr_method           = isolate(input$dr_method),
                 clustering_options  = isolate(input$clustering_options),
@@ -842,12 +842,12 @@ shinyServer(function(input, output, session) {
             )
             temp_log <<- log_add(
                 log_mssg            = temp_log, 
-                function_           = "TSDF | Read feather",
+                function_           = "TSDF | Load dataset | Rownames",
                 cpu_flag            = isolate(input$cpu_flag),
                 dr_method           = isolate(input$dr_method),
                 clustering_options  = isolate(input$clustering_options),
                 zoom                = isolate(input$zoom_btn),
-                mssg                = "Load dataset",
+                mssg                = "Move timeindex column to rownames",
                 time                = t_2-t_1
             )
             
@@ -1483,21 +1483,21 @@ shinyServer(function(input, output, session) {
         logs = log_df()
         if (nrow(logs) == 0) {
             return(dataTableOutput("No available log."))
-        } else {
-            logs_filtered <- logs %>%
-            filter(
-                timestamp >= as.numeric(input$timestamp_range[1]) & 
-                timestamp <= as.numeric(input$timestamp_range[2])
-            )
+        } #else {B/(macu1995)
+            #logs_filtered <- logs %>%
+            #filter(
+            #    timestamp >= as.numeric(input$timestamp_range[1]) & 
+            #    timestamp <= as.numeric(input$timestamp_range[2])
+            #)
 
-        }
+        #}
 
         logs 
     })
 
     output$download_data <- downloadHandler(
         filename = function() {
-            paste("logs-", Sys.Date(), ".csv", sep="")
+            paste("logs-", Sys.Date(), execution_id, ".csv", sep="")
         },
         content = function(file) {
             write.csv(log_df(), file)

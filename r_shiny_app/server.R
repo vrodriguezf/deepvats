@@ -408,6 +408,7 @@ shinyServer(function(input, output, session) {
     log_path <- reactiveVal() 
     log_header <- reactiveVal()
     
+    
     temp_log <- data.frame(
         timestamp           = character(),
         function_           = character(),
@@ -904,6 +905,7 @@ shinyServer(function(input, output, session) {
                     log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
                 }
                 prjs$cluster <- clusters$labels_
+                tcl_1 = Sys.time()
                 log_print(paste0("Compute clusters | Execution time ", tcl_1 - tcl_0), TRUE, log_path(), log_header())
                 temp_log <<- log_add(
                     log_mssg                = temp_log, 
@@ -917,7 +919,6 @@ shinyServer(function(input, output, session) {
                 )
                 prjs$cluster
              })
-        tcl_1 = Sys.time()
         
         on.exit({log_print("Projections -->"); flush.console()})
         #send_log("projections_end")
@@ -1394,14 +1395,29 @@ shinyServer(function(input, output, session) {
     )
 
     ########### Saving graphs in local
+    prj_plot_id <- reactiveVal(0)
+    set_plot_id <- function()({
+        prj_plot_id(prj_plot_id()+1)
+    })
     get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster){
         #log_print("Getting embedding plot name")
-        plt_name <- paste0(dataset_name,"_", encoder_name, "_", input$dr_method)
-        if (!is.null(selected) && selected == "precomputed_clusters") {
-            plt_name <- paste0(plt_name, "_cluster_", cluster, "_prjs.png")
-        } else {
-            plt_name <- paste0(plt_name, "_prjs.png")
-        }
+        set_plot_id()
+        plt_name <- paste0(
+            execution_id, "_",
+            prj_plot_id(), "_",
+            dataset_name, "_", 
+            encoder_name, "_", 
+            input$cpu_flag, "_", 
+            input$dr_method, "_",  
+            input$clustering_options, "_", 
+            "zoom", "_", 
+            input$zoom_btn, "_", 
+            "point_alpha_",
+            input$point_alpha, "_",
+            "show_lines_",
+            input$show_lines, "_",
+            "prjs.png"
+        )
         log_print(paste0("embeddings plot name", plt_name))
         plt_name
     }

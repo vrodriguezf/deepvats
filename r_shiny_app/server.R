@@ -349,7 +349,9 @@ shinyServer(function(input, output, session) {
     #  REACTIVES  #
     ###############
 
-    X <- reactive({
+    X <- reactiveVal()
+    
+    observe({
         #send_log("X_start")
         #req(input$wlen != 0, input$stride != 0, tsdf())
         req(input$wlen != 0, input$stride != 0, input$stride != 1)
@@ -391,7 +393,7 @@ shinyServer(function(input, output, session) {
             )); flush.console()
         })
         #send_log("X_end")
-        enc_input
+        X(enc_input)
     })
     
     # Time series artifact
@@ -420,15 +422,20 @@ shinyServer(function(input, output, session) {
         mssg                = character()
     )
 
+
     log_df <- reactiveVal(
         data.frame( 
             timestamp           = character(),
+            dataset             = character(),
+            encoder             = character(),
             execution_id        = numeric(),
             function_           = character(),
             cpu_flag            = character(),
             dr_method           = character(),
             clustering_options  = character(),
             zoom                = logical(),
+            point_alpha         = numeric(),
+            show_lines          = logical(),
             mssg                = character(),
             time                = numeric()
         )
@@ -436,9 +443,16 @@ shinyServer(function(input, output, session) {
 
     observe({
         if (nrow(temp_log) > 0) {
-            new_record <- cbind(execution_id = execution_id, temp_log)
+            new_record <- cbind(
+                execution_id = execution_id, 
+                dataset = isolate(ts_ar()$name),
+                encoder = ifelse(is.null(isolate(input$encoder)), " ", input$encoder),
+                show_lines = isolate(input$show_lines),
+                point_alpha = isolate(input$point_alpha),
+                temp_log
+            )
             log_df(rbind(new_record, log_df()))
-            temp_log <<- data.frame(timestamp = character(), header = character(), time = character(), mssg = character(), stringsAsFactors = FALSE)
+            temp_log <<- data.frame(timestamp = character(), function_ = character(), cpu_flag = character(), dr_method = character(), clustering_options = character(), zoom = logical(), time = numeric(), mssg = character(), stringsAsFactors = FALSE)
         }
         invalidateLater(10000)
     })
@@ -824,12 +838,12 @@ shinyServer(function(input, output, session) {
             t_1 = Sys.time()
             log_print(paste0("Reactive tsdf | Read feather | After | ", path))
             log_print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(df)), TRUE, log_path(), log_header())
-            log_print(paste0("Reactive tsdf | Column to rowname | Before | ", path))
-            df_ = df 
-            df_ <- column_to_rownames(df_, var = "timeindex")
-            t_2 = Sys.time()
-            log_print(paste0("Reactive tsdf | Column to rowname | After | ", path))
-            log_print(paste0("Reactive tsdf | Read feather | Rownames: ", t_2 - t_1, " seconds"), TRUE, log_path(), log_header())
+            #log_print(paste0("Reactive tsdf | Column to rowname | Before | ", path))
+            #df_ = df 
+            #df_ <- column_to_rownames(df_, var = "timeindex")
+            #t_2 = Sys.time()
+            #log_print(paste0("Reactive tsdf | Column to rowname | After | ", path))
+            #log_print(paste0("Reactive tsdf | Read feather | Rownames: ", t_2 - t_1, " seconds"), TRUE, log_path(), log_header())
             
             temp_log <<- log_add(
                 log_mssg            = temp_log, 
@@ -841,16 +855,16 @@ shinyServer(function(input, output, session) {
                 time                = t_1-t_0, 
                 mssg                = "Read feather"
             )
-            temp_log <<- log_add(
-                log_mssg            = temp_log, 
-                function_           = "TSDF | Load dataset | Rownames",
-                cpu_flag            = isolate(input$cpu_flag),
-                dr_method           = isolate(input$dr_method),
-                clustering_options  = isolate(input$clustering_options),
-                zoom                = isolate(input$zoom_btn),
-                mssg                = "Move timeindex column to rownames",
-                time                = t_2-t_1
-            )
+            #temp_log <<- log_add(
+            #    log_mssg            = temp_log, 
+            #    function_           = "TSDF | Load dataset | Rownames",
+            #    cpu_flag            = isolate(input$cpu_flag),
+            #    dr_method           = isolate(input$dr_method),
+            #    clustering_options  = isolate(input$clustering_options),
+            #    zoom                = isolate(input$zoom_btn),
+            #    mssg                = "Move timeindex column to rownames",
+            #    time                = t_2-t_1
+            #)
             
             flush.console()
             on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds"));flush.console()})
@@ -890,7 +904,12 @@ shinyServer(function(input, output, session) {
                     cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
                     metric = clusters_config$metric_hdbscan
                 )$fit(prjs)
-                score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
+                score = 0
+                unique_labels <- unique(clusters$labels_)
+                total_unique_labels <- length(unique_labels)
+                if(total_unique_labels > 1){
+                    score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
+                }
                 log_print(paste0("Projections | Score ", score))
                 if (score <= 0) {
                     log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
@@ -901,7 +920,12 @@ shinyServer(function(input, output, session) {
                         cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
                         metric = clusters_config$metric_hdbscan
                     )$fit(prjs)
-                    score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
+                    score = 0
+                    unique_labels <- unique(clusters$labels_)
+                    total_unique_labels <- length(unique_labels)
+                    if(total_unique_labels > 1){
+                        score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
+                    }
                     log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
                 }
                 prjs$cluster <- clusters$labels_
@@ -915,7 +939,7 @@ shinyServer(function(input, output, session) {
                     clustering_options      = input$clustering_options,
                     zoom                    = input$zoom,
                     time                    = tcl_1-tcl_0, 
-                    header                  = "Compute clusters"
+                    mssg                    = "Compute clusters"
                 )
                 prjs$cluster
              })
@@ -962,10 +986,20 @@ shinyServer(function(input, output, session) {
         end_date = isolate(end_date())
         log_print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_ts_plot_0 <- Sys.time()
-        tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected, - "timeindex")
+        tsdf_ <- isolate(tsdf()) %>% select(isolate(ts_variables$selected), - "timeindex")
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
         t_ts_plot_1 <- Sys.time()
-        log_print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_0-t_ts_plot_1)) 
+        log_print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_1-t_ts_plot_0)) 
+        temp_log <<- log_add(
+          log_mssg            = temp_log, 
+          function_           = "Reactive X | SWV",
+          cpu_flag            = isolate(input$cpu_flag),
+          dr_method           = isolate(input$dr_method),
+          clustering_options  = isolate(input$clustering_options),
+          zoom                = isolate(input$zoom_btn),
+          time                = t_ts_plot_1-t_ts_plot_0,
+          mssg                = "tsdf_xts"
+        )
         log_print(head(tsdf_xts))
         log_print(tail(tsdf_xts))
         ts_plt = dygraph(
@@ -1308,7 +1342,7 @@ shinyServer(function(input, output, session) {
             clustering_options      = input$clustering_options,
             zoom                    = input$zoom_btn,
             time                    = t_pp_1-t_pp_0, 
-            mssg                    = "R execution time"
+            mssg                    = paste0("R execution time | Ts selected point", input$ts_plot_dygraph_click)
         )
         #send_log("Projections plot_end")
         plt
@@ -1385,7 +1419,7 @@ shinyServer(function(input, output, session) {
                 dr_method               = isolate(input$dr_method),
                 clustering_options      = isolate(input$clustering_options),
                 zoom                    = isolate(input$zoom),
-                mssg                    = "R execution time",
+                mssg                    = paste0("R execution time | Selected prj points: ", isolate(embedding_ids())),
                 time                    = tspd_1-tspd_0
             )
             #send_log("TsPlot dygraph_end")
@@ -1455,16 +1489,16 @@ shinyServer(function(input, output, session) {
             last_time = as.double(renderTimes[[plot_id]][length(renderTimes[[plot_id]])])
             mssg <- paste(plot_id, last_time, sep=", ")
             log_print(paste0("| JS PLOT RENDER | ", mssg), TRUE, log_path(), log_header())
-            temp_log <<- log_add(
-                log_mssg                = temp_log,
-                function_               = paste0("JS Plot Render ", plot_id),
-                cpu_flag                = isolate(input$cpu_flag),
-                dr_method               = isolate(input$dr_method),
-                clustering_options      = isolate(input$clustering_options),
-                zoom                    = isolate(input$zoom_btn),
-                time                    = last_time,
-                mssg                    = paste0(plot_id, "renderization time (milisecs)")
-            )
+            #temp_log <<- log_add(
+            #    log_mssg                = temp_log,
+            #    function_               = paste0("JS Plot Render ", plot_id),
+            #    cpu_flag                = isolate(input$cpu_flag),
+            #    dr_method               = isolate(input$dr_method),
+            #    clustering_options      = isolate(input$clustering_options),
+            #    zoom                    = isolate(input$zoom_btn),
+            #    time                    = last_time,
+            #    mssg                    = paste0(plot_id, "renderization time (milisecs)")
+            #)
             temp_log <<- log_add(
                 log_mssg                = temp_log,
                 function_               = paste0("JS Plot Render ", plot_id),
@@ -1473,7 +1507,7 @@ shinyServer(function(input, output, session) {
                 clustering_options      = isolate(input$clustering_options),
                 zoom                    = isolate(input$zoom_btn),
                 time                    = last_time/1000,   
-                mssg                    = paste0(plot_id, "renderization time (secs)")
+                mssg                    = paste0(plot_id, " renderization time (secs)")
             )
         } 
     })

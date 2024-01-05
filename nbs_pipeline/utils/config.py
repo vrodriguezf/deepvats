@@ -822,7 +822,7 @@ def force_artifact_config_sd2a(
         print("Selecting ", list(tested_configs.items())[id][0])
     config.artifact_name = to_set.alias
     config.data_cols = to_set.cols
-    config.data_fpath= "~/data/"+to_set.fname+to_set.ftype
+    #config.data_fpath= "~/data/"+to_set.fname+to_set.ftype
     config.freq=to_set.freq
     config.time_col = to_set.time_col
     config.csv_config = {}
@@ -860,12 +860,21 @@ def force_artifact_config_mvp(
     id:int = 0, 
     print_flag = False,
     both = False,
+    frequency_factor = 1,
+    frequency_factor_change_alias = False,
 ):
     to_set = get_tested_config(id)
     if print_flag: 
         config_before = deepcopy(config)
 
-    force_artifact_config_sd2a(config, id, False, False)
+    force_artifact_config_sd2a(
+        config = config, 
+        id = id, 
+        print_flag = False, 
+        both = False, 
+        frequency_factor = frequency_factor, 
+        frequency_factor_change_alias = frequency_factor_change_alias
+    )
 
     config.alias = to_set.alias
     config.batch_size = to_set.mvp.batch_size

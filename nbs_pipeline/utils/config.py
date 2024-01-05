@@ -364,10 +364,11 @@ def get_artifact_config_DCAE(print_flag: bool = False) -> Tuple[AttrDict, str]:
     """
     user, project, version, data = get_project_data(print_flag)
     config = get_config(print_flag, "02a-encoder_dcae")
-    print("Antes de leer configuration " + str(config))
+    if print_flag: print("Antes de leer configuration " + str(config))
     config = config.configuration
 
     artifact_config = AttrDict(
+        alias               = config.alias,
         use_wandb           = config.wandb.use,
         wandb_group         = config.wandb.group,
         wandb_entity        = config.wandb.entity,
@@ -506,6 +507,18 @@ monash_australian_electricity_demand_0 = AttrDict(
         n_epoch = 100,
         ws = [2,336], #1h-1week | TODO: Check to ensure freq sense
         stride = 48 #Day2Day TODO: Check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512,
+        n_epoch = 100,
+        stride = 48,
+        w      = 224,
+        delta  = 60,
+        nfs    = [64, 32, 16],
+        kss     = [10, 5, 5],
+        output_filter_size = 10,
+        top_k = [2,2,4],
+        pool_szs = [2,2,4]
     )
 )
 
@@ -523,6 +536,18 @@ monash_sunspot_0 = AttrDict(
         n_epoch = 100,
         ws = [7,365], #1week-1year
         stride = 30 #1 month TODO: Check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512,
+        n_epoch = 100,
+        stride = 48,
+        w      = 224,
+        delta  = 60,
+        nfs    = [64, 32, 16],
+        kss     = [10, 5, 5],
+        output_filter_size = 10,
+        top_k = [2,2,4],
+        pool_szs = [2,2,4]
     )
 )
 
@@ -544,6 +569,18 @@ monash_solar_4_seconds_0 = AttrDict(
         ws = [450,900], #1 min - 30 min (15*60=900 = 1hora intervalos 4 secs)
         stride = 450
         #stride = 10800 #1 min TODO: Check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512,
+        n_epoch = 100,
+        stride = 48,
+        w      = 224,
+        delta  = 60,
+        nfs    = [64, 32, 16],
+        kss     = [10, 5, 5],
+        output_filter_size = 10,
+        top_k = [2,2,4],
+        pool_szs = [2,2,4]
     )
 )
 
@@ -560,6 +597,18 @@ wikipedia_0 = AttrDict(
         n_epoch = 100,
         ws = [1,365], #1d-1año
         stride = 1 #TODO: Check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512,
+        n_epoch = 100,
+        stride = 48,
+        w      = 224,
+        delta  = 60,
+        nfs    = [64, 32, 16],
+        kss     = [10, 5, 5],
+        output_filter_size = 10,
+        top_k = [2,2,4],
+        pool_szs = [2,2,4]
     )
 )
 
@@ -576,6 +625,18 @@ traffic_san_francisco_0 = AttrDict(
         n_epoch = 100,
         ws = [1,720], #1h-1week TODO: Check
         stride = 24 #1 day TODO: Check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512,
+        n_epoch = 100,
+        stride = 48,
+        w      = 224,
+        delta  = 60,
+        nfs    = [64, 32, 16],
+        kss     = [10, 5, 5],
+        output_filter_size = 10,
+        top_k = [2,2,4],
+        pool_szs = [2,2,4]
     )
 )
 
@@ -600,6 +661,18 @@ monash_solar_10_minutes_0 = AttrDict(
         #15 days 2160 -> Ok
         ws = [1,2160],
         stride = 144 #1d by 1d
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512,
+        n_epoch = 100,
+        stride = 48,
+        w      = 224,
+        delta  = 60,
+        nfs    = [64, 32, 16],
+        kss     = [10, 5, 5],
+        output_filter_size = 10,
+        top_k = [2,2,4],
+        pool_szs = [2,2,4]
     )
 )
 
@@ -616,6 +689,18 @@ etth1_0 = AttrDict(
         n_epoch = 100,
         ws = [1,720], #1 h - 1 month TODO:Check
         stride = 24 #1 day TODO: Check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512,
+        n_epoch = 100,
+        stride = 48,
+        w      = 224,
+        delta  = 60,
+        nfs    = [64, 32, 16],
+        kss     = [10, 5, 5],
+        output_filter_size = 10,
+        top_k = [2,2,4],
+        pool_szs = [2,2,4]
     )
 )
 
@@ -632,6 +717,18 @@ stumpy_abp_0 = AttrDict(
         n_epoch = 100,
         ws = [60,3600], #1min-1h TODO:Check
         stride = 60 #1 min TODO: Check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512,
+        n_epoch = 100,
+        stride = 48,
+        w      = 224,
+        delta  = 60,
+        nfs    = [64, 32, 16],
+        kss     = [10, 5, 5],
+        output_filter_size = 10,
+        top_k = [2,2,4],
+        pool_szs = [2,2,4]
     )
 )
 
@@ -648,6 +745,18 @@ stumpy_toy_0 = AttrDict(
         n_epoch = 100,
         ws = [10,1008], 
         stride = 1
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512,
+        n_epoch = 100,
+        stride = 48,
+        w      = 224,
+        delta  = 60,
+        nfs    = [64, 32, 16],
+        kss     = [10, 5, 5],
+        output_filter_size = 10,
+        top_k = [2,2,4],
+        pool_szs = [2,2,4]
     )
 )
 
@@ -895,6 +1004,53 @@ def force_artifact_config_mvp(
 
     config.mvp_ws= to_set.mvp.ws
     config.w = config.mvp_ws[1]
+
+    if print_flag: 
+        diff_attrdict(
+            dict_original=config_before, 
+            dict_modified=config, 
+            both = both
+        )
+
+#| Export 
+def force_artifact_config_dcae(
+    config: AttrDict,
+    id:int = 0, 
+    print_flag = False,
+    both = False,
+    frequency_factor = 1,
+    frequency_factor_change_alias = False,
+):
+    to_set = get_tested_config(id)
+    if print_flag: 
+        config_before = deepcopy(config)
+
+    force_artifact_config_sd2a(
+        config = config, 
+        id = id, 
+        print_flag = False, 
+        both = False, 
+        frequency_factor = frequency_factor, 
+        frequency_factor_change_alias = frequency_factor_change_alias
+    )
+
+    config.alias = to_set.alias
+
+    config.batch_size = to_set.dcae.batch_size
+    config.epochs = to_set.dcae.n_epoch    
+    config.r = 0.71
+    config.stride=to_set.dcae.stride
+    path,_,version = split_artifact_string(config.train_artifact)
+    config.train_artifact=path+config.artifact_name+":"+version
+
+    config.valid_size = 0.2
+    config.w = to_set.dcae.w
+    config.delta = to_set.dcae.delta
+    config.nfs = to_set.dcae.nfs
+    config.kss = to_set.dcae.kss
+    config.output_filter_size = to_set.dcae.kss
+    config.top_k = to_set.dcae.top_k
+    config.pool_szs = to_set.dcae.pool_szs
 
     if print_flag: 
         diff_attrdict(

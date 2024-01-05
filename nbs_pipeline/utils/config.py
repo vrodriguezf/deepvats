@@ -716,6 +716,69 @@ def print_colored(
     else:
         print(f"{color}{key}: {modified_val}{reset}")
 
+import pandas as pd
+
+#| export 
+def get_resampling_frequency(
+    freq: str,
+    frequency_factor:int = 1,
+    print_flag = False
+):
+    if print_flag:
+        print("--> Frequency factor resampling frequency")
+        print("Freq factor: ", frequency_factor)
+    freq_new = pd.to_timedelta(freq)
+    freq_new = freq_new*frequency_factor
+    if print_flag:
+        print("freq_original: ", freq)
+        print("freq_new: ", freq_new)
+    suffix = "-"
+    resampling_freq=""
+    if freq_new.days > 0 and freq_new.seconds == pd.to_timedelta(0,'s'):
+        suffix  = str(freq_new.days)+'d'
+        resampling_freq = str(freq_new.days)+'D'
+    elif freq_new.seconds % 3600 == 0:
+        hours = (freq_new.seconds // 3600) + freq_new.days*24
+        suffix = str(hours)+'h'
+        resampling_freq = str(hours) + 'H'
+    elif freq_new.seconds % 60 == 0: 
+        minutes = (freq_new.seconds // 60) + (freq_new.days*24*60)
+        suffix = str(minutes)+'m'
+        resampling_freq = str(minutes)+'T'
+    else: 
+        seconds = freq_new.seconds + freq_new.days*24*60*60 
+        suffix = str(seconds)+'s'
+        resampling_freq = str(seconds)+'S'
+    if print_flag:
+        print("suffix: ", suffix)
+        print("resampling_freq: ", resampling_freq)
+        print("Frequency factor resampling frequency -->")
+    return (suffix, resampling_freq)
+
+#| export
+def frequency_factor_config(
+    config: AttrDict, 
+    frequency_factor:int = 1,
+    frequency_factor_change_alias: bool = True,
+    print_flag = False
+):
+    if print_flag:
+        print("--> Frequency factor config")
+        print("Freq factor: ", frequency_factor)
+        print("frequency_factor_change_alias: ", frequency_factor_change_alias)
+    suffix, config.resampling_freq = get_resampling_frequency(config.freq, frequency_factor, print_flag)
+
+    if frequency_factor_change_alias:
+        #filename = config.data_fpath.split(".tsf", 1)[0]
+        config.artifact_name = config.artifact_name+"-"+suffix
+        #config.data_fpath = filename+"-"+suffix+".tsf"
+
+    if print_flag:     
+        print("resampling_freq: ", config.freq)
+        print("name: ", config.artifact_name)
+        print("path: ", config.data_fpath)    
+        print("Frequency factor config -->")
+
 #| export
 def diff_attrdict(
     dict_original: AttrDict, 
@@ -750,6 +813,8 @@ def force_artifact_config_sd2a(
     id:int = 0, 
     print_flag = False,
     both = False,
+    frequency_factor = 1, 
+    frequency_factor_change_alias = True
 ):
     to_set = get_tested_config(id)
     if print_flag: 
@@ -770,7 +835,8 @@ def force_artifact_config_sd2a(
     resampling_freq= None,
     start_date= None,
     test_split= None,
-
+    if frequency_factor > 1: 
+        frequency_factor_config(config, frequency_factor, frequency_factor_change_alias, print_flag)
     if print_flag: 
         diff_attrdict(
             dict_original=config_before, 

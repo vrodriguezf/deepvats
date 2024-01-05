@@ -347,17 +347,6 @@ shinyServer(function(input, output, session) {
         on.exit({print("eventReactive ts_ar -->"); flush.console()})
         ar
     }, label = "ts_ar")
-
-    #ts_ar <- eventReactive(input$dataset, {
-    #    req(input$dataset)
-    #    print(paste0("--> eventReactive ts_ar | Update dataset artifact  | stride ", input$stride, "| hash ", input$dataset, "-->"))
-    #    dataset <- api$artifact(input$dataset, type='dataset')
-    #    if(anyDuplicated(rownames(dataset))) {
-    #        print("eventReactive ts_ar | Update dataset artifact | delete duplicated rows")
-    #        dataset <- dataset[!duplicated(rownames(dataset)), ]
-    #    }
-    #    dataset
-    #}, label = "ts_ar")
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
@@ -688,25 +677,6 @@ shinyServer(function(input, output, session) {
         return(unlist(result))
     }
 
-    parallel_column_to_rownames <- function(df, column_name) {
-        print(paste0("-->Parallel Column 2 rownames | column_name: ", column_name))
-        chunk_size = 1000000
-        num_chunks = ceiling(nrow(df)/chunk_size)
-        chunks=split(df, ceiling(seq_along(df)/chunk_size))
-        print(paste0("Parallel Column 2 rownames | Chunks: ", num_chunks))
-        cl = parallel::makeCluster(4)
-
-        parallel::clusterEvalQ(cl, {library(tibble)})
-        result = parallel::clusterApply(cl, chunks, function(chunk) {
-            tibble::column_to_rownames(chunk, var = column_name)
-        })
-        stopCluster(cl)
-        print("Parallel Column 2 rownames -->")
-        return (result)
-    }
-
-
-
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
         {
@@ -727,9 +697,7 @@ shinyServer(function(input, output, session) {
             t_end = Sys.time()
             print(paste0("Reactive tsdf | Read feather | Execution time: ", t_end - t_init, " seconds"))
             flush.console()
-            #df <- parallel_posfix(df)
-            #df <- df %>% column_to_rownames(var = "timeindex")
-            df = as.data.frame(parallel_column_to_rownames(df, "timeindex"))
+
             t_end = Sys.time()
             on.exit({print(paste0("Reactive tsdf | Column to index | Execution time: ", t_end - t_init, " seconds"));flush.console()})
             df
@@ -805,15 +773,16 @@ shinyServer(function(input, output, session) {
         colour_palette
     })
     
+    
 
     start_date <- reactive({
-        rownames(isolate(tsdf()))[1]
+        isolate(tsdf()$timeindex[1])
     })
 
     end_date <- reactive({
-        end_date_id = 1000000
+        end_date_id = 100000
         end_date_id = min(end_date_id, nrow(tsdf()))
-        end_date = rownames(isolate(tsdf()))[end_date_id]
+        isolate(tsdf()$timeindex[end_date_id])
     })
 
     ts_plot_base <- reactive({
@@ -821,11 +790,16 @@ shinyServer(function(input, output, session) {
         on.exit({print("ts_plot_base -->"); flush.console()})
         start_date =isolate(start_date())
         end_date = isolate(end_date())
-        tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected)
-
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
+        t_init <- Sys.time()
+        tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected, - "timeindex")
+        tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
+        t_end <- Sys.time()
+        print(paste0("ts_plot_base | tsdf_xts time", t_end-t_init)) 
+        print(head(tsdf_xts))
+        print(tail(tsdf_xts))
         ts_plt = dygraph(
-            tsdf_ %>% select(ts_variables$selected),
+            tsdf_xts,
             width="100%", height = "400px"
         ) %>% 
         dyRangeSelector(c(start_date, end_date)) %>% 
@@ -840,10 +814,47 @@ shinyServer(function(input, output, session) {
                 ".dygraph-legend > span { display: none; }
                 .dygraph-legend > span.highlight { display: inline; }"
             )
-        )
+        ) 
+
     })
 
-    
+    embedding_ids <- reactive({
+        print("--> embedding idx")
+        on.exit(print("embedding idx -->"))
+        bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
+        bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
+    })
+    window_list <- reactive({
+        print("--> window_list")
+        on.exit(print("window_list -->"))
+        # Get the window indices
+        req(length(embedding_ids() > 0))
+        embedding_idxs = embedding_ids()
+        window_indices = get_window_indices(embedding_idxs, input$wlen, input$stride)
+        # Put all the indices in one list and remove duplicates
+        unlist_window_indices = unique(unlist(window_indices))
+        # Calculate a vector of differences to detect idx where a new window should be created 
+        diff_vector <- diff(unlist_window_indices,1)
+        # Take indexes where the difference is greater than one (that represent a change of window)
+        idx_window_limits <- which(diff_vector!=1)
+        # Include the first and last index to have a whole set of indexes.
+        idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
+        # Create a reduced window list
+        reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
+        # Populate the first element of the list with the idx of the first window.
+        reduced_window_list[[1]] <- c(unlist_window_indices[idx_window_limits[1]],
+                            unlist_window_indices[idx_window_limits[1+1]])
+        # Populate the rest of the list
+        for (i in 2:(length(idx_window_limits)-1)){
+            reduced_window_list[[i]]<- c(
+                #unlist_window_indices[idx_window_limits[i]+1],
+                #unlist_window_indices[idx_window_limits[i+1]]
+                            as.Date(tsdf()$timeindex[unlist_window_indices[idx_window_limits[i]+1]]),
+                            as.Date(tsdf()$timeindex[unlist_window_indices[idx_window_limits[i+1]]])
+                               )
+        }
+        reduced_window_list
+    })
     
 
     # Generate timeseries data for dygraph dygraph
@@ -857,34 +868,14 @@ shinyServer(function(input, output, session) {
 
         print("ts_plot | bp")
         #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)
-        bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
+        
         #if (!is.data.frame(bp)) {bp = bp_}
-
         print("ts_plot | embedings idxs ")
-        embedding_idxs <- bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
+        embedding_idxs = embedding_ids()
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
         print("ts_plot | Before if")
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
-            # Get the window indices
-            window_indices <- get_window_indices(embedding_idxs, input$wlen, input$stride)
-            # Put all the indices in one list and remove duplicates
-            unlist_window_indices <- unique(unlist(window_indices))
-            # Calculate a vector of differences to detect idx where a new window should be created 
-            diff_vector <- diff(unlist_window_indices,1)
-            # Take indexes where the difference is greater than one (that represent a change of window)
-            idx_window_limits <- which(diff_vector!=1)
-            # Include the first and last index to have a whole set of indexes.
-            idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
-            # Create a reduced window list
-            reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
-            # Populate the first element of the list with the idx of the first window.
-            reduced_window_list[[1]] <- c(unlist_window_indices[idx_window_limits[1]],
-                                unlist_window_indices[idx_window_limits[1+1]])
-            # Populate the rest of the list
-            for (i in 2:(length(idx_window_limits)-1)){
-                reduced_window_list[[i]]<- c(unlist_window_indices[idx_window_limits[i]+1],
-                                   unlist_window_indices[idx_window_limits[i+1]])
-            }
+            reduced_window_list = req(window_list())
             print(paste0("ts_plot | reduced_window_list[1] = ", reduced_window_list[1]))
             start_indices = min(sapply(reduced_window_list, function(x) x[1]))
             end_indices = max(sapply(reduced_window_list, function(x) x[2]))
@@ -892,15 +883,13 @@ shinyServer(function(input, output, session) {
             view_size = end_indices-start_indices+1
             max_size = 10000
 
+            start_date = tsdf()$timeindex[start_indices]
+            end_date = tsdf()$timeindex[end_indices]
 
-            start_date = rownames(tsdf())[start_indices]
-            end_date = rownames(tsdf())[end_indices]
-            #start_date = min(rownames(tsdf())[start_indices])
-            #end_date = max(rownames(tsdf())[end_indices])
             print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
             
             if (view_size > max_size) {
-                end_date = rownames(tsdf())[start_indices + max_size - 1]
+                end_date = tsdf()$timeindex[start_indices + max_size - 1]
                 #range_color = "#FF0000" # Red
             } 
             
@@ -911,8 +900,8 @@ shinyServer(function(input, output, session) {
             count = 0
             for(ts_idxs in reduced_window_list) {
                 count = count + 1
-                start_event_date = rownames(tsdf())[head(ts_idxs, 1)]
-                end_event_date = rownames(tsdf())[tail(ts_idxs, 1)]
+                start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
+                end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
                 ts_plt <- ts_plt %>% dyShading(
                     from = start_event_date,
                     to = end_event_date,
@@ -935,7 +924,7 @@ shinyServer(function(input, output, session) {
 
             }   
             
-            ts_plt <- ts_plt 
+            ts_plt <- ts_plt
             # NOTE: This code block allows you to plot shadyng at once. 
             #       The traditional method has to plot the dygraph n times 
             #       (n being the number of rectangles to plot). With the adjacent
@@ -957,11 +946,100 @@ shinyServer(function(input, output, session) {
         ts_plt
     })
     
-    
-    
+
     #############
     #  OUTPUTS  #
     #############
+
+    color_palete_window_plot <- colorRampPalette(
+        colors = c("blue", "green"),
+        space = "Lab" # Option used when colors do not represent a quantitative scale
+    )
+    output$windows_plot <- renderPlot({
+        req(length(embedding_ids()) > 0)
+        reduced_window_list = req(window_list())
+
+        # Convertir a fechas POSIXct
+        reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
+            data.frame(
+                start = as.POSIXct(tsdf()$timeindex[x[1]], origin = "1970-01-01"),
+                end = as.POSIXct(tsdf()$timeindex[x[2]], origin = "1970-01-01")
+            )
+        }))
+
+        # Establecer límites basados en los datos
+        first_date = min(reduced_window_df$start)
+        last_date = max(reduced_window_df$end)
+    
+        left = as.POSIXct(tsdf()$timeindex[1],  origin = "1970-01-01")
+        right = as.POSIXct(tsdf()$timeindex[nrow(tsdf())], origin = "1970-01-01")
+
+        # Configuración del gráfico base
+        par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
+        plot(
+            NA, 
+            xlim = c(left, right), 
+            ylim = c(0, 1), 
+            type = "n", 
+            xaxt = "n", yaxt = "n", 
+            xlab = "", ylab = "", 
+            bty = "n")
+            f = "%F %H:%M:%S"
+            axis(1, at = as.numeric(c(left, right)), labels = c(format(first_date, f), format(last_date, f)), cex.axis = 0.7)
+
+            # Añadir líneas verticales
+            colors = color_palete_window_plot(2)
+            abline(
+                v = as.numeric(reduced_window_df$start), 
+                col =  rep(colors, length.out = nrow(reduced_window_df)),
+                lwd = 1
+            )
+            abline(
+                v = as.numeric(reduced_window_df$end), 
+                col =  rep(colors, length.out = nrow(reduced_window_df)),
+                lwd = 1
+            )
+            segments(
+                x0 = as.numeric(reduced_window_df$start),
+                x1 = as.numeric(reduced_window_df$end),
+                y0 = 0,
+                y1 = 0,
+                col =  rep(colors, length.out = nrow(reduced_window_df)),
+                lwd = 1
+            )
+            text(
+                x = as.numeric(reduced_window_df$start),
+                y = 0,
+                srt = 90,
+                adj = c(1,0.5),
+                labels =  paste0("SW-", seq_len(nrow(reduced_window_df)), format(reduced_window_df$start, f)), 
+                cex = 1,
+                xpd = TRUE,
+                col = rep(colors, length.out = nrow(reduced_window_df))
+            )
+
+            points(x = as.numeric(left),y = 0, col = "black", pch = 20, cex = 1)
+            points(x = as.numeric(right),y = 0, col = "black", pch = 20, cex = 1)
+        }, 
+        height=200
+    )  
+
+output$windows_text <- renderUI({
+    req(length(embedding_ids()) > 0)
+    reduced_window_list = req(window_list())
+
+    # Crear un conjunto de etiquetas de texto con información de las ventanas
+    window_info <- lapply(1:length(reduced_window_list), function(i) {
+        window <- reduced_window_list[[i]]
+        start <- format(as.POSIXct(tsdf()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+        end <- format(as.POSIXct(tsdf()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+        color <- ifelse(i %% 2 == 0, "green", "blue")
+        HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+    })
+
+    # Devuelve todos los elementos de texto como una lista de HTML
+    do.call(tagList, window_info)
+})
     
     # Generate encoder info table
     #output$enc_info = renderDataTable({

@@ -42,6 +42,7 @@ ARG UID=1000
 ARG GID=1000
 ENV HOME /home/$USER
 ENV ENV_PREFIX $HOME/env
+
 RUN addgroup --gid $GID $USER
 RUN adduser --disabled-password \
     --gecos "Non-root user" \

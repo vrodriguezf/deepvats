@@ -1,3 +1,4 @@
+name: dvats_env
 channels:
   #--- Torch & Cuda
   - pytorch
@@ -9,6 +10,9 @@ channels:
   #--- AI
   - fastai
   - rapidsai
+  - defaults  
+  - conda-forge
+
   - timeseriesai
 dependencies:
   ##########################

@@ -14,6 +14,9 @@ FROM nvidia/cuda:${CUDA_VERSION}
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
 LABEL cuda_version=${CUDA_VERSION}
+LABEL log_path=${log_path}
+##---Initialize bash
+LABEL cuda_version=${CUDA_VERSION}
 
 RUN echo "Cuda version: $CUDA_VERSION"
 ##---Initialize bash
@@ -112,6 +115,12 @@ RUN chmod u+x /usr/local/bin/postBuild \
     && conda deactivate \
     # Make bash automatically activate the conda environment
     && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
+RUN chmod u+x /usr/local/bin/postBuild \
+    && conda activate $ENV_PREFIX  \
+    && /usr/local/bin/postBuild  \
+    && conda deactivate \
+    # Make bash automatically activate the conda environment
+    && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 
 RUN conda list --prefix ${ENV_PREFIX}
 
@@ -123,7 +132,6 @@ ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
 ARG JUPYTER_TOKEN
 ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
-RUN echo "token:"${JUPYTER_TOKEN}
 # default command will be to launch JupyterLab server for development
 
 CMD ["sh", "-c", "jupyter lab --no-browser --ip 0.0.0.0 --ContentsManager.allow_hidden=True --NotebookApp.token=$JUPYTER_TOKEN"]

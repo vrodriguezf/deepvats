@@ -6,6 +6,7 @@
 #
 #    http://shiny.rstudio.com/
 #
+#source("./ui-helper-logs.R")
 
 shinyUI(fluidPage(
   ################################################

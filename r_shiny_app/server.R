@@ -6,36 +6,19 @@
 #
 #    http://shiny.rstudio.com/
 #
-###########3 devtools::install_github("apache/arrow/r", ref = "tags/apache-arrow-14.0.0", subdir = "arrow/r")
+###########
+
+source("./server-helper-logs.R")
 shinyServer(function(input, output, session) {
-logMessages <- reactiveVal("")
-    send_log <- function(message) {
-        print("--> Log message")
-        new_log = paste0(logMessages(), Sys.time(), " - ", message, "\n")
-        logMessages(new_log)
-        #print(new_log)
-        invalidateLater(10, session)
-        print(paste0("Log Message |  ", message, "-->"))
-    }
-
-
     options(shiny.verbose = TRUE)
-    #options(shiny.error = function() {
-    #    traceback()
-    #    stopApp()
-    #})
-  
+ 
     ######################
     #  REACTIVES VALUES  #
     ######################
     
-    # Reactive values created to update the current range of the main slider input
-    #slider_range <- reactiveValues(min_value = 1, max_value = 2)
-    
     # Reactive value created to keep updated the selected precomputed clusters_labels artifact
     precomputed_clusters <- reactiveValues(selected = NULL)
-    
-    
+
     # Reactive value created to keep updated the selected clustering option
     clustering_options <- reactiveValues(selected = "no_clusters")
     
@@ -254,20 +237,20 @@ print(paste0("enc_ar_stride: ", old_value))
     
     # Update clusters_config reactive values when user clicks on "calculate_clusters" button
     observeEvent(input$calculate_clusters, {
-        send_log("Clusters config_start")
+        send_log("Clusters config_start", session)
         log_print("--> observe event calculate_clusters | update clusters_config")
         clusters_config$metric_hdbscan <- req(input$metric_hdbscan)
         clusters_config$min_cluster_size_hdbscan <- req(input$min_cluster_size_hdbscan)
         clusters_config$min_samples_hdbscan <- req(input$min_samples_hdbscan)
         clusters_config$cluster_selection_epsilon_hdbscan <- req(input$cluster_selection_epsilon_hdbscan)
-        send_log("Clusters config_end")
+        send_log("Clusters config_end", session)
         on.exit({log_print("observe event calculate_clusters | update clusters_config -->")})
     })
     
     
     # Observe the events related to zoom the projections graph
     observeEvent(input$zoom_btn, {
-        send_log("Zoom btn_start")
+        send_log("Zoom btn_start", session)
         log_print("--> observeEvent zoom_btn")
         on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn))))
         brush <- input$projections_brush
@@ -284,13 +267,13 @@ print(paste0("enc_ar_stride: ", old_value))
             ranges$x <- NULL
             ranges$y <- NULL
         }
-send_log("Zoom btn_end")
+        send_log("Zoom btn_end", session)
     })
     
     
     # Observe the events related to change the appearance of the projections graph
     observeEvent(input$update_prj_graph,{
-send_log("Update prj graph_start")
+        send_log("Update prj graph_start", session)
         log_print("Update prj graph", TRUE, log_path(), log_header())
         
         style_values <- list(path_line_size = input$path_line_size ,
@@ -309,7 +292,7 @@ send_log("Update prj graph_start")
             config_style$point_alpha <- NULL
             config_style$point_size <- NULL
         }
-send_log("Update prj graph_end")
+        send_log("Update prj graph_end", session)
     })
     
     
@@ -321,7 +304,7 @@ send_log("Update prj graph_end")
     
     # Observe to check/uncheck all variables
     observeEvent(input$selectall,{
-        send_log("Select all variables_start")
+        send_log("Select all variables_start", session)
         req(tsdf)
         ts_variables$selected <- names(isolate(tsdf()))
         if(input$selectall %%2 == 0){
@@ -335,7 +318,7 @@ send_log("Update prj graph_end")
                                      choices = ts_variables$selected, 
                                      selected = NULL)
         }
-        send_log("Select all variables_end")
+        send_log("Select all variables_end", session)
     })
     
     
@@ -347,7 +330,6 @@ send_log("Update prj graph_end")
     X <- reactiveVal()
     
     observe({
-#send_log("X_start")
         #req(input$wlen != 0, input$stride != 0, tsdf())
         req(input$wlen != 0, input$stride != 0, input$stride != 1)
         log_print("--> Reactive X | Update Sliding Window")
@@ -387,7 +369,6 @@ send_log("Update prj graph_end")
                 "-->"
             )); flush.console()
         })
-        #send_log("X_end")
         X(enc_input)
     })
     
@@ -623,7 +604,6 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
         X <- NULL
         gc(verbose=TRUE)
         on.exit({log_print("reactive embs | get embeddings -->"); flush.console()})
-#send_log("embs_end")
         result
     })
 #enc = py_load_object(
@@ -824,20 +804,15 @@ t_prj_0 = Sys.time()
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
         {
-            #send_log("tsdf_start")
             req(input$encoder, ts_ar())
             ts_ar = ts_ar()
             log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
             flush.console()
-            # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
-            # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
-            # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
-            
             t_init <- Sys.time()
             path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
             print(paste0("Reactive tsdf | Read feather ", path ))
             flush.console()
-log_print(paste0("Reactive tsdf | Read feather | Before | ", path))
+            log_print(paste0("Reactive tsdf | Read feather | Before | ", path))
             t_0 <- Sys.time()
             df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
             t_1 = Sys.time()
@@ -884,7 +859,6 @@ on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " secon
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-        #send_log("projections_start")
         log_print("--> Projections")
         req(prj_object(), input$dr_method)
         #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
@@ -892,7 +866,7 @@ on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " secon
         prjs <- prj_object()
         req(input$dataset, input$encoder, input$wlen, input$stride)
         log_print("Projections | before switch")
-log_print("Calculate clusters | before")
+        log_print("Calculate clusters | before")
         tcl_0 = Sys.time()
         switch(clustering_options$selected,
             precomputed_clusters = {
@@ -949,7 +923,6 @@ tcl_1 = Sys.time()
              })
         
         on.exit({log_print("Projections -->"); flush.console()})
-#send_log("projections_end")
       prjs
     })
     
@@ -1230,7 +1203,6 @@ tcl_1 = Sys.time()
 
             points(x = as.numeric(left),y = 0, col = "black", pch = 20, cex = 1)
             points(x = as.numeric(right),y = 0, col = "black", pch = 20, cex = 1)
-#send_log("windows_plot_start")
             plt
         }, 
         height=200
@@ -1325,15 +1297,6 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
             plt <- plt + theme(plot.background = element_rect(fill = "white"))
             ggsave(filename = prjs_plot_name(), plot = plt, path = "../data/plots/")
         })
-        #observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
-            #req(input$dataset, input$encoder)
-            #print("!-- CUDA?: ", torch$cuda$is_available())
-            #prjs_ <- req(projections())
-            #filename <- prjs_plot_name()
-            #print(paste("saving embedding plot to ",filename))
-            #ggsave(filename = filename, plot = plt, path="../data/plots/") 
-            #print("Embeding plot saved")
-        #})
         t_pp_1 = Sys.time()
         log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, log_path(), log_header())
         temp_log <<- log_add(
@@ -1346,7 +1309,6 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
             time                    = t_pp_1-t_pp_0, 
             mssg                    = paste0("R execution time | Ts selected point", input$ts_plot_dygraph_click)
         )
-        #send_log("Projections plot_end")
         plt
     })
     
@@ -1402,15 +1364,10 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
                 input$wlen != 0, 
                 input$stride != 0
             )
-            #send_log("TsPlot dygraph_start")
             log_print("ts_plot dygraph")
             tspd_0 = Sys.time()
-            #log_print("Saving time series plot")
             ts_plot <- req(ts_plot())
-            #save_path <- file.path("..", "data", "plots", ts_plot_name())
-            #htmlwidgets::saveWidget(ts_plot, file = save_path, selfcontained=TRUE)
-            #log_print(paste0("Time series plot saved to", save_path))
-tspd_1 = Sys.time()
+            tspd_1 = Sys.time()
             log_print(paste0("ts_plot dygraph | Execution_time: ", tspd_1 - tspd_0), TRUE, log_path(), log_header())
             temp_log <<- log_add(
                 log_mssg                = temp_log, 
@@ -1422,15 +1379,13 @@ tspd_1 = Sys.time()
                 mssg                    = paste0("R execution time | Selected prj points: ", isolate(embedding_ids())),
                 time                    = tspd_1-tspd_0
             )
-            #send_log("TsPlot dygraph_end")
             ts_plot
-            #req(ts_plot())
         }   
     )
 
 
     ########### Saving graphs in local
-prj_plot_id <- reactiveVal(0)
+    prj_plot_id <- reactiveVal(0)
     set_plot_id <- function()({
         prj_plot_id(prj_plot_id()+1)
     })
@@ -1476,7 +1431,7 @@ prj_plot_id <- reactiveVal(0)
         get_ts_plot_name(dataset_name, encoder_name)
     })
     
-###################################
+    ###################################
     ########## JSCript Logs ###########
     ###################################
     output$logsOutput <- renderText({

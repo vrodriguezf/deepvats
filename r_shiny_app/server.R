@@ -140,7 +140,11 @@ logMessages <- reactiveVal("")
                 max = wmax,
                 value = wlen
             )
-
+updateSliderInput(
+                session = session, inputId = "stride", 
+                min = 1, max = input$wlen, 
+                value = enc_ar_stride()
+            )
             on.exit({
                 log_print(
                     paste0(
@@ -168,8 +172,9 @@ logMessages <- reactiveVal("")
         log_print(paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen))
         tryCatch({
             old_value = input$stride
-            if (input$stride == 0){
+            if (input$stride == 0 | input$stride == 1){
                 old_value = enc_ar_stride()
+print(paste0("enc_ar_stride: ", old_value))
             }
             freezeReactiveValue(input, "stride")
             log_print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value))
@@ -344,9 +349,12 @@ send_log("Select all variables_end")
     #  REACTIVES  #
     ###############
 
-    X <- reactive({
+    X <- reactiveVal()
+    
+    observe({
+#send_log("X_start")
         #req(input$wlen != 0, input$stride != 0, tsdf())
-        req(input$wlen != 0, input$stride != 0)
+        req(input$wlen != 0, input$stride != 0, input$stride != 1)
         log_print("--> Reactive X | Update Sliding Window")
         log_print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
         log_print("reactive X | SWV")
@@ -361,6 +369,7 @@ send_log("Select all variables_end")
             #tsdf(), #%>%select(-"timeindex"),
             fcst_history = input$wlen
         )
+
         t_x_1 <- Sys.time() 
         t_sliding_window_view = t_x_1 - t_x_0
         log_print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "), TRUE, log_path(), log_header())
@@ -384,7 +393,7 @@ send_log("Select all variables_end")
             )); flush.console()
         })
         #send_log("X_end")
-        enc_input
+        X(enc_input)
     })
     
     # Time series artifact
@@ -884,7 +893,7 @@ on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " secon
         log_print("--> Projections")
         req(prj_object(), input$dr_method)
         #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
-        print("Projections | before prjs")
+        log_print("Projections | before prjs")
         prjs <- prj_object()
         req(input$dataset, input$encoder, input$wlen, input$stride)
         log_print("Projections | before switch")
@@ -904,10 +913,15 @@ log_print("Calculate clusters | before")
                     cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
                     metric = clusters_config$metric_hdbscan
                 )$fit(prjs)
+score = 0
+                unique_labels <- unique(clusters$labels_)
+                total_unique_labels <- length(unique_labels)
+                if(total_unique_labels > 1){
                 score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
-                print(paste0("Projections | Score ", score))
+                }
+                log_print(paste0("Projections | Score ", score))
                 if (score <= 0) {
-                    print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
                     prjs <- prj_object_cpu()
                     clusters = hdbscan$HDBSCAN(
                         min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
@@ -915,8 +929,13 @@ log_print("Calculate clusters | before")
                         cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
                         metric = clusters_config$metric_hdbscan
                     )$fit(prjs)
+score = 0
+                    unique_labels <- unique(clusters$labels_)
+                    total_unique_labels <- length(unique_labels)
+                    if(total_unique_labels > 1){
                     score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
-                    print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                    }
+                    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
                 }
                 prjs$cluster <- clusters$labels_
 tcl_1 = Sys.time()

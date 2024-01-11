@@ -9,6 +9,8 @@
 ###########
 
 source("./server-helper-logs.R")
+source("./server-helper-plots.R")
+
 shinyServer(function(input, output, session) {
     options(shiny.verbose = TRUE)
  
@@ -101,33 +103,41 @@ shinyServer(function(input, output, session) {
     observeEvent(
         input$encoder, 
         {
-            #req(input$dataset, encs_l)
-            #enc_ar = req(enc_ar())
-            log_print("--> observeEvent input_encoder | update wlen")
+            log_print("--> observeEvent input_encoder", TRUE, file_path, log_header(), debug_level, 'main')
+            
             freezeReactiveValue(input, "wlen")
-            log_print("observeEvent input_encoder | update wlen | Before enc_ar")
+            
+            log_print("observeEvent input_encoder | update wlen | Before enc_ar", FALSE, file_path, log_header(), debug_level, 'generic')
+            
             enc_ar = enc_ar()
-            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar: ", enc_ar))
-            log_print("observeEvent input_encoder | update wlen | Set wlen slider values")
+            
+            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar: ", enc_ar, "| Set wlen slider values"), FALSE, file_path, log_header(), debug_level, 'generic')
+    
             if (is.null(enc_ar$metadata$mvp_ws)) {
-                log_print("observeEvent input_encoder | update wlen | Set wlen slider values from w | ")
+                log_print("observeEvent input_encoder | update wlen | Set wlen slider values from w | ", FALSE, file_path, log_header(), debug_level, 'generic')
                 enc_ar$metadata$mvp_ws = c(enc_ar$metadata$w, enc_ar$metadata$w)
             }
-            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ))
+            
+            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ), FALSE, file_path, log_header(), debug_level, 'generic')
+            
             wmin <- enc_ar$metadata$mvp_ws[1]
             wmax <- enc_ar$metadata$mvp_ws[2]
             wlen <- enc_ar$metadata$w
-            log_print(paste0("observeEvent input_encoder | update wlen | Update slider input (", wmin, ", ", wmax, " ) -> ", wlen ))
+            
+            log_print(paste0("observeEvent input_encoder | update wlen | Update slider input (", wmin, ", ", wmax, " ) -> ", wlen ), FALSE, file_path, log_header(), debug_level, 'generic')
+            
             updateSliderInput(session = session, inputId = "wlen",
                 min = wmin,
                 max = wmax,
                 value = wlen
             )
-updateSliderInput(
+            
+            updateSliderInput(
                 session = session, inputId = "stride", 
                 min = 1, max = input$wlen, 
                 value = enc_ar_stride()
             )
+            
             on.exit({
                 log_print(
                     paste0(
@@ -136,7 +146,8 @@ updateSliderInput(
                         " | stride ",
                         input$stride,
                         " -->"
-                        )
+                        ), 
+                FALSE, file_path, log_header(), debug_level, 'generic'
             ); flush.console()
             })
         }
@@ -144,39 +155,43 @@ updateSliderInput(
 
     # Obtener el valor de stride
     enc_ar_stride = reactive({
-        log_print("--> reactive enc_ar_stride")
+        log_print("--> reactive enc_ar_stride", FALSE, file_path, log_header(), debug_level, 'generic')
         stride <- enc_ar()$metadata$stride
-        on.exit({log_print(paste0("reactive_enc_ar_stride | --> ", stride)); flush.console()})
+        on.exit({log_print(paste0("reactive_enc_ar_stride | --> ", stride), FALSE, file_path, log_header(), debug_level, 'generic'); flush.console()})
         stride
     })
         
     observeEvent(input$wlen, {
         req(input$wlen)
-        log_print(paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen))
+        log_print(paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen), FALSE, file_path, log_header(), debug_level, 'generic')
         tryCatch({
             old_value = input$stride
             if (input$stride == 0 | input$stride == 1){
                 old_value = enc_ar_stride()
-print(paste0("enc_ar_stride: ", old_value))
+                log_print(paste0("enc_ar_stride: ", old_value), FALSE, file_path, log_header(), debug_level, 'generic')
             }
+            
             freezeReactiveValue(input, "stride")
-            log_print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value))
+            
+            log_print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value), FALSE, file_path, log_header(), debug_level, 'generic')
+        
             updateSliderInput(
                 session = session, inputId = "stride", 
                 min = 1, max = input$wlen, 
                 value = ifelse(old_value <= input$wlen, old_value, 1)
             )
-            }, 
-            error = function(e){
-                log_print(paste0("observeEvent input_wlen | update slide stride value | Error | ", e$message))
-            }, 
-            warning = function(w) {
-                message(paste0("observeEvent input_wlen | update slide stride value | Warning | ", w$message))
-            }
-        )
-        on.exit({log_print(paste0( 
+
+        }, error = function(e){
+            log_print(paste0("observeEvent input_wlen | update slide stride value | Error | ", e$message), FALSE, file_path, log_header(), debug_level, 'generic')
+        }, warning = function(w) {
+            message(paste0("observeEvent input_wlen | update slide stride value | Warning | ", w$message))
+        })
+        on.exit({
+            log_print(paste0( 
             "observeEvent input_wlen | update slide stride value | Finally |  wlen min ",  
-            1, " max ", input$wlen, " current value ", input$stride, " -->")); flush.console()})
+            1, " max ", input$wlen, " current value ", input$stride, " -->"), 
+            FALSE, file_path, log_header(), debug_level, 'generic'
+        ); flush.console()})
     })
 
     # Update "metric_hdbscan" selectInput when the app is loaded
@@ -187,51 +202,38 @@ print(paste0("enc_ar_stride: ", old_value))
             choices = names(req(hdbscan_metrics))
         )
     })
-    # Update the range of point selection when there is new data
-    # observeEvent(X(), {
-    #   #max_ = ts_ar()$metadata$TS$n_samples
-    #   max_ = dim(X())[[1]]
-    #   freezeReactiveValue(input, "points_emb")
-    #   updateSliderInput(session = session, inputId = "points_emb",
-    #                     min = 1, max = max_, value = c(1, max_))
-    # })
-
+    
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
-        log_print("--> observeEvent tsdf | update select variables")
-        on.exit({log_print("--> observeEvent tsdf | update select variables -->"); flush.console()})
-        #        freezeReactiveValue(input, "select_variables")
+        log_print("--> observeEvent tsdf | update select variables", , FALSE, file_path, log_header(), debug_level, 'main')
+        on.exit({log_print("--> observeEvent tsdf | update select variables -->", FALSE, file_path, log_header(), debug_level, 'main'); flush.console()})
+        
         ts_variables$selected = names(isolate(tsdf()))[names(tsdf()) != "timeindex"]
-        #ts_variables$selected = names(isolate(tsdf()))
+        
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
+        
         updateCheckboxGroupInput(
             session = session,
             inputId = "select_variables",
             choices = ts_variables$selected,
             selected = ts_variables$selected
         )
+
     }, label = "select_variables")
-    
-    # Update slider_range reactive values with current samples range
-    # observe({
-    #     req(input$points_emb)
-    #     slider_range$min_value <- input$points_emb[1]
-    #     slider_range$max_value <- input$points_emb[2]
-    # })
-    
+       
     # Update precomputed_clusters reactive value when the input changes
     observeEvent(input$clusters_labels_name, {
-        log_print("--> observe | precomputed_cluster selected ")
+        log_print("--> observe | precomputed_cluster selected ", FALSE, file_path, log_header(), debug_level, 'generic')
         precomputed_clusters$selected <- req(input$clusters_labels_name)
-        log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected))
+        log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected), FALSE, file_path, log_header(), debug_level, 'generic')
     })
     
     
     # Update clustering_options reactive value when the input changes
     observe({
-        log_print("--> Observe clustering options")
+        log_print("--> Observe clustering options", FALSE, file_path, log_header(), debug_level, 'generic')
         clustering_options$selected <- req(input$clustering_options)
-        log_print("Observe clustering options -->")
+        log_print("Observe clustering options -->", FALSE, file_path, log_header(), debug_level, 'generic')
     })
 
     
@@ -251,8 +253,9 @@ print(paste0("enc_ar_stride: ", old_value))
     # Observe the events related to zoom the projections graph
     observeEvent(input$zoom_btn, {
         send_log("Zoom btn_start", session)
-        log_print("--> observeEvent zoom_btn")
-        on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn))))
+        log_print("--> observeEvent zoom_btn", , FALSE, file_path, log_header(), debug_level, 'generic')
+        on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn)), FALSE, file_path, log_header(), debug_level, 'generic'))
+        
         brush <- input$projections_brush
         if (!is.null(brush)) {
             if(isTRUE(input$zoom_btn)){
@@ -267,6 +270,7 @@ print(paste0("enc_ar_stride: ", old_value))
             ranges$x <- NULL
             ranges$y <- NULL
         }
+
         send_log("Zoom btn_end", session)
     })
     
@@ -383,9 +387,9 @@ print(paste0("enc_ar_stride: ", old_value))
         ar
     }, label = "ts_ar")
 
+    
     log_path <- reactiveVal() 
     log_header <- reactiveVal()
-    
     
     temp_log <- data.frame(
         timestamp           = character(),
@@ -458,8 +462,8 @@ print(paste0("enc_ar_stride: ", old_value))
             execution_id ," | ", 
             input$cpu_flag, " | ", 
             input$dr_method, " | ", input$clustering_options, " | ", input$zoom_btn)
-        print(paste0("Log header: ", log_header_))
-        log_header(log_header_)  # Actualiza log_path
+        print(paste0(">>>>> Log header: ", log_header_, "<<<<<"))
+        log_header(log_header_)  
     })
     
     # Get timeseries artifact metadata
@@ -1295,7 +1299,7 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
 
         observeEvent(input$savePlot, {
             plt <- plt + theme(plot.background = element_rect(fill = "white"))
-            ggsave(filename = prjs_plot_name(), plot = plt, path = "../data/plots/")
+            ggsave(filename = set_prjs_plot_name(), plot = plt, path = "../data/plots/")
         })
         t_pp_1 = Sys.time()
         log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, log_path(), log_header())
@@ -1385,51 +1389,10 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
 
 
     ########### Saving graphs in local
-    prj_plot_id <- reactiveVal(0)
-    set_plot_id <- function()({
-        prj_plot_id(prj_plot_id()+1)
-    })
-    get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster){
-        #log_print("Getting embedding plot name")
-        set_plot_id()
-        plt_name <- paste0(
-            execution_id, "_",
-            prj_plot_id(), "_",
-            dataset_name, "_", 
-            encoder_name, "_", 
-            input$cpu_flag, "_", 
-            input$dr_method, "_",  
-            input$clustering_options, "_", 
-            "zoom", "_", 
-            input$zoom_btn, "_", 
-            "point_alpha_",
-            input$point_alpha, "_",
-            "show_lines_",
-            input$show_lines, "_",
-            "prjs.png"
-        )
-        log_print(paste0("embeddings plot name", plt_name))
-        plt_name
-    }
-
-    get_ts_plot_name <- function(dataset_name, encoder_name){
-        log_print("Getting timeserie plot name")
-        plt_name <- paste0(dataset_name,  "_", encoder_name, input$dr_method, "_ts.html")
-        log_print(paste0("ts plot name: ", plt_name))
-        plt_name
-    }
-
-    prjs_plot_name <- reactive({
-        dataset_name <- basename(input$dataset)
-        encoder_name <- basename(input$encoder)
-        get_prjs_plot_name(dataset_name, encoder_name, clustering_options$selected, prjs_$cluster)
-    })
     
-    ts_plot_name <- reactive({
-        dataset_name <- basename(input$dataset)
-        encoder_name <- basename(input$encoder)
-        get_ts_plot_name(dataset_name, encoder_name)
-    })
+    
+
+    
     
     ###################################
     ########## JSCript Logs ###########

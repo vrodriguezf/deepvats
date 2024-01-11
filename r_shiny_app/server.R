@@ -215,7 +215,6 @@ print(paste0("enc_ar_stride: ", old_value))
 
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
-        send_log("Update tsdf select variables_start")
         log_print("--> observeEvent tsdf | update select variables")
         on.exit({log_print("--> observeEvent tsdf | update select variables -->"); flush.console()})
         #        freezeReactiveValue(input, "select_variables")
@@ -228,7 +227,6 @@ print(paste0("enc_ar_stride: ", old_value))
             choices = ts_variables$selected,
             selected = ts_variables$selected
         )
-send_log("Update tsdf select variables_end")
     }, label = "select_variables")
     
     # Update slider_range reactive values with current samples range
@@ -240,11 +238,9 @@ send_log("Update tsdf select variables_end")
     
     # Update precomputed_clusters reactive value when the input changes
     observeEvent(input$clusters_labels_name, {
-        send_log("Precomputed clusters_start")
         log_print("--> observe | precomputed_cluster selected ")
         precomputed_clusters$selected <- req(input$clusters_labels_name)
         log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected))
-send_log("Precomputed clusters_end")
     })
     
     
@@ -273,7 +269,7 @@ send_log("Precomputed clusters_end")
     observeEvent(input$zoom_btn, {
         send_log("Zoom btn_start")
         log_print("--> observeEvent zoom_btn")
-on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn))))
+        on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn))))
         brush <- input$projections_brush
         if (!is.null(brush)) {
             if(isTRUE(input$zoom_btn)){
@@ -325,10 +321,9 @@ send_log("Update prj graph_end")
     
     # Observe to check/uncheck all variables
     observeEvent(input$selectall,{
-send_log("Select all variables_start")
+        send_log("Select all variables_start")
         req(tsdf)
         ts_variables$selected <- names(isolate(tsdf()))
-        #ts_variables$selected <- names(req(tsdf()))
         if(input$selectall %%2 == 0){
             updateCheckboxGroupInput(session = session, 
                                      inputId = "select_variables",
@@ -340,7 +335,7 @@ send_log("Select all variables_start")
                                      choices = ts_variables$selected, 
                                      selected = NULL)
         }
-send_log("Select all variables_end")
+        send_log("Select all variables_end")
     })
     
     

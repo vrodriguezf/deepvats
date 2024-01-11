@@ -103,28 +103,38 @@ shinyServer(function(input, output, session) {
     observeEvent(
         input$encoder, 
         {
-            log_print("--> observeEvent input_encoder", TRUE, file_path, log_header(), debug_level, 'main')
+            log_print(
+                mssg = "--> observeEvent input_encoder", 
+                file_flag = TRUE, 
+                file_path = log_path(), 
+                log_header = log_header(), 
+                debug_level, 'main'
+            )
             
             freezeReactiveValue(input, "wlen")
             
-            log_print("observeEvent input_encoder | update wlen | Before enc_ar", FALSE, file_path, log_header(), debug_level, 'generic')
+            log_print("observeEvent input_encoder | update wlen | Before enc_ar", debug_level = debug_level, debug_group = 'generic')
             
             enc_ar = enc_ar()
             
-            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar: ", enc_ar, "| Set wlen slider values"), FALSE, file_path, log_header(), debug_level, 'generic')
+            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar: ", enc_ar, "| Set wlen slider values"), debug_level = debug_level, debug_group = 'generic')
     
             if (is.null(enc_ar$metadata$mvp_ws)) {
-                log_print("observeEvent input_encoder | update wlen | Set wlen slider values from w | ", FALSE, file_path, log_header(), debug_level, 'generic')
+                log_print("observeEvent input_encoder | update wlen | Set wlen slider values from w | ", debug_level = debug_level, debug_group = 'generic')
                 enc_ar$metadata$mvp_ws = c(enc_ar$metadata$w, enc_ar$metadata$w)
             }
             
-            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ), FALSE, file_path, log_header(), debug_level, 'generic')
+            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ), debug_level = debug_level, debug_group = 'generic')
             
             wmin <- enc_ar$metadata$mvp_ws[1]
             wmax <- enc_ar$metadata$mvp_ws[2]
             wlen <- enc_ar$metadata$w
             
-            log_print(paste0("observeEvent input_encoder | update wlen | Update slider input (", wmin, ", ", wmax, " ) -> ", wlen ), FALSE, file_path, log_header(), debug_level, 'generic')
+            log_print(
+                paste0(
+                    "observeEvent input_encoder | update wlen | Update slider input (", 
+                    wmin, ", ", wmax, " ) -> ", wlen 
+                ), debug_level = debug_level, debug_group = 'generic')
             
             updateSliderInput(session = session, inputId = "wlen",
                 min = wmin,
@@ -147,7 +157,7 @@ shinyServer(function(input, output, session) {
                         input$stride,
                         " -->"
                         ), 
-                FALSE, file_path, log_header(), debug_level, 'generic'
+                FALSE, log_path(), log_header(), debug_level, 'generic'
             ); flush.console()
             })
         }
@@ -155,25 +165,25 @@ shinyServer(function(input, output, session) {
 
     # Obtener el valor de stride
     enc_ar_stride = reactive({
-        log_print("--> reactive enc_ar_stride", FALSE, file_path, log_header(), debug_level, 'generic')
+        log_print("--> reactive enc_ar_stride", debug_level = debug_level, debug_group = 'generic')
         stride <- enc_ar()$metadata$stride
-        on.exit({log_print(paste0("reactive_enc_ar_stride | --> ", stride), FALSE, file_path, log_header(), debug_level, 'generic'); flush.console()})
+        on.exit({log_print(paste0("reactive_enc_ar_stride | --> ", stride), debug_level = debug_level, debug_group = 'generic'); flush.console()})
         stride
     })
         
     observeEvent(input$wlen, {
         req(input$wlen)
-        log_print(paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen), FALSE, file_path, log_header(), debug_level, 'generic')
+        log_print(mssg = paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen), debug_level = debug_level, debug_group = 'generic')
         tryCatch({
             old_value = input$stride
             if (input$stride == 0 | input$stride == 1){
                 old_value = enc_ar_stride()
-                log_print(paste0("enc_ar_stride: ", old_value), FALSE, file_path, log_header(), debug_level, 'generic')
+                log_print(paste0("enc_ar_stride: ", old_value), debug_level = debug_level, debug_group = 'generic')
             }
             
             freezeReactiveValue(input, "stride")
             
-            log_print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value), FALSE, file_path, log_header(), debug_level, 'generic')
+            log_print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value), debug_level = debug_level, debug_group = 'generic')
         
             updateSliderInput(
                 session = session, inputId = "stride", 
@@ -182,7 +192,7 @@ shinyServer(function(input, output, session) {
             )
 
         }, error = function(e){
-            log_print(paste0("observeEvent input_wlen | update slide stride value | Error | ", e$message), FALSE, file_path, log_header(), debug_level, 'generic')
+            log_print(paste0("observeEvent input_wlen | update slide stride value | Error | ", e$message), file_flag = FALSE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic')
         }, warning = function(w) {
             message(paste0("observeEvent input_wlen | update slide stride value | Warning | ", w$message))
         })
@@ -190,7 +200,7 @@ shinyServer(function(input, output, session) {
             log_print(paste0( 
             "observeEvent input_wlen | update slide stride value | Finally |  wlen min ",  
             1, " max ", input$wlen, " current value ", input$stride, " -->"), 
-            FALSE, file_path, log_header(), debug_level, 'generic'
+            file_flag = FALSE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic'
         ); flush.console()})
     })
 
@@ -205,8 +215,8 @@ shinyServer(function(input, output, session) {
     
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
-        log_print("--> observeEvent tsdf | update select variables", , FALSE, file_path, log_header(), debug_level, 'main')
-        on.exit({log_print("--> observeEvent tsdf | update select variables -->", FALSE, file_path, log_header(), debug_level, 'main'); flush.console()})
+        log_print("--> observeEvent tsdf | update select variables", debug_level = debug_level, debug_group = 'main')
+        on.exit({log_print("--> observeEvent tsdf | update select variables -->", debug_level = debug_level, debug_group = 'main'); flush.console()})
         
         ts_variables$selected = names(isolate(tsdf()))[names(tsdf()) != "timeindex"]
         
@@ -223,17 +233,17 @@ shinyServer(function(input, output, session) {
        
     # Update precomputed_clusters reactive value when the input changes
     observeEvent(input$clusters_labels_name, {
-        log_print("--> observe | precomputed_cluster selected ", FALSE, file_path, log_header(), debug_level, 'generic')
+        log_print("--> observe | precomputed_cluster selected ", debug_level = debug_level, debug_group = 'generic')
         precomputed_clusters$selected <- req(input$clusters_labels_name)
-        log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected), FALSE, file_path, log_header(), debug_level, 'generic')
+        log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected), debug_level = debug_level, debug_group = 'generic')
     })
     
     
     # Update clustering_options reactive value when the input changes
     observe({
-        log_print("--> Observe clustering options", FALSE, file_path, log_header(), debug_level, 'generic')
+        log_print("--> Observe clustering options")
         clustering_options$selected <- req(input$clustering_options)
-        log_print("Observe clustering options -->", FALSE, file_path, log_header(), debug_level, 'generic')
+        log_print("Observe clustering options -->")
     })
 
     
@@ -253,8 +263,8 @@ shinyServer(function(input, output, session) {
     # Observe the events related to zoom the projections graph
     observeEvent(input$zoom_btn, {
         send_log("Zoom btn_start", session)
-        log_print("--> observeEvent zoom_btn", , FALSE, file_path, log_header(), debug_level, 'generic')
-        on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn)), FALSE, file_path, log_header(), debug_level, 'generic'))
+        log_print("--> observeEvent zoom_btn", , debug_level = debug_level, debug_group = 'generic')
+        on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn)), debug_level = debug_level, debug_group = 'generic'))
         
         brush <- input$projections_brush
         if (!is.null(brush)) {
@@ -443,15 +453,14 @@ shinyServer(function(input, output, session) {
     execution_id = get_execution_id(id_file)
 
     observe({
-        #toguether_log_path = header
         toguether_log_path = paste0(header, "-", execution_id)
         if (toguether){
             log_path(toguether_log_path)
-            print(paste0("Log path: ", toguether_log_path))   
+            print(paste0(">>>> Toguether Log path: ", toguether_log_path))   
         } else {
             new_log_path <- paste0(toguether_log_path, "-", ts_ar()$name, ".log")  # Construye el nuevo log_path
             log_path(new_log_path)
-            print(paste0("Log path: ", new_log_path))   
+            print(paste0(">>>> New Log path: ", new_log_path))   
         }
     })
 
@@ -710,14 +719,13 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
       colnames(res) = c("xcoord", "ycoord")
       on.exit({log_print(" prj_object -->"); flush.console()})
       flush.console()
-      #browser()
       res
     })
 
     prj_object <- reactive({
         req(embs(), input$dr_method)
         log_print("--> prj_object")
-t_prj_0 = Sys.time()
+        t_prj_0 = Sys.time()
         embs = req(embs())
         log_print("prj_object | Before complete cases ")
         embs = embs[complete.cases(embs),]
@@ -1005,10 +1013,12 @@ tcl_1 = Sys.time()
 
     embedding_ids <- reactive({
         log_print("--> embedding idx")
-        on.exit(log_print("embedding idx -->"))
+        on.exit({log_print("embedding idx -->");})
         bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
         bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
     })
+
+
     window_list <- reactive({
         log_print("--> window_list")
         on.exit(log_print("window_list -->"))
@@ -1372,7 +1382,15 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
             tspd_0 = Sys.time()
             ts_plot <- req(ts_plot())
             tspd_1 = Sys.time()
-            log_print(paste0("ts_plot dygraph | Execution_time: ", tspd_1 - tspd_0), TRUE, log_path(), log_header())
+            log_print(
+                paste0(
+                    mssg = "ts_plot dygraph | Execution_time: ", tspd_1 - tspd_0), 
+                    file_flag = TRUE, 
+                    file_path = log_path(), 
+                    log_header = log_header(), 
+                    debug_level = debug_level, 
+                    debug_group ='main'
+                )
             temp_log <<- log_add(
                 log_mssg                = temp_log, 
                 function_               = "TS Plot Dygraph",
@@ -1452,15 +1470,7 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
         logs = log_df()
         if (nrow(logs) == 0) {
             return(dataTableOutput("No available log."))
-        } #else {B/(macu1995)
-            #logs_filtered <- logs %>%
-            #filter(
-            #    timestamp >= as.numeric(input$timestamp_range[1]) & 
-            #    timestamp <= as.numeric(input$timestamp_range[2])
-            #)
-
-        #}
-
+        } 
         logs 
     })
 
@@ -1472,52 +1482,5 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
             write.csv(log_df(), file)
         }
     )
-
-    #output$res <- renderPrint(str(input$timestamp_range))
-#
-    #observe({
-    #    min_max = req(timestamp_min_max())  # Asegúrate de que esto se ejecuta cuando log_df() cambie
-    #    current_values = input$timestamp_range
-    #    if (identical(current_values, c("Loading...","Loading..."))) {
-    #        current_values = min_max
-    #    } 
-    #    if (
-    #        !identical(current_values, c("Loading...","Loading..."))
-    #    ) {
-    #        min_val = as.numeric(as.POSIXct(min_max[1]))
-    #        max_val = as.numeric(as.POSIXct(min_max[2]))
-    #        browser()
-    #        current_values[1] = as.numeric(as.POSIXct(current_values[1]))#, format = "%Y-%m-%d %H:%M:%OS3", tz="UTC"))
-    #        current_values[2] = as.numeric(as.POSIXct(current_values[2]))#, format = "%Y-%m-%d %H:%M:%OS3", tz="UTC"))
-    #        sequence = seq(min_val, max_val, length.out = 5)
-    #        sequence = unique(as.numeric(c(sequence, current_values)))
-    #        browser()
-    #        labels_ = setNames(
-    #            lapply(
-    #                sequence, 
-    #                function(time) {
-    #                    format(
-    #                        as.POSIXct(time, origin = "1970-01-01", tx="UTC"), 
-    #                        "%Y-%m-%d %H:%M:%S.%OS3" 
-    #                    )
-    #            }),
-    #            sequence
-    #        )
-    #        current_values[1] = format(as.POSIXct(as.numeric(current_values[1]), origin = "1970-01-01", tx="UTC"), "%Y-%m-%d %H:%M:%S.%OS3")
-    #        current_values[2] = format(as.POSIXct(as.numeric(current_values[2]), origin = "1970-01-01", tx="UTC"), "%Y-%m-%d %H:%M:%S.%OS3")
-    #        print("--> Update Slider Text Input")
-    #        shinyWidgets::updateSliderTextInput(
-    #            session,
-    #            inputId = "timestamp_range", 
-    #            label   = "- Select initial and final timestamps",
-    #            choices = labels_, #setNames(as.character(seq(min_val, max_val, length.out=5)), labels),
-    #            selected = current_values
-    #        )
-    #        print("Update Slider Text Input -->")
-    #    }
-    #    browser()
-    ##}, ignoreInit = FALSE)
-    #})
-    #
 })
 

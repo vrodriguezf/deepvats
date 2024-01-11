@@ -1,5 +1,6 @@
 # Dependencies
 source("./global-dependencies.R")
+options(shiny.trace = TRUE, shiny.loglevel = "DEBUG")
 # Logs handling and configuration
 source("./global-helper-logs.R")
 source("./global-helper-plots.R")

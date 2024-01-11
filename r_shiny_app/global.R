@@ -187,20 +187,22 @@ log_add <- function(
   return(new_mssg) 
 }
 
-
-
-# Función para leer o inicializar el ID de ejecución
 get_execution_id <- function(file) {
   if (file.exists(file)) {
-    # Lee el ID actual y lo incrementa
-    id = as.numeric(readLines(file)) + 1
+    df = feather::read_feather(file)
+    if (!all(c("id", "timestamp") %in% colnames(df))) {
+      stop("Wrong Execution ID feather file")
+    }
+      id = max(as.numeric(df$id)) + 1
   } else {
-    # Inicializa el ID si el archivo no existe
     id = 1
+    df = data.frame(id = numeric(0), timestamp = character(0))
   }
-  # Guarda el ID actualizado en el archivo
-  writeLines(as.character(id), file)
-  print(paste0("Execution id: ", id))
+  timestamp = format(Sys.time(), "%d/%m/%y %H:%M:%S")
+  record = data.frame(id = id, timestamp=timestamp)
+  df = rbind(df, record)
+  feather::write_feather(df, file)
+  log_print(paste0("Execution id: ", id, ", Start Timestamp: ", timestamp))
   return(id)
 }
 
@@ -224,4 +226,4 @@ log_print("Done!")
 
 toguether = TRUE
 header = "r_shiny_app_logs"
-id_file = "execution_id.txt"
+id_file = "execution_id"

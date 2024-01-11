@@ -41,7 +41,7 @@ def gpu_memory_status(device=0):
     color_code = color_for_percentage(percentage)
     bar = create_bar(percentage, color_code)
     print(f"GPU | Used mem: {used}")
-    print(f"GPU | Used mem: {total}")
+    print(f"GPU | Total mem: {total}")
     print(f"GPU | Memory Usage: [{bar}] {color_code}{percentage}%\033[0m")
 
 def get_cpu_memory():

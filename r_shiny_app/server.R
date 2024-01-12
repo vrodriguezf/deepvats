@@ -7,6 +7,10 @@
 #    http://shiny.rstudio.com/
 #
 ###########3 devtools::install_github("apache/arrow/r", ref = "tags/apache-arrow-14.0.0", subdir = "arrow/r")
+
+
+source("./server-helper .R")
+
 shinyServer(function(input, output, session) {
     options(shiny.verbose = TRUE)
     #options(shiny.error = function() {
@@ -52,7 +56,35 @@ shinyServer(function(input, output, session) {
     # Reactive value created to store time series selected variables
     ts_variables <- reactiveValues(selected = NULL)
     
-    
+    # Reactive value created to store the encoder_input
+    X <- reactiveVal()
+
+    # Reactive value created to store encoder artifact stride
+    enc_ar_stride <- eventReactive(enc_ar(), {
+        stride = ceiling(enc_ar()$metadata$stride/2)
+    })
+
+    # Time series artifact
+    ts_ar <- eventReactive(
+        input$dataset, 
+        {
+        req(input$dataset)
+        ar <- api$artifact(input$dataset, type='dataset')
+        on.exit({print("eventReactive ts_ar -->"); flush.console()})
+        ar
+    }, label = "ts_ar")
+
+
+
+
+    #Current execution id
+    execution_id = get_execution_id(id_file)
+
+    # Reactive value for forcing logs update
+    update_log_df_trigger <- reactiveVal(FALSE)
+
+    # Reactive value for indexing saved projections plot
+    prj_plot_id <- reactiveVal(0)
     
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
@@ -95,15 +127,7 @@ shinyServer(function(input, output, session) {
             {print("observeEvent input_dataset | update encoder list -->"); flush.console()}
         )
     }, label = "input_encoder")
-    
-    # observeEvent(input$encoder, {
-    #   freezeReactiveValue(input, "embs_ar")
-    #   updateSelectizeInput(session = session, inputId = "embs_ar",
-    #                        choices = embs_l %>%
-    #                          keep(~ .$metadata$enc_artifact == input$encoder)
-    #                        %>% names)
-    # })
-    
+        
     observeEvent(
         input$encoder, 
         {
@@ -129,6 +153,11 @@ shinyServer(function(input, output, session) {
                 max = wmax,
                 value = wlen
             )
+            updateSliderInput(
+                session = session, inputId = "stride", 
+                min = 1, max = input$wlen, 
+                value = enc_ar_stride()
+            )
             on.exit({print("observeEvent input_encoder | update wlen -->"); flush.console()})
         }
     )
@@ -142,12 +171,13 @@ shinyServer(function(input, output, session) {
     })
         
     observeEvent(input$wlen, {
-        req(input$wlen != 0)
+        req(input$wlen)
         print(paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen))
         tryCatch({
             old_value = input$stride
-            if (input$stride == 0){
+            if (input$stride == 0 | input$stride == 1){
                 old_value = enc_ar_stride()
+                print(paste0("enc_ar_stride: ", old_value))
             }
             freezeReactiveValue(input, "stride")
             print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value))
@@ -200,18 +230,8 @@ shinyServer(function(input, output, session) {
             choices = ts_variables$selected,
             selected = ts_variables$selected
         )
-
-
-
     }, label = "select_variables")
-    
-    # Update slider_range reactive values with current samples range
-    # observe({
-    #     req(input$points_emb)
-    #     slider_range$min_value <- input$points_emb[1]
-    #     slider_range$max_value <- input$points_emb[2]
-    # })
-    
+        
     # Update precomputed_clusters reactive value when the input changes
     observeEvent(input$clusters_labels_name, {
         print("--> observe | precomputed_cluster selected ")
@@ -226,7 +246,6 @@ shinyServer(function(input, output, session) {
         clustering_options$selected <- req(input$clustering_options)
         print("Observe clustering options -->")
     })
-
     
     # Update clusters_config reactive values when user clicks on "calculate_clusters" button
     observeEvent(input$calculate_clusters, {
@@ -291,7 +310,6 @@ shinyServer(function(input, output, session) {
     observeEvent(input$selectall,{
         req(tsdf)
         ts_variables$selected <- names(isolate(tsdf()))
-        #ts_variables$selected <- names(req(tsdf()))
         if(input$selectall %%2 == 0){
             updateCheckboxGroupInput(session = session, 
                                      inputId = "select_variables",
@@ -304,54 +322,122 @@ shinyServer(function(input, output, session) {
                                      selected = NULL)
         }
     })
-    
-    
+    # Observe to update encoder input (enc_input = X())
+    observe({ #Event(input$dataset, input$encoder, input$wlen, input$stride, {
+    req(input$wlen != 0, input$stride != 0, input$stride != 1)
+    print(paste0("Check reactiveness | X |  wlen, stride |"))
+        if (
+            is.null(X()) ||
+            !identical(
+                input$dataset, isolate(input$dataset)) || 
+                !identical(input$encoder, isolate(input$encoder)) || 
+                input$wlen != isolate(input$wlen) || 
+                input$stride != isolate(input$stride)
+        ) {
+            send_log("--> ReactiveVal X")
+            print("--> ReactiveVal X | Update Sliding Window")
+            print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
+            print("reactive X | SWV")
+            
+            t_x_0 <- Sys.time()
+        
+            enc_input = dvats$exec_with_feather_k_output(
+                function_name = "prepare_forecasting_data",
+                module_name   = "tsai.data.preparation",
+                path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
+                k_output = as.integer(0),
+                print_flag = TRUE,
+                time_flag = TRUE,
+                fcst_history = input$wlen
+            )
+
+            t_x_1 <- Sys.time()
+            t_sliding_window_view = t_x_1 - t_x_0
+            print(mssg = paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
+            
+            print(paste0("reactive X | Update sliding window | Apply stride ", input$stride," | enc_input ~ ", dim(enc_input), "-->"))
+            print("| Update | X" )
+            on.exit({print(mssg = "| Outside| X"); flush.console()})
+            X(enc_input)
+        }
+        X()
+    })
+
+    # Observe for updating log dataframe shown in the logs tab
+    observe({
+        if (nrow(temp_log) > 0) {
+            new_record <- cbind(
+                execution_id = execution_id, 
+                dataset = isolate(ts_ar()$name),
+                encoder = ifelse(is.null(isolate(input$encoder)), " ", input$encoder),
+                show_lines = isolate(input$show_lines),
+                point_alpha = isolate(input$point_alpha),
+                temp_log
+            )
+            log_df(rbind(new_record, log_df()))
+            temp_log <<- data.frame(timestamp = character(), function_ = character(), cpu_flag = character(), dr_method = character(), clustering_options = character(), zoom = logical(), time = numeric(), mssg = character(), stringsAsFactors = FALSE)
+        }
+        invalidateLater(10000)
+    })
+
+    # Observe for defining log path
+    observe({
+        toguether_log_path = paste0(header, "-", execution_id)
+        if (toguether){#Save all logs toguether
+            log_path(toguether_log_path)
+            print(paste0("Log path: ", toguether_log_path))   
+        } else {#One log per dataset artifact
+            new_log_path <- paste0(toguether_log_path, "-", ts_ar()$name, ".log") 
+            log_path(new_log_path)
+            print(paste0("Log path: ", new_log_path))   
+        }
+    })
+
+    # Observe for defining the log header
+    observe({
+        log_header_ = paste0(
+            ts_ar()$name, " | ", 
+            execution_id ," | ", 
+            input$cpu_flag, " | ", 
+            input$dr_method, " | ", input$clustering_options, " | ", input$zoom_btn)
+        print(paste0("Log header: ", log_header_))
+        log_header(log_header_) 
+    })
+
+    # Brings Java Script rendering logs
+    observe({
+        req(input$renderTimes)
+        renderTimes <- fromJSON(input$renderTimes)
+        for (plot_id in names(renderTimes)) {
+            last_time = as.double(renderTimes[[plot_id]][length(renderTimes[[plot_id]])])
+            mssg <- paste(plot_id, last_time, sep=", ")
+            print(paste0("| JS PLOT RENDER | ", mssg))
+            temp_log <<- log_add(
+                log_mssg                = temp_log,
+                function_               = paste0("JS Plot Render ", plot_id),
+                cpu_flag                = isolate(input$cpu_flag),
+                dr_method               = isolate(input$dr_method),
+                clustering_options      = isolate(input$clustering_options),
+                zoom                    = isolate(input$zoom_btn),
+                time                    = last_time/1000,   
+                mssg                    = paste0(plot_id, " renderization time (secs)")
+            )
+        } 
+    })
+
+    # Observe to update logs df
+    observeEvent(input$update_logs, {
+        update_log_df_trigger = !update_log_df_trigger
+    })
     
     ###############
     #  REACTIVES  #
     ###############
-
-    X <- reactive({
-        #req(input$wlen != 0, input$stride != 0, tsdf())
-        req(input$wlen != 0, input$stride != 0)
-        print("--> Reactive X | Update Sliding Window")
-        print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
-        
-        t_init <- Sys.time()
-        
-        enc_input = dvats$exec_with_feather_k_output(
-            function_name = "prepare_forecasting_data",
-            module_name   = "tsai.data.preparation",
-            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
-            k_output = as.integer(0),
-            print_flag = TRUE,
-            time_flag = TRUE,
-            #tsdf(), #%>%select(-"timeindex"),
-            fcst_history = input$wlen
-        )
-        
-        t_end <- Sys.time()
-        t_sliding_window_view = t_end - t_init
-        print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
-        on.exit({print(paste0("reactive X | Update sliding window | Apply stride | enc_input ~ ", dim(enc_input), "-->")); flush.console()})
-        enc_input
-    })
-    
-    # Time series artifact
-    ts_ar <- eventReactive(
-        input$dataset, 
-        {
-        req(input$dataset)
-        print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset, "-->"))
-        ar <- api$artifact(input$dataset, type='dataset')
-        on.exit({print("eventReactive ts_ar -->"); flush.console()})
-        ar
-    }, label = "ts_ar")
     
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
         print("--> reactive ts_ar_config | List used artifacts")
-        ts_ar <- req(ts_ar())
+        ts_ar = req(ts_ar())
         print(paste0("reactive ts_ar_config | List used artifacts | hash", ts_ar$hash))
         list_used_arts = ts_ar$metadata$TS
         list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
@@ -363,25 +449,9 @@ shinyServer(function(input, output, session) {
         list_used_arts
         on.exit({print("reactive ts_ar_config -->"); flush.console()})
     })
-    
-    # selected_embs_ar = eventReactive(input$embs_ar, {
-    #   embs_l[[input$embs_ar]]
-    # })
-    
-    # embeddings object. Get it from local if it is there, otherwise download
-    # embs = reactive({
-    #   selected_embs_ar = req(selected_embs_ar())
-    #   print("embs")
-    #   fname = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, 
-    #                     selected_embs_ar$metadata$ref$hash)
-    #   if (file.exists(fname))
-    #     py_load_object(filename = fname)
-    #   else
-    #     selected_embs_ar$to_obj()
-    # })
-    
+        
     # Get encoder artifact
-    enc_ar <- eventReactive(
+    enc_ar <- eventReactive (
         input$encoder, 
         {
             print(paste0("eventReactive enc_ar | Enc. Artifact: ", input$encoder))
@@ -424,7 +494,7 @@ shinyServer(function(input, output, session) {
           } else {
             print("CUDA NOT AVAILABLE")
         }
-        t_init <- Sys.time()
+        t_embs_0 <- Sys.time()
         print(
             paste0(
                 "reactive embs | get embeddings | Just about to get embedings. Device number: ", 
@@ -463,32 +533,7 @@ shinyServer(function(input, output, session) {
         chunk_size = chunk_size,
         check_memory_usage = TRUE
     )
-#exec_with_feather_k_output(
-#    function_name = 'get_enc_embs_set_stride_set_batch_size',
-#    module_name   = 'dvats.encoder',
-#    path = enc_input,
-#    #X = enc_input, 
-#    k_output = 0, #as.integer(0),
-#    print_flag = True,
-#    time_flag = True,
-#    enc_learn = enc_l, 
-#    stride = ", input$stride, ", 
-#    batch_size = bs, 
-#    cpu = ", input$cpu_flag, ", 
-#    print_flag = False, 
-#    time_flag = True, 
-#    chunk_size = chunk_size,
-#    check_memory_usage = True
-#)
-#")
-    
-        #home_directory <- path.expand("~")
-        ## Sustituye 'python' con la ruta completa a tu intérprete de Python si es necesario
-        #comand <- sprintf(paste0(path.expand("~"), "/env -c \"%s\""), python_string)
-        #print(paste0("COMAND: ", comand))
-        #result <- system(comand, intern = TRUE)
-
-        
+       
         #result <- system(python_string)
         t_end <- Sys.time()
         diff <- t_end - t_init
@@ -500,70 +545,6 @@ shinyServer(function(input, output, session) {
         on.exit({print("reactive embs | get embeddings -->"); flush.console()})
         result
     })
-#enc = py_load_object(
-#    os.path.join(
-#        DEFAULT_PATH_WANDB_ARTIFACTS, 
-#        hash
-#    )
-#)
-#embs_py_code <- "
-#import os
-#from dvats.all import get_enc_embs
-#from torch import cuda
-#from time import time
-#import pickle
-#
-#path = os.path.join(wandb_path, hash)
-#print(path)
-#with open(path, 'rb') as f:
-#    enc = pickle.load(f)
-#print('reactive embs | load encoder | Set batchsize')
-#enc.bs = batch_size
-#print('reactive embs | load encoder | Batchsize: ', enc.bs)
-#print('--> reactive embs | get embeddings | enc.bs ', enc.bs )
-#if cuda.is_available():
-#    print('CUDA devices: ', cuda.device_count())
-#else:
-#    print('CUDA NOT AVAILABLE')
-#t_init = time()
-#print(
-#    '--> reactive embs | get embeddings | Just about to get embedings. Device number: ', 
-#    cuda.current_device(), 
-#    ' Batch size: ', enc.bs
-#)
-#result = get_enc_embs(X = enc_input, enc_learn = enc, cpu = False)
-#t_end = time()
-#diff = t_end - t_init
-#diff_secs = diff
-#diff_mins = diff / 60
-#"   
-
-#embs = reactive({
-#    req(input$dataset, X())
-#    print("--> reactive embs | get embeddings -->")
-#    enc_ar <- req(enc_ar())
-#    dataset_logged_by = enc_ar$logged_by()
-#    batch_size = dataset_logged_by$config$batch_size
-#    hash <- enc_ar$metadata$ref$hash
-#    print(paste0("reactive embs | get embeddings | hash ", hash, " | logged_by_batch_size ", batch_size))
-#    py$wandb_path <- DEFAULT_PATH_WANDB_ARTIFACTS
-#    print(paste0("reactive embs | get embeddings | path ", py$wandb_path))
-#    py$hash <- hash
-#    print(paste0("reactive embs | get embeddings | hash ", py$hash))
-#    py$enc_input <- X()
-#    py$dataset_logged_by <- dataset_logged_by
-#    py$batch_size <- batch_size
-#    print(paste0("reactive embs | get embeddings | bs ", py$batch_size))
-#    print(reticulate::py_config())
-#    print(paste0("reactive embs | get embeddings | Enter embs_py code! ", embs_py_code))
-#    py_run_string(embs_py_code)
-#    print(paste0("reactive embs | get embeddings | Outside embs_py codee! ", embs_py_code))
-#    diff_secs <- py$diff_secs
-#    diff_mins <- py$diff_mins
-#    result <- py$result
-#    print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
-#    result
-#})
 
  prj_object_cpu <- reactive({
         embs = req(embs(), input$dr_method)
@@ -607,6 +588,7 @@ shinyServer(function(input, output, session) {
     prj_object <- reactive({
         req(embs(), input$dr_method)
         print("--> prj_object")
+        t_prj_0 = Sys.time()
         embs = req(embs())
         print("prj_object | Before complete cases ")
         embs = embs[complete.cases(embs),]
@@ -641,54 +623,22 @@ shinyServer(function(input, output, session) {
         )
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
       colnames(res) = c("xcoord", "ycoord")
-      on.exit({print(" prj_object -->"); flush.console()})
+      t_prj_1 = Sys.time()
+      on.exit({print(paste0(" prj_object | ", t_prj_1-t_prj_0, " seconds -->"); flush.console()})
       flush.console()
-      Sys.sleep(5)
-      #browser()
       res
     })
     
 
-    parallel_posfix <- function(df) {
-        
-        chunk_size = 100000
-        num_chunks = ceiling(nrow(df)/chunk_size)
-        chunks=split(df$timeindex, ceiling(seq_along(df$timeindex)/chunk_size))
-                
-        print(paste0("Parallel posfix | Chunks: ", num_chunks))
-
-        cl = parallel::makeCluster(4)
-        parallel::clusterEvalQ(cl, library(fasttime))
-                
-        print(paste0("Parallel posfix | Cluster ", cl, " of ", detectCores()))
-        flush.console()
-        
-        result <- parallel::clusterApply(cl, chunks, function(chunk) {
-            cat("Processing chunk\n")
-            flush.console()
-            #fasttime::fastPOSIXct(chunk, format = "%Y-%m-%d %H:%M:%S")
-            as.POSIXct(chunk)
-        })
-        stopCluster(cl)
-        print("Reactive tsdf | Make conversion -->")
-        t_end = Sys.time()
-        print(paste0("Reactive tsdf | Make conversion | Parallel part execution time: ", t_end - t_init, " seconds"))
-        flush.console()
-        return(unlist(result))
-    }
-
+    
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
-        {
-            
-            req(input$wlen > 0, input$stride > 0, input$dataset, input$encoder)
+        {    
+            req(input$encoder, ts_ar())
             ts_ar <- req(ts_ar())
             print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
             flush.console()
-            # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
-            # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
-            # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
-            
+                        
             t_init <- Sys.time()
             path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
             print(paste0("Reactive tsdf | Read feather ", path ))
@@ -732,7 +682,12 @@ shinyServer(function(input, output, session) {
                     cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
                     metric = clusters_config$metric_hdbscan
                 )$fit(prjs)
+                score = 0
+                unique_labels <- unique(clusters$labels_)
+                total_unique_labels <- length(unique_labels)
+                if(total_unique_labels > 1){
                 score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
+                }
                 print(paste0("Projections | Score ", score))
                 if (score <= 0) {
                     print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
@@ -743,7 +698,12 @@ shinyServer(function(input, output, session) {
                         cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
                         metric = clusters_config$metric_hdbscan
                     )$fit(prjs)
+                    score = 0
+                    unique_labels <- unique(clusters$labels_)
+                    total_unique_labels <- length(unique_labels)
+                    if(total_unique_labels > 1){
                     score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
+                    }
                     print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
                 }
                 prjs$cluster <- clusters$labels_
@@ -773,16 +733,19 @@ shinyServer(function(input, output, session) {
         colour_palette
     })
     
-    
+    color_palete_window_plot <- colorRampPalette(
+        colors = c("blue", "green"),
+        space = "Lab" # Option used when colors do not represent a quantitative scale
+    )
 
     start_date <- reactive({
-        isolate(tsdf()$timeindex[1])
+        isolate(tsdf())$timeindex[1]
     })
 
     end_date <- reactive({
         end_date_id = 100000
-        end_date_id = min(end_date_id, nrow(tsdf()))
-        isolate(tsdf()$timeindex[end_date_id])
+        end_date_id = min(end_date_id, nrow(isolate(tsdf())))
+        isolate(tsdf())$timeindex[end_date_id]
     })
 
     ts_plot_base <- reactive({
@@ -824,6 +787,7 @@ shinyServer(function(input, output, session) {
         bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
         bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
     })
+
     window_list <- reactive({
         print("--> window_list")
         on.exit(print("window_list -->"))
@@ -849,8 +813,8 @@ shinyServer(function(input, output, session) {
             reduced_window_list[[i]]<- c(
                 #unlist_window_indices[idx_window_limits[i]+1],
                 #unlist_window_indices[idx_window_limits[i+1]]
-                            as.Date(tsdf()$timeindex[unlist_window_indices[idx_window_limits[i]+1]]),
-                            as.Date(tsdf()$timeindex[unlist_window_indices[idx_window_limits[i+1]]])
+                            as.Date(isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]]),
+                            as.Date(isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]])
                                )
         }
         reduced_window_list
@@ -883,13 +847,13 @@ shinyServer(function(input, output, session) {
             view_size = end_indices-start_indices+1
             max_size = 10000
 
-            start_date = tsdf()$timeindex[start_indices]
-            end_date = tsdf()$timeindex[end_indices]
+            start_date = isolate(tsdf())$timeindex[start_indices]
+            end_date = isolate(tsdf())$timeindex[end_indices]
 
             print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
             
             if (view_size > max_size) {
-                end_date = tsdf()$timeindex[start_indices + max_size - 1]
+                end_date = isolate(tsdf())$timeindex[start_indices + max_size - 1]
                 #range_color = "#FF0000" # Red
             } 
             
@@ -900,8 +864,8 @@ shinyServer(function(input, output, session) {
             count = 0
             for(ts_idxs in reduced_window_list) {
                 count = count + 1
-                start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
-                end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
+                start_event_date = isolate(tsdf())$timeindex[head(ts_idxs, 1)]
+                end_event_date = isolate(tsdf())$timeindex[tail(ts_idxs, 1)]
                 ts_plt <- ts_plt %>% dyShading(
                     from = start_event_date,
                     to = end_event_date,
@@ -946,24 +910,33 @@ shinyServer(function(input, output, session) {
         ts_plt
     })
     
+    # Get projections plot name for saving
+    prjs_plot_name <- reactive({
+        dataset_name <- basename(input$dataset)
+        encoder_name <- basename(input$encoder)
+        get_prjs_plot_name(dataset_name, encoder_name, clustering_options$selected, prjs_$cluster, prj_plot_id, input)
+    })
+    
+    # Get timeserie plot name for saving
+    ts_plot_name <- reactive({
+        dataset_name <- basename(input$dataset)
+        encoder_name <- basename(input$encoder)
+        get_ts_plot_name(dataset_name, encoder_name, prj_plot_id, input)
+    })
 
     #############
     #  OUTPUTS  #
     #############
 
-    color_palete_window_plot <- colorRampPalette(
-        colors = c("blue", "green"),
-        space = "Lab" # Option used when colors do not represent a quantitative scale
-    )
-    output$windows_plot <- renderPlot({
+        output$windows_plot <- renderPlot({
         req(length(embedding_ids()) > 0)
         reduced_window_list = req(window_list())
 
         # Convertir a fechas POSIXct
         reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
             data.frame(
-                start = as.POSIXct(tsdf()$timeindex[x[1]], origin = "1970-01-01"),
-                end = as.POSIXct(tsdf()$timeindex[x[2]], origin = "1970-01-01")
+                start = as.POSIXct(isolate(tsdf())$timeindex[x[1]], origin = "1970-01-01"),
+                end = as.POSIXct(isolate(tsdf())$timeindex[x[2]], origin = "1970-01-01")
             )
         }))
 
@@ -971,12 +944,12 @@ shinyServer(function(input, output, session) {
         first_date = min(reduced_window_df$start)
         last_date = max(reduced_window_df$end)
     
-        left = as.POSIXct(tsdf()$timeindex[1],  origin = "1970-01-01")
-        right = as.POSIXct(tsdf()$timeindex[nrow(tsdf())], origin = "1970-01-01")
+        left = as.POSIXct(isolate(tsdf())$timeindex[1],  origin = "1970-01-01")
+        right = as.POSIXct(isolate(tsdf())$timeindex[nrow(isolate(tsdf()))], origin = "1970-01-01")
 
         # Configuración del gráfico base
         par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
-        plot(
+        plt <- plot(
             NA, 
             xlim = c(left, right), 
             ylim = c(0, 1), 
@@ -1020,54 +993,43 @@ shinyServer(function(input, output, session) {
 
             points(x = as.numeric(left),y = 0, col = "black", pch = 20, cex = 1)
             points(x = as.numeric(right),y = 0, col = "black", pch = 20, cex = 1)
+            #send_log("windows_plot_start")
+            plt
         }, 
         height=200
     )  
 
-output$windows_text <- renderUI({
-    req(length(embedding_ids()) > 0)
-    reduced_window_list = req(window_list())
+    output$windows_text <- renderUI({
+        req(length(embedding_ids()) > 0)
+        reduced_window_list = req(window_list())
 
-    # Crear un conjunto de etiquetas de texto con información de las ventanas
-    window_info <- lapply(1:length(reduced_window_list), function(i) {
-        window <- reduced_window_list[[i]]
-        start <- format(as.POSIXct(tsdf()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
-        end <- format(as.POSIXct(tsdf()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
-        color <- ifelse(i %% 2 == 0, "green", "blue")
-        HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+        # Crear un conjunto de etiquetas de texto con información de las ventanas
+        window_info <- lapply(1:length(reduced_window_list), function(i) {
+            window <- reduced_window_list[[i]]
+            start <- format(as.POSIXct(isolate(tsdf())$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+            end <- format(as.POSIXct(isolate(tsdf())$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+            color <- ifelse(i %% 2 == 0, "green", "blue")
+            HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+        })
+
+        # Devuelve todos los elementos de texto como una lista de HTML
+        do.call(tagList, window_info)
     })
-
-    # Devuelve todos los elementos de texto como una lista de HTML
-    do.call(tagList, window_info)
-})
     
     # Generate encoder info table
-    #output$enc_info = renderDataTable({
-    #  print("enc_info")
-      #map(~ .$value) %>%
-    #  encoder_artiffact <- req(enc_ar())
-    #  print(paste0("Encoder artiffact", encoder_artiffact))
-      #req(enc_ar())$metadata %>%
-    #  print("Encoder artiffact metadata")
-    #  print(encoder_artiffact$metadata)
-    #  encoder_artiffact$metadata %>%
-    #    enframe()
-    #})
     output$enc_info = renderDataTable({
         selected_encoder_name <- req(input$encoder)
+        on.exit({print("Encoder artiffact -->"); flush.console()})
         print(paste0("--> Encoder artiffact", selected_encoder_name))
         selected_encoder <- encs_l[[selected_encoder_name]]
         encoder_metadata <- req(selected_encoder$metadata)
         print(paste0("Encoder artiffact | encoder metadata ", selected_encoder_name))
-        encoder_metadata %>%
-        enframe()
-        on.exit({print("Encoder artiffact -->"); flush.console()})
-    })
+        encoder_metadata %>%enframe()
+            })
     
     # Generate time series info table
     output$ts_ar_info = renderDataTable({
-        ts_ar_config() %>% 
-            enframe()
+        ts_ar_config() %>% enframe()
     })
 
 
@@ -1139,8 +1101,7 @@ output$windows_text <- renderUI({
             ) %>% withSpinner()
         }
     )
-    
-    
+        
     # Render information about the selected point in the time series graph
     output$point <- renderText({
         req(input$ts_plot_dygraph_click$x_closest_point)
@@ -1149,7 +1110,6 @@ output$windows_text <- renderUI({
                '; Y = ', req(input$ts_plot_dygraph_click$y_closest_point),
                '; X (raw) = ', req(input$ts_plot_dygraph_click$x_closest_point))
     })
-
     
     # Render information about the selected point and brush in the projections graph
     output$projections_plot_interaction_info <- renderText({
@@ -1167,9 +1127,7 @@ output$windows_text <- renderUI({
             "brush: ", xy_range_str(input$projections_brush)
         )
     })
-    
-    
-    
+        
     # Generate time series plot
     output$ts_plot_dygraph <- renderDygraph(
         {
@@ -1189,26 +1147,6 @@ output$windows_text <- renderUI({
         }   
     )
 
-
-    ########### Saving graphs in local
-    get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster){
-        #print("Getting embedding plot name")
-        plt_name <- paste0(dataset_name,"_", encoder_name, "_", input$dr_method)
-        if (!is.null(selected) && selected == "precomputed_clusters") {
-            plt_name <- paste0(plt_name, "_cluster_", cluster, "_prjs.png")
-        } else {
-            plt_name <- paste0(plt_name, "_prjs.png")
-        }
-        print(paste0("embeddings plot name", plt_name))
-        plt_name
-    }
-
-    get_ts_plot_name <- function(dataset_name, encoder_name){
-        print("Getting timeserie plot name")
-        plt_name <- paste0(dataset_name,  "_", encoder_name, input$dr_method, "_ts.html")
-        print(paste0("ts plot name: ", plt_name))
-        plt_name
-    }
 
     prjs_plot_name <- reactive({
         dataset_name <- basename(input$dataset)

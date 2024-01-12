@@ -9,7 +9,7 @@
 ###########3 devtools::install_github("apache/arrow/r", ref = "tags/apache-arrow-14.0.0", subdir = "arrow/r")
 
 
-source("./server-helper-tsdf.R")
+source("./server-helper.R")
 
 shinyServer(function(input, output, session) {
     logMessages <- reactiveVal("")
@@ -119,7 +119,14 @@ shinyServer(function(input, output, session) {
         )
     )
 
+    #Current execution id
     execution_id = get_execution_id(id_file)
+
+    # Reactive value for forcing logs update
+    update_log_df_trigger <- reactiveVal(FALSE)
+
+    # Reactive value for indexing saved projections plot
+    prj_plot_id <- reactiveVal(0)
 
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
@@ -460,6 +467,32 @@ shinyServer(function(input, output, session) {
         log_header(log_header_) 
     })
 
+    # Brings Java Script rendering logs
+    observe({
+        req(input$renderTimes)
+        renderTimes <- fromJSON(input$renderTimes)
+        for (plot_id in names(renderTimes)) {
+            last_time = as.double(renderTimes[[plot_id]][length(renderTimes[[plot_id]])])
+            mssg <- paste(plot_id, last_time, sep=", ")
+            log_print(paste0("| JS PLOT RENDER | ", mssg), TRUE, log_path(), log_header())
+            temp_log <<- log_add(
+                log_mssg                = temp_log,
+                function_               = paste0("JS Plot Render ", plot_id),
+                cpu_flag                = isolate(input$cpu_flag),
+                dr_method               = isolate(input$dr_method),
+                clustering_options      = isolate(input$clustering_options),
+                zoom                    = isolate(input$zoom_btn),
+                time                    = last_time/1000,   
+                mssg                    = paste0(plot_id, " renderization time (secs)")
+            )
+        } 
+    })
+
+    # Observe to update logs df
+    observeEvent(input$update_logs, {
+        update_log_df_trigger = !update_log_df_trigger
+    })
+
     ###############
     #  REACTIVES  #
     ###############
@@ -768,7 +801,7 @@ shinyServer(function(input, output, session) {
                     cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
                     metric = clusters_config$metric_hdbscan
                 )$fit(prjs)
-score = 0
+                score = 0
                 unique_labels <- unique(clusters$labels_)
                 total_unique_labels <- length(unique_labels)
                 if(total_unique_labels > 1){
@@ -809,7 +842,7 @@ score = 0
              })
         
         on.exit({log_print("Projections -->", TRUE, log_path(), log_header(), debug_level, 'main'); flush.console()})
-#send_log("projections_end")
+        #send_log("projections_end")
       prjs
     })
     
@@ -831,7 +864,10 @@ score = 0
         colour_palette
     })
     
-    
+    color_palete_window_plot <- colorRampPalette(
+        colors = c("blue", "green"),
+        space = "Lab" # Option used when colors do not represent a quantitative scale
+    )
 
     start_date <- reactive({
         isolate(tsdf())$timeindex[1]
@@ -892,6 +928,7 @@ score = 0
         bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
         bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
     })
+
     window_list <- reactive({
         log_print("--> window_list")
         on.exit(log_print("window_list -->"))
@@ -1016,15 +1053,24 @@ score = 0
         ts_plt
     })
     
+    # Get projections plot name for saving
+    prjs_plot_name <- reactive({
+        dataset_name <- basename(input$dataset)
+        encoder_name <- basename(input$encoder)
+        get_prjs_plot_name(dataset_name, encoder_name, clustering_options$selected, prjs_$cluster, prj_plot_id, input)
+    })
+    
+    # Get timeserie plot name for saving
+    ts_plot_name <- reactive({
+        dataset_name <- basename(input$dataset)
+        encoder_name <- basename(input$encoder)
+        get_ts_plot_name(dataset_name, encoder_name, prj_plot_id, input)
+    })
 
     #############
     #  OUTPUTS  #
     #############
 
-    color_palete_window_plot <- colorRampPalette(
-        colors = c("blue", "green"),
-        space = "Lab" # Option used when colors do not represent a quantitative scale
-    )
     output$windows_plot <- renderPlot({
         req(length(embedding_ids()) > 0)
         reduced_window_list = req(window_list())
@@ -1090,41 +1136,30 @@ score = 0
 
             points(x = as.numeric(left),y = 0, col = "black", pch = 20, cex = 1)
             points(x = as.numeric(right),y = 0, col = "black", pch = 20, cex = 1)
-#send_log("windows_plot_start")
+            #send_log("windows_plot_start")
             plt
         }, 
         height=200
     )  
 
-output$windows_text <- renderUI({
-    req(length(embedding_ids()) > 0)
-    reduced_window_list = req(window_list())
+    output$windows_text <- renderUI({
+        req(length(embedding_ids()) > 0)
+        reduced_window_list = req(window_list())
 
-    # Crear un conjunto de etiquetas de texto con información de las ventanas
-    window_info <- lapply(1:length(reduced_window_list), function(i) {
-        window <- reduced_window_list[[i]]
-        start <- format(as.POSIXct(isolate(tsdf())$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
-        end <- format(as.POSIXct(isolate(tsdf())$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
-        color <- ifelse(i %% 2 == 0, "green", "blue")
-        HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+        # Crear un conjunto de etiquetas de texto con información de las ventanas
+        window_info <- lapply(1:length(reduced_window_list), function(i) {
+            window <- reduced_window_list[[i]]
+            start <- format(as.POSIXct(isolate(tsdf())$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+            end <- format(as.POSIXct(isolate(tsdf())$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+            color <- ifelse(i %% 2 == 0, "green", "blue")
+            HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+        })
+
+        # Devuelve todos los elementos de texto como una lista de HTML
+        do.call(tagList, window_info)
     })
-
-    # Devuelve todos los elementos de texto como una lista de HTML
-    do.call(tagList, window_info)
-})
     
     # Generate encoder info table
-    #output$enc_info = renderDataTable({
-    #  print("enc_info")
-      #map(~ .$value) %>%
-    #  encoder_artiffact <- req(enc_ar())
-    #  print(paste0("Encoder artiffact", encoder_artiffact))
-      #req(enc_ar())$metadata %>%
-    #  print("Encoder artiffact metadata")
-    #  print(encoder_artiffact$metadata)
-    #  encoder_artiffact$metadata %>%
-    #    enframe()
-    #})
     output$enc_info = renderDataTable({
         selected_encoder_name <- req(input$encoder)
         on.exit({log_print("Encoder artiffact -->"); flush.console()})
@@ -1146,7 +1181,9 @@ output$windows_text <- renderUI({
     # Generate projections plot
     output$projections_plot <- renderPlot({
         req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
+        
         log_print("--> Projections_plot")
+        
         t_pp_0 = Sys.time()
         prjs_ <- req(projections())
         log_print("projections_plot | Prepare column highlights")
@@ -1160,11 +1197,14 @@ output$windows_text <- renderUI({
         } else {
             prjs_$highlight = FALSE
         }
+
         # Prepare the column highlight to color data. If input$generate_cluster has not been clicked
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
         if(!("cluster" %in% names(prjs_)))
             prjs_$cluster = FALSE
+        
         log_print(paste0("projections_plot | GoGo Plot!", nrow(prjs_)))
+        
         plt <- ggplot(data = prjs_) + 
             aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
             scale_colour_manual(name = "clusters", values = req(update_palette())) +
@@ -1186,15 +1226,7 @@ output$windows_text <- renderUI({
             plt <- plt + theme(plot.background = element_rect(fill = "white"))
             ggsave(filename = prjs_plot_name(), plot = plt, path = "../data/plots/")
         })
-        #observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
-            #req(input$dataset, input$encoder)
-            #print("!-- CUDA?: ", torch$cuda$is_available())
-            #prjs_ <- req(projections())
-            #filename <- prjs_plot_name()
-            #print(paste("saving embedding plot to ",filename))
-            #ggsave(filename = filename, plot = plt, path="../data/plots/") 
-            #print("Embeding plot saved")
-        #})
+
         t_pp_1 = Sys.time()
         log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, log_path(), log_header())
         temp_log <<- log_add(
@@ -1207,7 +1239,6 @@ output$windows_text <- renderUI({
             time                    = t_pp_1-t_pp_0, 
             mssg                    = paste0("R execution time | Ts selected point", input$ts_plot_dygraph_click)
         )
-        #send_log("Projections plot_end")
         plt
     })
     
@@ -1223,8 +1254,7 @@ output$windows_text <- renderUI({
             ) %>% withSpinner()
         }
     )
-    
-    
+
     # Render information about the selected point in the time series graph
     output$point <- renderText({
         req(input$ts_plot_dygraph_click$x_closest_point)
@@ -1233,7 +1263,6 @@ output$windows_text <- renderUI({
                '; Y = ', req(input$ts_plot_dygraph_click$y_closest_point),
                '; X (raw) = ', req(input$ts_plot_dygraph_click$x_closest_point))
     })
-
     
     # Render information about the selected point and brush in the projections graph
     output$projections_plot_interaction_info <- renderText({
@@ -1252,8 +1281,6 @@ output$windows_text <- renderUI({
         )
     })
     
-    
-    
     # Generate time series plot
     output$ts_plot_dygraph <- renderDygraph(
         {
@@ -1271,7 +1298,7 @@ output$windows_text <- renderUI({
             #save_path <- file.path("..", "data", "plots", ts_plot_name())
             #htmlwidgets::saveWidget(ts_plot, file = save_path, selfcontained=TRUE)
             #log_print(paste0("Time series plot saved to", save_path))
-tspd_1 = Sys.time()
+            tspd_1 = Sys.time()
             log_print(paste0("ts_plot dygraph | Execution_time: ", tspd_1 - tspd_0), TRUE, log_path(), log_header())
             temp_log <<- log_add(
                 log_mssg                = temp_log, 
@@ -1289,109 +1316,13 @@ tspd_1 = Sys.time()
         }   
     )
 
-
-    ########### Saving graphs in local
-prj_plot_id <- reactiveVal(0)
-    set_plot_id <- function()({
-        prj_plot_id(prj_plot_id()+1)
-    })
-    get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster){
-        #log_print("Getting embedding plot name")
-        set_plot_id()
-        plt_name <- paste0(
-            execution_id, "_",
-            prj_plot_id(), "_",
-            dataset_name, "_", 
-            encoder_name, "_", 
-            input$cpu_flag, "_", 
-            input$dr_method, "_",  
-            input$clustering_options, "_", 
-            "zoom", "_", 
-            input$zoom_btn, "_", 
-            "point_alpha_",
-            input$point_alpha, "_",
-            "show_lines_",
-            input$show_lines, "_",
-            "prjs.png"
-        )
-        log_print(paste0("embeddings plot name", plt_name))
-        plt_name
-    }
-
-    get_ts_plot_name <- function(dataset_name, encoder_name){
-        log_print("Getting timeserie plot name")
-        plt_name <- paste0(dataset_name,  "_", encoder_name, input$dr_method, "_ts.html")
-        log_print(paste0("ts plot name: ", plt_name))
-        plt_name
-    }
-
-    prjs_plot_name <- reactive({
-        dataset_name <- basename(input$dataset)
-        encoder_name <- basename(input$encoder)
-        get_prjs_plot_name(dataset_name, encoder_name, clustering_options$selected, prjs_$cluster)
-    })
-    
-    ts_plot_name <- reactive({
-        dataset_name <- basename(input$dataset)
-        encoder_name <- basename(input$encoder)
-        get_ts_plot_name(dataset_name, encoder_name)
-    })
-    
-###################################
-    ########## JSCript Logs ###########
-    ###################################
+    # Text output for main & simple execution logs
     output$logsOutput <- renderText({
         logMessages()
     })
 
-    observe({
-        req(input$renderTimes)
-        renderTimes <- fromJSON(input$renderTimes)
-        for (plot_id in names(renderTimes)) {
-            last_time = as.double(renderTimes[[plot_id]][length(renderTimes[[plot_id]])])
-            mssg <- paste(plot_id, last_time, sep=", ")
-            log_print(paste0("| JS PLOT RENDER | ", mssg), TRUE, log_path(), log_header())
-            #temp_log <<- log_add(
-            #    log_mssg                = temp_log,
-            #    function_               = paste0("JS Plot Render ", plot_id),
-            #    cpu_flag                = isolate(input$cpu_flag),
-            #    dr_method               = isolate(input$dr_method),
-            #    clustering_options      = isolate(input$clustering_options),
-            #    zoom                    = isolate(input$zoom_btn),
-            #    time                    = last_time,
-            #    mssg                    = paste0(plot_id, "renderization time (milisecs)")
-            #)
-            temp_log <<- log_add(
-                log_mssg                = temp_log,
-                function_               = paste0("JS Plot Render ", plot_id),
-                cpu_flag                = isolate(input$cpu_flag),
-                dr_method               = isolate(input$dr_method),
-                clustering_options      = isolate(input$clustering_options),
-                zoom                    = isolate(input$zoom_btn),
-                time                    = last_time/1000,   
-                mssg                    = paste0(plot_id, " renderization time (secs)")
-            )
-        } 
-    })
-    
-    update_trigger <- reactiveVal(FALSE)
-    observeEvent(input$update_logs, {
-        update_trigger = !update_trigger
-    })
-
-    timestamp_min_max <- reactive({
-        data <- log_df()  # Obtén tus datos aquí
-        if (nrow(data) == 0){
-            min_max = c("Loading...","Loading...")
-        } else {
-            min_max <- range(data$timestamp, na.rm = TRUE)
-            if (min_max[1] == min_max[2]) {min_max[2] = min_max[1]+10}
-        }
-        return(min_max)
-    })
-
     output$log_output <- renderDataTable({
-        trigger <- update_trigger()
+        trigger <- update_log_df_trigger()
         logs = log_df()
         if (nrow(logs) == 0) {
             return(dataTableOutput("No available log."))
@@ -1416,51 +1347,5 @@ prj_plot_id <- reactiveVal(0)
         }
     )
 
-    #output$res <- renderPrint(str(input$timestamp_range))
-#
-    #observe({
-    #    min_max = req(timestamp_min_max())  # Asegúrate de que esto se ejecuta cuando log_df() cambie
-    #    current_values = input$timestamp_range
-    #    if (identical(current_values, c("Loading...","Loading..."))) {
-    #        current_values = min_max
-    #    } 
-    #    if (
-    #        !identical(current_values, c("Loading...","Loading..."))
-    #    ) {
-    #        min_val = as.numeric(as.POSIXct(min_max[1]))
-    #        max_val = as.numeric(as.POSIXct(min_max[2]))
-    #        browser()
-    #        current_values[1] = as.numeric(as.POSIXct(current_values[1]))#, format = "%Y-%m-%d %H:%M:%OS3", tz="UTC"))
-    #        current_values[2] = as.numeric(as.POSIXct(current_values[2]))#, format = "%Y-%m-%d %H:%M:%OS3", tz="UTC"))
-    #        sequence = seq(min_val, max_val, length.out = 5)
-    #        sequence = unique(as.numeric(c(sequence, current_values)))
-    #        browser()
-    #        labels_ = setNames(
-    #            lapply(
-    #                sequence, 
-    #                function(time) {
-    #                    format(
-    #                        as.POSIXct(time, origin = "1970-01-01", tx="UTC"), 
-    #                        "%Y-%m-%d %H:%M:%S.%OS3" 
-    #                    )
-    #            }),
-    #            sequence
-    #        )
-    #        current_values[1] = format(as.POSIXct(as.numeric(current_values[1]), origin = "1970-01-01", tx="UTC"), "%Y-%m-%d %H:%M:%S.%OS3")
-    #        current_values[2] = format(as.POSIXct(as.numeric(current_values[2]), origin = "1970-01-01", tx="UTC"), "%Y-%m-%d %H:%M:%S.%OS3")
-    #        print("--> Update Slider Text Input")
-    #        shinyWidgets::updateSliderTextInput(
-    #            session,
-    #            inputId = "timestamp_range", 
-    #            label   = "- Select initial and final timestamps",
-    #            choices = labels_, #setNames(as.character(seq(min_val, max_val, length.out=5)), labels),
-    #            selected = current_values
-    #        )
-    #        print("Update Slider Text Input -->")
-    #    }
-    #    browser()
-    ##}, ignoreInit = FALSE)
-    #})
-    #
 })
 

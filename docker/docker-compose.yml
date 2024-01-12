@@ -60,9 +60,7 @@ services:
           - GROUPID=${GROUP_ID} #*
           - PASSWORD=${RSTUDIO_PASSWD} #*
           - ROOT=FALSE
-          - CUDA_VISIBLE_DEVICES=0,1,2
-          #- CUDA_VISIBLE_DEVICES=1
-            #          - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+          - CUDA_VISIBLE_DEVICES=1
           - GH_TOKEN=${GH_TOKEN} #*
           # TODO (28/03/2023): I don't know why it is not working without this
           - ENV_VARS=WANDB_ENTITY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES

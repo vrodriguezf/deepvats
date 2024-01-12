@@ -10,12 +10,9 @@
 shinyServer(function(input, output, session) {
 logMessages <- reactiveVal("")
     send_log <- function(message) {
-        print("--> Log message")
         new_log = paste0(logMessages(), Sys.time(), " - ", message, "\n")
         logMessages(new_log)
-        #print(new_log)
         invalidateLater(10, session)
-        print(paste0("Log Message |  ", message, "-->"))
     }
 
 
@@ -107,19 +104,9 @@ logMessages <- reactiveVal("")
         )
     }, label = "input_encoder")
     
-    # observeEvent(input$encoder, {
-    #   freezeReactiveValue(input, "embs_ar")
-    #   updateSelectizeInput(session = session, inputId = "embs_ar",
-    #                        choices = embs_l %>%
-    #                          keep(~ .$metadata$enc_artifact == input$encoder)
-    #                        %>% names)
-    # })
-    
     observeEvent(
         input$encoder, 
         {
-            #req(input$dataset, encs_l)
-            #enc_ar = req(enc_ar())
             log_print("--> observeEvent input_encoder | update wlen")
             freezeReactiveValue(input, "wlen")
             log_print("observeEvent input_encoder | update wlen | Before enc_ar")
@@ -140,7 +127,7 @@ logMessages <- reactiveVal("")
                 max = wmax,
                 value = wlen
             )
-updateSliderInput(
+            updateSliderInput(
                 session = session, inputId = "stride", 
                 min = 1, max = input$wlen, 
                 value = enc_ar_stride()
@@ -347,48 +334,59 @@ send_log("Update prj graph_end")
     X <- reactiveVal()
     
     observe({
-#send_log("X_start")
-        #req(input$wlen != 0, input$stride != 0, tsdf())
+        isolate({log_print(mssg = paste0("... Waiting ...| X |  wlen, stride |", input$wlen, input$stride ), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main') %>% throttle(100000)})
         req(input$wlen != 0, input$stride != 0, input$stride != 1)
-        log_print("--> Reactive X | Update Sliding Window")
-        log_print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
-        log_print("reactive X | SWV")
-        t_x_0 <- Sys.time()
-                enc_input = dvats$exec_with_feather_k_output(
-            function_name = "prepare_forecasting_data",
-            module_name   = "tsai.data.preparation",
-            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
-            k_output = as.integer(0),
-            print_flag = TRUE,
-            time_flag = TRUE,
-            #tsdf(), #%>%select(-"timeindex"),
-            fcst_history = input$wlen
-        )
+        isolate({log_print(paste0("Check reactiveness | X |  wlen, stride |", input$wlen, input$stride, TRUE, log_path(), log_header(), debug_level, 'main' )) %>% throttle(100000)})
+        if (
+            is.null(X()) ||
+            !identical(
+                input$dataset, isolate(input$dataset)) || 
+                !identical(input$encoder, isolate(input$encoder)) || 
+                input$wlen != isolate(input$wlen) || 
+                input$stride != isolate(input$stride)
+        ) {
+            send_log("--> ReactiveVal X")
+            log_print("--> Reactive X | Update Sliding Window")
+            log_print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
+            log_print("reactive X | SWV")
+            t_x_0 <- Sys.time()
+            enc_input = dvats$exec_with_feather_k_output(
+                function_name = "prepare_forecasting_data",
+                module_name   = "tsai.data.preparation",
+                path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
+                k_output = as.integer(0),
+                print_flag = TRUE,
+                time_flag = TRUE,
+                #tsdf(), #%>%select(-"timeindex"),
+                fcst_history = input$wlen
+            )
 
-        t_x_1 <- Sys.time() 
-        t_sliding_window_view = t_x_1 - t_x_0
-        log_print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "), TRUE, log_path(), log_header())
-        temp_log <<- log_add(
-            log_mssg            = isolate(temp_log), 
-            function_           = "Reactive X | SWV",
-            cpu_flag            = isolate(input$cpu_flag),
-            dr_method           = isolate(input$dr_method),
-            clustering_options  = isolate(input$clustering_options),
-            zoom                = isolate(input$zoom_btn),
-            time                = t_sliding_window_view,
-            mssg                = "Compute Sliding Window View"
-        )
-        on.exit({
+            t_x_1 <- Sys.time() 
+            t_sliding_window_view = t_x_1 - t_x_0
+            log_print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "), TRUE, log_path(), log_header())
+            temp_log <<- log_add(
+                log_mssg            = isolate(temp_log), 
+                function_           = "Reactive X | SWV",
+                cpu_flag            = isolate(input$cpu_flag),
+                dr_method           = isolate(input$dr_method),
+                clustering_options  = isolate(input$clustering_options),
+                zoom                = isolate(input$zoom_btn),
+                time                = t_sliding_window_view,
+                mssg                = "Compute Sliding Window View"
+            )
+            
             log_print(paste0(
                 "reactive X | Update sliding window | Apply stride ", 
                 input$stride,
                 " | enc_input ~ ", 
                 dim(enc_input), 
                 "-->"
-            )); flush.console()
-        })
-        #send_log("X_end")
-        X(enc_input)
+            ), TRUE, log_path(), log_header(), debug_level, 'main'); flush.console()
+            #send_log("X_end")
+            log_print("| Update | X", TRUE, log_path(), log_header(), debug_level, 'main' )
+            on.exit({log_print("| Outside| X", TRUE, log_path(), log_header(), debug_level, 'generic')})
+            X(enc_input)
+        }
     })
     
     # Time series artifact
@@ -556,8 +554,9 @@ send_log("Update prj graph_end")
     
     
     embs <- reactive({
+        isolate({log_print(paste0("| ... Waiting ...| Embs |  X, enc | ", X(), enc()) ) %>% throttle(10000)})
         req(X(), enc_l <- enc())
-        log_print("--> reactive embs | get embeddings")
+        log_print(paste0("--> reactive embs | get embeddings | ", X(), enc()))
         if (torch$cuda$is_available()){
             log_print(paste0("CUDA devices: ", torch$cuda$device_count()))
           } else {
@@ -589,7 +588,7 @@ send_log("Update prj graph_end")
         log_print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
    
     cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
-log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
+    log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
     result = dvats$get_enc_embs_set_stride_set_batch_size(
         X = X(),
         print_flag = TRUE,
@@ -602,7 +601,7 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
         chunk_size = chunk_size,
         check_memory_usage = TRUE
     )
-log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
+    log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
         
         #result <- system(python_string)
         t_embs_1 <- Sys.time()
@@ -623,7 +622,6 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
         X <- NULL
         gc(verbose=TRUE)
         on.exit({log_print("reactive embs | get embeddings -->"); flush.console()})
-#send_log("embs_end")
         result
     })
 #enc = py_load_object(
@@ -731,9 +729,20 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
     })
 
     prj_object <- reactive({
+        print("Gola")
+        isolate({
+            log_print(
+                mssg = paste0("| ... Waiting ...| prj_object |  embs, dr_method ", input$dr_method), 
+                file_flag = TRUE, 
+                file_path = log_path(), 
+                log_header = log_header(), 
+                debug_level = debug_level, 
+                debug_group = 'main' 
+            ) # %>% throttle(10000)
+        })
         req(embs(), input$dr_method)
-        log_print("--> prj_object")
-t_prj_0 = Sys.time()
+        log_print("--> prj_object", TRUE, log_path(), log_header(), debug_level, 'main')
+        t_prj_0 = Sys.time()
         embs = req(embs())
         log_print("prj_object | Before complete cases ")
         embs = embs[complete.cases(embs),]
@@ -776,7 +785,7 @@ t_prj_0 = Sys.time()
             input$cpu_flag, " | ", input$dr_method, 
             " | Execution time: ", t_prj_1-t_prj_0 , 
             " seconds -->"
-            ), TRUE, log_path(), log_header()
+            ), , TRUE, log_path(), log_header(), debug_level, 'main'
         ); temp_log <<- log_add(
             log_mssg            = temp_log,
             function_           = "PRJ Object",
@@ -884,15 +893,15 @@ on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " secon
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-        #send_log("projections_start")
-        log_print("--> Projections")
+        isolate({log_print(paste0("| ... Waiting ...| Projections |  prj_object, dr_method ", input$dr_method), TRUE, log_path(), log_header(), debug_level, 'main' ) %>% throttle(10000)})
         req(prj_object(), input$dr_method)
+        log_print("--> Projections", TRUE, log_path(), log_header(), debug_level, 'main')
         #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
         log_print("Projections | before prjs")
         prjs <- prj_object()
         req(input$dataset, input$encoder, input$wlen, input$stride)
         log_print("Projections | before switch")
-log_print("Calculate clusters | before")
+        log_print("Calculate clusters | before")
         tcl_0 = Sys.time()
         switch(clustering_options$selected,
             precomputed_clusters = {
@@ -916,7 +925,7 @@ score = 0
                 }
                 log_print(paste0("Projections | Score ", score))
                 if (score <= 0) {
-                    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score), TRUE, log_path(), log_header(), debug_level, 'generic')
                     prjs <- prj_object_cpu()
                     clusters = hdbscan$HDBSCAN(
                         min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
@@ -924,17 +933,17 @@ score = 0
                         cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
                         metric = clusters_config$metric_hdbscan
                     )$fit(prjs)
-score = 0
+                    score = 0
                     unique_labels <- unique(clusters$labels_)
                     total_unique_labels <- length(unique_labels)
                     if(total_unique_labels > 1){
                     score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
                     }
-                    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score), TRUE, log_path(), log_header(), debug_level, 'generic')
                 }
                 prjs$cluster <- clusters$labels_
-tcl_1 = Sys.time()
-                log_print(paste0("Compute clusters | Execution time ", tcl_1 - tcl_0), TRUE, log_path(), log_header())
+                tcl_1 = Sys.time()
+                log_print(paste0("Compute clusters | Execution time ", tcl_1 - tcl_0), TRUE, log_path(), log_header(), debug_level, 'main')
                 temp_log <<- log_add(
                     log_mssg                = temp_log, 
                     function_               = "Projections | Hdbscan",
@@ -948,7 +957,7 @@ tcl_1 = Sys.time()
                 prjs$cluster
              })
         
-        on.exit({log_print("Projections -->"); flush.console()})
+        on.exit({log_print("Projections -->", TRUE, log_path(), log_header(), debug_level, 'main'); flush.console()})
 #send_log("projections_end")
       prjs
     })
@@ -1287,12 +1296,12 @@ output$windows_text <- renderUI({
     output$projections_plot <- renderPlot({
         req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
         log_print("--> Projections_plot")
-t_pp_0 = Sys.time()
+        t_pp_0 = Sys.time()
         prjs_ <- req(projections())
         log_print("projections_plot | Prepare column highlights")
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
-log_print("Selected ts time points" , TRUE, log_path(), log_header())
+            log_print("Selected ts time points" , TRUE, log_path(), log_header())
             selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
             projections_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
             prjs_$highlight = projections_idxs

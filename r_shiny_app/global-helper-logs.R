@@ -13,7 +13,8 @@ debug_level = 0 # Logged Group >= DEBUG_LEVEL
 debug_groups = list (
   'generic' = 0,
   'buttons' = 1,
-  'plots'   = 2
+  'plots'   = 2,
+  'main'    = 3 #Always the last/biggest one.
 )
 
 #############
@@ -29,6 +30,8 @@ log_print <- function(
   debug_group = 'generic'
 ) {
   debug_group_id = debug_groups[[debug_group]]
+  print(paste0("debug[", debug_group_id, "] = ", debug_group))
+  print(paste0("debug_level: ", debug_level))
   if (debug_group_id >= debug_level){
     time <- format(Sys.time(), "%H:%M:%OS3")
     formated_mssg = paste0(time, "::::", log_header, "::::", mssg, "\n")

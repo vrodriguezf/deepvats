@@ -136,7 +136,7 @@ shinyServer(function(input, output, session) {
     # Obtener el valor de stride
     enc_ar_stride = reactive({
         print("--> reactive enc_ar_stride")
-        stride <- enc_ar()$metadata$stride
+        stride = ceiling(enc_ar()$metadata$mvp_ws[2]/2)  #<- enc_ar()$metadata$stride
         on.exit({print(paste0("reactive_enc_ar_stride | --> ", stride)); flush.console()})
         stride
     })

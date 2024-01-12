@@ -60,8 +60,63 @@ logMessages <- reactiveVal("")
     # Reactive value created to store time series selected variables
     ts_variables <- reactiveValues(selected = NULL)
     
+    # Reactive value created to store the encoder_input
+    X <- reactiveVal()
+
+    # Reactive value created to store encoder artifact stride
+    enc_ar_stride <- eventReactive(enc_ar(), {
+        stride = ceiling(enc_ar()$metadata$stride/2)
+    })
+
+    # Time series artifact
+    ts_ar <- eventReactive(
+        input$dataset, 
+        {
+        req(input$dataset)
+        log_print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset, "-->"))
+        ar <- api$artifact(input$dataset, type='dataset')
+        on.exit({log_print("eventReactive ts_ar -->"); flush.console()})
+        ar
+    }, label = "ts_ar")
+
+    # Log file path
+    log_path <- reactiveVal() 
+    # Log header (stores main information for following the interactions)
+    log_header <- reactiveVal()
     
-    
+    #Temporal log variable for updates
+    temp_log <- data.frame(
+        timestamp           = character(),
+        function_           = character(),
+        cpu_flag            = character(),
+        dr_method           = character(),
+        clustering_options  = character(),
+        zoom                = logical(),
+        time                = numeric(),
+        mssg                = character()
+    )
+
+    # Log dataframe variable
+    log_df <- reactiveVal(
+        data.frame( 
+            timestamp           = character(),
+            dataset             = character(),
+            encoder             = character(),
+            execution_id        = numeric(),
+            function_           = character(),
+            cpu_flag            = character(),
+            dr_method           = character(),
+            clustering_options  = character(),
+            zoom                = logical(),
+            point_alpha         = numeric(),
+            show_lines          = logical(),
+            mssg                = character(),
+            time                = numeric()
+        )
+    )
+
+    execution_id = get_execution_id(id_file)
+
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
@@ -145,14 +200,6 @@ logMessages <- reactiveVal("")
             })
         }
     )
-
-    # Obtener el valor de stride
-    enc_ar_stride = reactive({
-        log_print("--> reactive enc_ar_stride")
-        stride <- enc_ar()$metadata$stride
-        on.exit({log_print(paste0("reactive_enc_ar_stride | --> ", stride)); flush.console()})
-        stride
-    })
         
     observeEvent(input$wlen, {
         req(input$wlen)
@@ -161,7 +208,7 @@ logMessages <- reactiveVal("")
             old_value = input$stride
             if (input$stride == 0 | input$stride == 1){
                 old_value = enc_ar_stride()
-print(paste0("enc_ar_stride: ", old_value))
+                print(paste0("enc_ar_stride: ", old_value))
             }
             freezeReactiveValue(input, "stride")
             log_print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value))
@@ -271,13 +318,13 @@ print(paste0("enc_ar_stride: ", old_value))
             ranges$x <- NULL
             ranges$y <- NULL
         }
-send_log("Zoom btn_end")
+        send_log("Zoom btn_end")
     })
     
     
     # Observe the events related to change the appearance of the projections graph
     observeEvent(input$update_prj_graph,{
-send_log("Update prj graph_start")
+        send_log("Update prj graph_start")
         log_print("Update prj graph", TRUE, log_path(), log_header())
         
         style_values <- list(path_line_size = input$path_line_size ,
@@ -296,7 +343,7 @@ send_log("Update prj graph_start")
             config_style$point_alpha <- NULL
             config_style$point_size <- NULL
         }
-send_log("Update prj graph_end")
+        send_log("Update prj graph_end")
     })
     
     
@@ -307,7 +354,7 @@ send_log("Update prj graph_end")
     
     
     # Observe to check/uncheck all variables
-    observeEvent(input$selectall,{
+    observeEvent(input$selectall, {
         send_log("Select all variables_start")
         req(tsdf)
         ts_variables$selected <- names(isolate(tsdf()))
@@ -326,14 +373,8 @@ send_log("Update prj graph_end")
     })
     
     
-    
-    ###############
-    #  REACTIVES  #
-    ###############
-
-    X <- reactiveVal()
-    
-    observe({
+    # Observe to update encoder input (enc_input = X())
+    observe({ #Event(input$dataset, input$encoder, input$wlen, input$stride, {
         log_print(mssg = paste0("... Waiting ...| X |  wlen, stride |", input$wlen, input$stride ), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main') %>% throttle(10)
         req(input$wlen != 0, input$stride != 0, input$stride != 1)
         log_print(paste0("Check reactiveness | X |  wlen, stride |", input$wlen, input$stride, TRUE, log_path(), log_header(), debug_level, 'main' )) %>% throttle(10)
@@ -383,52 +424,8 @@ send_log("Update prj graph_end")
         }
         X()
     })
-    
-    # Time series artifact
-    ts_ar <- eventReactive(
-        input$dataset, 
-        {
-        req(input$dataset)
-        log_print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset, "-->"))
-        ar <- api$artifact(input$dataset, type='dataset')
-        on.exit({log_print("eventReactive ts_ar -->"); flush.console()})
-        ar
-    }, label = "ts_ar")
 
-    log_path <- reactiveVal() 
-    log_header <- reactiveVal()
-    
-    
-    temp_log <- data.frame(
-        timestamp           = character(),
-        function_           = character(),
-        cpu_flag            = character(),
-        dr_method           = character(),
-        clustering_options  = character(),
-        zoom                = logical(),
-        time                = numeric(),
-        mssg                = character()
-    )
-
-
-    log_df <- reactiveVal(
-        data.frame( 
-            timestamp           = character(),
-            dataset             = character(),
-            encoder             = character(),
-            execution_id        = numeric(),
-            function_           = character(),
-            cpu_flag            = character(),
-            dr_method           = character(),
-            clustering_options  = character(),
-            zoom                = logical(),
-            point_alpha         = numeric(),
-            show_lines          = logical(),
-            mssg                = character(),
-            time                = numeric()
-        )
-    )
-
+    # Observe for updating log dataframe shown in the logs tab
     observe({
         if (nrow(temp_log) > 0) {
             new_record <- cbind(
@@ -445,25 +442,20 @@ send_log("Update prj graph_end")
         invalidateLater(10000)
     })
 
-    
-    
-
-    execution_id = get_execution_id(id_file)
-
+    # Observe for defining log path
     observe({
-        #toguether_log_path = header
         toguether_log_path = paste0(header, "-", execution_id)
-        if (toguether){
+        if (toguether){#Save all logs toguether
             log_path(toguether_log_path)
             print(paste0("Log path: ", toguether_log_path))   
-        } else {
-            new_log_path <- paste0(toguether_log_path, "-", ts_ar()$name, ".log")  # Construye el nuevo log_path
+        } else {#One log per dataset artifact
+            new_log_path <- paste0(toguether_log_path, "-", ts_ar()$name, ".log") 
             log_path(new_log_path)
             print(paste0("Log path: ", new_log_path))   
         }
     })
 
-    
+    # Observe for defining the log header
     observe({
         log_header_ = paste0(
             ts_ar()$name, " | ", 
@@ -471,9 +463,13 @@ send_log("Update prj graph_end")
             input$cpu_flag, " | ", 
             input$dr_method, " | ", input$clustering_options, " | ", input$zoom_btn)
         print(paste0("Log header: ", log_header_))
-        log_header(log_header_)  # Actualiza log_path
+        log_header(log_header_) 
     })
-    
+
+    ###############
+    #  REACTIVES  #
+    ###############
+
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
         log_print("--> reactive ts_ar_config | List used artifacts")
@@ -491,24 +487,8 @@ send_log("Update prj graph_end")
         on.exit({print("reactive ts_ar_config -->"); flush.console()})
     })
     
-    # selected_embs_ar = eventReactive(input$embs_ar, {
-    #   embs_l[[input$embs_ar]]
-    # })
-    
-    # embeddings object. Get it from local if it is there, otherwise download
-    # embs = reactive({
-    #   selected_embs_ar = req(selected_embs_ar())
-    #   log_print("embs")
-    #   fname = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, 
-    #                     selected_embs_ar$metadata$ref$hash)
-    #   if (file.exists(fname))
-    #     py_load_object(filename = fname)
-    #   else
-    #     selected_embs_ar$to_obj()
-    # })
-    
     # Get encoder artifact
-    enc_ar <- eventReactive(
+    enc_ar <- eventReactive (
         input$encoder, 
         {
             log_print(paste0("eventReactive enc_ar | Enc. Artifact: ", input$encoder))

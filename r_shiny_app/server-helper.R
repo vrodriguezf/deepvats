@@ -4,11 +4,11 @@ parallel_posfix <- function(df) {
     num_chunks = ceiling(nrow(df)/chunk_size)
     chunks=split(df$timeindex, ceiling(seq_along(df$timeindex)/chunk_size))
             
-    log_print(paste0("Parallel posfix | Chunks: ", num_chunks))
+    print(paste0("Parallel posfix | Chunks: ", num_chunks))
     cl = parallel::makeCluster(4)
     parallel::clusterEvalQ(cl, library(fasttime))
             
-    log_print(paste0("Parallel posfix | Cluster ", cl, " of ", detectCores()))
+    print(paste0("Parallel posfix | Cluster ", cl, " of ", detectCores()))
     flush.console()
     
     result <- parallel::clusterApply(cl, chunks, function(chunk) {
@@ -18,8 +18,8 @@ parallel_posfix <- function(df) {
         as.POSIXct(chunk)
     })
     stopCluster(cl)
-    log_print(" Reactive tsdf | Make conversion -->")
-    log_print(" Reactive tsdf | Make conversion ")
+    print(" Reactive tsdf | Make conversion -->")
+    print(" Reactive tsdf | Make conversion ")
     flush.console()
     return(unlist(result))
 }
@@ -31,7 +31,6 @@ set_plot_id <- function(prj_plot_id)({
 
 # Get projection plot name
 get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster, prj_plot_id, input){
-    #log_print("Getting embedding plot name")
     set_plot_id()
     plt_name <- paste0(
         execution_id, "_",
@@ -49,13 +48,13 @@ get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster, pr
         input$show_lines, "_",
         "prjs.png"
     )
-    log_print(paste0("embeddings plot name", plt_name))
+    print(paste0("embeddings plot name", plt_name))
     plt_name
 }
 
 get_ts_plot_name <- function(dataset_name, encoder_name, prj_plot_id, input){
-    log_print("Getting timeserie plot name")
+    print("Getting timeserie plot name")
     plt_name <- paste0(dataset_name,  "_", encoder_name, input$dr_method, "_ts.html")
-    log_print(paste0("ts plot name: ", plt_name))
+    print(paste0("ts plot name: ", plt_name))
     plt_name
 }

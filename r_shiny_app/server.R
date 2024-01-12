@@ -9,7 +9,7 @@
 ###########3 devtools::install_github("apache/arrow/r", ref = "tags/apache-arrow-14.0.0", subdir = "arrow/r")
 
 
-source("./server-helper .R")
+source("./server-helper.R")
 
 shinyServer(function(input, output, session) {
     options(shiny.verbose = TRUE)
@@ -74,14 +74,6 @@ shinyServer(function(input, output, session) {
         ar
     }, label = "ts_ar")
 
-
-
-
-    #Current execution id
-    execution_id = get_execution_id(id_file)
-
-    # Reactive value for forcing logs update
-    update_log_df_trigger <- reactiveVal(FALSE)
 
     # Reactive value for indexing saved projections plot
     prj_plot_id <- reactiveVal(0)
@@ -334,7 +326,6 @@ shinyServer(function(input, output, session) {
                 input$wlen != isolate(input$wlen) || 
                 input$stride != isolate(input$stride)
         ) {
-            send_log("--> ReactiveVal X")
             print("--> ReactiveVal X | Update Sliding Window")
             print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
             print("reactive X | SWV")
@@ -353,83 +344,16 @@ shinyServer(function(input, output, session) {
 
             t_x_1 <- Sys.time()
             t_sliding_window_view = t_x_1 - t_x_0
-            print(mssg = paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
+            print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
             
             print(paste0("reactive X | Update sliding window | Apply stride ", input$stride," | enc_input ~ ", dim(enc_input), "-->"))
             print("| Update | X" )
-            on.exit({print(mssg = "| Outside| X"); flush.console()})
+            on.exit({print("| Outside| X"); flush.console()})
             X(enc_input)
         }
         X()
     })
-
-    # Observe for updating log dataframe shown in the logs tab
-    observe({
-        if (nrow(temp_log) > 0) {
-            new_record <- cbind(
-                execution_id = execution_id, 
-                dataset = isolate(ts_ar()$name),
-                encoder = ifelse(is.null(isolate(input$encoder)), " ", input$encoder),
-                show_lines = isolate(input$show_lines),
-                point_alpha = isolate(input$point_alpha),
-                temp_log
-            )
-            log_df(rbind(new_record, log_df()))
-            temp_log <<- data.frame(timestamp = character(), function_ = character(), cpu_flag = character(), dr_method = character(), clustering_options = character(), zoom = logical(), time = numeric(), mssg = character(), stringsAsFactors = FALSE)
-        }
-        invalidateLater(10000)
-    })
-
-    # Observe for defining log path
-    observe({
-        toguether_log_path = paste0(header, "-", execution_id)
-        if (toguether){#Save all logs toguether
-            log_path(toguether_log_path)
-            print(paste0("Log path: ", toguether_log_path))   
-        } else {#One log per dataset artifact
-            new_log_path <- paste0(toguether_log_path, "-", ts_ar()$name, ".log") 
-            log_path(new_log_path)
-            print(paste0("Log path: ", new_log_path))   
-        }
-    })
-
-    # Observe for defining the log header
-    observe({
-        log_header_ = paste0(
-            ts_ar()$name, " | ", 
-            execution_id ," | ", 
-            input$cpu_flag, " | ", 
-            input$dr_method, " | ", input$clustering_options, " | ", input$zoom_btn)
-        print(paste0("Log header: ", log_header_))
-        log_header(log_header_) 
-    })
-
-    # Brings Java Script rendering logs
-    observe({
-        req(input$renderTimes)
-        renderTimes <- fromJSON(input$renderTimes)
-        for (plot_id in names(renderTimes)) {
-            last_time = as.double(renderTimes[[plot_id]][length(renderTimes[[plot_id]])])
-            mssg <- paste(plot_id, last_time, sep=", ")
-            print(paste0("| JS PLOT RENDER | ", mssg))
-            temp_log <<- log_add(
-                log_mssg                = temp_log,
-                function_               = paste0("JS Plot Render ", plot_id),
-                cpu_flag                = isolate(input$cpu_flag),
-                dr_method               = isolate(input$dr_method),
-                clustering_options      = isolate(input$clustering_options),
-                zoom                    = isolate(input$zoom_btn),
-                time                    = last_time/1000,   
-                mssg                    = paste0(plot_id, " renderization time (secs)")
-            )
-        } 
-    })
-
-    # Observe to update logs df
-    observeEvent(input$update_logs, {
-        update_log_df_trigger = !update_log_df_trigger
-    })
-    
+        
     ###############
     #  REACTIVES  #
     ###############
@@ -518,25 +442,25 @@ shinyServer(function(input, output, session) {
         chunk_size = 10000000 #N*32
         #print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size, " | shape[1]*shape[2]: ", shape[1]*shape[2] ))
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
-#        python_string = paste0("
-#import dvats.all   
-    cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
-    result = dvats$get_enc_embs_set_stride_set_batch_size(
-        X = X(),
-        print_flag = TRUE,
-        enc_learn = enc_l,
-        stride =  input$stride,  
-        batch_size = bs, 
-        cpu = cpu_flag, 
-        print_flag = FALSE, 
-        time_flag = TRUE, 
-        chunk_size = chunk_size,
-        check_memory_usage = TRUE
-    )
+        #        python_string = paste0("
+        #import dvats.all   
+        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+        result = dvats$get_enc_embs_set_stride_set_batch_size(
+            X = X(),
+            print_flag = TRUE,
+            enc_learn = enc_l,
+            stride =  input$stride,  
+            batch_size = bs, 
+            cpu = cpu_flag, 
+            print_flag = FALSE, 
+            time_flag = TRUE, 
+            chunk_size = chunk_size,
+            check_memory_usage = TRUE
+        )
        
         #result <- system(python_string)
-        t_end <- Sys.time()
-        diff <- t_end - t_init
+        t_embs_1 <- Sys.time()
+        diff <- t_embs_1 - t_embs_0
         diff_secs <- as.numeric(diff, units = "secs")
         diff_mins <- as.numeric(diff, units = "mins")
         print(paste0("get_enc_embs total time: ", diff_secs, " secs thus ", diff_mins, " mins"))
@@ -624,7 +548,7 @@ shinyServer(function(input, output, session) {
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
       colnames(res) = c("xcoord", "ycoord")
       t_prj_1 = Sys.time()
-      on.exit({print(paste0(" prj_object | ", t_prj_1-t_prj_0, " seconds -->"); flush.console()})
+      on.exit({print(paste0(" prj_object | ", t_prj_1-t_prj_0, " seconds -->")); flush.console()})
       flush.console()
       res
     })
@@ -993,7 +917,6 @@ shinyServer(function(input, output, session) {
 
             points(x = as.numeric(left),y = 0, col = "black", pch = 20, cex = 1)
             points(x = as.numeric(right),y = 0, col = "black", pch = 20, cex = 1)
-            #send_log("windows_plot_start")
             plt
         }, 
         height=200

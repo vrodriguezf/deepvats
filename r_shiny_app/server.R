@@ -334,9 +334,9 @@ send_log("Update prj graph_end")
     X <- reactiveVal()
     
     observe({
-        isolate({log_print(mssg = paste0("... Waiting ...| X |  wlen, stride |", input$wlen, input$stride ), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main') %>% throttle(100000)})
+        log_print(mssg = paste0("... Waiting ...| X |  wlen, stride |", input$wlen, input$stride ), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main') %>% throttle(10)
         req(input$wlen != 0, input$stride != 0, input$stride != 1)
-        isolate({log_print(paste0("Check reactiveness | X |  wlen, stride |", input$wlen, input$stride, TRUE, log_path(), log_header(), debug_level, 'main' )) %>% throttle(100000)})
+        log_print(paste0("Check reactiveness | X |  wlen, stride |", input$wlen, input$stride, TRUE, log_path(), log_header(), debug_level, 'main' )) %>% throttle(10)
         if (
             is.null(X()) ||
             !identical(
@@ -346,10 +346,12 @@ send_log("Update prj graph_end")
                 input$stride != isolate(input$stride)
         ) {
             send_log("--> ReactiveVal X")
-            log_print("--> Reactive X | Update Sliding Window")
-            log_print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
-            log_print("reactive X | SWV")
+            log_print(mssg = "--> ReactiveVal X | Update Sliding Window",file_flag = TRUE, file_path = log_path(), log_header = log_header(),debug_level = debug_level, debug_group = 'main')
+            log_print(mssg = paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic')
+            log_print(mssg = "reactive X | SWV", file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic')
+            
             t_x_0 <- Sys.time()
+            
             enc_input = dvats$exec_with_feather_k_output(
                 function_name = "prepare_forecasting_data",
                 module_name   = "tsai.data.preparation",
@@ -357,13 +359,12 @@ send_log("Update prj graph_end")
                 k_output = as.integer(0),
                 print_flag = TRUE,
                 time_flag = TRUE,
-                #tsdf(), #%>%select(-"timeindex"),
                 fcst_history = input$wlen
             )
 
             t_x_1 <- Sys.time() 
             t_sliding_window_view = t_x_1 - t_x_0
-            log_print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "), TRUE, log_path(), log_header())
+            log_print(mssg = paste0("reactive X | SWV: ", t_sliding_window_view, " secs "), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic')
             temp_log <<- log_add(
                 log_mssg            = isolate(temp_log), 
                 function_           = "Reactive X | SWV",
@@ -375,18 +376,12 @@ send_log("Update prj graph_end")
                 mssg                = "Compute Sliding Window View"
             )
             
-            log_print(paste0(
-                "reactive X | Update sliding window | Apply stride ", 
-                input$stride,
-                " | enc_input ~ ", 
-                dim(enc_input), 
-                "-->"
-            ), TRUE, log_path(), log_header(), debug_level, 'main'); flush.console()
-            #send_log("X_end")
-            log_print("| Update | X", TRUE, log_path(), log_header(), debug_level, 'main' )
-            on.exit({log_print("| Outside| X", TRUE, log_path(), log_header(), debug_level, 'generic')})
+            log_print(mssg = paste0("reactive X | Update sliding window | Apply stride ", input$stride," | enc_input ~ ", dim(enc_input), "-->"), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic')
+            log_print(mssg = "| Update | X", file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main' )
+            on.exit({log_print(mssg = "| Outside| X", file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main')})
             X(enc_input)
         }
+        X()
     })
     
     # Time series artifact
@@ -551,31 +546,28 @@ send_log("Update prj graph_end")
         enc
     })
 
-    
-    
     embs <- reactive({
-        isolate({log_print(paste0("| ... Waiting ...| Embs |  X, enc | ", X(), enc()) ) %>% throttle(10000)})
+        log_print(
+            mssg = " ... Waiting ...| Embs |  X, enc ",
+            file_flag = TRUE, 
+            file_path = log_path(), 
+            log_header = log_header(),
+            debug_level = debug_level, 
+            debug_group = 'main'
+        )
         req(X(), enc_l <- enc())
-        log_print(paste0("--> reactive embs | get embeddings | ", X(), enc()))
+        log_print(mssg = paste0("--> reactive embs | get embeddings | ", enc()),file_flag = TRUE, file_path = log_path(), log_header = log_header(),debug_level = debug_level, debug_group = 'main')
         if (torch$cuda$is_available()){
             log_print(paste0("CUDA devices: ", torch$cuda$device_count()))
           } else {
             log_print("CUDA NOT AVAILABLE")
         }
         t_embs_0 <- Sys.time()
-        log_print(
-            paste0(
-                "reactive embs | get embeddings | Just about to get embedings. Device number: ", 
-                torch$cuda$current_device() 
-            )
-        )
-        
-        log_print("reactive embs | get embeddings | Get batch size and dataset")
-
+        log_print(mssg = paste0("reactive embs | get embeddings | Just about to get embedings. Device number: ", torch$cuda$current_device()),file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main')
         dataset_logged_by <- enc_ar()$logged_by()
         bs = dataset_logged_by$config$batch_size
         stride = input$stride 
-        
+    
         log_print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
         enc_input = X()
         #chunk_max = 10000000
@@ -587,21 +579,21 @@ send_log("Update prj graph_end")
         
         log_print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
    
-    cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
-    log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
-    result = dvats$get_enc_embs_set_stride_set_batch_size(
-        X = X(),
-        print_flag = TRUE,
-        enc_learn = enc_l,
-        stride =  input$stride,  
-        batch_size = bs, 
-        cpu = cpu_flag, 
-        print_flag = FALSE, 
-        time_flag = TRUE, 
-        chunk_size = chunk_size,
-        check_memory_usage = TRUE
-    )
-    log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
+        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+        log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
+        result = dvats$get_enc_embs_set_stride_set_batch_size(
+            X = X(),
+            print_flag = TRUE,
+            enc_learn = enc_l,
+            stride =  input$stride,  
+            batch_size = bs, 
+            cpu = cpu_flag, 
+            print_flag = FALSE, 
+            time_flag = TRUE, 
+            chunk_size = chunk_size,
+            check_memory_usage = TRUE
+        )   
+        log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
         
         #result <- system(python_string)
         t_embs_1 <- Sys.time()
@@ -619,83 +611,20 @@ send_log("Update prj graph_end")
             time                = diff, 
             mssg                = "Get encoder embeddings"
         )
-        X <- NULL
-        gc(verbose=TRUE)
-        on.exit({log_print("reactive embs | get embeddings -->"); flush.console()})
+        on.exit({
+            log_print("reactive embs | get embeddings -->",file_flag = TRUE, file_path = log_path(), log_header = log_header(),debug_level = debug_level, debug_group = 'main')
+            flush.console()
+            })
         result
     })
-#enc = py_load_object(
-#    os.path.join(
-#        DEFAULT_PATH_WANDB_ARTIFACTS, 
-#        hash
-#    )
-#)
-#embs_py_code <- "
-#import os
-#from dvats.all import get_enc_embs
-#from torch import cuda
-#from time import time
-#import pickle
-#
-#path = os.path.join(wandb_path, hash)
-#print(path)
-#with open(path, 'rb') as f:
-#    enc = pickle.load(f)
-#print('reactive embs | load encoder | Set batchsize')
-#enc.bs = batch_size
-#print('reactive embs | load encoder | Batchsize: ', enc.bs)
-#print('--> reactive embs | get embeddings | enc.bs ', enc.bs )
-#if cuda.is_available():
-#    print('CUDA devices: ', cuda.device_count())
-#else:
-#    print('CUDA NOT AVAILABLE')
-#t_init = time()
-#print(
-#    '--> reactive embs | get embeddings | Just about to get embedings. Device number: ', 
-#    cuda.current_device(), 
-#    ' Batch size: ', enc.bs
-#)
-#result = get_enc_embs(X = enc_input, enc_learn = enc, cpu = False)
-#t_end = time()
-#diff = t_end - t_init
-#diff_secs = diff
-#diff_mins = diff / 60
-#"   
 
-#embs = reactive({
-#    req(input$dataset, X())
-#    print("--> reactive embs | get embeddings -->")
-#    enc_ar <- req(enc_ar())
-#    dataset_logged_by = enc_ar$logged_by()
-#    batch_size = dataset_logged_by$config$batch_size
-#    hash <- enc_ar$metadata$ref$hash
-#    print(paste0("reactive embs | get embeddings | hash ", hash, " | logged_by_batch_size ", batch_size))
-#    py$wandb_path <- DEFAULT_PATH_WANDB_ARTIFACTS
-#    print(paste0("reactive embs | get embeddings | path ", py$wandb_path))
-#    py$hash <- hash
-#    print(paste0("reactive embs | get embeddings | hash ", py$hash))
-#    py$enc_input <- X()
-#    py$dataset_logged_by <- dataset_logged_by
-#    py$batch_size <- batch_size
-#    print(paste0("reactive embs | get embeddings | bs ", py$batch_size))
-#    print(reticulate::py_config())
-#    print(paste0("reactive embs | get embeddings | Enter embs_py code! ", embs_py_code))
-#    py_run_string(embs_py_code)
-#    print(paste0("reactive embs | get embeddings | Outside embs_py codee! ", embs_py_code))
-#    diff_secs <- py$diff_secs
-#    diff_mins <- py$diff_mins
-#    result <- py$result
-#    print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
-#    result
-#})
-
- prj_object_cpu <- reactive({
+    prj_object_cpu <- reactive({
         embs = req(embs(), input$dr_method)
         embs = embs[complete.cases(embs),]
-        log_print("--> prj_object")
+        log_print(mssg = "--> prj_object CPU", file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main' )
         #log_print(embs) #--
         #log_print(paste0("--> prj_object | UMAP params ", str(umap_params_)))
-        log_print("--> prj_object | UMAP params ")
+        log_print("--> prj_object CPU | UMAP params ")
         
         res = switch( input$dr_method,
             #### Comprobando parametros para saber por qué salen diferentes los embeddings
@@ -729,19 +658,9 @@ send_log("Update prj graph_end")
     })
 
     prj_object <- reactive({
-        print("Gola")
-        isolate({
-            log_print(
-                mssg = paste0("| ... Waiting ...| prj_object |  embs, dr_method ", input$dr_method), 
-                file_flag = TRUE, 
-                file_path = log_path(), 
-                log_header = log_header(), 
-                debug_level = debug_level, 
-                debug_group = 'main' 
-            ) # %>% throttle(10000)
-        })
+        log_print(mssg = paste0(" ... Waiting ...| prj_object |  embs, dr_method ", input$dr_method), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main' ) # %>% throttle(10)})
         req(embs(), input$dr_method)
-        log_print("--> prj_object", TRUE, log_path(), log_header(), debug_level, 'main')
+        log_print(mssg = "--> prj_object", file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main')
         t_prj_0 = Sys.time()
         embs = req(embs())
         log_print("prj_object | Before complete cases ")
@@ -785,7 +704,8 @@ send_log("Update prj graph_end")
             input$cpu_flag, " | ", input$dr_method, 
             " | Execution time: ", t_prj_1-t_prj_0 , 
             " seconds -->"
-            ), , TRUE, log_path(), log_header(), debug_level, 'main'
+            ), 
+            TRUE, log_path(), log_header(), debug_level, 'main'
         ); temp_log <<- log_add(
             log_mssg            = temp_log,
             function_           = "PRJ Object",
@@ -824,68 +744,52 @@ send_log("Update prj graph_end")
             as.POSIXct(chunk)
         })
         stopCluster(cl)
-        log_print("Reactive tsdf | Make conversion -->")
-        log_print("Reactive tsdf | Make conversion ")
+        log_print(" Reactive tsdf | Make conversion -->")
+        log_print(" Reactive tsdf | Make conversion ")
         flush.console()
         return(unlist(result))
     }
 
     # Load and filter TimeSeries object from wandb
-    tsdf <- reactive(
-        {
-            #send_log("tsdf_start")
-            req(input$encoder, ts_ar())
-            ts_ar = ts_ar()
-            log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
+    tsdf <- reactive({
+        #send_log("tsdf_start")
+        req(input$encoder, ts_ar())
+        ts_ar = ts_ar()
+        log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
+        flush.console()
+        
+        t_init <- Sys.time()
+        path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
+        log_print(paste0(mssg = "Reactive tsdf | Read feather | Before | ", path), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic')
+        t_0 <- Sys.time()
+        df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
+        t_1 = Sys.time()
+        log_print(paste0("Reactive tsdf | Read feather | After | ", path), file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic')
+        log_print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(df)),  file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main')
+        
+        temp_log <<- log_add(
+            log_mssg            = temp_log, 
+            function_           = "TSDF | Load dataset | Read feather",
+            cpu_flag            = isolate(input$cpu_flag),
+            dr_method           = isolate(input$dr_method),
+            clustering_options  = isolate(input$clustering_options),
+            zoom                = isolate(input$zoom_btn),
+            time                = t_1-t_0, 
+            mssg                = "Read feather"
+        )
+        
+        flush.console()
+        on.exit({
+            log_print(
+                mssg = paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds"),
+                file_flag = TRUE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'main'
+            );
             flush.console()
-            # Take the first and last element of the timeseries corresponding to the subset of the embedding selectedx
-            # first_data_index <- get_window_indices(idxs = input$points_emb[[1]], w = input$wlen, s = input$stride)[[1]] %>% head(1)
-            # last_data_index <- get_window_indices(idxs = input$points_emb[[2]], w = input$wlen, s = input$stride)[[1]] %>% tail(1)
-            
-            t_init <- Sys.time()
-            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
-            print(paste0("Reactive tsdf | Read feather ", path ))
-            flush.console()
-log_print(paste0("Reactive tsdf | Read feather | Before | ", path))
-            t_0 <- Sys.time()
-            df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
-            t_1 = Sys.time()
-            log_print(paste0("Reactive tsdf | Read feather | After | ", path))
-            log_print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(df)), TRUE, log_path(), log_header())
-            #log_print(paste0("Reactive tsdf | Column to rowname | Before | ", path))
-            #df_ = df 
-            #df_ <- column_to_rownames(df_, var = "timeindex")
-            #t_2 = Sys.time()
-            #log_print(paste0("Reactive tsdf | Column to rowname | After | ", path))
-            #log_print(paste0("Reactive tsdf | Read feather | Rownames: ", t_2 - t_1, " seconds"), TRUE, log_path(), log_header())
-            
-            temp_log <<- log_add(
-                log_mssg            = temp_log, 
-                function_           = "TSDF | Load dataset | Read feather",
-                cpu_flag            = isolate(input$cpu_flag),
-                dr_method           = isolate(input$dr_method),
-                clustering_options  = isolate(input$clustering_options),
-                zoom                = isolate(input$zoom_btn),
-                time                = t_1-t_0, 
-                mssg                = "Read feather"
-            )
-            #temp_log <<- log_add(
-            #    log_mssg            = temp_log, 
-            #    function_           = "TSDF | Load dataset | Rownames",
-            #    cpu_flag            = isolate(input$cpu_flag),
-            #    dr_method           = isolate(input$dr_method),
-            #    clustering_options  = isolate(input$clustering_options),
-            #    zoom                = isolate(input$zoom_btn),
-            #    mssg                = "Move timeindex column to rownames",
-            #    time                = t_2-t_1
-            #)
-            
-            flush.console()
-on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds"));flush.console()})
-            df
         })
+        df
+    })
     
-    # Auxiliary object for the interaction ts->projections
+ # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
       req(input$wlen != 0, input$stride != 0)
       get_window_indices(1:nrow(isolate(projections())), w = input$wlen, s = input$stride)
@@ -893,7 +797,7 @@ on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " secon
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-        isolate({log_print(paste0("| ... Waiting ...| Projections |  prj_object, dr_method ", input$dr_method), TRUE, log_path(), log_header(), debug_level, 'main' ) %>% throttle(10000)})
+        log_print(mssg = paste0(" ... Waiting ...| Projections |  prj_object, dr_method ", input$dr_method), file_flag = TRUE, file_path = log_path(), log_header= log_header(), debug_level = debug_level, debug_group = 'main' ) #%>% throttle(10)})
         req(prj_object(), input$dr_method)
         log_print("--> Projections", TRUE, log_path(), log_header(), debug_level, 'main')
         #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
@@ -983,7 +887,7 @@ score = 0
     
 
     start_date <- reactive({
-        isolate(tsdf()$timeindex[1])
+        isolate(tsdf())$timeindex[1]
     })
 
     end_date <- reactive({
@@ -1299,6 +1203,7 @@ output$windows_text <- renderUI({
         t_pp_0 = Sys.time()
         prjs_ <- req(projections())
         log_print("projections_plot | Prepare column highlights")
+        flush.console()
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
             log_print("Selected ts time points" , TRUE, log_path(), log_header())

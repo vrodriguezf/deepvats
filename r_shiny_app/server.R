@@ -7,8 +7,12 @@
 #    http://shiny.rstudio.com/
 #
 ###########3 devtools::install_github("apache/arrow/r", ref = "tags/apache-arrow-14.0.0", subdir = "arrow/r")
+
+
+source("./server-helper-tsdf.R")
+
 shinyServer(function(input, output, session) {
-logMessages <- reactiveVal("")
+    logMessages <- reactiveVal("")
     send_log <- function(message) {
         new_log = paste0(logMessages(), Sys.time(), " - ", message, "\n")
         logMessages(new_log)
@@ -262,21 +266,13 @@ logMessages <- reactiveVal("")
             selected = ts_variables$selected
         )
     }, label = "select_variables")
-    
-    # Update slider_range reactive values with current samples range
-    # observe({
-    #     req(input$points_emb)
-    #     slider_range$min_value <- input$points_emb[1]
-    #     slider_range$max_value <- input$points_emb[2]
-    # })
-    
+        
     # Update precomputed_clusters reactive value when the input changes
     observeEvent(input$clusters_labels_name, {
         log_print("--> observe | precomputed_cluster selected ")
         precomputed_clusters$selected <- req(input$clusters_labels_name)
         log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected))
     })
-    
     
     # Update clustering_options reactive value when the input changes
     observe({
@@ -285,7 +281,6 @@ logMessages <- reactiveVal("")
         log_print("Observe clustering options -->")
     })
 
-    
     # Update clusters_config reactive values when user clicks on "calculate_clusters" button
     observeEvent(input$calculate_clusters, {
         send_log("Clusters config_start")
@@ -297,7 +292,6 @@ logMessages <- reactiveVal("")
         send_log("Clusters config_end")
         on.exit({log_print("observe event calculate_clusters | update clusters_config -->")})
     })
-    
     
     # Observe the events related to zoom the projections graph
     observeEvent(input$zoom_btn, {
@@ -629,10 +623,10 @@ logMessages <- reactiveVal("")
                 random_state=as.integer(input$prj_random_state)
             )
         )
-      res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
-      colnames(res) = c("xcoord", "ycoord")
-      on.exit({log_print(" prj_object -->"); flush.console()})
-      flush.console()
+        res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
+        colnames(res) = c("xcoord", "ycoord")
+        on.exit({log_print(" prj_object -->"); flush.console()})
+        flush.console()
       #browser()
       res
     })
@@ -702,33 +696,6 @@ logMessages <- reactiveVal("")
     })
 
     
-
-    parallel_posfix <- function(df) {
-        
-        chunk_size = 100000
-        num_chunks = ceiling(nrow(df)/chunk_size)
-        chunks=split(df$timeindex, ceiling(seq_along(df$timeindex)/chunk_size))
-                
-        log_print(paste0("Parallel posfix | Chunks: ", num_chunks))
-
-        cl = parallel::makeCluster(4)
-        parallel::clusterEvalQ(cl, library(fasttime))
-                
-        log_print(paste0("Parallel posfix | Cluster ", cl, " of ", detectCores()))
-        flush.console()
-        
-        result <- parallel::clusterApply(cl, chunks, function(chunk) {
-            cat("Processing chunk\n")
-            flush.console()
-            #fasttime::fastPOSIXct(chunk, format = "%Y-%m-%d %H:%M:%S")
-            as.POSIXct(chunk)
-        })
-        stopCluster(cl)
-        log_print(" Reactive tsdf | Make conversion -->")
-        log_print(" Reactive tsdf | Make conversion ")
-        flush.console()
-        return(unlist(result))
-    }
 
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive({

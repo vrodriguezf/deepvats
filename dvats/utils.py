@@ -177,7 +177,7 @@ def exec_with_feather_k_output(function_name, module_name = "main", path = None,
     if print_flag: print("Exec with feather --> ", path)
     return result
 
-# %% ../nbs/utils.ipynb 47
+# %% ../nbs/utils.ipynb 48
 def exec_with_and_feather_k_output(function_name, module_name = "main", path_input = None, path_output = None, k_output = 0, print_flag = False, time_flag = False, *args, **kwargs):
     result = None
     function = py_function(module_name, function_name, print_flag)

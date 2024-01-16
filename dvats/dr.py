@@ -36,9 +36,9 @@ def gpu_memory_status(device=0):
     used, total, percentage = get_gpu_memory(device)
     color_code = color_for_percentage(percentage)
     bar = create_bar(percentage, color_code)
-    print(f"Used mem: {used}")
-    print(f"Used mem: {total}")
-    print(f"Memory Usage: [{bar}] {color_code}{percentage}%\033[0m")
+    print(f"GPU | Used mem: {used}")
+    print(f"GPU | Used mem: {total}")
+    print(f"GPU | Memory Usage: [{bar}] {color_code}{percentage}%\033[0m")
 
 # %% ../nbs/dr.ipynb 4
 import umap

@@ -743,8 +743,8 @@ stumpy_toy_0 = AttrDict(
     mvp = AttrDict(
         batch_size = 512,
         n_epoch = 100,
-        ws = [10,1008], 
-        stride = 1
+        ws = [10,30], 
+        stride = 5
     ),
     dcae = AttrDict(#TODO: Check
         batch_size = 512,

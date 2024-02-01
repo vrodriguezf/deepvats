@@ -37,10 +37,10 @@ configuration:
       #ws2: 30 #TitlABP
       #ws1: 7 #sunspot
       #ws2: &wlen 365 #sunspot
-      #ws1: 10 #toy
-      #ws2: &wlen 30 #toy
-      ws1: 1 #Monash-Australian_electricity_demand
-      ws2: 365 #Monash-Australian_electricity_demand
+      ws1: 10 #toy
+      ws2: &wlen 30 #toy
+      #ws1: 1 #Monash-Australian_electricity_demand
+      #ws2: 365 #Monash-Australian_electricity_demand
       # probability of masking in MVP
       r: 0.710
       valid_size: 0.2

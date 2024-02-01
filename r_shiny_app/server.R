@@ -838,13 +838,14 @@ shinyServer(function(input, output, session) {
             t_1 = Sys.time()
             log_print(paste0("Reactive tsdf | Read feather | After | ", path))
             log_print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(df)), TRUE, log_path(), log_header())
-            #log_print(paste0("Reactive tsdf | Column to rowname | Before | ", path))
-            #df_ = df 
-            #df_ <- column_to_rownames(df_, var = "timeindex")
-            #t_2 = Sys.time()
-            #log_print(paste0("Reactive tsdf | Column to rowname | After | ", path))
-            #log_print(paste0("Reactive tsdf | Read feather | Rownames: ", t_2 - t_1, " seconds"), TRUE, log_path(), log_header())
-            
+            ### Volver a comentar. Repuesto para sacar los tiempos nuevos
+            log_print(paste0("Reactive tsdf | Column to rowname | Before | ", path))
+            df_ = df 
+            df_ <- column_to_rownames(df_, var = "timeindex")
+            t_2 = Sys.time()
+            log_print(paste0("Reactive tsdf | Column to rowname | After | ", path))
+            log_print(paste0("Reactive tsdf | Read feather | Rownames: ", t_2 - t_1, " seconds"), TRUE, log_path(), log_header())
+            ###
             temp_log <<- log_add(
                 log_mssg            = temp_log, 
                 function_           = "TSDF | Load dataset | Read feather",
@@ -855,16 +856,16 @@ shinyServer(function(input, output, session) {
                 time                = t_1-t_0, 
                 mssg                = "Read feather"
             )
-            #temp_log <<- log_add(
-            #    log_mssg            = temp_log, 
-            #    function_           = "TSDF | Load dataset | Rownames",
-            #    cpu_flag            = isolate(input$cpu_flag),
-            #    dr_method           = isolate(input$dr_method),
-            #    clustering_options  = isolate(input$clustering_options),
-            #    zoom                = isolate(input$zoom_btn),
-            #    mssg                = "Move timeindex column to rownames",
-            #    time                = t_2-t_1
-            #)
+            temp_log <<- log_add(
+                log_mssg            = temp_log, 
+                function_           = "TSDF | Load dataset | Rownames",
+                cpu_flag            = isolate(input$cpu_flag),
+                dr_method           = isolate(input$dr_method),
+                clustering_options  = isolate(input$clustering_options),
+                zoom                = isolate(input$zoom_btn),
+                mssg                = "Move timeindex column to rownames",
+                time                = t_2-t_1
+            )
             
             flush.console()
             on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds"));flush.console()})

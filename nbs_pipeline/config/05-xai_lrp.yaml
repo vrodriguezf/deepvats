@@ -11,7 +11,7 @@ include: !include "base.yaml"
 #################################
 # 04 - Dimensionality reduction #
 #################################
-job_type: 'dimensionality_reduction'
+job_type: 'layer_relevance_propagation'
 configuration:
   wandb: 
     use: *use_wandb
@@ -31,3 +31,5 @@ configuration:
       n_neighbors: 15
       min_dist: 0.1
       random_state: 1234
+      metric: 'euclidean'
+  cpu_flag: true

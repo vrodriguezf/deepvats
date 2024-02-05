@@ -479,7 +479,10 @@ def get_artifact_config_xai_lrp(print_flag: bool = False) -> Tuple[AttrDict, str
     job_type        = config.job_type
     enc_artifact = build_enc_artifact(config, print_flag)
     config = config.configuration
-    print(configuration)
+    if print_flag: 
+        print("-- config --")
+        show_attrdict(config)
+        print("-- config --")
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use, 
         wandb_group         = config.wandb.group,
@@ -490,6 +493,7 @@ def get_artifact_config_xai_lrp(print_flag: bool = False) -> Tuple[AttrDict, str
         n_neighbors         = config.encoder.umap.n_neighbors,
         min_dist            = config.encoder.umap.min_dist,
         random_state        = config.encoder.umap.random_state,
+        metric              = config.encoder.umap.metric,
         cpu_flag            = config.cpu_flag
     )
     return artifact_config, job_type

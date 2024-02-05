@@ -54,7 +54,4 @@ d = { 'settings': { 'branch': 'master',
                              'dvats.utils.remove_constant_columns': ('utils.html#remove_constant_columns', 'dvats/utils.py'),
                              'dvats.utils.wandb.apis.public.Artifact.to_obj': ( 'utils.html#wandb.apis.public.artifact.to_obj',
                                                                                 'dvats/utils.py')},
-            'dvats.visualization': { 'dvats.visualization.plot_TS': ('visualization.html#plot_ts', 'dvats/visualization.py'),
-                                     'dvats.visualization.plot_mask': ('visualization.html#plot_mask', 'dvats/visualization.py'),
-                                     'dvats.visualization.plot_validation_ts_ae': ( 'visualization.html#plot_validation_ts_ae',
-                                                                                    'dvats/visualization.py')}}}
+            'dvats.visualization': {'dvats.visualization.get_dataset': ('xai.html#get_dataset', 'dvats/visualization.py')}}}

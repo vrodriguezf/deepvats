@@ -477,7 +477,7 @@ def get_artifact_config_xai_lrp(print_flag: bool = False) -> Tuple[AttrDict, str
     """
     config          = get_config(print_flag, "05-xai_lrp")
     job_type        = config.job_type
-    enc_artifact = build_enc_artifact(config, print_flag)
+    train_artifact = build_enc_artifact(config, print_flag)
     config = config.configuration
     if print_flag: 
         print("-- config --")
@@ -489,14 +489,19 @@ def get_artifact_config_xai_lrp(print_flag: bool = False) -> Tuple[AttrDict, str
         wandb_entity        = config.wandb.entity,
         wandb_project       = config.wandb.project,
         valid_artifact      = config.encoder.artifacts.valid, 
-        train_artifact      = enc_artifact,
+        train_artifact      = train_artifact,
+        enc_artifact        = train_artifact if config.encoder.artifacts.enc == 'train' else config.encoder.artifacts.valid,
         n_neighbors         = config.encoder.umap.n_neighbors,
         min_dist            = config.encoder.umap.min_dist,
         random_state        = config.encoder.umap.random_state,
         metric              = config.encoder.umap.metric,
-        cpu_flag            = config.cpu_flag
+        cpu_flag            = config.cpu_flag,
+        job_type            = job_type,
+        allow_val_change    = config.allow_val_change,
+        dr_artifact         = config.encoder.artifacts.dr
     )
-    return artifact_config, job_type
+
+    return artifact_config
 
 #| export
 # Monash australian electricity demand

@@ -1,12 +1,12 @@
 include: !include "base.yaml"
 
-#########################################################
-########### NBS - PIPELINE CONFIGURATION FILE ###########
-########### 04 - DIMENSIONALITY REDUCTION     ###########
-#########################################################
-###### Author: Maria Inmaculada Santamaria-Valenzuela   #
-###### Date: 08-2023                                    #
-#########################################################
+######################################################################
+########### NBS - PIPELINE CONFIGURATION FILE              ###########
+########### 05 - XAI - Layerwise Relevance Propagation     ###########
+######################################################################
+###### Author: Maria Inmaculada Santamaria-Valenzuela                #
+###### Date: 08-2023                                                 #
+######################################################################
 
 #################################
 # 04 - Dimensionality reduction #
@@ -27,9 +27,12 @@ configuration:
         enc_prefix: !join [ *wdb_user, '/', *wdb_project, '/', *alg]
       # If none, the validation set used to train enc is used
       valid: null
+      enc: 'train'
+      dr: null
     umap:
       n_neighbors: 15
       min_dist: 0.1
       random_state: 1234
       metric: 'euclidean'
   cpu_flag: true
+  allow_val_change: true

@@ -1,6 +1,6 @@
 version: '1'
 services:
-  jupyter-macu:
+  jupyter:
     build:
       args:
         - username=${USER_NAME}
@@ -39,7 +39,7 @@ services:
               count: all
               capabilities: [gpu]
             
-  rstudio-server-macu:
+  rstudio-server:
       build:
           context: ../
           dockerfile: docker/Dockerfile.rstudio

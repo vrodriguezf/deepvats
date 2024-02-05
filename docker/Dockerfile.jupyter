@@ -122,6 +122,13 @@ RUN chmod u+x /usr/local/bin/postBuild \
     # Make bash automatically activate the conda environment
     && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 
+#####################################################
+# Install external libraries not available in conda #
+#####################################################
+RUN pip install zennit==0.5.1
+
+
+
 RUN conda list --prefix ${ENV_PREFIX}
 
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin

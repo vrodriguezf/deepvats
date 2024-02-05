@@ -467,18 +467,19 @@ def get_artifact_config_dimensionality_reduction(print_flag: bool = False) -> Tu
     return artifact_config, job_type
 
 ##################
-# 05 - XAI-SHAP  #
+# 05 - XAI-LRP   #
 ##################
-def get_artifact_config_xai_shap(print_flag: bool = False) -> Tuple[AttrDict, str]:
+def get_artifact_config_xai_lrp(print_flag: bool = False) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for the XAI SHAP (Explainable Artificial Intelligence using SHAP values) analysis. 
     This includes fetching relevant settings, building the encoder artifact, and assembling the artifact configuration.
     Returns the artifact configuration as an AttrDict, along with the job type.
     """
-    config          = get_config(print_flag, "05-xai_shap")
+    config          = get_config(print_flag, "05-xai_lrp")
     job_type        = config.job_type
     enc_artifact = build_enc_artifact(config, print_flag)
     config = config.configuration
+    print(configuration)
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use, 
         wandb_group         = config.wandb.group,
@@ -488,7 +489,8 @@ def get_artifact_config_xai_shap(print_flag: bool = False) -> Tuple[AttrDict, st
         train_artifact      = enc_artifact,
         n_neighbors         = config.encoder.umap.n_neighbors,
         min_dist            = config.encoder.umap.min_dist,
-        random_state        = config.encoder.umap.random_state
+        random_state        = config.encoder.umap.random_state,
+        cpu_flag            = config.cpu_flag
     )
     return artifact_config, job_type
 

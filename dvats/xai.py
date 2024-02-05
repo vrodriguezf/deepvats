@@ -3,7 +3,8 @@
 # %% auto 0
 __all__ = ['get_dataset', 'umap_parameters', 'get_prjs', 'plot_projections', 'plot_projections_clusters',
            'calculate_cluster_stats', 'anomaly_score', 'detector', 'plot_anomaly_scores_distribution',
-           'plot_clusters_with_anomalies', 'update_plot', 'plot_clusters_with_anomalies_interactive_plot']
+           'plot_clusters_with_anomalies', 'update_plot', 'plot_clusters_with_anomalies_interactive_plot', 'plot_save',
+           'get_anomalies', 'get_anomaly_styles', 'plot_initial_config']
 
 # %% ../nbs/xai.ipynb 1
 #Weight & Biases
@@ -32,6 +33,15 @@ import pandas as pd
 import ipywidgets as widgets
 from IPython.display import display
 from functools import partial
+
+from IPython.display import display, clear_output, HTML as IPHTML
+from ipywidgets import Button, Output, VBox, HBox, HTML, Layout, FloatSlider
+
+import plotly.graph_objs as go
+import plotly.offline as py
+import plotly.io as pio
+#! pip install kaleido
+import kaleido
 
 
 # %% ../nbs/xai.ipynb 4
@@ -216,7 +226,7 @@ def update_plot(threshold, prjs_umap, clusters_labels, anomaly_scores, fig_size)
     plot_clusters_with_anomalies(prjs_umap, clusters_labels, anomaly_scores, threshold, fig_size)
 
 def plot_clusters_with_anomalies_interactive_plot(threshold, prjs_umap, clusters_labels, anomaly_scores, fig_size):
-    threshold_slider = widgets.FloatSlider(value=2, min=1, max=3, step=0.01, description='Threshold')
+    threshold_slider = widgets.FloatSlider(value=threshold, min=0.001, max=3, step=0.001, description='Threshold')
     interactive_plot =  widgets.interactive(update_plot, threshold = threshold_slider, 
                               prjs_umap = widgets.fixed(prjs_umap), 
                               clusters_labels = widgets.fixed(clusters_labels),
@@ -224,3 +234,60 @@ def plot_clusters_with_anomalies_interactive_plot(threshold, prjs_umap, clusters
                               fig_size = widgets.fixed((25,25)))
     display(interactive_plot)
     
+
+# %% ../nbs/xai.ipynb 17
+import plotly.express as px
+
+# %% ../nbs/xai.ipynb 18
+def plot_save(fig, w):
+    image_bytes = pio.to_image(fig, format='png')
+    with open(f"../imgs/w={w}.png", 'wb') as f:
+        f.write(image_bytes)
+    
+
+# %% ../nbs/xai.ipynb 19
+def get_anomalies(df, threshold, flag):
+    df['anomaly'] = [ (score > threshold) and flag for score in df['anomaly_score']]
+    
+def get_anomaly_styles(df, threshold, anomaly_scores, flag = False, print_flag = False):
+        if print_flag: print("Threshold: ", threshold)
+        if print_flag: print("Flag", flag)
+        if print_flag: print("df ~", df.shape)
+        df['anomaly'] = [ (score > threshold) and flag for score in df['anomaly_score'] ]
+        print(df)
+        get_anomalies(df, threshold, flag)
+        anomalies = df[df['anomaly']]
+        if flag:
+            df['anomaly'] = [ 
+                (score > threshold) and flag 
+                for score in anomaly_scores 
+            ]
+            symbols = [
+                'x' if is_anomaly else 'circle' 
+                for is_anomaly in df['anomaly']
+            ]
+            line_colors = [
+                'black'
+                if (is_anomaly and flag) else 'rgba(0,0,0,0)'
+                for is_anomaly in df['anomaly']
+            ]
+        else:
+            symbols = ['circle' for _ in df['x1']]
+            line_colors = ['rgba(0,0,0,0)' for _ in df['x1']]
+        if print_flag: print(anomalies)
+        return symbols, line_colors
+### Example of use
+#prjs_df = pd.DataFrame(prjs_umap, columns = ['x1', 'x2'])
+#prjs_df['anomaly_score'] = anomaly_scores
+#s, l = get_anomaly_styles(prjs_df, 1, True)
+
+# %% ../nbs/xai.ipynb 20
+def plot_initial_config(prjs, cluster_labels, anomaly_scores):
+    prjs_df = pd.DataFrame(prjs, columns = ['x1', 'x2'])
+    prjs_df['cluster'] = cluster_labels
+    prjs_df['anomaly_score'] = anomaly_scores
+    
+    cluster_colors_df = pd.DataFrame({'cluster': cluster_labels}).drop_duplicates()
+    cluster_colors_df['color'] = px.colors.qualitative.Set1[:len(cluster_colors_df)]
+    cluster_colors = dict(zip(cluster_colors_df['cluster'], cluster_colors_df['color']))
+    return prjs_df, cluster_colors

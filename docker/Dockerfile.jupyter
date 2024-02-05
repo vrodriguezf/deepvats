@@ -128,8 +128,7 @@ RUN chmod u+x /usr/local/bin/postBuild \
 #####################################################
 RUN chmod u+x /usr/local/bin/postBuild \
     && conda activate $ENV_PREFIX  \
-    && pip install zennit==0.5.1  \
-    && pip install kaleido==0.2.1\
+    && pip install zennit==0.5.1 \
     && conda deactivate
 
 RUN conda list --prefix ${ENV_PREFIX}

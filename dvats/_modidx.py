@@ -54,4 +54,6 @@ d = { 'settings': { 'branch': 'master',
                              'dvats.utils.remove_constant_columns': ('utils.html#remove_constant_columns', 'dvats/utils.py'),
                              'dvats.utils.wandb.apis.public.Artifact.to_obj': ( 'utils.html#wandb.apis.public.artifact.to_obj',
                                                                                 'dvats/utils.py')},
-            'dvats.visualization': {'dvats.visualization.get_dataset': ('xai.html#get_dataset', 'dvats/visualization.py')}}}
+            'dvats.visualization': { 'dvats.visualization.get_dataset': ('xai.html#get_dataset', 'dvats/visualization.py'),
+                                     'dvats.visualization.get_prjs': ('xai.html#get_prjs', 'dvats/visualization.py'),
+                                     'dvats.visualization.umap_parameters': ('xai.html#umap_parameters', 'dvats/visualization.py')}}}

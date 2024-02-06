@@ -25,3 +25,4 @@ configuration:
     prefix: !join [ *wdb_user, '/', *wdb_project, '/embeddings-', *alg]
     version: 'latest'
   allow_val_change: true
+  stride: 5

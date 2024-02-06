@@ -511,7 +511,8 @@ def get_artifact_config_xai_lrp(print_flag: bool = False) -> Tuple[AttrDict, str
         wandb_project       = config.wandb.project,
         emb_artifact        = emb_artifact,
         job_type            = job_type,
-        allow_val_change    = config.allow_val_change
+        allow_val_change    = config.allow_val_change,
+        stride              = config.stride
     )
 
     return artifact_config

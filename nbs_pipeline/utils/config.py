@@ -466,7 +466,8 @@ def get_artifact_config_dimensionality_reduction(print_flag: bool = False) -> Tu
         n_neighbors         = config.encoder.umap.n_neighbors,
         min_dist            = config.encoder.umap.min_dist,
         random_state        = config.encoder.umap.random_state,
-        metric              = config.encoder.umap.metric
+        metric              = config.encoder.umap.metric,
+        cpu_flag            = config.encoder.umap.cpu_flag
     )
     return artifact_config, job_type
 

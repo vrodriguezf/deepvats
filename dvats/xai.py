@@ -4,7 +4,8 @@
 __all__ = ['get_dataset', 'umap_parameters', 'get_prjs', 'plot_projections', 'plot_projections_clusters',
            'calculate_cluster_stats', 'anomaly_score', 'detector', 'plot_anomaly_scores_distribution',
            'plot_clusters_with_anomalies', 'update_plot', 'plot_clusters_with_anomalies_interactive_plot',
-           'InteractiveAnomalyPlot', 'plot_save', 'get_anomalies', 'get_anomaly_styles', 'plot_initial_config']
+           'get_df_selected', 'shift_datetime', 'InteractiveAnomalyPlot', 'plot_save', 'get_anomalies',
+           'get_anomaly_styles', 'plot_initial_config', 'ts_plot_interactive']
 
 # %% ../nbs/xai.ipynb 1
 #Weight & Biases
@@ -237,8 +238,80 @@ def plot_clusters_with_anomalies_interactive_plot(threshold, prjs_umap, clusters
 
 # %% ../nbs/xai.ipynb 17
 import plotly.express as px
+from datetime import timedelta
 
 # %% ../nbs/xai.ipynb 18
+def get_df_selected(df, selected_indices, w, stride = 1): #Cuidado con stride
+    '''Links back the selected points to the original dataframe and returns the associated windows indices'''
+    n_windows = len(selected_indices)
+    window_ranges = [(id*stride, (id*stride)+w) for id in selected_indices]    
+    #window_ranges = [(id*w, (id+1)*w+1) for id in selected_indices]    
+    #window_ranges = [(id*stride, (id*stride)+w) for id in selected_indices]
+    #print(window_ranges)
+    valores_tramos = [df.iloc[inicio:fin+1] for inicio, fin in window_ranges]
+    df_selected = pd.concat(valores_tramos, ignore_index=False)
+    return window_ranges, n_windows, df_selected
+
+# %% ../nbs/xai.ipynb 19
+def shift_datetime(dt, seconds, sign, dateformat="%Y-%m-%d %H:%M:%S.%f", print_flag = False):
+    """
+    This function gets a datetime dt, a number of seconds, 
+    a sign and moves the date such number of seconds to the future 
+    if sign is '+' and to the past if sing is '-'.
+    """
+    if print_flag: print(dateformat)
+    dateformat2= "%Y-%m-%d %H:%M:%S.%f"
+    dateformat3 = "%Y-%m-%d"
+    ok = False
+    try: 
+        if print_flag: print("dt ", dt, "seconds", seconds, "sign", sign)
+        new_dt = datetime.strptime(dt, dateformat)
+        if print_flag: print("ndt", new_dt)
+        ok = True
+    except ValueError as e:
+        if print_flag: 
+            print("Error: ", e)
+        
+    if (not ok):
+        try:
+            if print_flag: print("Parsing alternative dataformat", dt, "seconds", seconds, "sign", sign, dateformat2)
+            new_dt = datetime.strptime(dt, dateformat3)
+            if print_flag: print("2ndt", new_dt)            
+        except ValueError as e:
+            print("Error: ", e)
+    if print_flag: print(new_dt)
+    try:
+            
+        if new_dt.hour == 0 and new_dt.minute == 0 and new_dt.second == 0:
+            if print_flag: "Aqui"
+            new_dt = new_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            if print_flag: print(new_dt)
+
+        if print_flag: print("ndt", new_dt)
+                
+        if (sign == '+'):
+            if print_flag: print("Aqui")
+            new_dt = new_dt + timedelta(seconds = seconds)
+            if print_flag: print(new_dt)
+        else: 
+            if print_flag: print(sign, type(dt))
+            new_dt = new_dt - timedelta(seconds = seconds)
+            if print_flag: print(new_dt)            
+        if new_dt.hour == 0 and new_dt.minute == 0 and new_dt.second == 0:
+            if print_flag: print("replacing")
+            new_dt = new_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        new_dt_str = new_dt.strftime(dateformat)
+        if print_flag: print("new dt ", new_dt)
+    except ValueError as e:
+        if print_flag: print("Aqui3")
+        shift_datetime(dt, 0, sign, dateformat = "%Y-%m-%d", print_flag = False)
+        return str(e)
+    return new_dt_str
+
+
+
+# %% ../nbs/xai.ipynb 21
 class InteractiveAnomalyPlot():
     def __init__(
         self, selected_indices = [], 
@@ -465,14 +538,14 @@ class InteractiveAnomalyPlot():
         display(box)
 
 
-# %% ../nbs/xai.ipynb 19
+# %% ../nbs/xai.ipynb 22
 def plot_save(fig, w):
     image_bytes = pio.to_image(fig, format='png')
     with open(f"../imgs/w={w}.png", 'wb') as f:
         f.write(image_bytes)
     
 
-# %% ../nbs/xai.ipynb 20
+# %% ../nbs/xai.ipynb 23
 def get_anomalies(df, threshold, flag):
     df['anomaly'] = [ (score > threshold) and flag for score in df['anomaly_score']]
     
@@ -508,7 +581,7 @@ def get_anomaly_styles(df, threshold, anomaly_scores, flag = False, print_flag =
 #prjs_df['anomaly_score'] = anomaly_scores
 #s, l = get_anomaly_styles(prjs_df, 1, True)
 
-# %% ../nbs/xai.ipynb 21
+# %% ../nbs/xai.ipynb 24
 def plot_initial_config(prjs, cluster_labels, anomaly_scores):
     prjs_df = pd.DataFrame(prjs, columns = ['x1', 'x2'])
     prjs_df['cluster'] = cluster_labels
@@ -518,3 +591,203 @@ def plot_initial_config(prjs, cluster_labels, anomaly_scores):
     cluster_colors_df['color'] = px.colors.qualitative.Set1[:len(cluster_colors_df)]
     cluster_colors = dict(zip(cluster_colors_df['cluster'], cluster_colors_df['color']))
     return prjs_df, cluster_colors
+
+# %% ../nbs/xai.ipynb 25
+def ts_plot_interactive(
+    df, selected_indices, meaningful_features_subset_ids, w, stride = 1, print_flag = False
+):
+    window_ranges, n_windows, df_selected = get_df_selected(df, selected_indices, w, stride)
+
+    if print_flag: print(n_windows, window_ranges)
+    if print_flag: print(df_selected.index)
+    
+    df.index = df.index.astype(str)
+    dateformat = '%Y-%m-%d %H:%M:%S'
+    #df.index = pd.to_datetime(df.index)
+    #df.index = df.index.strftime(dateformat)
+    
+    fig = go.FigureWidget()
+    
+    colors = [f'rgb({np.random.randint(0, 256)}, {np.random.randint(0, 256)}, {np.random.randint(0, 256)})' for _ in range(n_windows)]
+    
+    # Agregar cada serie al gráfico con sombreado si está en df_selected
+    output_windows = Output()
+    for feature_id in df.columns:
+        feature_pos = df.columns.get_loc(feature_id)
+        trace = go.Scatter(
+            x=df.index,
+            y=df[feature_id],
+            mode='lines',
+            name=feature_id,
+            visible=feature_pos in meaningful_features_subset_ids,
+            text=df.index
+        )
+        fig.add_trace(trace)
+        
+    # Aplicar sombreado a las ventanas dentro de df_selected
+    for i, (start, end) in enumerate(window_ranges):
+        
+        fig.add_shape(
+            type="rect",
+            x0=df.index[start],
+            x1=df.index[end],
+            y0= df[feature_id].min(),
+            y1= df[feature_id].max(),
+            fillcolor=colors[i], #"LightSalmon",
+            opacity=0.25,
+            layer="below",
+            line=dict(color=colors[i], width=1),
+            name = f"w_{i}"
+        )
+        with output_windows:
+            print("w[" + str( selected_indices[i] )+ "]="+str(df.index[start])+", "+str(df.index[end])+")")
+    
+    fig.update_layout(
+        title='Time Series with time window plot',
+        xaxis_title='Datetime',
+        yaxis_title='Value',
+        legend_title='Variables',
+        margin=dict(l=10, r=10, t=30, b=10),
+        xaxis=dict(
+            tickformat=dateformat#,
+            #grid_color = 'lightgray', zerolinecolor='black', title = 'x'
+        ),
+        #yaxis = dict(grid_color = 'lightgray', zerolinecolor='black', title = 'y'),
+        #plot_color = 'white',
+        paper_bgcolor='#f0f0f0'
+    )
+
+    # Función para manejar el evento del botón
+    def toggle_trace(button):
+        idx = button.description
+        trace = fig.data[df.columns.get_loc(idx)]
+        trace.visible = not trace.visible
+
+    # Crear un botón para cada variable
+    buttons = [
+        Button(
+            description=str(feature_id),
+            button_style='success' if df.columns.get_loc(feature_id) in meaningful_features_subset_ids else '') 
+        for feature_id in df.columns
+    ]
+
+    for button in buttons:
+        button.on_click(toggle_trace)
+
+    output_move = Output()
+    output_delta_x = Output()
+    output_delta_y = Output()
+    
+
+    delta_x = 10   
+    delta_y = 0.1
+    
+    def move_left(button):
+        with output_move:
+            output_move.clear_output(wait=True)
+            start_date, end_date = fig.layout.xaxis.range
+            new_start_date = shift_datetime(start_date, delta_x, '-', dateformat) 
+            new_end_date = shift_datetime(end_date, delta_x, '-', dateformat) 
+            with fig.batch_update():
+                fig.layout.xaxis.range = [new_start_date, new_end_date]
+
+    def move_right(button):
+        output_move.clear_output(wait=True)
+        with output_move:
+            start_date, end_date = fig.layout.xaxis.range
+            new_start_date = shift_datetime(start_date, delta_x, '+', dateformat) 
+            new_end_date = shift_datetime(end_date, delta_x, '+', dateformat) 
+            with fig.batch_update():
+                fig.layout.xaxis.range = [new_start_date, new_end_date]
+        
+    def move_down(button):
+        with output_move:
+            output_move.clear_output(wait=True)
+            start_y, end_y = fig.layout.yaxis.range
+            with fig.batch_update():
+                fig.layout.yaxis.range = [start_y-delta_y, end_y-delta_y]
+
+    def move_up(button):
+        with output_move:
+            output_move.clear_output(wait=True)
+            start_y, end_y = fig.layout.yaxis.range
+            with fig.batch_update():
+                fig.layout.yaxis.range = [start_y+delta_y, end_y+delta_y]
+
+    def delta_x_bigger():
+        nonlocal delta_x, delta_y
+        with output_delta_x: 
+            output_delta_x.clear_output(wait = True)
+            print("Delta before", delta_x)
+            delta_x = delta_x*10
+            #print("Bigger delta_x")
+            print("delta_x:", delta_x)
+
+    def delta_y_bigger():
+        nonlocal delta_x, delta_y
+        with output_delta_y: 
+            output_delta_y.clear_output(wait = True)
+            print("Delta before", delta_y)
+            delta_y = delta_y * 10
+            print("delta_y:", delta_y)
+
+    def delta_x_lower():
+        nonlocal delta_x, delta_y
+        with output_delta_x:
+            output_delta_x.clear_output(wait = True)
+            print("Delta before", delta_x)
+            delta_x /= 10
+            print("delta_x:", delta_x)
+
+    def delta_y_lower():
+        nonlocal delta_x, delta_y
+        with output_delta_y: 
+            output_delta_y.clear_output(wait = True)
+            print("Delta before", delta_y)
+            delta_y = delta_y * 10
+            print("delta_y:", delta_y)
+    
+    button_left = Button(description="←")
+    button_right = Button(description="→")
+    button_up = Button(description="↑")
+    button_down = Button(description="↓")
+    
+    button_step_x_up = Button(description="dx ↑")
+    button_step_x_down = Button(description="dx ↓")
+    button_step_y_up = Button(description="dy↑")
+    button_step_y_down = Button(description="dy↓")
+
+
+    # TODO: Arreglar que se pueda modificar el paso con el que se avanza. No se ve el output y no se modifica el valor
+    button_step_x_up.on_click(delta_x_bigger)
+    button_step_x_down.on_click(delta_x_lower)
+    button_step_y_up.on_click(delta_y_bigger)
+    button_step_y_down.on_click(delta_y_lower)
+    
+    
+    steps_x = VBox([button_step_x_up, button_step_x_down])
+    steps_y = VBox([button_step_y_up, button_step_y_down])
+
+
+    button_left.on_click(move_left)
+    button_right.on_click(move_right)
+    button_up.on_click(move_up)
+    button_down.on_click(move_down)
+    
+    arrow_buttons = HBox([button_left, button_right, button_up, button_down, steps_x, steps_y])
+    
+    # Organizar los botones en un layout horizontal
+    hbox_layout = widgets.Layout(display='flex', flex_flow='row wrap', align_items='flex-start')
+    
+    hbox = HBox(buttons, layout=hbox_layout)
+
+    # Mostrar el gráfico y los botones
+    box_layout = widgets.Layout(display='flex',
+                flex_flow='column',
+                align_items='center',
+                width='100%')
+
+    box = VBox([hbox, arrow_buttons, output_move, output_delta_x, output_delta_y, fig, output_windows], layout=box_layout)
+    
+    display(box)
+

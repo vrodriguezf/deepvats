@@ -4,8 +4,8 @@
 __all__ = ['get_dataset', 'umap_parameters', 'get_prjs', 'plot_projections', 'plot_projections_clusters',
            'calculate_cluster_stats', 'anomaly_score', 'detector', 'plot_anomaly_scores_distribution',
            'plot_clusters_with_anomalies', 'update_plot', 'plot_clusters_with_anomalies_interactive_plot',
-           'get_df_selected', 'shift_datetime', 'InteractiveAnomalyPlot', 'plot_save', 'get_anomalies',
-           'get_anomaly_styles', 'plot_initial_config', 'ts_plot_interactive']
+           'get_df_selected', 'shift_datetime', 'get_anomalies', 'get_anomaly_styles', 'InteractiveAnomalyPlot',
+           'plot_save', 'plot_initial_config', 'ts_plot_interactive']
 
 # %% ../nbs/xai.ipynb 1
 #Weight & Biases
@@ -312,6 +312,42 @@ def shift_datetime(dt, seconds, sign, dateformat="%Y-%m-%d %H:%M:%S.%f", print_f
 
 
 # %% ../nbs/xai.ipynb 21
+def get_anomalies(df, threshold, flag):
+    df['anomaly'] = [ (score > threshold) and flag for score in df['anomaly_score']]
+    
+def get_anomaly_styles(df, threshold, anomaly_scores, flag = False, print_flag = False):
+        if print_flag: print("Threshold: ", threshold)
+        if print_flag: print("Flag", flag)
+        if print_flag: print("df ~", df.shape)
+        df['anomaly'] = [ (score > threshold) and flag for score in df['anomaly_score'] ]
+        print(df)
+        get_anomalies(df, threshold, flag)
+        anomalies = df[df['anomaly']]
+        if flag:
+            df['anomaly'] = [ 
+                (score > threshold) and flag 
+                for score in anomaly_scores 
+            ]
+            symbols = [
+                'x' if is_anomaly else 'circle' 
+                for is_anomaly in df['anomaly']
+            ]
+            line_colors = [
+                'black'
+                if (is_anomaly and flag) else 'rgba(0,0,0,0)'
+                for is_anomaly in df['anomaly']
+            ]
+        else:
+            symbols = ['circle' for _ in df['x1']]
+            line_colors = ['rgba(0,0,0,0)' for _ in df['x1']]
+        if print_flag: print(anomalies)
+        return symbols, line_colors
+### Example of use
+#prjs_df = pd.DataFrame(prjs_umap, columns = ['x1', 'x2'])
+#prjs_df['anomaly_score'] = anomaly_scores
+#s, l = get_anomaly_styles(prjs_df, 1, True)
+
+# %% ../nbs/xai.ipynb 22
 class InteractiveAnomalyPlot():
     def __init__(
         self, selected_indices = [], 
@@ -320,18 +356,20 @@ class InteractiveAnomalyPlot():
         path = "../imgs", w = 0
     ):
         self.selected_indices = selected_indices
+        self.selected_indices_tmp = selected_indices
         self.threshold = threshold
+        self.threshold_ = threshold
         self.anomaly_flag = anomaly_flag
-        self.w = w,
+        self.w = w
         self.name = f"w={self.w}"
         self.path = f"{path}{self.name}.png"
+        self.interaction_enabled = True
     
 
     def plot_projections_clusters_interactive(
         self, prjs, cluster_labels, umap_params, anomaly_scores=[], fig_size=(7,7), print_flag = False
     ):
-        threshold_ = self.threshold
-        selected_indices_tmp = self.selected_indices
+        self.selected_indices_tmp = self.selected_indices
         py.init_notebook_mode()
 
         prjs_df, cluster_colors = plot_initial_config(prjs, cluster_labels, anomaly_scores)
@@ -341,7 +379,7 @@ class InteractiveAnomalyPlot():
 
         marker_colors = prjs_df['cluster'].map(cluster_colors)
     
-        symbols, line_colors = get_anomaly_styles(prjs_df, threshold_, anomaly_scores, self.anomaly_flag, print_flag)
+        symbols, line_colors = get_anomaly_styles(prjs_df, self.threshold_, anomaly_scores, self.anomaly_flag, print_flag)
     
         fig = go.FigureWidget(
             [
@@ -362,8 +400,8 @@ class InteractiveAnomalyPlot():
             x=prjs_df['x1'],  # Reemplaza 'x1' y 'x2' con los nombres de tus columnas de datos
             y=prjs_df['x2'],  # Reemplaza 'x1' y 'x2' con los nombres de tus columnas de datos
             mode="lines",  # Establece el modo en "lines"
-            line=dict(color='rgba(128, 128, 128, 0.5)', width=1),
-            showlegend=False  # Puedes configurar si deseas mostrar esta línea en la leyenda
+            line=dict(color='rgba(128, 128, 128, 0.5)', width=1)#,
+            #showlegend=False  # Puedes configurar si deseas mostrar esta línea en la leyenda
         )
     
         fig.add_trace(line_trace)
@@ -394,53 +432,45 @@ class InteractiveAnomalyPlot():
         output_tmp = Output()
         output_button = Output()
         output_anomaly = Output()
+        output_threshold = Output()
     
     
         def select_action(trace, points, selector):
-            global selected_indices_tmp
-            selected_indices_tmp = points.point_inds
+            self.selected_indices_tmp = points.point_inds
             with output_tmp:
                 output_tmp.clear_output(wait=True)
-                print("Selected indices tmp:", selected_indices_tmp)
+                if print_flag: print("Selected indices tmp:", self.selected_indices_tmp)
         
         def button_action(b):
-            #global selected_indices
-            global selected_indices_tmp
-            self.selected_indices = selected_indices_tmp 
+            self.selected_indices = self.selected_indices_tmp 
             with output_button: 
                 output_button.clear_output(wait = True)
-                print("Selected indices:", self.selected_indices)
+                if print_flag: print("Selected indices:", self.selected_indices)
 
     
-        def update_anomalies(anomaly_flag):
-            #nonlocal threshold_
-            #nonlocal anomaly_scores
-            #nonlocal fig
-            #nonlocal print_flag
-            
+        def update_anomalies():           
             if print_flag: print("About to update anomalies")
-            symbols, line_colors = get_anomaly_styles(prjs_df,threshold_,anomaly_flag)
-    
+                
+            symbols, line_colors = get_anomaly_styles(prjs_df, self.threshold_, anomaly_scores, self.anomaly_flag, print_flag)
+
+            if print_flag: print("Anomaly styles got")
+
             with fig.batch_update():
                 fig.data[0].marker.symbol = symbols
                 fig.data[0].marker.line.color = line_colors
-    
-            if print_flag: print("Threshold: ", threshold_)
+            if print_flag: print("Anomalies updated")
+            if print_flag: print("Threshold: ", self.threshold_)
             if print_flag: print("Scores: ", anomaly_scores)
         
               
         def anomaly_action(b):
-            #nonlocal anomaly_flag
-            self.anomaly_flag = not self.anomaly_flag
             with output_anomaly:  # Cambia output_flag a output_anomaly
                 output_anomaly.clear_output(wait=True)
-                if print_flag:
-                    print("Show anomalies:", self.anomaly_flag)
-                update_anomalies(self.anomaly_flag)
-                    
-                
-            
-        
+                if print_fllag: print("Negate anomaly flag")
+                self.anomaly_flag = not self.anomaly_flag
+                if print_flag: print("Show anomalies:", self.anomaly_flag)
+                update_anomalies()
+                              
         sca.on_selection(select_action)
         layout = widgets.Layout(width='auto', height='40px')
         button = Button(
@@ -483,31 +513,30 @@ class InteractiveAnomalyPlot():
 
     
         threshold_slider = FloatSlider(
-            value=threshold_,
+            value=self.threshold_,
             min=0.0,
             max=float(np.ceil(self.threshold+5)),
-            step=0.01,
+            step=0.0001,
             description='Anomaly threshold:',
             continuous_update=False
         )
     
-        interaction_enabled = True
         def pause_interaction(b):
-            global interaction_enabled
-            interaction_enabled = False
+            self.interaction_enabled = False
             fig.update_layout(dragmode='pan')
     
         def resume_interaction(b):
-            global interaction_enabled
-            interaction_enabled = True
+            self.interaction_enabled = True
             fig.update_layout(dragmode='lasso')
 
     
         def update_threshold(change):
-            #nonlocal threshold_
-            #nonlocal anomaly_flag
-            threshold_ = change.new
-            update_anomalies(self.anomaly_flag)
+            with output_threshold: 
+                output_threshold.clear_output(wait = True)
+                if print_flag: print("Update threshold")
+                self.threshold_ = change.new
+                if print_flag: print("Update anomalies threshold = ", self.threshold_)
+                update_anomalies()
         
 
         pause_button.on_click(pause_interaction)
@@ -518,7 +547,7 @@ class InteractiveAnomalyPlot():
         #####
         space = HTML("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;") 
     
-        vbox = VBox((output_tmp, output_button, output_anomaly, fig))
+        vbox = VBox((output_tmp, output_button, output_anomaly, output_threshold, fig))
         hbox = HBox((space, button, space, pause_button, space, resume_button, anomaly_button))
     
         # Centrar las dos cajas horizontalmente en el VBox
@@ -538,48 +567,12 @@ class InteractiveAnomalyPlot():
         display(box)
 
 
-# %% ../nbs/xai.ipynb 22
+# %% ../nbs/xai.ipynb 23
 def plot_save(fig, w):
     image_bytes = pio.to_image(fig, format='png')
     with open(f"../imgs/w={w}.png", 'wb') as f:
         f.write(image_bytes)
     
-
-# %% ../nbs/xai.ipynb 23
-def get_anomalies(df, threshold, flag):
-    df['anomaly'] = [ (score > threshold) and flag for score in df['anomaly_score']]
-    
-def get_anomaly_styles(df, threshold, anomaly_scores, flag = False, print_flag = False):
-        if print_flag: print("Threshold: ", threshold)
-        if print_flag: print("Flag", flag)
-        if print_flag: print("df ~", df.shape)
-        df['anomaly'] = [ (score > threshold) and flag for score in df['anomaly_score'] ]
-        print(df)
-        get_anomalies(df, threshold, flag)
-        anomalies = df[df['anomaly']]
-        if flag:
-            df['anomaly'] = [ 
-                (score > threshold) and flag 
-                for score in anomaly_scores 
-            ]
-            symbols = [
-                'x' if is_anomaly else 'circle' 
-                for is_anomaly in df['anomaly']
-            ]
-            line_colors = [
-                'black'
-                if (is_anomaly and flag) else 'rgba(0,0,0,0)'
-                for is_anomaly in df['anomaly']
-            ]
-        else:
-            symbols = ['circle' for _ in df['x1']]
-            line_colors = ['rgba(0,0,0,0)' for _ in df['x1']]
-        if print_flag: print(anomalies)
-        return symbols, line_colors
-### Example of use
-#prjs_df = pd.DataFrame(prjs_umap, columns = ['x1', 'x2'])
-#prjs_df['anomaly_score'] = anomaly_scores
-#s, l = get_anomaly_styles(prjs_df, 1, True)
 
 # %% ../nbs/xai.ipynb 24
 def plot_initial_config(prjs, cluster_labels, anomaly_scores):

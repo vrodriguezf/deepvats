@@ -33,3 +33,4 @@ configuration:
       min_dist: 0.1
       random_state: 1234
       metric: 'euclidean'
+      cpu_flag: false

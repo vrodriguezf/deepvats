@@ -122,7 +122,7 @@ def umap_parameters(config_dr, config):
         'init': 'random',
         'hash_input': True
     }
-    if config.cpu_flag: 
+    if config_dr.cpu_flag: 
         umap_params = umap_params_cpu
     else:
         umap_params = umap_params_gpu
@@ -141,7 +141,7 @@ def get_prjs(embs_no_nan, config_dr, config, print_flag = False):
         print(prjs_pca.shape)
     prjs_umap = get_UMAP_prjs(
         input_data = prjs_pca, 
-        cpu =  config.cpu_flag, #config_dr.cpu, 
+        cpu =  config_dr.cpu_flag, #config_dr.cpu, 
         print_flag = print_flag,         
         **umap_params
     )

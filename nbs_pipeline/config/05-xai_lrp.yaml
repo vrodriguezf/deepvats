@@ -21,18 +21,7 @@ configuration:
     entity: *wdb_user
     # The project to use for wandb,
     project: *wdb_project 
-  encoder:
-    artifacts: 
-      train: 
-        enc_prefix: !join [ *wdb_user, '/', *wdb_project, '/', *alg]
-      # If none, the validation set used to train enc is used
-      valid: null
-      enc: 'train'
-      dr: null
-    umap:
-      n_neighbors: 15
-      min_dist: 0.1
-      random_state: 1234
-      metric: 'euclidean'
-  cpu_flag: false
+  artifact: 
+    prefix: !join [ *wdb_user, '/', *wdb_project, '/embeddings-', *alg]
+    version: 'latest'
   allow_val_change: true

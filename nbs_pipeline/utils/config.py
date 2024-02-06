@@ -453,6 +453,8 @@ def get_artifact_config_dimensionality_reduction(print_flag: bool = False) -> Tu
     job_type        = config.job_type
     enc_artifact = build_enc_artifact(config, print_flag)
     config = config.configuration
+    if (config.encoder.artifacts.dr is not None):
+        config.encoder.artifacts.dr = enc_artifact
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use, 
         wandb_group         = config.wandb.group,
@@ -460,11 +462,30 @@ def get_artifact_config_dimensionality_reduction(print_flag: bool = False) -> Tu
         wandb_project       = config.wandb.project,
         valid_artifact      = config.encoder.artifacts.valid, 
         train_artifact      = enc_artifact,
+        dr_artifact         = config.encoder.artifacts.dr,
         n_neighbors         = config.encoder.umap.n_neighbors,
         min_dist            = config.encoder.umap.min_dist,
-        random_state        = config.encoder.umap.random_state
+        random_state        = config.encoder.umap.random_state,
+        metric              = config.encoder.umap.metric
     )
     return artifact_config, job_type
+
+def build_emb_artifact(
+    config: AttrDict, 
+    print_flag: bool = False
+) -> str:
+    """
+    Build enc_artifact name from config data.
+    """
+    version = config.configuration.artifact.version
+    emb_artifact = config.configuration.artifact.prefix
+    if (version == 'latest'):
+        emb_artifact+=":latest"
+    else:
+        emb_artifact=emb_artifact+":v"+version
+    if (print_flag):
+        print("enc_artifact: "+emb_artifact)
+    return emb_artifact
 
 ##################
 # 05 - XAI-LRP   #
@@ -477,7 +498,7 @@ def get_artifact_config_xai_lrp(print_flag: bool = False) -> Tuple[AttrDict, str
     """
     config          = get_config(print_flag, "05-xai_lrp")
     job_type        = config.job_type
-    train_artifact = build_enc_artifact(config, print_flag)
+    emb_artifact    = build_emb_artifact(config, print_flag)
     config = config.configuration
     if print_flag: 
         print("-- config --")
@@ -488,17 +509,9 @@ def get_artifact_config_xai_lrp(print_flag: bool = False) -> Tuple[AttrDict, str
         wandb_group         = config.wandb.group,
         wandb_entity        = config.wandb.entity,
         wandb_project       = config.wandb.project,
-        valid_artifact      = config.encoder.artifacts.valid, 
-        train_artifact      = train_artifact,
-        enc_artifact        = train_artifact if config.encoder.artifacts.enc == 'train' else config.encoder.artifacts.valid,
-        n_neighbors         = config.encoder.umap.n_neighbors,
-        min_dist            = config.encoder.umap.min_dist,
-        random_state        = config.encoder.umap.random_state,
-        metric              = config.encoder.umap.metric,
-        cpu_flag            = config.cpu_flag,
+        emb_artifact        = emb_artifact,
         job_type            = job_type,
-        allow_val_change    = config.allow_val_change,
-        dr_artifact         = config.encoder.artifacts.dr
+        allow_val_change    = config.allow_val_change
     )
 
     return artifact_config

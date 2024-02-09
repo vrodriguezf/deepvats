@@ -1,5 +1,5 @@
 services:
-  jupyter-macu:
+  jupyter:
     build:
       args:
         - username=${USER_NAME}

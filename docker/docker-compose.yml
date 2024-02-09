@@ -1,5 +1,5 @@
 services:
-  jupyter:
+  jupyter-${USER_NAME}:
     build:
       args:
         - username=${USER_NAME}

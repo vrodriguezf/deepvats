@@ -786,6 +786,33 @@ stumpy_toy_0 = AttrDict(
     )
 )
 
+eamonn_penguins = AttrDict(
+    alias="penguins",
+    fname="MP_first_test_penguin_sample",
+    ftype=".csv",
+    cols=[],
+    freq="1s",
+    time_col=None,
+    mvp = AttrDict(
+        batch_size = 512, #To check
+        n_epoch = 100, #To check
+        ws = [10,30], #To check
+        stride = 5 #To check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512, #To check
+        n_epoch = 100,#To check
+        stride = 48,#To check
+        w      = 224,#To check
+        delta  = 60,#To check
+        nfs    = [64, 32, 16],#To check
+        kss     = [10, 5, 5],#To check
+        output_filter_size = 10,#To check
+        top_k = [2,2,4],#To check
+        pool_szs = [2,2,4]#To check
+    )
+)
+
 tested_configs = {
     'monash_australian_electricity_demand_0': monash_australian_electricity_demand_0,
     'monash_solar_4_seconds_0': monash_solar_4_seconds_0,
@@ -794,7 +821,8 @@ tested_configs = {
     'monash_solar_10_minutes_0': monash_solar_10_minutes_0,
     'etth1_0': etth1_0,
     'stumpy_abp_0':  stumpy_abp_0,
-    'stumpy_toy_0': stumpy_toy_0
+    'stumpy_toy_0': stumpy_toy_0,
+    'eamonn_penguins': eamonn_penguins
 }
 
 #| export

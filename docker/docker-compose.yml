@@ -23,7 +23,7 @@ services:
       - WANDB_DIR=/home/${USER_NAME}/work
       - JUPYTER_TOKEN=${JUPYTER_TOKEN}
     volumes:
-      - ../:/home/${USER}/work
+      - ../:/home/${USER_NAME}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/
       - conda-env:/home/${USER_NAME}/env
       - miniconda:/home/${USER_NAME}/miniconda3

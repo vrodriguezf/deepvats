@@ -418,9 +418,9 @@ class InteractiveAnomalyPlot():
         )
 
         line_trace = go.Scatter(
-            x=prjs_df['x1'],  # Reemplaza 'x1' y 'x2' con los nombres de tus columnas de datos
-            y=prjs_df['x2'],  # Reemplaza 'x1' y 'x2' con los nombres de tus columnas de datos
-            mode="lines",  # Establece el modo en "lines"
+            x=prjs_df['x1'], 
+            y=prjs_df['x2'], 
+            mode="lines",  
             line=dict(color='rgba(128, 128, 128, 0.5)', width=1)#,
             #showlegend=False  # Puedes configurar si deseas mostrar esta línea en la leyenda
         )
@@ -454,7 +454,7 @@ class InteractiveAnomalyPlot():
         output_button = Output()
         output_anomaly = Output()
         output_threshold = Output()
-    
+        output_width = Output()
     
         def select_action(trace, points, selector):
             self.selected_indices_tmp = points.point_inds
@@ -558,13 +558,40 @@ class InteractiveAnomalyPlot():
                 self.threshold_ = change.new
                 if print_flag: print("Update anomalies threshold = ", self.threshold_)
                 update_anomalies()
-        
+
+        #### Width
+        width_slider = FloatSlider(
+            value = 0.5,  
+            min   = 0.0,  
+            max   = 1.0,  
+            step  = 0.0001, 
+            description = 'Line width:',  
+            continuous_update = False  
+        )
+
+        def update_width(change):
+            with output_width:
+                try:
+                    output_width.clear_output(wait = True)
+                    if print_flag: 
+                        print("Change line width")
+                        print("Trace to update:", fig.data[1])  
+                    with fig.batch_update():
+                        fig.data[1].line.width = change.new  # Actualiza la opacidad de la línea
+                    if print_flag: print("ChangeD line width")
+                except Exception as e:
+                    print("Error updating line width:", e)
+                    
+
 
         pause_button.on_click(pause_interaction)
         resume_button.on_click(resume_interaction)
     
         threshold_slider.observe(update_threshold, 'value')
     
+        #### 
+        width_slider.observe(update_width, names = 'value')
+        
         #####
         space = HTML("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;") 
     
@@ -579,9 +606,9 @@ class InteractiveAnomalyPlot():
                     width='100%')
 
         if self.anomaly_flag:
-            box = VBox((hbox,threshold_slider,vbox), layout = box_layout)
+            box = VBox((hbox,threshold_slider,width_slider, output_width, vbox), layout = box_layout)
         else: 
-            box = VBox((hbox,vbox), layout = box_layout)
+            box = VBox((hbox, width_slider, output_width, vbox), layout = box_layout)
         box.add_class("layout")
         plot_save(fig, self.w)
     

@@ -677,8 +677,9 @@ def ts_plot_interactive(
             type="rect",
             x0=df.index[start],
             x1=df.index[end],
-            y0= df[feature_id].min(),
-            y1= df[feature_id].max(),
+            y0= 0,
+            y1= 1,
+            yref = "paper",
             fillcolor=colors[i], #"LightSalmon",
             opacity=0.25,
             layer="below",
@@ -696,7 +697,7 @@ def ts_plot_interactive(
         margin=dict(l=10, r=10, t=30, b=10),
         xaxis=dict(
             tickformat = '%d-' + dateformat,
-            tickvals=list(range(len(df.index))),
+            #tickvals=list(range(len(df.index))),
             ticktext = [f'{i}-{val}' for i, val in enumerate(df.index)]
             #grid_color = 'lightgray', zerolinecolor='black', title = 'x'
         ),

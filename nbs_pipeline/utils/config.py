@@ -796,7 +796,61 @@ eamonn_penguins = AttrDict(
     mvp = AttrDict(
         batch_size = 512, #To check
         n_epoch = 100, #To check
-        ws = [10,30], #To check
+        ws = [10,30], #To check (Too Small)
+        stride = 5 #To check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512, #To check
+        n_epoch = 100,#To check
+        stride = 48,#To check
+        w      = 224,#To check
+        delta  = 60,#To check
+        nfs    = [64, 32, 16],#To check
+        kss     = [10, 5, 5],#To check
+        output_filter_size = 10,#To check
+        top_k = [2,2,4],#To check
+        pool_szs = [2,2,4]#To check
+    )
+)
+
+insects_0 = AttrDict(
+    alias="insects_0",
+    fname="insects_04_Lab_FD_031114",
+    ftype=".csv",
+    cols=[1,2,5],
+    freq="1s",
+    time_col=None,
+    mvp = AttrDict(
+        batch_size = 512, #To check
+        n_epoch = 100, #To check
+        ws = [10000,15000], #To check (Too Small)
+        stride = 5 #To check
+    ),
+    dcae = AttrDict(#TODO: Check
+        batch_size = 512, #To check
+        n_epoch = 100,#To check
+        stride = 48,#To check
+        w      = 224,#To check
+        delta  = 60,#To check
+        nfs    = [64, 32, 16],#To check
+        kss     = [10, 5, 5],#To check
+        output_filter_size = 10,#To check
+        top_k = [2,2,4],#To check
+        pool_szs = [2,2,4]#To check
+    )
+)
+
+cars = AttrDict(
+    alias="cars",
+    fname="monthly-car-sales",
+    ftype=".csv",
+    cols=[1],
+    freq="30d",
+    time_col=None,
+    mvp = AttrDict(
+        batch_size = 512, #To check
+        n_epoch = 100, #To check
+        ws = [12,48], #To check (Too Small)
         stride = 5 #To check
     ),
     dcae = AttrDict(#TODO: Check
@@ -822,7 +876,9 @@ tested_configs = {
     'etth1_0': etth1_0,
     'stumpy_abp_0':  stumpy_abp_0,
     'stumpy_toy_0': stumpy_toy_0,
-    'eamonn_penguins': eamonn_penguins
+    'eamonn_penguins': eamonn_penguins,
+    'insects_0': insects_0,
+    'cars': cars
 }
 
 #| export

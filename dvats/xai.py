@@ -635,8 +635,11 @@ def plot_initial_config(prjs, cluster_labels, anomaly_scores):
 
 # %% ../nbs/xai.ipynb 26
 def ts_plot_interactive(
-    df, selected_indices, meaningful_features_subset_ids, w, stride = 1, print_flag = False
+    df, selected_indices, meaningful_features_subset_ids, w, stride = 1, print_flag = False, num_points = 10000
 ):
+    #Just in case
+    num_points = min(df.shape[0], num_points)
+    
     window_ranges, n_windows, df_selected = get_df_selected(df, selected_indices, w, stride)
 
     if print_flag: print(n_windows, window_ranges)
@@ -644,6 +647,7 @@ def ts_plot_interactive(
     
     df.index = df.index.astype(str)
     dateformat = '%Y-%m-%d %H:%M:%S'
+    
     #df.index = pd.to_datetime(df.index)
     #df.index = df.index.strftime(dateformat)
     
@@ -656,12 +660,13 @@ def ts_plot_interactive(
     for feature_id in df.columns:
         feature_pos = df.columns.get_loc(feature_id)
         trace = go.Scatter(
-            x=df.index,
-            y=df[feature_id],
+            x=df.index[:num_points],
+            y=df[feature_id][:num_points],
             mode='lines',
             name=feature_id,
             visible=feature_pos in meaningful_features_subset_ids,
             text=df.index
+            #text=[f'{i}-{val}' for i, val in enumerate(df.index)]
         )
         fig.add_trace(trace)
         
@@ -690,7 +695,9 @@ def ts_plot_interactive(
         legend_title='Variables',
         margin=dict(l=10, r=10, t=30, b=10),
         xaxis=dict(
-            tickformat=dateformat#,
+            tickformat = '%d-' + dateformat,
+            tickvals=list(range(len(df.index))),
+            ticktext = [f'{i}-{val}' for i, val in enumerate(df.index)]
             #grid_color = 'lightgray', zerolinecolor='black', title = 'x'
         ),
         #yaxis = dict(grid_color = 'lightgray', zerolinecolor='black', title = 'y'),

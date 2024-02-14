@@ -797,7 +797,6 @@ def setup_style(self: InteractiveTSPlot):
         margin=dict(l=10, r=10, t=30, b=10),
         xaxis=dict(
             tickformat = '%d-' + self.dateformat,
-            constrain = 'domain'
             #tickvals=list(range(len(df.index))),
             #ticktext = [f'{i}-{val}' for i, val in enumerate(df.index)]
             #grid_color = 'lightgray', zerolinecolor='black', title = 'x'
@@ -806,10 +805,12 @@ def setup_style(self: InteractiveTSPlot):
         #plot_color = 'white',
         paper_bgcolor='#f0f0f0'
     )
+    self.fig.update_yaxes(fixedrange=True)
+
 InteractiveTSPlot.setup_style = setup_style
 
 # %% ../nbs/xai.ipynb 34
-def toggle_trace(button):
+def toggle_trace(self : InteractiveTSPlot, button : Button):
     idx = button.description
     trace = self.fig.data[self.df.columns.get_loc(idx)]
     trace.visible = not trace.visible
@@ -825,7 +826,7 @@ def set_features_buttons(self):
         ) 
         for feature_id in self.df.columns
     ]
-    for button in buttons:
+    for button in self.buttons:
         button.on_click(self.toggle_trace)
 InteractiveTSPlot.set_features_buttons = set_features_buttons
 
@@ -931,7 +932,7 @@ def setup_boxes(self: InteractiveTSPlot):
     self.steps_y = VBox([self.button_step_y_up, self.button_step_y_down])
     arrow_buttons = HBox([self.button_left, self.button_right, self.button_up, self.button_down, self.steps_x, self.steps_y])
     hbox_layout = widgets.Layout(display='flex', flex_flow='row wrap', align_items='flex-start')
-    hbox = HBox(buttons, layout=hbox_layout)
+    hbox = HBox(self.buttons, layout=hbox_layout)
     box_layout = widgets.Layout(
         display='flex',
         flex_flow='column',
@@ -939,7 +940,7 @@ def setup_boxes(self: InteractiveTSPlot):
         width='100%'
     )
     if self.print_flag:
-        self.box = VBox([hbox, arrow_buttons, self.output_move, self.output_delta_x, self.loutput_delta_y, self.fig, self.output_windows], layout=box_layout)
+        self.box = VBox([hbox, arrow_buttons, self.output_move, self.output_delta_x, self.output_delta_y, self.fig, self.output_windows], layout=box_layout)
     else: 
         self.box = VBox([hbox, arrow_buttons, self.fig, self.output_windows], layout=box_layout)
 
@@ -951,6 +952,7 @@ def initial_plot(self: InteractiveTSPlot):
     self.add_selected_features()
     self.add_windows()
     self.setup_style()
+    self.set_features_buttons()
     self.add_movement_buttons()
     self.setup_boxes()
 InteractiveTSPlot.initial_plot = initial_plot

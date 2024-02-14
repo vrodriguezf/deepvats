@@ -5,7 +5,7 @@ __all__ = ['get_embeddings', 'get_dataset', 'umap_parameters', 'get_prjs', 'plot
            'calculate_cluster_stats', 'anomaly_score', 'detector', 'plot_anomaly_scores_distribution',
            'plot_clusters_with_anomalies', 'update_plot', 'plot_clusters_with_anomalies_interactive_plot',
            'get_df_selected', 'shift_datetime', 'get_anomalies', 'get_anomaly_styles', 'InteractiveAnomalyPlot',
-           'plot_save', 'plot_initial_config', 'ts_plot_interactive']
+           'plot_save', 'plot_initial_config', 'merge_overlapping_windows', 'ts_plot_interactive']
 
 # %% ../nbs/xai.ipynb 1
 #Weight & Biases
@@ -634,12 +634,32 @@ def plot_initial_config(prjs, cluster_labels, anomaly_scores):
     return prjs_df, cluster_colors
 
 # %% ../nbs/xai.ipynb 26
+def merge_overlapping_windows(windows):
+    if not windows:
+        return []
+
+    # Order
+    sorted_windows = sorted(windows, key=lambda x: x[0])
+
+    merged_windows = [sorted_windows[0]]
+
+    for window in sorted_windows[1:]:
+        if window[0] <= merged_windows[-1][1]:
+            # Merge!
+            merged_windows[-1] = (merged_windows[-1][0], max(window[1], merged_windows[-1][1]))
+        else:
+            merged_windows.append(window)
+
+    return merged_windows
+
+# %% ../nbs/xai.ipynb 28
 def ts_plot_interactive(
     df, selected_indices, meaningful_features_subset_ids, w, stride = 1, print_flag = False, num_points = 10000
 ):
     
     
     window_ranges, n_windows, df_selected = get_df_selected(df, selected_indices, w, stride)
+    window_ranges = merge_overlapping_windows(window_ranges)
 
 
         
@@ -705,7 +725,8 @@ def ts_plot_interactive(
         legend_title='Variables',
         margin=dict(l=10, r=10, t=30, b=10),
         xaxis=dict(
-            tickformat = '%d-' + dateformat#,
+            tickformat = '%d-' + dateformat,
+            constrain = 'domain'
             #tickvals=list(range(len(df.index))),
             #ticktext = [f'{i}-{val}' for i, val in enumerate(df.index)]
             #grid_color = 'lightgray', zerolinecolor='black', title = 'x'

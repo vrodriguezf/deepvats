@@ -4,8 +4,12 @@
 __all__ = ['get_embeddings', 'get_dataset', 'umap_parameters', 'get_prjs', 'plot_projections', 'plot_projections_clusters',
            'calculate_cluster_stats', 'anomaly_score', 'detector', 'plot_anomaly_scores_distribution',
            'plot_clusters_with_anomalies', 'update_plot', 'plot_clusters_with_anomalies_interactive_plot',
-           'get_df_selected', 'shift_datetime', 'get_anomalies', 'get_anomaly_styles', 'InteractiveAnomalyPlot',
-           'plot_save', 'plot_initial_config', 'merge_overlapping_windows', 'ts_plot_interactive']
+           'get_df_selected', 'shift_datetime', 'get_dateformat', 'get_anomalies', 'get_anomaly_styles',
+           'InteractiveAnomalyPlot', 'plot_save', 'plot_initial_config', 'merge_overlapping_windows',
+           'InteractiveTSPlot', 'add_selected_features', 'add_windows', 'setup_style', 'toggle_trace',
+           'set_features_buttons', 'move_left', 'move_right', 'move_down', 'move_up', 'delta_x_bigger',
+           'delta_y_bigger', 'delta_x_lower', 'delta_y_lower', 'add_movement_buttons', 'setup_boxes', 'initial_plot',
+           'show']
 
 # %% ../nbs/xai.ipynb 1
 #Weight & Biases
@@ -280,10 +284,12 @@ def shift_datetime(dt, seconds, sign, dateformat="%Y-%m-%d %H:%M:%S.%f", print_f
     a sign and moves the date such number of seconds to the future 
     if sign is '+' and to the past if sing is '-'.
     """
+    
     if print_flag: print(dateformat)
     dateformat2= "%Y-%m-%d %H:%M:%S.%f"
     dateformat3 = "%Y-%m-%d"
     ok = False
+
     try: 
         if print_flag: print("dt ", dt, "seconds", seconds, "sign", sign)
         new_dt = datetime.strptime(dt, dateformat)
@@ -322,7 +328,7 @@ def shift_datetime(dt, seconds, sign, dateformat="%Y-%m-%d %H:%M:%S.%f", print_f
             if print_flag: print("replacing")
             new_dt = new_dt.replace(hour=0, minute=0, second=0, microsecond=0)
         
-        new_dt_str = new_dt.strftime(dateformat)
+        new_dt_str = new_dt.strftime(dateformat2)
         if print_flag: print("new dt ", new_dt)
     except ValueError as e:
         if print_flag: print("Aqui3")
@@ -332,7 +338,32 @@ def shift_datetime(dt, seconds, sign, dateformat="%Y-%m-%d %H:%M:%S.%f", print_f
 
 
 
-# %% ../nbs/xai.ipynb 22
+# %% ../nbs/xai.ipynb 21
+def get_dateformat(text_date):
+    dateformat1 = "%Y-%m-%d %H:%M:%S"
+    dateformat2 = "%Y-%m-%d %H:%M:%S.%f"
+    dateformat3 = "%Y-%m-%d"
+    dateformat = ""
+    parts = text_date.split()
+
+    if len(parts) == 2:
+        time_parts = parts[1].split(':')
+        if len(time_parts) == 3:
+            sec_parts = time_parts[2].split('.')
+            if len(sec_parts) == 2:
+                dateformat = dateformat2
+            else:
+                dateformat = dateformat1
+        else:
+            dateformat = "unknown format 1"
+    elif len(parts) == 1:
+        dateformat = dateformat3
+    else:
+        dateformat = "unknown format 2"
+
+    return dateformat
+
+# %% ../nbs/xai.ipynb 23
 def get_anomalies(df, threshold, flag):
     df['anomaly'] = [ (score > threshold) and flag for score in df['anomaly_score']]
     
@@ -368,7 +399,7 @@ def get_anomaly_styles(df, threshold, anomaly_scores, flag = False, print_flag =
 #prjs_df['anomaly_score'] = anomaly_scores
 #s, l = get_anomaly_styles(prjs_df, 1, True)
 
-# %% ../nbs/xai.ipynb 23
+# %% ../nbs/xai.ipynb 24
 class InteractiveAnomalyPlot():
     def __init__(
         self, selected_indices = [], 
@@ -615,14 +646,14 @@ class InteractiveAnomalyPlot():
         display(box)
 
 
-# %% ../nbs/xai.ipynb 24
+# %% ../nbs/xai.ipynb 25
 def plot_save(fig, w):
     image_bytes = pio.to_image(fig, format='png')
     with open(f"../imgs/w={w}.png", 'wb') as f:
         f.write(image_bytes)
     
 
-# %% ../nbs/xai.ipynb 25
+# %% ../nbs/xai.ipynb 26
 def plot_initial_config(prjs, cluster_labels, anomaly_scores):
     prjs_df = pd.DataFrame(prjs, columns = ['x1', 'x2'])
     prjs_df['cluster'] = cluster_labels
@@ -633,7 +664,7 @@ def plot_initial_config(prjs, cluster_labels, anomaly_scores):
     cluster_colors = dict(zip(cluster_colors_df['cluster'], cluster_colors_df['color']))
     return prjs_df, cluster_colors
 
-# %% ../nbs/xai.ipynb 26
+# %% ../nbs/xai.ipynb 27
 def merge_overlapping_windows(windows):
     if not windows:
         return []
@@ -652,80 +683,120 @@ def merge_overlapping_windows(windows):
 
     return merged_windows
 
-# %% ../nbs/xai.ipynb 28
-def ts_plot_interactive(
-    df, selected_indices, meaningful_features_subset_ids, w, stride = 1, print_flag = False, num_points = 10000
-):
+# %% ../nbs/xai.ipynb 29
+class InteractiveTSPlot: 
+    def __init__(
+        self, 
+        df, 
+        selected_indices, 
+        meaningful_features_subset_ids, 
+        w, 
+        stride=1, 
+        print_flag=False, 
+        num_points=10000, 
+        dateformat='%Y-%m-%d %H:%M:%S',
+        delta_x = 10, 
+        delta_y = 0.1  
+    ):
+        self.df = df
+        self.selected_indices = selected_indices
+        self.meaningful_features_subset_ids = meaningful_features_subset_ids
+        self.w = w
+        self.stride = stride
+        self.print_flag = print_flag
+        self.num_points = num_points
+        self.dateformat = dateformat
+        self.fig = go.FigureWidget()
+        self.buttons = []
+        self.print_flag = print_flag   
     
-    
-    window_ranges, n_windows, df_selected = get_df_selected(df, selected_indices, w, stride)
-    window_ranges = merge_overlapping_windows(window_ranges)
+        self.delta_x = delta_x
+        self.delta_y = delta_y
 
+        self.window_ranges, self.n_windows, self.df_selected = get_df_selected(
+            self.df, self.selected_indices, self.w, self.stride
+        )
+        # Ensure the small possible number of windows to plot (like in R Shiny App)
+        self.window_ranges = merge_overlapping_windows(self.window_ranges)
+
+        #Num points no va bien...
+        #num_points = min(df_selected.shape[0], num_points)
+
+        if self.print_flag: 
+            print("windows: ", self.n_windows, self.window_ranges)
+            print("selected id: ", self.df_selected.index)
+            print("points: ", self.num_points)
+
+        self.df.index = self.df.index.astype(str)
+        self.fig = go.FigureWidget()
+        self.colors = [
+            f'rgb({np.random.randint(0, 256)}, {np.random.randint(0, 256)}, {np.random.randint(0, 256)})' 
+            for _ in range(self.n_windows)
+        ]
+
+        ##############################
+        # Outputs for debug printing #
+        ##############################
+        self.output_windows = Output()
+        self.output_move = Output()
+        self.output_delta_x = Output()
+        self.output_delta_y = Output()
 
         
-    #Just in case
-    #Num points no va bien...
-    #num_points = min(df_selected.shape[0], num_points)
-    
-    if print_flag: 
-        print("windows: ", n_windows, window_ranges)
-        print("selected id: ", df_selected.index)
-        print("points: ", num_points)
-    
-    df.index = df.index.astype(str)
-    dateformat = '%Y-%m-%d %H:%M:%S'
-    
-    #df.index = pd.to_datetime(df.index)
-    #df.index = df.index.strftime(dateformat)
-    
-    fig = go.FigureWidget()
-    
-    colors = [f'rgb({np.random.randint(0, 256)}, {np.random.randint(0, 256)}, {np.random.randint(0, 256)})' for _ in range(n_windows)]
-    
-    # Agregar cada serie al gráfico con sombreado si está en df_selected
-    output_windows = Output()
-    for feature_id in df.columns:
-        feature_pos = df.columns.get_loc(feature_id)
+        
+        
+
+# %% ../nbs/xai.ipynb 30
+def add_selected_features(self: InteractiveTSPlot):
+    # Add features time series
+    for feature_id in self.df.columns:
+        feature_pos = self.df.columns.get_loc(feature_id)
         trace = go.Scatter(
             #x=df.index[:num_points],
             #y=df[feature_id][:num_points],
-            x = df.index,
-            y = df[feature_id],
+            x = self.df.index,
+            y = self.df[feature_id],
             mode='lines',
             name=feature_id,
-            visible=feature_pos in meaningful_features_subset_ids,
-            text=df.index
+            visible=feature_pos in self.meaningful_features_subset_ids,
+            text=self.df.index
             #text=[f'{i}-{val}' for i, val in enumerate(df.index)]
         )
-        fig.add_trace(trace)
+        self.fig.add_trace(trace)
         
-    # Aplicar sombreado a las ventanas dentro de df_selected
-    for i, (start, end) in enumerate(window_ranges):
-        
-        fig.add_shape(
+InteractiveTSPlot.add_selected_features = add_selected_features
+
+# %% ../nbs/xai.ipynb 31
+def add_windows(self: InteractiveTSPlot):
+    for i, (start, end) in enumerate(self.window_ranges):
+        self.fig.add_shape(
             type="rect",
-            x0=df.index[start],
-            x1=df.index[end],
+            x0=self.df.index[start],
+            x1=self.df.index[end],
             y0= 0,
             y1= 1,
             yref = "paper",
-            fillcolor=colors[i], #"LightSalmon",
+            fillcolor=self.colors[i], #"LightSalmon",
             opacity=0.25,
             layer="below",
-            line=dict(color=colors[i], width=1),
+            line=dict(color=self.colors[i], width=1),
             name = f"w_{i}"
         )
-        with output_windows:
-            print("w[" + str( selected_indices[i] )+ "]="+str(df.index[start])+", "+str(df.index[end])+")")
-    
-    fig.update_layout(
+        with self.output_windows:
+            print("w[" + str( self.selected_indices[i] )+ "]="+str(self.df.index[start])+", "+str(self.df.index[end])+")")
+
+InteractiveTSPlot.add_windows = add_windows
+
+# %% ../nbs/xai.ipynb 32
+def setup_style(self: InteractiveTSPlot):
+    self.fig.update_layout(
         title='Time Series with time window plot',
         xaxis_title='Datetime',
         yaxis_title='Value',
         legend_title='Variables',
         margin=dict(l=10, r=10, t=30, b=10),
         xaxis=dict(
-            tickformat = '%d-' + dateformat,
+            tickformat = '%d-' + self.dateformat,
             constrain = 'domain'
             #tickvals=list(range(len(df.index))),
             #ticktext = [f'{i}-{val}' for i, val in enumerate(df.index)]
@@ -735,138 +806,157 @@ def ts_plot_interactive(
         #plot_color = 'white',
         paper_bgcolor='#f0f0f0'
     )
+InteractiveTSPlot.setup_style = setup_style
 
-    # Función para manejar el evento del botón
-    def toggle_trace(button):
-        idx = button.description
-        trace = fig.data[df.columns.get_loc(idx)]
-        trace.visible = not trace.visible
+# %% ../nbs/xai.ipynb 34
+def toggle_trace(button):
+    idx = button.description
+    trace = self.fig.data[self.df.columns.get_loc(idx)]
+    trace.visible = not trace.visible
 
-    # Crear un botón para cada variable
-    buttons = [
+InteractiveTSPlot.toggle_trace = toggle_trace
+
+# %% ../nbs/xai.ipynb 35
+def set_features_buttons(self):
+    self.buttons = [
         Button(
             description=str(feature_id),
-            button_style='success' if df.columns.get_loc(feature_id) in meaningful_features_subset_ids else '') 
-        for feature_id in df.columns
+            button_style='success' if self.df.columns.get_loc(feature_id) in self.meaningful_features_subset_ids else ''
+        ) 
+        for feature_id in self.df.columns
     ]
-
     for button in buttons:
-        button.on_click(toggle_trace)
+        button.on_click(self.toggle_trace)
+InteractiveTSPlot.set_features_buttons = set_features_buttons
 
-    output_move = Output()
-    output_delta_x = Output()
-    output_delta_y = Output()
+# %% ../nbs/xai.ipynb 36
+def move_left(self : InteractiveTSPlot, button : Button):
+    with self.output_move:
+        self.output_move.clear_output(wait=True)
+        start_date, end_date = self.fig.layout.xaxis.range
+        new_start_date = shift_datetime(start_date, self.delta_x, '-', self.dateformat) 
+        new_end_date = shift_datetime(end_date, self.delta_x, '-', self.dateformat) 
+        with self.fig.batch_update():
+            self.fig.layout.xaxis.range = [new_start_date, new_end_date]
+
+def move_right(self : InteractiveTSPlot, button : Button):
+    self.output_move.clear_output(wait=True)
+    with self.output_move:
+        start_date, end_date = self.fig.layout.xaxis.range
+        new_start_date = shift_datetime(start_date, self.delta_x, '+', self.dateformat) 
+        new_end_date = shift_datetime(end_date, self.delta_x, '+', self.dateformat) 
+        with self.fig.batch_update():
+            self.fig.layout.xaxis.range = [new_start_date, new_end_date]
     
+def move_down(self: InteractiveTSPlot, button : Button):
+    with self.output_move:
+        self.output_move.clear_output(wait=True)
+        start_y, end_y = self.fig.layout.yaxis.range
+        with self.fig.batch_update():
+            self.ig.layout.yaxis.range = [start_y-self.delta_y, end_y-self.delta_y]
+def move_up(self: InteractiveTSPlot, button : Button):
+    with self.output_move:
+        self.output_move.clear_output(wait=True)
+        start_y, end_y = self.fig.layout.yaxis.range
+        with self.fig.batch_update():
+            self.fig.layout.yaxis.range = [start_y+self.delta_y, end_y+self.delta_y]
 
-    delta_x = 10   
-    delta_y = 0.1
+InteractiveTSPlot.move_left = move_left
+InteractiveTSPlot.move_right = move_right
+InteractiveTSPlot.move_down = move_down
+InteractiveTSPlot.move_up = move_up
+
+# %% ../nbs/xai.ipynb 37
+def delta_x_bigger(self: InteractiveTSPlot):
+    with self.output_delta_x: 
+        self.output_delta_x.clear_output(wait = True)
+        if self.print_flag: print("Delta before", self.delta_x)
+        self.delta_x *= 10
+        if self.print_flag: print("delta_x:", self.delta_x)
+
+def delta_y_bigger(self: InteractiveTSPlot):
+    with self.output_delta_y: 
+        self.output_delta_y.clear_output(wait = True)
+        if self.print_flag: print("Delta before", self.delta_y)
+        self.delta_y *= 10
+        if self.print_flag: print("delta_y:", self.delta_y)
+
+def delta_x_lower(self:InteractiveTSPlot):
+    with self.output_delta_x:
+        self.output_delta_x.clear_output(wait = True)
+        if self.print_flag: print("Delta before", self.delta_x)
+        self.delta_x /= 10
+        if self.print_flag: print("delta_x:", self.delta_x)
+
+def delta_y_lower(self:InteractiveTSPlot):
+    with self.output_delta_y: 
+        self.output_delta_y.clear_output(wait = True)
+        print("Delta before", self.delta_y)
+        self.delta_y = self.delta_y * 10
+        print("delta_y:", self.delta_y)
+InteractiveTSPlot.delta_x_bigger = delta_x_bigger
+InteractiveTSPlot.delta_y_bigger = delta_y_bigger
+InteractiveTSPlot.delta_x_lower = delta_x_lower
+InteractiveTSPlot.delta_y_lower = delta_y_lower
+
+# %% ../nbs/xai.ipynb 38
+def add_movement_buttons(self: InteractiveTSPlot):
+    self.button_left = Button(description="←")
+    self.button_right = Button(description="→")
+    self.button_up = Button(description="↑")
+    self.button_down = Button(description="↓")
     
-    def move_left(button):
-        with output_move:
-            output_move.clear_output(wait=True)
-            start_date, end_date = fig.layout.xaxis.range
-            new_start_date = shift_datetime(start_date, delta_x, '-', dateformat) 
-            new_end_date = shift_datetime(end_date, delta_x, '-', dateformat) 
-            with fig.batch_update():
-                fig.layout.xaxis.range = [new_start_date, new_end_date]
-
-    def move_right(button):
-        output_move.clear_output(wait=True)
-        with output_move:
-            start_date, end_date = fig.layout.xaxis.range
-            new_start_date = shift_datetime(start_date, delta_x, '+', dateformat) 
-            new_end_date = shift_datetime(end_date, delta_x, '+', dateformat) 
-            with fig.batch_update():
-                fig.layout.xaxis.range = [new_start_date, new_end_date]
-        
-    def move_down(button):
-        with output_move:
-            output_move.clear_output(wait=True)
-            start_y, end_y = fig.layout.yaxis.range
-            with fig.batch_update():
-                fig.layout.yaxis.range = [start_y-delta_y, end_y-delta_y]
-
-    def move_up(button):
-        with output_move:
-            output_move.clear_output(wait=True)
-            start_y, end_y = fig.layout.yaxis.range
-            with fig.batch_update():
-                fig.layout.yaxis.range = [start_y+delta_y, end_y+delta_y]
-
-    def delta_x_bigger():
-        nonlocal delta_x, delta_y
-        with output_delta_x: 
-            output_delta_x.clear_output(wait = True)
-            print("Delta before", delta_x)
-            delta_x = delta_x*10
-            #print("Bigger delta_x")
-            print("delta_x:", delta_x)
-
-    def delta_y_bigger():
-        nonlocal delta_x, delta_y
-        with output_delta_y: 
-            output_delta_y.clear_output(wait = True)
-            print("Delta before", delta_y)
-            delta_y = delta_y * 10
-            print("delta_y:", delta_y)
-
-    def delta_x_lower():
-        nonlocal delta_x, delta_y
-        with output_delta_x:
-            output_delta_x.clear_output(wait = True)
-            print("Delta before", delta_x)
-            delta_x /= 10
-            print("delta_x:", delta_x)
-
-    def delta_y_lower():
-        nonlocal delta_x, delta_y
-        with output_delta_y: 
-            output_delta_y.clear_output(wait = True)
-            print("Delta before", delta_y)
-            delta_y = delta_y * 10
-            print("delta_y:", delta_y)
-    
-    button_left = Button(description="←")
-    button_right = Button(description="→")
-    button_up = Button(description="↑")
-    button_down = Button(description="↓")
-    
-    button_step_x_up = Button(description="dx ↑")
-    button_step_x_down = Button(description="dx ↓")
-    button_step_y_up = Button(description="dy↑")
-    button_step_y_down = Button(description="dy↓")
+    self.button_step_x_up = Button(description="dx ↑")
+    self.button_step_x_down = Button(description="dx ↓")
+    self.button_step_y_up = Button(description="dy↑")
+    self.button_step_y_down = Button(description="dy↓")
 
 
     # TODO: Arreglar que se pueda modificar el paso con el que se avanza. No se ve el output y no se modifica el valor
-    button_step_x_up.on_click(delta_x_bigger)
-    button_step_x_down.on_click(delta_x_lower)
-    button_step_y_up.on_click(delta_y_bigger)
-    button_step_y_down.on_click(delta_y_lower)
-    
-    
-    steps_x = VBox([button_step_x_up, button_step_x_down])
-    steps_y = VBox([button_step_y_up, button_step_y_down])
+    self.button_step_x_up.on_click(self.delta_x_bigger)
+    self.button_step_x_down.on_click(self.delta_x_lower)
+    self.button_step_y_up.on_click(self.delta_y_bigger)
+    self.button_step_y_down.on_click(self.delta_y_lower)
 
+    self.button_left.on_click(self.move_left)
+    self.button_right.on_click(self.move_right)
+    self.button_up.on_click(self.move_up)
+    self.button_down.on_click(self.move_down)
 
-    button_left.on_click(move_left)
-    button_right.on_click(move_right)
-    button_up.on_click(move_up)
-    button_down.on_click(move_down)
-    
-    arrow_buttons = HBox([button_left, button_right, button_up, button_down, steps_x, steps_y])
-    
-    # Organizar los botones en un layout horizontal
+InteractiveTSPlot.add_movement_buttons = add_movement_buttons
+
+# %% ../nbs/xai.ipynb 40
+def setup_boxes(self: InteractiveTSPlot):
+    self.steps_x = VBox([self.button_step_x_up, self.button_step_x_down])
+    self.steps_y = VBox([self.button_step_y_up, self.button_step_y_down])
+    arrow_buttons = HBox([self.button_left, self.button_right, self.button_up, self.button_down, self.steps_x, self.steps_y])
     hbox_layout = widgets.Layout(display='flex', flex_flow='row wrap', align_items='flex-start')
-    
     hbox = HBox(buttons, layout=hbox_layout)
+    box_layout = widgets.Layout(
+        display='flex',
+        flex_flow='column',
+        align_items='center',
+        width='100%'
+    )
+    if self.print_flag:
+        self.box = VBox([hbox, arrow_buttons, self.output_move, self.output_delta_x, self.loutput_delta_y, self.fig, self.output_windows], layout=box_layout)
+    else: 
+        self.box = VBox([hbox, arrow_buttons, self.fig, self.output_windows], layout=box_layout)
 
-    # Mostrar el gráfico y los botones
-    box_layout = widgets.Layout(display='flex',
-                flex_flow='column',
-                align_items='center',
-                width='100%')
+InteractiveTSPlot.setup_boxes = setup_boxes
 
-    box = VBox([hbox, arrow_buttons, output_move, output_delta_x, output_delta_y, fig, output_windows], layout=box_layout)
-    
-    display(box)
 
+# %% ../nbs/xai.ipynb 41
+def initial_plot(self: InteractiveTSPlot):
+    self.add_selected_features()
+    self.add_windows()
+    self.setup_style()
+    self.add_movement_buttons()
+    self.setup_boxes()
+InteractiveTSPlot.initial_plot = initial_plot
+
+# %% ../nbs/xai.ipynb 42
+def show(self : InteractiveTSPlot):
+    self.initial_plot()
+    display(self.box)
+InteractiveTSPlot.show = show

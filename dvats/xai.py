@@ -835,8 +835,8 @@ def move_left(self : InteractiveTSPlot, button : Button):
     with self.output_move:
         self.output_move.clear_output(wait=True)
         start_date, end_date = self.fig.layout.xaxis.range
-        new_start_date = shift_datetime(start_date, self.delta_x, '-', self.dateformat) 
-        new_end_date = shift_datetime(end_date, self.delta_x, '-', self.dateformat) 
+        new_start_date = shift_datetime(start_date, self.delta_x, '-', self.dateformat, self.print_flag) 
+        new_end_date = shift_datetime(end_date, self.delta_x, '-', self.dateformat, self.print_flag) 
         with self.fig.batch_update():
             self.fig.layout.xaxis.range = [new_start_date, new_end_date]
 
@@ -844,8 +844,8 @@ def move_right(self : InteractiveTSPlot, button : Button):
     self.output_move.clear_output(wait=True)
     with self.output_move:
         start_date, end_date = self.fig.layout.xaxis.range
-        new_start_date = shift_datetime(start_date, self.delta_x, '+', self.dateformat) 
-        new_end_date = shift_datetime(end_date, self.delta_x, '+', self.dateformat) 
+        new_start_date = shift_datetime(start_date, self.delta_x, '+', self.dateformat, self.print_flag) 
+        new_end_date = shift_datetime(end_date, self.delta_x, '+', self.dateformat, self.print_flag) 
         with self.fig.batch_update():
             self.fig.layout.xaxis.range = [new_start_date, new_end_date]
     

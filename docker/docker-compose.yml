@@ -11,7 +11,7 @@ services:
       labels:
         - username=${USER_NAME}
       dockerfile: docker/Dockerfile.jupyter
-    image: dvats-jupyter:12.2.0-devel-ubuntu20.04
+    image: ${COMPOSE_PROJECT_NAME}-jupyter:12.2.0-devel-ubuntu20.04
     ports:
       - "${JUPYTER_PORT}:8888"
     environment:

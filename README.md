@@ -70,6 +70,9 @@ RSTUDIO_PORT=
 RSTUDIO_PASSWD=
 ```
 
+Alternatively, you can run ./docker/env.sh so the file .env is automatically generated with the basic user data to ensure the proper build of dockers.
+
+
 Finally, in a terminal located in the folder `docker` of this repository, run:
 
 ```docker-compose up -d```

@@ -5,7 +5,7 @@ GROUP_ID=$(id -g)
 USER_NAME=$(id -un)
 
 # Crear o sobrescribir el archivo .env con la información recopilada
-cat > .env_ << EOF
+cat > .env << EOF
 # The name of the docker-compose project
 COMPOSE_PROJECT_NAME=dvats-${USER_NAME}
 # The user ID you are using to run docker-compose

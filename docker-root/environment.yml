@@ -1,0 +1,72 @@
+name: dvats_env
+channels:
+  #--- Torch & Cuda
+  - pytorch
+  #- nvidia/label/cuda-12.2.0
+  - nvidia
+  #--- Generic
+  - conda-forge
+  - defaults
+  #--- AI
+  - fastai
+  - rapidsai
+  - defaults  
+  - conda-forge
+
+  - timeseriesai
+dependencies:
+  ##########################
+  # Generic configurations #
+  ##########################
+  - nano=7.2=h8228510_0
+  - git=2.42.0=pl5321h86e50cf_0
+  #--- github
+  - gh=2.37.0=ha8f183a_0
+  #--- Python
+  - python=3.10.13=hd12c33a_0_cpython
+  #WANDB <= 0.15.12 needs this version. See https://github.com/wandb/wandb/issues/6546
+  - ipython=8.16.1=pyh0d859eb_0
+  - pip=23.3.1=pyhd8ed1ab_0
+  - conda-forge::twine=4.0.2=pyhd8ed1ab_0
+  - conda-forge::xeus-python=0.15.10=py310hd41b1e2_1
+  #--- NodeJS
+  - conda-forge::nodejs=20.8.1=h1990674_0
+  #---Jupyter
+  - conda-forge::ipywidgets=8.1.1=pyhd8ed1ab_0
+  - conda-forge::jupyterlab=4.0.7=pyhd8ed1ab_0
+  - conda-forge::jupyterlab-git=0.41.0=pyhd8ed1ab_1
+  - conda-forge::nbclassic=1.0.0=pyhb4ecaf3_1
+  - conda-forge::nbdev=2.2.10=pyhd8ed1ab_0
+  - nbformat>=5.1.3
+  #--- passwords & files
+  - keyrings.alt
+  - platformdirs=2.5.2
+  - conda-forge::keyrings.alt=4.2.0=pyhd8ed1ab_0
+  - psutil>=5.4.8 
+  ##############
+  # CUDA & GPU #
+  ##############
+  - nvidia::cuda-toolkit=11.6=0
+  - rapidsai::cudf=23.02=cuda_11_py310_g5ad4a85b9d_0
+  - rapidsai::cuml=23.02=cuda11_py310_g3356f05bd_0
+  - conda-forge::genv=1.2.0=pyhd8ed1ab_0
+  ############
+  # Specific #
+  ############
+  #--- Torch
+  - pytorch=1.13=py3.10_cuda11.7_cudnn8.5.0_0
+  #---Graphs & imgs
+  - conda-forge::plotly=5.18.0=pyhd8ed1ab_0
+  - conda-forge::jpeg=9e=h166bdaf_2
+  - conda-forge::seaborn=0.13.0=hd8ed1ab_0
+  - conda-forge::matplotlib=3.8.1=py310hff52083_0
+  #--- IA
+  - conda-forge::hdbscan=0.8.33=py310h1f7b6fc_4
+  - conda-forge::imbalanced-learn>= 0.8.0
+  - conda-forge::pyts >= 0.12.0
+  - conda-forge::umap-learn=0.5.4=py310hff52083_0
+  - conda-forge::scikit-learn=1.2.2=py310hf7d194e_2
+  - conda-forge::wandb=0.14.2=pyhd8ed1ab_0
+  - fastai::fastai>=2.7.9
+  - timeseriesai::tsai
+  - conda-forge::feather-format

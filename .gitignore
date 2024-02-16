@@ -161,5 +161,6 @@ checklink/cookies.txt
 
 /environments/generic.env
 /docker/.env 
+/docker-root/.env
 /docker_test/
 /docker/tmp_configComits.sh

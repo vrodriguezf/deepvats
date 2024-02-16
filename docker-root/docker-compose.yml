@@ -22,6 +22,7 @@ services:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       - WANDB_DIR=/home/${USER_NAME}/work
       - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+      - USER_NAME=${USER_NAME} #* 
     volumes:
       - ../:/home/${USER_NAME}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/

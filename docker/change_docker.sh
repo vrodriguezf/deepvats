@@ -1,55 +1,28 @@
 #!/bin/bash
 
-if [ -f "docker-compose.yml" ]; then
-    mv "docker-compose.yml" "docker-compose.yml__"
-else
-	exit
-fi
+echo "Renombrando docker-compose.yml a docker-compose.yml__"
+mv "docker-compose.yml" "docker-compose.yml__"
 
-if [ -f "docker-compose.yml_" ]; then
-    mv "docker-compose.yml_" "docker-compose.yml"
-else 
-	mv "docker-compose.yml__" "docker-compose.yml"
-	exit
-fi
+echo "Renombrando docker-compose.yml_ a docker-compose.yml"
+mv "docker-compose.yml_" "docker-compose.yml"
 
-if [ -f "docker-compose.yml__" ]; then
-    mv "docker-compose.yml__" "docker-compose.yml_"
-else 
-	exit
-fi
+echo "Renombrando docker-compose.yml__ a docker-compose.yml_"
+mv "docker-compose.yml__" "docker-compose.yml_"
 
-if [ -f "Dockerfile.jupyter" ]; then
-    mv "Dockerfile.jupyter" "Dockerfile.jupyter__"
-else
-    mv "docker-compose.yml" "docker-compose.yml__"
-    mv "docker-compose.yml_" "docker-compose.yml"
-    mv "docker-compose.yml__" "docker-compose.yml_"
-    exit
-fi
+echo "Renombrando Dockerfile.jupyter a Dockerfile.jupyter__"
+mv "Dockerfile.jupyter" "Dockerfile.jupyter__"
 
-if [ -f "Dockerfile.jupyter_" ]; then
-    mv "Dockerfile-jupyter_" "Dockerfile.jupyter"
-    exit
-fi
+echo "Renombrando Dockerfile.jupyter_ a Dockerfile.jupyter"
+mv "Dockerfile.jupyter_" "Dockerfile.jupyter"
 
-if [ -f "Dockerfile.jupyter__" ]; then
-    mv "Dockerfile.jupyter__" "Dockerfile.jupyter_"
-    exit
-fi
+echo "Renombrando Dockerfile.jupyter__ a Dockerfile.jupyter_"
+mv "Dockerfile.jupyter__" "Dockerfile.jupyter_"
 
-if [ -f "Dockerfile.rstudio" ]; then
-    mv "Dockerfile.rstudio" "Dockerfile.rstudio__"
-    exit
-fi
+echo "Renombrando Dockerfile.rstudio a Dockerfile.rstudio__"
+mv "Dockerfile.rstudio" "Dockerfile.rstudio__"
 
-if [ -f "Dockerfile.rstudio_" ]; then
-    mv "Dockerfile.rstudio_" "Dockerfile.rstudio"
-    exit
-fi
+echo "Renombrando Dockerfile.rstudio_ a Dockerfile.rstudio"
+mv "Dockerfile.rstudio_" "Dockerfile.rstudio"
 
-if [ -f "Dockerfile.rstudio__" ]; then
-    mv "Dockerfile.rstudio__" "Dockerfile.rstudio_"
-    exit
-fi
-
+echo "Renombrando Dockerfile.rstudio__ a Dockerfile.rstudio_"
+mv "Dockerfile.rstudio__" "Dockerfile.rstudio_"

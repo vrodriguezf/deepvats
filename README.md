@@ -77,6 +77,9 @@ Finally, in a terminal located in the folder `docker` of this repository, run:
 
 ```docker-compose up -d```
 
+> Note: In case of permission error, please check again ```userid``` and ```groupid``` .env variables. If the issue persist, although it is *not recomended, another docker with root permissions is proposed in ```docker-root```.
+
+
 then go to `localhost:{{JUPYTER_PORT}}` to run/edit the notebooks (backend) or go to `localhost:{{RSTUDIO_PORT}}` to edit the visualization module (frontend). 
 
 > Note: In case you are working in a remote server, replace `localhost` with the IP of your remote server.

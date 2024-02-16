@@ -77,7 +77,11 @@ Finally, in a terminal located in the folder `docker` of this repository, run:
 
 ```docker-compose up -d```
 
-> Note: In case of permission error, please check again ```userid``` and ```groupid``` .env variables. If the issue persist, although it is *not recomendedcker, another docker with root permissions is proposed in ```docker-root```.
+> Note: In case of permission error, please check again ```userid``` and ```groupid``` .env variables.  If the issue persist, although it is *not recomended*, another docker with root permissions is proposed: 
+Run in terminal 
+- chmod +777 change_docker.sh
+- ./change_docker.sh
+in ```docker/``` and the docker files will be automatically subtituted by de ones with root permissions. If you preffer to do it manually, just interchange the docker-compose and Dockerfile files with '<>_' with the associated '<>' ones.
 
 
 then go to `localhost:{{JUPYTER_PORT}}` to run/edit the notebooks (backend) or go to `localhost:{{RSTUDIO_PORT}}` to edit the visualization module (frontend). 

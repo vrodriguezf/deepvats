@@ -14,7 +14,7 @@ else
 fi
 
 if [ -f "docker-compose.yml__" ]; then
-    mv "docker-compose.yml_" "docker-compose.yml_"
+    mv "docker-compose.yml__" "docker-compose.yml_"
 else 
 	exit
 fi

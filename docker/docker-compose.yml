@@ -11,7 +11,7 @@ services:
       labels:
         - username=${USER_NAME}
       dockerfile: docker/Dockerfile.jupyter
-    image: dvats-${USER_NAME}-jupyter:12.2.0-devel-ubuntu20.04
+    image: dvats-jupyter:${USER_NAME}
     ports:
       - "${JUPYTER_PORT}:8888"
     environment:
@@ -50,7 +50,7 @@ services:
               - USER=${USER_NAME} #* 
               - UID=${USER_ID} #*
               - GID=${GROUP_ID} #*
-      image: dvats-${USER_NAME}-r:rocker-ml_4.2
+      image: dvats-r:${USER_NAME}
       ports:
           - "${RSTUDIO_PORT}:8787" #*
       environment:

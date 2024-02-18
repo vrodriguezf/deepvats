@@ -5,7 +5,8 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-ARG CUDA_VERSION
+ARG CUDA_VERSION=$CUDA_VERSION
+
 FROM nvidia/cuda:${CUDA_VERSION}
 
 ##--- Tags

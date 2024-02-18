@@ -45,8 +45,8 @@ services:
           dockerfile: docker/Dockerfile.rstudio
           args:
               - WANDB_API_KEY=${WANDB_API_KEY} #
-              - RETICULATE_PYTHON_ENV=/home/${USER_NAME}/env
-              - RETICULATE_MINICONDA_PATH=/home/${USER_NAME}/miniconda3
+              - RETICULATE_PYTHON_ENV=/home/env
+              - RETICULATE_MINICONDA_PATH=/home/miniconda3
               - USER=${USER_NAME} #* 
               - UID=${USER_ID} #*
               - GID=${GROUP_ID} #*

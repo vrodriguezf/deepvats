@@ -17,9 +17,8 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 ################## 
 #TODO: Automatizar que lo coja de /etc/timezone
 ARG TZ=Etc/UTC 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC 
-
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get update --fix-missing \
     && apt-get install -y \
     wget bzip2 curl git \
@@ -30,50 +29,46 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get clean  \
     && rm -rf /var/lib/apt/lists/*
 
-#-- Environmental variables for wandb
+#-- Environment variables
+#--- Wandb
 ENV LC_ALL=C.UTF-8 \
-    LANG=C.UTF-8 
+    LANG=C.UTF-8 \
+    #--- Miniconda installation
+    MINICONDA_VERSION=4.10.3 \ 
+    HOME=/home\
+    CONDA_DIR=$HOME/miniconda3 \
+    PATH=$CONDA_DIR/bin:$PATH \
+    PROJECT_DIR=$HOME \
+    #---Mamba installation
+    ENV_PREFIX=$PROJECT_DIR/env
+
+
+#-- Copy tmp configuration files
+COPY ./docker/environment.yml ./docker/requirements.txt ./docker/DESCRIPTION /tmp/
 
 #####################
 # Install miniconda #
 #####################
 
-ENV MINICONDA_VERSION=4.10.3 \ 
-    HOME=/home\
-    CONDA_DIR=$HOME/miniconda3 \
-    PATH=$CONDA_DIR/bin:$PATH 
-ENV PROJECT_DIR=$HOME
-
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_VERSION-Linux-x86_64.sh -O $HOME/miniconda.sh  \
     && chmod +x $HOME/miniconda.sh  \
     && $HOME/miniconda.sh -b -p $CONDA_DIR  \
-    && rm $HOME/miniconda.sh 
-
-RUN echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.profile 
-RUN  conda init bash 
-    #\
-    # create a project directory inside user home
-    #&& mkdir -p $PROJECT_DIR
-#---> Esto habrá que hacerlo en jupyter/R cuando haya usuario
-# no?
+    && rm $HOME/miniconda.sh \
+    && echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.profile \
+    && conda init bash 
 
 WORKDIR $PROJECT_DIR
 
 ##########################
 # Install & update MAMBA #
 ########################## 
-ENV ENV_PREFIX $PROJECT_DIR/env
-RUN conda install --name base --channel conda-forge mamba \
+
+RUN echo "--> Mamba install & Update" \
+    && conda install --name base --channel conda-forge mamba \
     && mamba update --name base --channel defaults conda 
 #-- Build the mamba environment
-RUN mamba install conda-lock -c conda-forge
-COPY ./docker/environment.yml ./docker/requirements.txt /tmp/
-#RUN mamba lock -f /tmp/environment.yml --lockfile /tmp/environment.lock
-#RUN mamba create --prefix ${ENV_PREFIX} --file /tmp/environment.lock
-RUN mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml
-RUN conda clean --all --yes
-
-
+RUN mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml \
+    && conda clean --all --yes
 
 #-- Bring & Install deepvats
 COPY ./ ${HOME}/work
@@ -85,7 +80,7 @@ RUN pip install -e $HOME/work
 ## INSTALL R PACKAGES ##
 ########################
 
-COPY docker/DESCRIPTION /tmp/
+
 RUN R -e "devtools::install_deps('/tmp/', dependencies = TRUE)"
 
 ARG RETICULATE_MINICONDA_PATH=/home/miniconda3

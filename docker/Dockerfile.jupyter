@@ -8,7 +8,7 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-FROM misantamaria/dvats-jupyter:latest
+FROM misantamaria/dvats-jupyter:0
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"

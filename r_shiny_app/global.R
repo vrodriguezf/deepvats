@@ -78,8 +78,10 @@ DEFAULT_VALUES = list(metric_hdbscan = "euclidean",
                       path_alpha = 5/10,
                       point_alpha = 1/10,
                       point_size = 1)
+
 WANDB_ENTITY = Sys.getenv("WANDB_ENTITY")
 WANDB_PROJECT = Sys.getenv("WANDB_PROJECT")
+WANDB_API_KEY = Sys.getenv("WANDB_API_KEY")
 
 
 ####################

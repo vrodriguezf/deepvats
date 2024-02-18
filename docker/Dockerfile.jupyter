@@ -67,6 +67,8 @@ USER $USER
 
 # Add the jupyterlab settings
 COPY --chown=$uid:$gid docker/jupyter_config $HOME/.jupyter
+
+
 #####################
 # Install miniconda #
 #####################
@@ -76,7 +78,7 @@ ENV MINICONDA_VERSION=4.10.3 \
     CONDA_DIR=$HOME/miniconda3 \
     # Make non-activate conda commands available
     PATH=$CONDA_DIR/bin:$PATH \
-    PROJECT_DIR=$HOME 
+    PROJECT_DIR=$HOME
 
 RUN echo "HOME: ${HOME} | CONDA_DIR = ${CONDA_DIR}" \
     #-- Install MINICONDA

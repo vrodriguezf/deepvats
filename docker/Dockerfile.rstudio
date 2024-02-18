@@ -36,5 +36,8 @@ RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 # use an entrypoint script to insure conda environment is properly activated at runtime
 COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
-RUN ls "/init"
+
+ARG WANDB_API_KEY
+RUN echo "WANDB_API_KEY=${WANDB_API_KEY}" >> /${HOME}/.Renviron
+
 ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]

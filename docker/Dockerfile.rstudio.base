@@ -90,13 +90,12 @@ RUN R -e "devtools::install_deps('/tmp/', dependencies = TRUE)"
 
 ARG RETICULATE_MINICONDA_PATH=/home/miniconda3
 ARG RETICULATE_PYTHON_ENV=/home/env
-ARG WANDB_API_KEY
+
 ENV RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/
 
 #-- Update R-environment
 RUN echo "RETICULATE_PYTHON_ENV=${RETICULATE_PYTHON_ENV}" >> ${HOME}/.Renviron
 RUN echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> ${HOME}/.Renviron
-RUN echo "WANDB_API_KEY=${WANDB_API_KEY}" >> /${HOME}/.Renviron
 RUN echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> ${HOME}/.Renviron
 # make non-activate conda commands available
 ENV PATH=${RETICULATE_MINICONDA_PATH}/bin:${PATH}

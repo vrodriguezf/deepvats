@@ -21,7 +21,8 @@ echo "Args:" "${args[@]}"
 PROJECT_NAME='dvats'
 echo "Get docker"
 DOCKER=$1
-IMAGE_GOALS='conda-miniconda3'
+VERSION=$2
+#IMAGE_GOALS='conda-miniconda3'
 USER_NAME=$(id -un)
 echo "DOCKER: $DOCKER"
 if "$DOCKER" == 'jupyter'; then
@@ -30,7 +31,7 @@ if "$DOCKER" == 'jupyter'; then
     DOCKERFILE=./docker/Dockerfile.rstudio.base
 fi
 echo "Dockerfile: $DOCKERFILE"
-IMAGE_NAME=${PROJECT_NAME}-$DOCKER'-'${IMAGE_GOALS}':latest'
+IMAGE_NAME=${PROJECT_NAME}-$DOCKER':'$VERSION
 # Si la imagen depende de usuario para rutas
 # Usar :USER_NAME detrás de IMAGE_GOALS,
 # Antes de :latest

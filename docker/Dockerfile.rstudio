@@ -8,11 +8,8 @@
 ##############
 # Base image #
 ##############
-#FROM vrodriguezf/rstudio-server-shiny-development
-# Adds rstudio server, tiyverse, devtools to rocker/cuda
-#FROM misantamaria/dvats-rstudio-conda-miniconda3:0
-FROM misantamaria/dvats-jupyter:latest
-
+##--- Setup Ubuntu & Preliminary libraries
+FROM misantamaria/dvats-jupyter:0
 SHELL [ "/bin/bash", "--login", "-c" ]
 
 ## Add Rstudio Server user
@@ -33,11 +30,9 @@ RUN adduser --disabled-password \
 RUN adduser $USER sudo
 RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# use an entrypoint script to insure conda environment is properly activated at runtime
+# Use an entrypoint script to insure conda environment is properly activated at runtime
 COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
 
-ARG WANDB_API_KEY
-RUN echo "WANDB_API_KEY=${WANDB_API_KEY}" >> /${HOME}/.Renviron
-
+# Initialize R-Stusio Server
 ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]

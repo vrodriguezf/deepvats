@@ -164,3 +164,5 @@ checklink/cookies.txt
 /docker-root/.env
 /docker_test/
 /docker/tmp_configComits.sh
+/docker/logs
+/docker/logs_py

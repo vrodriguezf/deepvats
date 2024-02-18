@@ -71,28 +71,23 @@ RUN echo "--> Mamba install & Update" \
 
 #-- Bring & Install deepvats
 COPY ./ ${HOME}/work
-RUN conda activate $ENV_PREFIX
-RUN pip install -e $HOME/work
+RUN conda activate $ENV_PREFIX \
+    && pip install -e $HOME/work
 
+###############################################
+## INSTALL R PACKAGES & Make conda available ##
+###############################################
+ARG RETICULATE_MINICONDA_PATH=/home/miniconda3 \
+    RETICULATE_PYTHON_ENV=/home/env
 
-########################
-## INSTALL R PACKAGES ##
-########################
-
-
-RUN R -e "devtools::install_deps('/tmp/', dependencies = TRUE)"
-
-ARG RETICULATE_MINICONDA_PATH=/home/miniconda3
-ARG RETICULATE_PYTHON_ENV=/home/env
-
-ENV RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/
-
+ENV RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/ \
+    PATH=${RETICULATE_MINICONDA_PATH}/bin:${PATH}
+    
 #-- Update R-environment
-RUN echo "RETICULATE_PYTHON_ENV=${RETICULATE_PYTHON_ENV}" >> ${HOME}/.Renviron
-RUN echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> ${HOME}/.Renviron
-RUN echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> ${HOME}/.Renviron
-# make non-activate conda commands available
-ENV PATH=${RETICULATE_MINICONDA_PATH}/bin:${PATH}
+RUN R -e "devtools::install_deps('/tmp/', dependencies = TRUE)" \
+    && echo "RETICULATE_PYTHON_ENV=${RETICULATE_PYTHON_ENV}" >> ${HOME}/.Renviron \
+    && echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> ${HOME}/.Renviron \
+    && echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> ${HOME}/.Renviron
 
+# make non-activate conda commands available
 COPY --chown=${UID}:${GID} ./docker/entrypoint-rstudio.sh /usr/local/bin
-RUN ls "/init"

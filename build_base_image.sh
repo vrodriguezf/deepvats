@@ -25,13 +25,16 @@ VERSION=$2
 #IMAGE_GOALS='conda-miniconda3'
 USER_NAME=$(id -un)
 echo "DOCKER: $DOCKER"
-if "$DOCKER" == 'jupyter'; then
+if [ "$DOCKER" = 'jupyter' ]; then
     DOCKERFILE=./docker/Dockerfile.jupyter.base
     else 
     DOCKERFILE=./docker/Dockerfile.rstudio.base
 fi
+
 echo "Dockerfile: $DOCKERFILE"
 IMAGE_NAME=${PROJECT_NAME}-$DOCKER':'$VERSION
+
+#read -p "Docker $DOCKER Dockerfile: $DOCKERFILE Image: $IMAGE_NAME"
 # Si la imagen depende de usuario para rutas
 # Usar :USER_NAME detrás de IMAGE_GOALS,
 # Antes de :latest

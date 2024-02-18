@@ -1,7 +1,8 @@
 #!/bin/bash --login
 set -e
 
-echo ". ${HOME}/miniconda3/etc/profile.d/conda.sh" >> ${HOME}/.bashrc
+#echo ". ${HOME}/miniconda3/etc/profile.d/conda.sh" >> ${HOME}/.bashrc
+echo ". /home/miniconda3/etc/profile.d/conda.sh" >> /home/.bashrc
 # Make bash automatically activate the conda environment
 echo "conda activate ${ENV_PREFIX}" >> ~/.bashrc
 #echo "export WANDB_ENTITY=${WANDB_ENTITY:-default}" >> ${HOME}/.bashrc

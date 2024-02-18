@@ -17,6 +17,6 @@ IMAGE_NAME=${PROJECT_NAME}'-'${IMAGE_GOALS}':latest'
 # Usar :USER_NAME detrás de IMAGE_GOALS,
 # Antes de :latest
 
+DOCKERFILE=Dockerfile.py
 
-
-docker build "${args[@]}" . -f Dockerfile.base -t ${IMAGE_NAME}
+docker build "${args[@]}" . -f ${DOCKERFILE} -t ${IMAGE_NAME}

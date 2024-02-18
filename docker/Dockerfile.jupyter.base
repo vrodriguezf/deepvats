@@ -49,11 +49,6 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_
 
 RUN echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.profile 
 RUN  conda init bash 
-    #\
-    # create a project directory inside user home
-    #&& mkdir -p $PROJECT_DIR
-#---> Esto habrá que hacerlo en jupyter/R cuando haya usuario
-# no?
 
 WORKDIR $PROJECT_DIR
 

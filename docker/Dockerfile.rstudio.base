@@ -18,7 +18,7 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 #TODO: Automatizar que lo coja de /etc/timezone
 ARG TZ=Etc/UTC 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get update --fix-missing \
     && apt-get install -y \
     wget bzip2 curl git \
@@ -36,12 +36,11 @@ ENV LC_ALL=C.UTF-8 \
     #--- Miniconda installation
     MINICONDA_VERSION=4.10.3 \ 
     HOME=/home\
-    CONDA_DIR=$HOME/miniconda3 \
+    CONDA_DIR=/home/miniconda3 \
     PATH=$CONDA_DIR/bin:$PATH \
-    PROJECT_DIR=$HOME \
+    PROJECT_DIR=/home \
     #---Mamba installation
-    ENV_PREFIX=$PROJECT_DIR/env
-
+    ENV_PREFIX=/home/env
 
 #-- Copy tmp configuration files
 COPY ./docker/environment.yml ./docker/requirements.txt ./docker/DESCRIPTION /tmp/
@@ -49,13 +48,13 @@ COPY ./docker/environment.yml ./docker/requirements.txt ./docker/DESCRIPTION /tm
 #####################
 # Install miniconda #
 #####################
-
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_VERSION-Linux-x86_64.sh -O $HOME/miniconda.sh  \
-    && chmod +x $HOME/miniconda.sh  \
-    && $HOME/miniconda.sh -b -p $CONDA_DIR  \
-    && rm $HOME/miniconda.sh \
-    && echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.profile \
-    && conda init bash 
+    && chmod +x /home/miniconda.sh \
+    && /home/miniconda.sh -b -p $CONDA_DIR \
+    && rm /home/miniconda.sh 
+
+RUN  echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> /home/.profile 
+RUN conda init bash 
 
 WORKDIR $PROJECT_DIR
 

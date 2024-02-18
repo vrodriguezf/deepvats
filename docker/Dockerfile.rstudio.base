@@ -63,10 +63,11 @@ WORKDIR $PROJECT_DIR
 
 RUN echo "--> Mamba install & Update" \
     && conda install --name base --channel conda-forge mamba \
-    && mamba update --name base --channel defaults conda 
-#-- Build the mamba environment
-RUN mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml \
+    && mamba update --name base --channel defaults conda \
+    #Build the mamba environment
+    && mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml \
     && conda clean --all --yes
+
 
 #-- Bring & Install deepvats
 COPY ./ ${HOME}/work

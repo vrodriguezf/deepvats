@@ -51,9 +51,8 @@ COPY ./docker/environment.yml ./docker/requirements.txt ./docker/DESCRIPTION /tm
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_VERSION-Linux-x86_64.sh -O $HOME/miniconda.sh  \
     && chmod +x /home/miniconda.sh \
     && /home/miniconda.sh -b -p $CONDA_DIR \
-    && rm /home/miniconda.sh 
-
-RUN  echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> /home/.profile 
+    && rm /home/miniconda.sh \
+    && echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> /home/.profile 
 RUN conda init bash 
 
 WORKDIR $PROJECT_DIR

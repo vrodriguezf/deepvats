@@ -8,7 +8,7 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-FROM dvats-conda-miniconda3:latest
+FROM misantamaria/dvats-jupyter-conda-miniconda3:latest
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"

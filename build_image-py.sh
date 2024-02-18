@@ -19,13 +19,22 @@ echo "Args:" "${args[@]}"
 
 # Ejecuta docker build con los argumentos
 PROJECT_NAME='dvats'
+echo "Get docker"
+DOCKER=$1
 IMAGE_GOALS='conda-miniconda3'
 USER_NAME=$(id -un)
-IMAGE_NAME=${PROJECT_NAME}'-'${IMAGE_GOALS}':latest'
+echo "DOCKER: $DOCKER"
+if "$DOCKER" == 'jupyter'; then
+    DOCKERFILE=./docker/Dockerfile.jupyter.base
+    else 
+    DOCKERFILE=./docker/Dockerfile.rstudio.base
+fi
+echo "Dockerfile: $DOCKERFILE"
+IMAGE_NAME=${PROJECT_NAME}-$DOCKER'-'${IMAGE_GOALS}':latest'
 # Si la imagen depende de usuario para rutas
 # Usar :USER_NAME detrás de IMAGE_GOALS,
 # Antes de :latest
 
-DOCKERFILE=./docker/Dockerfile.py
 
+echo "IMAGE_NAME: $IMAGE_NAME"
 docker build "${args[@]}" . -f ${DOCKERFILE} -t ${IMAGE_NAME}

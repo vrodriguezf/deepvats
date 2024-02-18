@@ -10,7 +10,8 @@
 ##############
 #FROM vrodriguezf/rstudio-server-shiny-development
 # Adds rstudio server, tiyverse, devtools to rocker/cuda
-FROM misantamaria/dvats-jupyter-conda-miniconda3:latest
+#FROM misantamaria/dvats-rstudio-conda-miniconda3:0
+FROM misantamaria/dvats-jupyter:latest
 
 SHELL [ "/bin/bash", "--login", "-c" ]
 
@@ -35,4 +36,5 @@ RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 # use an entrypoint script to insure conda environment is properly activated at runtime
 COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
+RUN ls "/init"
 ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]

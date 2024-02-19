@@ -50,7 +50,7 @@ services:
               - USER=${USER_NAME} #* 
               - UID=${USER_ID} #*
               - GID=${GROUP_ID} #*
-      image: dvats-r:${USER_NAME}
+      image: dvats-rstudio:${USER_NAME}
       ports:
           - "${RSTUDIO_PORT}:8787" #*
       environment:

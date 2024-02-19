@@ -97,12 +97,6 @@ RUN chmod u+x /usr/local/bin/postBuild \
     && conda deactivate \
     # Make bash automatically activate the conda environment
     && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
-RUN chmod u+x /usr/local/bin/postBuild \
-    && conda activate $ENV_PREFIX  \
-    && /usr/local/bin/postBuild  \
-    && conda deactivate \
-    # Make bash automatically activate the conda environment
-    && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 
 #RUN conda list --prefix ${ENV_PREFIX}
 

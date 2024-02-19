@@ -17,9 +17,6 @@ LABEL cuda_version=${CUDA_VERSION}
 ##---Initialize bash
 SHELL [ "/bin/bash", "--login", "-c" ]
 
-##################
-# Packages setup #
-################## 
 #-- Environmental variables for wandb
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 
@@ -75,16 +72,12 @@ WORKDIR /home/
 
 # run the postBuild script to install the JupyterLab extensions
 COPY --chown=$UID:$GID docker/postBuild /usr/local/bin
-RUN chmod u+x /usr/local/bin/postBuild 
-RUN conda activate $ENV_PREFIX  
-RUN /usr/local/bin/postBuild  
-RUN  conda deactivate 
+RUN chmod u+x /usr/local/bin/postBuild \
+    && conda activate $ENV_PREFIX   \
+    && /usr/local/bin/postBuild  \
+    && conda deactivate  \
     # Make bash automatically activate the conda environment
-RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc
-
-RUN echo "--> Check conda list"
-
-RUN conda list --prefix ${ENV_PREFIX}
+    && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 
 RUN echo "--> Exec entrypoint"
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin

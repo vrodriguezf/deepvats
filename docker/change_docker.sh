@@ -18,6 +18,15 @@ mv "Dockerfile.jupyter_" "Dockerfile.jupyter"
 echo "Renombrando Dockerfile.jupyter__ a Dockerfile.jupyter_"
 mv "Dockerfile.jupyter__" "Dockerfile.jupyter_"
 
+echo "Renombrando entrypoint.sh a entrypoint.sh__"
+mv "entrypoint.sh" "entrypoint.sh__"
+
+echo "Renombrando entrypoint.sh_ a entrypoint.sh"
+mv "entrypoint.sh_" "entrypoint.sh"
+
+echo "Renombrando entrypoint.sh__ a entrypoint.sh_"
+mv "entrypoint.sh__" "entrypoint.sh_"
+
 echo "Renombrando Dockerfile.rstudio a Dockerfile.rstudio__"
 mv "Dockerfile.rstudio" "Dockerfile.rstudio__"
 

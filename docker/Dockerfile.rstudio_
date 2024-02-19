@@ -8,76 +8,31 @@
 ##############
 # Base image #
 ##############
-
-# Adds rstudio server, tiyverse, devtools to rocker/cuda
-FROM rocker/ml:4.2
-
+##--- Setup Ubuntu & Preliminary libraries
+FROM misantamaria/dvats-jupyter:0
 SHELL [ "/bin/bash", "--login", "-c" ]
 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC 
-RUN apt-get update
-RUN apt-get install -y python3-pip
-RUN python3 -m pip install --upgrade pip
-RUN apt-get install -y python3-venv libxt-dev
-## Install R packages
-
-COPY docker-root/DESCRIPTION /tmp/
-
-RUN ls -la /tmp/ && sleep 5
-
-RUN R -e "devtools::install_deps('/tmp/', dependencies = TRUE)"
-
-ENV HOME /home/
+## Add Rstudio Server user
+ARG USER=user
+ARG UID=1000
+ARG GID=1000
+ENV HOME /home/$USER
 ENV ENV_PREFIX $HOME/env
 
-RUN echo "---> Make sudo & setup sudoers"
-RUN echo "$(id)"
+RUN addgroup --gid $GID $USER
+RUN adduser --disabled-password \
+    --gecos "Non-root user" \
+    --uid $UID \
+    --gid $GID \
+    --home $HOME \
+    $USER
 
-ARG RETICULATE_MINICONDA_PATH=/usr/local/share/r-miniconda
-ARG RETICULATE_PYTHON_ENV=/usr/virtualenvs/venv_shiny_app
-ENV RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/
+RUN adduser $USER sudo
+RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-RUN echo "---> RETICULATE PYTHONS"
-RUN echo "RETICULATE_PYTHON_ENV=${RETICULATE_PYTHON_ENV}" >> ${HOME}/.Renviron
-RUN echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> ${HOME}/.Renviron
+# Use an entrypoint script to insure conda environment is properly activated at runtime
+COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
+RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
 
-RUN echo "---> Export W&B"
-## Export W&B environment variable to Rstudio
-
-ARG WANDB_API_KEY
-RUN echo "WANDB_API_KEY=${WANDB_API_KEY}" >> /${HOME}/.Renviron
-
-
-RUN echo "--> rewruie miniconda path"
-# Rewrite the miniconda path environment in case it has been redefined in the compose file
-RUN echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> ${HOME}/.Renviron
-
-RUN echo "---> Make non-activate conda commands available"
-RUN # make non-activate conda commands available
-ENV PATH=${RETICULATE_MINICONDA_PATH}/bin:${PATH}
-RUN echo "--> Permissions"
-
-RUN echo "$(id )"
-
-RUN echo "--> Setup miniconda3"
-
-RUN echo ". ${HOME}miniconda3/etc/profile.d/conda.sh" >> ${HOME}/rstudio/.bashrc
-
-
-RUN echo "--> Conda activate"
-
-# Make bash automatically activate the conda environment
-RUN echo "conda activate ${ENV_PREFIX}" >> ${HOME}/rstudio/.bashrc
-
-# Define an array of environment variable names from the ENV_VARS Compose variable
-ARG ENV_VARS=ENV_VARS
-RUN echo "---> Setup variables" && \
-    IFS=',' read -ra NAMES <<< "ENV_VARS" && \
-    for ENV_VAR_NAME in "${NAMES[@]}"; do \ 
-    #echo "$ENV_VARS" | tr ',' '\n' | while read ENV_VAR_NAME; do \
-    ENV_VAR_VALUE="${!ENV_VAR_NAME:-default}"; \
-    echo "$ENV_VAR_NAME=$ENV_VAR_VALUE"; \
-    done > ${HOME}/rstudio/.Renviron
-
-RUN echo "--> Go!"
-CMD ["/init"]
+# Initialize R-Stusio Server
+ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]

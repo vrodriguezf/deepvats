@@ -553,8 +553,6 @@ shinyServer(function(input, output, session) {
       res
     })
     
-
-    
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
         {    
@@ -564,8 +562,8 @@ shinyServer(function(input, output, session) {
             flush.console()
                         
             t_init <- Sys.time()
-            
-            downloaded = TRUE; 
+            #Poner botón o directamente un try catch
+            downloaded = TRUE;
             path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
             if (downloaded){
                 print(paste0("Reactive tsdf | Read feather ", path ))
@@ -581,7 +579,7 @@ shinyServer(function(input, output, session) {
 
             }
             
-            t_end = Sys.time()
+            t_end = Sys.time()  
             print(paste0("Reactive tsdf | Read feather | Execution time: ", t_end - t_init, " seconds"))
             flush.console()
 

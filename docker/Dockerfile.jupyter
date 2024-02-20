@@ -43,30 +43,12 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 
 
-########################
-# Create non-root user #
-########################
-ARG username=user\
-    uid=1000 \
-    gid=1000
-ENV USER=$username \
-    UID=$uid \
-    GID=$gid 
+ARG username=USER_NAME
+ENV USER=${username}
 ENV HOME=/home/$USER
 
-#-- Passwordless sudo (TODO: mv to root section)
-RUN addgroup --gid $GID $USER  \
-    && adduser --disabled-password \
-    --gecos "Non-root user" \
-    --uid $UID \
-    --gid $GID \
-    --home $HOME $USER\
-    && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-#-- Move to user
-USER $USER
-
 # Add the jupyterlab settings
-COPY --chown=$uid:$gid docker/jupyter_config $HOME/.jupyter
+COPY docker/jupyter_config $HOME/.jupyter
 #####################
 # Install miniconda #
 #####################
@@ -116,9 +98,10 @@ RUN chmod u+x /usr/local/bin/postBuild \
     # Make bash automatically activate the conda environment
     && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 
-RUN conda list --prefix ${ENV_PREFIX}
+#RUN conda list --prefix ${ENV_PREFIX}
 
-COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
+RUN echo "--> Chmod entrypoint"
+COPY docker/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh
 
 
@@ -127,5 +110,5 @@ ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 ARG JUPYTER_TOKEN
 ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
 # default command will be to launch JupyterLab server for development
-
-CMD ["sh", "-c", "jupyter lab --no-browser --ip 0.0.0.0 --ContentsManager.allow_hidden=True --NotebookApp.token=$JUPYTER_TOKEN"]
+RUN echo "---> Go!"
+CMD ["sh", "-c", "jupyter lab --allow-root --no-browser --ip 0.0.0.0 --ContentsManager.allow_hidden=True --NotebookApp.token=$JUPYTER_TOKEN"]

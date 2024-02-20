@@ -123,7 +123,9 @@ class TSArtifact(wandb.Artifact):
 
 # %% ../nbs/load.ipynb 14
 @patch
-def to_df(self:wandb.apis.public.Artifact):
+def to_df(self:wandb.apis.public.Artifact, print_flag = False, id=0): 
+    #Se ha añadido id por problemas con toy, modo de obtener directamente un fichero en concreto
+    #si wandb mantiene basura
     "Download the files of a saved wandb artifact and process them as a single dataframe. The artifact must \
     come from a call to `run.use_artifact` with a proper wandb run."
     # The way we have to ensure that the argument comes from a TS arfitact is the metadata
@@ -131,10 +133,12 @@ def to_df(self:wandb.apis.public.Artifact):
         print(f'ERROR:{self} does not come from a logged TSArtifact')
         return None
     dir = Path(self.download())
+    if print_flag: print("to_df | dir ", dir)
     if self.metadata['TS']['created'] == 'from-df':
         # Call read_pickle with the single file from dir
         #return pd.read_pickle(dir.ls()[0])
-        return ft.read_feather(dir.ls()[0])
+        if print_flag: print("to_df | ls", dir.ls())
+        return ft.read_feather(dir.ls()[id])
     else:
         print("ERROR: Only from_df method is allowed yet")
 

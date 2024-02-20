@@ -565,7 +565,7 @@ shinyServer(function(input, output, session) {
                         
             t_init <- Sys.time()
             
-            downloaded = FALSE; 
+            downloaded = TRUE; 
             path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
             if (downloaded){
                 print(paste0("Reactive tsdf | Read feather ", path ))

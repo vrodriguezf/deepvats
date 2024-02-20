@@ -562,21 +562,15 @@ shinyServer(function(input, output, session) {
             flush.console()
                         
             t_init <- Sys.time()
-            #Poner botón o directamente un try catch
-            downloaded = TRUE;
-            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
-            if (downloaded){
-                print(paste0("Reactive tsdf | Read feather ", path ))
-                flush.console()
-                df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
-            } else {
-                artifact_dir = ts_ar$download(root=DEFAULT_PATH_WANDB_ARTIFACTS)
-                print(paste0("Reactive tsdf | Read feather | Path: ", path ))
-                df <- read_feather(
-                    path, as_data_frame = TRUE, 
-                    mmap = TRUE) %>% 
-                    rename('timeindex' = `__index_level_0__`)
-
+            print(paste0("Reactive tsdf | Read feather ", path ))
+            flush.console()
+            df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
+            artifact_dir = ts_ar$download(root=DEFAULT_PATH_WANDB_ARTIFACTS)
+            print(paste0("Reactive tsdf | Read feather | Path: ", path ))
+            df <- read_feather(
+                path, as_data_frame = TRUE, 
+                mmap = TRUE) %>% 
+                rename('timeindex' = `__index_level_0__`)
             }
             
             t_end = Sys.time()  

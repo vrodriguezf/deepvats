@@ -571,7 +571,6 @@ shinyServer(function(input, output, session) {
                 path, as_data_frame = TRUE, 
                 mmap = TRUE) %>% 
                 rename('timeindex' = `__index_level_0__`)
-            }
             
             t_end = Sys.time()  
             print(paste0("Reactive tsdf | Read feather | Execution time: ", t_end - t_init, " seconds"))

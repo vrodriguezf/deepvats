@@ -8,74 +8,86 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-ARG CUDA_VERSION
 FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
 LABEL cuda_version=${CUDA_VERSION}
-LABEL log_path=${log_path}
-##---Initialize bash
-LABEL cuda_version=${CUDA_VERSION}
 
-RUN echo "Cuda version: $CUDA_VERSION"
 ##---Initialize bash
 SHELL [ "/bin/bash", "--login", "-c" ]
-
 
 #-- Environmental variables for wandb
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 
 
-ARG username=USER_NAME
-ENV USER=${username}
-ENV HOME=/home
+########################
+# Create non-root user #
+########################
+ARG username=user\
+    uid=1000 \
+    gid=1000
+ENV USER=$username \
+    UID=$uid \
+    GID=$gid 
+ENV HOME=/home/$USER
+
+#-- Passwordless sudo (TODO: mv to root section)
+RUN addgroup --gid $GID $USER  \
+    && adduser --disabled-password \
+    --gecos "Non-root user" \
+    --uid $UID \
+    --gid $GID \
+    --home $HOME $USER\
+    && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+#-- Move to user
+USER $USER
 
 # Add the jupyterlab settings
-COPY docker/jupyter_config $HOME/.jupyter
+COPY --chown=$uid:$gid docker/jupyter_config $HOME/.jupyter
 
 #############################
 # Ensure miniconda for user #
 #############################
 
 ENV MINICONDA_VERSION=4.10.3 \ 
-    CONDA_DIR=$HOME/miniconda3 \
-    PATH=$CONDA_DIR/bin:$PATH 
-    
-ENV PROJECT_DIR=$HOME
-ENV ENV_PREFIX=${PROJECT_DIR}/env
+    #home/env/miniconda3
+    CONDA_DIR=/miniconda3 \ 
+    PATH=$CONDA_DIR/bin:$PATH \
+    PROJECT_DIR=~\
+    ENV_PREFIX=/home/env
 
-RUN echo "Env_prefix: " ${ENV_PREFIX}
-    # Make conda activate command available from /bin/bash --login shells
-RUN echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.profile 
-    # make conda activate command available from /bin/bash --interative shells
-RUN  conda init bash \
+# Make conda activate command available from /bin/bash --login shells
+RUN echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> ~/.profile 
+
+RUN echo "--> Activate conda"
+# make conda activate command available from /bin/bash --interative shells
+RUN  conda init bash 
+    #\
     # create a project directory inside user home
-    && mkdir -p $PROJECT_DIR
+    #&& mkdir -p /home/$USER/
+    #$PROJECT_DIR
+RUN echo "--> WORKDIR"
+WORKDIR /home/
 
-WORKDIR $PROJECT_DIR
-
-# Copy & run the postBuild script to install the JupyterLab extensions
+# run the postBuild script to install the JupyterLab extensions
 COPY --chown=$UID:$GID docker/postBuild /usr/local/bin
-
-RUN chmod u+x /usr/local/bin/postBuild 
-RUN conda activate /home/env \
-    && /usr/local/bin/postBuild \
-    && conda deactivate 
+RUN chmod u+x /usr/local/bin/postBuild \
+    && conda activate $ENV_PREFIX   \
+    && /usr/local/bin/postBuild  \
+    && conda deactivate  \
     # Make bash automatically activate the conda environment
-RUN echo "conda activate $ENV_PREFIX" >> ${HOME}/.bashrc
+    && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 
-#RUN conda list --prefix ${ENV_PREFIX}
-
-RUN echo "--> Chmod entrypoint"
-COPY docker/entrypoint.sh /usr/local/bin
+RUN echo "--> Exec entrypoint"
+COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh
-RUN rm -r /home/${USER}/work
+
 
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
 ARG JUPYTER_TOKEN
 ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
 # default command will be to launch JupyterLab server for development
-RUN echo "---> Go!"
-CMD ["sh", "-c", "jupyter lab --allow-root --no-browser --ip 0.0.0.0 --ContentsManager.allow_hidden=True --NotebookApp.token=$JUPYTER_TOKEN"]
+
+CMD ["sh", "-c", "jupyter lab --no-browser --ip 0.0.0.0 --ContentsManager.allow_hidden=True --NotebookApp.token=$JUPYTER_TOKEN"]

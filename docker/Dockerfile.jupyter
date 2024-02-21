@@ -9,7 +9,7 @@
 ##############
 ##--- Setup Ubuntu
 ARG CUDA_VERSION
-FROM misantamaria/dvats-jupyter:0
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
@@ -59,9 +59,9 @@ WORKDIR $PROJECT_DIR
 COPY --chown=$UID:$GID docker/postBuild /usr/local/bin
 
 RUN chmod u+x /usr/local/bin/postBuild 
-RUN conda activate $ENV_PREFIX  
-RUN /usr/local/bin/postBuild  
-RUN conda deactivate 
+RUN conda activate /home/env \
+    && /usr/local/bin/postBuild \
+    && conda deactivate 
     # Make bash automatically activate the conda environment
 RUN echo "conda activate $ENV_PREFIX" >> ${HOME}/.bashrc
 
@@ -70,7 +70,7 @@ RUN echo "conda activate $ENV_PREFIX" >> ${HOME}/.bashrc
 RUN echo "--> Chmod entrypoint"
 COPY docker/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh
-
+RUN rm -r /home/${USER}/work
 
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 

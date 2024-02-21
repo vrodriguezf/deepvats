@@ -69,12 +69,11 @@ services:
           # TODO (28/03/2023): I don't know why it is not working without this
           - ENV_VARS=WANDB_ENTITY,WANDB_API_KEY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES
       volumes:
-         - ../r_shiny_app:/home/${USER_NAME}/app #*
-         - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
+         - ../r_shiny_app:/home/${USER_NAME}/app 
+         - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ 
          - ../dvats:/home/${USER_NAME}/dvats
-         - conda-env:/home/${USER_NAME}/env
-         - miniconda:/home/${USER_NAME}/miniconda3 #:ro
-         - lib:/home/${USER_NAME}/lib
+         - conda-env:/usr/local/share/miniconda3/envs/env
+         - miniconda:/home/user/local/share/miniconda3 
       deploy:
         resources:
           #limits:

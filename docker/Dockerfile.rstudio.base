@@ -1,0 +1,93 @@
+#########################################################
+# CONDA & MINICONDA & R packages WITH PYBASE DOCKERFILE #
+# For Rstudio service                                   #
+#########################################################
+FROM rocker/ml:4.2
+
+##--- Tags
+LABEL maintainer="vrodriiguezf <victor.rfernandez@upm.es"
+LABEL cuda_version=${CUDA_VERSION}
+
+##--- Setup bash
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+
+##################
+# Packages setup #
+################## 
+#TODO: Automatizar que lo coja de /etc/timezone
+ARG TZ=Etc/UTC 
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && apt-get update --fix-missing \
+    && apt-get install -y \
+    wget bzip2 curl git \
+    sudo libarchive-dev libtiff5-dev \
+    zsh python3 python3-pip\
+    && python3 -m pip install --upgrade pip \ 
+    && apt-get install -y python3-venv libxt-dev \
+    && apt-get clean  \
+    && rm -rf /var/lib/apt/lists/*
+
+#-- Environment variables
+#--- Wandb
+ENV LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    #--- Miniconda installation
+    MINICONDA_VERSION=4.10.3 \ 
+    HOME=/home\
+    CONDA_DIR=/home/miniconda3 \
+    PATH=$CONDA_DIR/bin:$PATH \
+    PROJECT_DIR=/home \
+    #---Mamba installation
+    ENV_PREFIX=/home/env
+
+#-- Copy tmp configuration files
+COPY ./docker/environment.yml ./docker/requirements.txt ./docker/DESCRIPTION /tmp/
+
+#####################
+# Install miniconda #
+#####################
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_VERSION-Linux-x86_64.sh -O $HOME/miniconda.sh  \
+    && chmod +x /home/miniconda.sh \
+    && /home/miniconda.sh -b -p $CONDA_DIR \
+    && rm /home/miniconda.sh \
+    && echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> /home/.profile 
+RUN conda init bash 
+
+WORKDIR $PROJECT_DIR
+
+##########################
+# Install & update MAMBA #
+########################## 
+
+RUN echo "--> Mamba install & Update" \
+    && conda install --name base --channel conda-forge mamba \
+    && mamba update --name base --channel defaults conda \
+    #Build the mamba environment
+    && mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml \
+    && conda clean --all --yes
+
+
+#-- Bring & Install deepvats
+COPY ./ ${HOME}/work
+RUN conda activate $ENV_PREFIX \
+    && pip install -e $HOME/work
+
+###############################################
+## INSTALL R PACKAGES & Make conda available ##
+###############################################
+ARG RETICULATE_MINICONDA_PATH=/home/miniconda3 \
+    RETICULATE_PYTHON_ENV=/home/env
+
+ENV RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/ \
+    PATH=${RETICULATE_MINICONDA_PATH}/bin:${PATH}
+    
+#-- Update R-environment
+RUN R -e "devtools::install_deps('/tmp/', dependencies = TRUE)" \
+    && echo "RETICULATE_PYTHON_ENV=${RETICULATE_PYTHON_ENV}" >> ${HOME}/.Renviron \
+    && echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> ${HOME}/.Renviron \
+    && echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> ${HOME}/.Renviron
+
+# make non-activate conda commands available
+COPY --chown=${UID}:${GID} ./docker/entrypoint-rstudio.sh /usr/local/bin

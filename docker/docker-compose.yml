@@ -25,9 +25,9 @@ services:
     volumes:
       - ../:/home/${USER_NAME}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/
-      - conda-env:/home/${USER_NAME}/env
-      - miniconda:/home/${USER_NAME}/miniconda3
-      - lib:/home/${USER_NAME}/lib
+      - conda-env:/usr/local/share/miniconda3/envs/env
+      - miniconda:/usr/local/share/miniconda3
+
     init: true
     stdin_open: true
     tty: true

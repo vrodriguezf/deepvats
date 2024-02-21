@@ -36,11 +36,11 @@ ENV LC_ALL=C.UTF-8 \
     #--- Miniconda installation
     MINICONDA_VERSION=4.10.3 \ 
     HOME=/home\
-    CONDA_DIR=/home/miniconda3 \
-    PATH=$CONDA_DIR/bin:$PATH \
-    PROJECT_DIR=/home \
+    CONDA_DIR=/usr/local/share/miniconda3
+
+ENV PATH=$CONDA_DIR/bin:$PATH \
     #---Mamba installation
-    ENV_PREFIX=/home/env
+    ENV_PREFIX=${CONDA_DIR}/envs/env
 
 #-- Copy tmp configuration files
 COPY ./docker/environment.yml ./docker/requirements.txt ./docker/DESCRIPTION /tmp/
@@ -48,14 +48,14 @@ COPY ./docker/environment.yml ./docker/requirements.txt ./docker/DESCRIPTION /tm
 #####################
 # Install miniconda #
 #####################
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_VERSION-Linux-x86_64.sh -O $HOME/miniconda.sh  \
-    && chmod +x /home/miniconda.sh \
-    && /home/miniconda.sh -b -p $CONDA_DIR \
-    && rm /home/miniconda.sh \
-    && echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> /home/.profile 
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_VERSION-Linux-x86_64.sh -O /usr/local/share/miniconda.sh  \
+    && chmod +x /usr/local/share/miniconda.sh \
+    && /usr/local/share/miniconda.sh -b -p $CONDA_DIR \
+    && rm /usr/local/share/miniconda.sh \
+    && echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> /usr/local/share/.profile 
 RUN conda init bash 
 
-WORKDIR $PROJECT_DIR
+WORKDIR /usr/local/share/
 
 ##########################
 # Install & update MAMBA #
@@ -68,17 +68,11 @@ RUN echo "--> Mamba install & Update" \
     && mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml \
     && conda clean --all --yes
 
-
-#-- Bring & Install deepvats
-COPY ./ ${HOME}/work
-RUN conda activate $ENV_PREFIX \
-    && pip install -e $HOME/work
-
 ###############################################
 ## INSTALL R PACKAGES & Make conda available ##
 ###############################################
-ARG RETICULATE_MINICONDA_PATH=/home/miniconda3 \
-    RETICULATE_PYTHON_ENV=/home/env
+ARG RETICULATE_MINICONDA_PATH=${CONDA_DIR} \
+    RETICULATE_PYTHON_ENV=${ENV_PREFIX}
 
 ENV RETICULATE_PYTHON=${RETICULATE_PYTHON_ENV}/bin/python/ \
     PATH=${RETICULATE_MINICONDA_PATH}/bin:${PATH}
@@ -89,5 +83,6 @@ RUN R -e "devtools::install_deps('/tmp/', dependencies = TRUE)" \
     && echo "RETICULATE_PYTHON=${RETICULATE_PYTHON}" >> ${HOME}/.Renviron \
     && echo "RETICULATE_MINICONDA_PATH=${RETICULATE_MINICONDA_PATH}" >> ${HOME}/.Renviron
 
-# make non-activate conda commands available
-COPY --chown=${UID}:${GID} ./docker/entrypoint-rstudio.sh /usr/local/bin
+COPY ../ /root/work
+
+RUN pip install -e /root/work

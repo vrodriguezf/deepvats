@@ -50,39 +50,31 @@ COPY --chown=$uid:$gid docker/jupyter_config $HOME/.jupyter
 # Ensure miniconda for user #
 #############################
 
-ENV MINICONDA_VERSION=4.10.3 \ 
-    #home/env/miniconda3
-    CONDA_DIR=/miniconda3 \ 
-    PATH=$CONDA_DIR/bin:$PATH \
-    PROJECT_DIR=~\
-    ENV_PREFIX=/home/env
+#ENV MINICONDA_VERSION=4.10.3 \ 
+#    CONDA_DIR=/opt/miniconda3 
 
-# Make conda activate command available from /bin/bash --login shells
-RUN echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> ~/.profile 
+#ENV PATH=$CONDA_DIR/bin:$PATH \
+ENV PROJECT_DIR=${HOME}
+#ENV ENV_PREFIX=/opt/env
 
 RUN echo "--> Activate conda"
-# make conda activate command available from /bin/bash --interative shells
-RUN  conda init bash 
-    #\
-    # create a project directory inside user home
-    #&& mkdir -p /home/$USER/
-    #$PROJECT_DIR
+
+# Make conda activate command available from /bin/bash --interative shells
+RUN  conda init bash  \
+    # Create a project directory inside user home
+    && mkdir -p $PROJECT_DIR
+
 RUN echo "--> WORKDIR"
-WORKDIR /home/
+WORKDIR ${HOME}
 
-# run the postBuild script to install the JupyterLab extensions
-COPY --chown=$UID:$GID docker/postBuild /usr/local/bin
-RUN chmod u+x /usr/local/bin/postBuild \
-    && conda activate $ENV_PREFIX   \
-    && /usr/local/bin/postBuild  \
-    && conda deactivate  \
-    # Make bash automatically activate the conda environment
-    && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
-
-RUN echo "--> Exec entrypoint"
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
-RUN chmod u+x /usr/local/bin/entrypoint.sh
 
+# Make bash automatically activate the conda environment
+RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc \
+    && echo "--> Exec entrypoint" \
+    && chmod u+x /usr/local/bin/entrypoint.sh
+    
+ENV PATH /usr/local/share/miniconda3/envs/env/bin:$PATH
 
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 

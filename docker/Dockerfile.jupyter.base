@@ -33,22 +33,25 @@ ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 \
     MINICONDA_VERSION=4.10.3 \ 
     HOME=/home\
-    CONDA_DIR=$HOME/miniconda3 \
-    PATH=$CONDA_DIR/bin:$PATH \
-    PROJECT_DIR=/home \
-    ENV_PREFIX=$PROJECT_DIR/env
+    CONDA_DIR=/usr/local/share/miniconda3 
+
+ENV PATH=$CONDA_DIR/bin:$PATH \ 
+    ENV_PREFIX=${CONDA_DIR}/envs/env
+
 
 #####################
 # Install miniconda #
 #####################
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_VERSION-Linux-x86_64.sh -O $HOME/miniconda.sh  \
-    && chmod +x $HOME/miniconda.sh  \
-    && $HOME/miniconda.sh -b -p $CONDA_DIR  \
-    && rm $HOME/miniconda.sh \
-    && echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.profile 
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_VERSION-Linux-x86_64.sh -O /usr/local/share/miniconda.sh  \
+    && chmod +x /usr/local/share/miniconda.sh  \
+    && /usr/local/share/miniconda.sh -b -p $CONDA_DIR  \
+    && rm /usr/local/share/miniconda.sh \
+    && echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> /usr/local/share/.profile 
+
+RUN echo PATH: ${PATH}
 RUN  conda init bash 
 
-WORKDIR $PROJECT_DIR
+WORKDIR /usr/local/share/
 
 ##########################
 # Install & update MAMBA #
@@ -58,8 +61,3 @@ RUN conda install --name base --channel conda-forge mamba \
     && mamba update --name base --channel defaults conda \
     && mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml \
     && conda clean --all --yes
-
-#-- Bring & Install deepvats
-COPY ./ ${HOME}/work
-RUN conda activate $ENV_PREFIX \
-    && pip install -e $HOME/work

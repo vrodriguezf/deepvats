@@ -20,14 +20,14 @@ services:
       - WANDB_API_KEY=${WANDB_API_KEY}
       - GH_TOKEN=${GH_TOKEN}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
-      - WANDB_DIR=/home/work #${USER_NAME}/work
+      - WANDB_DIR=/home/${USER_NAME}/work
       - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       - USER_NAME=${USER_NAME} #* 
     volumes:
-      - ../:/home/${USER_NAME}/work
+      - ../:/home/$USER_NAME/work
       - ${LOCAL_DATA_PATH}:/home/$USER_NAME/data/
-      - conda-env:/home/$USER_NAME/env
-      - miniconda:/home/$USER_NAME/miniconda3
+      - conda-env:/home/env/
+      - miniconda:/miniconda3/
     init: true
     stdin_open: true
     tty: true

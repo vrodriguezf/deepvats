@@ -8,7 +8,7 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-FROM misantamaria/dvats-jupyter:0
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"

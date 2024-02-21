@@ -8,36 +8,14 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-ARG CUDA_VERSION
-FROM nvidia/cuda:${CUDA_VERSION}
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
 LABEL cuda_version=${CUDA_VERSION}
-LABEL log_path=${log_path}
-##---Initialize bash
-LABEL cuda_version=${CUDA_VERSION}
 
-RUN echo "Cuda version: $CUDA_VERSION"
 ##---Initialize bash
 SHELL [ "/bin/bash", "--login", "-c" ]
-
-##################
-# Packages setup #
-################## 
-#TODO: Automatizar que lo coja de /etc/timezone
-#Only neccesary for libarchive & libtiff if error appears
-ARG TZ=Etc/UTC 
-
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
-    && apt-get update --fix-missing \
-    #if errors with libtiff library
-    #&& apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev \
-    && apt-get install -y wget bzip2 curl git sudo libarchive-dev libtiff5-dev zsh\
-    #Otherwise
- #   && apt-get install -y wget bzip2 curl git sudo \
-    && apt-get clean  \
-    && rm -rf /var/lib/apt/lists/*
 
 #-- Environmental variables for wandb
 ENV LC_ALL=C.UTF-8 \
@@ -67,63 +45,41 @@ USER $USER
 
 # Add the jupyterlab settings
 COPY --chown=$uid:$gid docker/jupyter_config $HOME/.jupyter
-#####################
-# Install miniconda #
-#####################
+
+#############################
+# Ensure miniconda for user #
+#############################
 
 ENV MINICONDA_VERSION=4.10.3 \ 
-#ENV MINICONDA_VERSION=23.9.0 \ 
-    CONDA_DIR=$HOME/miniconda3 \
-    # Make non-activate conda commands available
+    #home/env/miniconda3
+    CONDA_DIR=/miniconda3 \ 
     PATH=$CONDA_DIR/bin:$PATH \
-    PROJECT_DIR=$HOME 
+    PROJECT_DIR=~\
+    ENV_PREFIX=/home/env
 
-RUN echo "HOME: ${HOME} | CONDA_DIR = ${CONDA_DIR}" \
-    #-- Install MINICONDA
-    && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_$MINICONDA_VERSION-Linux-x86_64.sh -O ~/miniconda.sh  \
-    && chmod +x ~/miniconda.sh  \
-    && ~/miniconda.sh -b -p $CONDA_DIR  \
-    && rm ~/miniconda.sh 
-
-    # Make conda activate command available from /bin/bash --login shells
+# Make conda activate command available from /bin/bash --login shells
 RUN echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> ~/.profile 
-    # make conda activate command available from /bin/bash --interative shells
-RUN  conda init bash \
-    # create a project directory inside user home
-    && mkdir -p $PROJECT_DIR
 
-WORKDIR $PROJECT_DIR
-##########################
-# Install & update MAMBA #
-########################## 
-ENV ENV_PREFIX $PROJECT_DIR/env
-RUN conda install --name base --channel conda-forge mamba \
-    && mamba update --name base --channel defaults conda 
-#-- Build the mamba environment
-RUN mamba install conda-lock -c conda-forge
-COPY --chown=$UID:$GID docker/environment.yml docker/requirements.txt /tmp/
-#RUN mamba lock -f /tmp/environment.yml --lockfile /tmp/environment.lock
-#RUN mamba create --prefix ${ENV_PREFIX} --file /tmp/environment.lock
-RUN mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml
-RUN conda clean --all --yes
+RUN echo "--> Activate conda"
+# make conda activate command available from /bin/bash --interative shells
+RUN  conda init bash 
+    #\
+    # create a project directory inside user home
+    #&& mkdir -p /home/$USER/
+    #$PROJECT_DIR
+RUN echo "--> WORKDIR"
+WORKDIR /home/
 
 # run the postBuild script to install the JupyterLab extensions
 COPY --chown=$UID:$GID docker/postBuild /usr/local/bin
 RUN chmod u+x /usr/local/bin/postBuild \
-    && conda activate $ENV_PREFIX  \
+    && conda activate $ENV_PREFIX   \
     && /usr/local/bin/postBuild  \
-    && conda deactivate \
-    # Make bash automatically activate the conda environment
-    && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
-RUN chmod u+x /usr/local/bin/postBuild \
-    && conda activate $ENV_PREFIX  \
-    && /usr/local/bin/postBuild  \
-    && conda deactivate \
+    && conda deactivate  \
     # Make bash automatically activate the conda environment
     && echo "conda activate $ENV_PREFIX" >> ~/.bashrc
 
-RUN conda list --prefix ${ENV_PREFIX}
-
+RUN echo "--> Exec entrypoint"
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint.sh
 

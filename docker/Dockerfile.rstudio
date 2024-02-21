@@ -9,7 +9,7 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu & Preliminary libraries
-FROM misantamaria/dvats-jupyter:rocker-ml_4.2
+FROM misantamaria/dvats-rstudio:rocker-ml4.2
 SHELL [ "/bin/bash", "--login", "-c" ]
 
 ## Add Rstudio Server user

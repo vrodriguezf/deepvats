@@ -505,7 +505,7 @@ shinyServer(function(input, output, session) {
       colnames(res) = c("xcoord", "ycoord")
       on.exit({print(" prj_object -->"); flush.console()})
       flush.console()
-      #browser()
+      
       res
     })
 
@@ -737,14 +737,18 @@ shinyServer(function(input, output, session) {
             isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[2]]]
         ) 
         # Populate the rest of the list
-        for (i in 2:(length(idx_window_limits)-1)){
-            reduced_window_list[[i]]<- c(
-                #unlist_window_indices[idx_window_limits[i]+1],
-                #unlist_window_indices[idx_window_limits[i+1]]
-                isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-                isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
-            )
+        if (length(idx_window_limits) > 2) {
+            for (i in 2:(length(idx_window_limits)-1)){
+                reduced_window_list[[i]]<- c(
+                    #unlist_window_indices[idx_window_limits[i]+1],
+                    #unlist_window_indices[idx_window_limits[i+1]]
+                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
+                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+                )
+            }
         }
+
+        
         reduced_window_list
     })
     

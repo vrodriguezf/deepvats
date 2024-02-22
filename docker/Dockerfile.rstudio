@@ -16,6 +16,11 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 ARG USER=user
 ARG UID=1000
 ARG GID=1000
+
+ENV USER=$USER
+ENV UID=$UID
+ENV GID=$GID
+
 ENV HOME /home/$USER
 ENV ENV_PREFIX $HOME/env
 
@@ -34,5 +39,8 @@ RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
 
+WORKDIR $HOME
+
 # Initialize R-Stusio Server
 ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]
+

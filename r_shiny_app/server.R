@@ -745,7 +745,6 @@ shinyServer(function(input, output, session) {
                             isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
                                )
         }
-        browser()
         reduced_window_list
     })
     
@@ -801,7 +800,6 @@ shinyServer(function(input, output, session) {
                     color = range_color
                 ) 
             
-            browser()
             print(c(start_date, end_date))
             ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
                 #%>% dyEvent(

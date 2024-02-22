@@ -19,16 +19,9 @@ ARG GID=1000
 ENV HOME /home/$USER
 ENV ENV_PREFIX $HOME/env
 
-RUN addgroup --gid $GID $USER
-RUN adduser --disabled-password \
-    --gecos "Non-root user" \
-    --uid $UID \
-    --gid $GID \
-    --home $HOME \
-    $USER
-
-RUN adduser $USER sudo
-RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN usermod -l ${USER} $(id -nu 1000) \
+    && adduser $USER sudo \
+    && echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Use an entrypoint script to insure conda environment is properly activated at runtime
 COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin

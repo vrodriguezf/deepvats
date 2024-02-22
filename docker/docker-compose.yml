@@ -6,10 +6,12 @@ services:
         - uid=${USER_ID}
         - gid=${GROUP_ID}
         - CUDA_VERSION=12.2.0-devel-ubuntu20.04
-        - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+          - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       context: ../
+      labels:
+        - username=${USER_NAME}
       dockerfile: docker/Dockerfile.jupyter
-    image: dvats-jupyter:12.2.0-devel-ubuntu20.04
+    image: dvats-jupyter:${USER_NAME}
     ports:
       - "${JUPYTER_PORT}:8888"
     environment:
@@ -21,11 +23,11 @@ services:
       - WANDB_DIR=/home/${USER_NAME}/work
       - JUPYTER_TOKEN=${JUPYTER_TOKEN}
     volumes:
-      - ../:/home/${USER}/work
+      - ../:/home/${USER_NAME}/work
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/
-      - conda-env:/home/${USER_NAME}/env
-      - miniconda:/home/${USER_NAME}/miniconda3
-      - lib:/home/${USER_NAME}/lib
+      - conda-env:/usr/local/share/miniconda3/envs/env
+      - miniconda:/usr/local/share/miniconda3
+
     init: true
     stdin_open: true
     tty: true
@@ -43,16 +45,17 @@ services:
           dockerfile: docker/Dockerfile.rstudio
           args:
               - WANDB_API_KEY=${WANDB_API_KEY} #
-              - RETICULATE_PYTHON_ENV=/home/${USER_NAME}/env
-              - RETICULATE_MINICONDA_PATH=/home/${USER_NAME}/miniconda3
+              - RETICULATE_PYTHON_ENV=/home/env
+              - RETICULATE_MINICONDA_PATH=/home/miniconda3
               - USER=${USER_NAME} #* 
               - UID=${USER_ID} #*
               - GID=${GROUP_ID} #*
-      image: dvats-r:rocker-ml_4.2
+      image: dvats-rstudio:${USER_NAME}
       ports:
           - "${RSTUDIO_PORT}:8787" #*
       environment:
           - WANDB_ENTITY=${WANDB_ENTITY}
+          - WANDB_API_KEY=${WANDB_API_KEY}
           - WANDB_PROJECT=${WANDB_PROJECT}
           - USER=${USER_NAME} #* 
           - USERID=${USER_ID} #*
@@ -64,14 +67,13 @@ services:
             #          - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
           - GH_TOKEN=${GH_TOKEN} #*
           # TODO (28/03/2023): I don't know why it is not working without this
-          - ENV_VARS=WANDB_ENTITY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES
+          - ENV_VARS=WANDB_ENTITY,WANDB_API_KEY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES
       volumes:
-         - ../r_shiny_app:/home/${USER_NAME}/app #*
-         - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ #*
+         - ../r_shiny_app:/home/${USER_NAME}/app 
+         - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ 
          - ../dvats:/home/${USER_NAME}/dvats
-         - conda-env:/home/${USER_NAME}/env
-         - miniconda:/home/${USER_NAME}/miniconda3 #:ro
-         - lib:/home/${USER_NAME}/lib
+         - conda-env:/usr/local/share/miniconda3/envs/env
+         - miniconda:/home/user/local/share/miniconda3 
       deploy:
         resources:
           #limits:

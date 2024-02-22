@@ -741,9 +741,9 @@ shinyServer(function(input, output, session) {
             reduced_window_list[[i]]<- c(
                 #unlist_window_indices[idx_window_limits[i]+1],
                 #unlist_window_indices[idx_window_limits[i+1]]
-                            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-                            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
-                               )
+                isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
+                isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+            )
         }
         reduced_window_list
     })

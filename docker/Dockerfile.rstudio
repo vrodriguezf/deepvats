@@ -14,8 +14,10 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 
 ## Add Rstudio Server user
 ARG USER=user
-ARG UID=1000
-ARG GID=1000
+
+ENV USER=${USER} 
+ENV UID=1000
+ENV GID=1000
 ENV HOME /home/$USER
 ENV ENV_PREFIX $HOME/env
 

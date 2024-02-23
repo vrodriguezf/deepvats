@@ -27,7 +27,6 @@ services:
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/
       - conda-env:/usr/local/share/miniconda3/envs/env
       - miniconda:/usr/local/share/miniconda3
-
     init: true
     stdin_open: true
     tty: true

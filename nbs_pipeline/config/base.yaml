@@ -14,7 +14,7 @@ user_preferences:
   use_wandb: &use_wandb true
   wdb:
     user: &wdb_user mi-santamaria
-    project_name: &wdb_project deepvats
+    project_name: &wdb_project dvats-hgf
     version: &wdb_version 'latest' #'6'
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode: &wdb_mode 'online'

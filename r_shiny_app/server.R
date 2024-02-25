@@ -361,8 +361,9 @@ shinyServer(function(input, output, session) {
     # Get timeseries artifact metadata
     ts_ar_config = reactive({
         print("--> reactive ts_ar_config | List used artifacts")
-        ts_ar = req(ts_ar())
-        print(paste0("reactive ts_ar_config | List used artifacts | hash", ts_ar$hash))
+        on.exit({print("reactive ts_ar_config -->"); flush.console()})
+        ts_ar <- req(ts_ar())
+        print(paste0("reactive ts_ar_config | Artifact hash", ts_ar$metadata$TS$hash))
         list_used_arts = ts_ar$metadata$TS
         list_used_arts$vars = ts_ar$metadata$TS$vars %>% stringr::str_c(collapse = "; ")
         list_used_arts$name = ts_ar$name
@@ -371,7 +372,6 @@ shinyServer(function(input, output, session) {
         list_used_arts$id = ts_ar$id
         list_used_arts$created_at = ts_ar$created_at
         list_used_arts
-        on.exit({print("reactive ts_ar_config -->"); flush.console()})
     })
         
     # Get encoder artifact
@@ -951,14 +951,16 @@ shinyServer(function(input, output, session) {
     
     # Generate encoder info table
     output$enc_info = renderDataTable({
+        on.exit({print("Encoder artiffact -->"); flush.console()})
         selected_encoder_name <- req(input$encoder)
         on.exit({print("Encoder artiffact -->"); flush.console()})
         print(paste0("--> Encoder artiffact", selected_encoder_name))
         selected_encoder <- encs_l[[selected_encoder_name]]
         encoder_metadata <- req(selected_encoder$metadata)
         print(paste0("Encoder artiffact | encoder metadata ", selected_encoder_name))
-        encoder_metadata %>%enframe()
-            })
+        encoder_metadata %>%
+        enframe()
+    })
     
     # Generate time series info table
     output$ts_ar_info = renderDataTable({

@@ -121,7 +121,7 @@ class TSArtifact(wandb.Artifact):
 
         return obj
 
-# %% ../nbs/load.ipynb 13
+# %% ../nbs/load.ipynb 14
 @patch
 def to_df(self:wandb.apis.public.Artifact):
     "Download the files of a saved wandb artifact and process them as a single dataframe. The artifact must \
@@ -138,7 +138,7 @@ def to_df(self:wandb.apis.public.Artifact):
     else:
         print("ERROR: Only from_df method is allowed yet")
 
-# %% ../nbs/load.ipynb 15
+# %% ../nbs/load.ipynb 16
 @patch
 def to_tsartifact(self:wandb.apis.public.Artifact):
     "Cast an artifact as a TS artifact. The artifact must have been created from one of the \
@@ -150,7 +150,7 @@ def to_tsartifact(self:wandb.apis.public.Artifact):
                       description=self.description,
                       metadata=self.metadata)
 
-# %% ../nbs/load.ipynb 17
+# %% ../nbs/load.ipynb 18
 @delegates(pd.to_datetime)
 def infer_or_inject_freq(df, injected_freq='1s', start_date=None, **kwargs):
     """

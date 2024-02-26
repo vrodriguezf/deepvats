@@ -8,7 +8,7 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
@@ -40,6 +40,7 @@ RUN addgroup --gid $GID $USER  \
     --gid $GID \
     --home $HOME $USER\
     && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
 #-- Move to user
 USER $USER
 
@@ -62,7 +63,7 @@ RUN echo "--> Activate conda"
 # Make conda activate command available from /bin/bash --interative shells
 RUN  conda init bash  \
     # Create a project directory inside user home
-    && mkdir -p $PROJECT_DIR
+    && mkdir -p $PROJECT_DIR 
 
 RUN echo "--> WORKDIR"
 WORKDIR ${HOME}

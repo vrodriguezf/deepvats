@@ -3,7 +3,6 @@ repos:
     rev: 2.2.10
     hooks: 
     - id: nbdev_clean
-      files: '~/work/nbs'
-      files: '~/work/nbs_pipeline'
+      files: 'nbs/|nbs_pipeline/'
     - id: nbdev_export
 

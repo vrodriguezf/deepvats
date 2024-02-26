@@ -3,6 +3,7 @@ repos:
     rev: 2.2.10
     hooks: 
     - id: nbdev_clean
-      files: 'nbs/|nbs_pipeline/'
+      args: ['--clear_all']
+      #files: ^nbs/.*\.ipynb|^nbs_pipeline/.*\.ipynb$
     - id: nbdev_export
 

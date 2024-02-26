@@ -10,4 +10,5 @@ ls -la /home/$USER/work
 conda list pre-commit
 
 pip install -e /home/$USER/work
+
 exec "$@"

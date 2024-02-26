@@ -1,0 +1,23 @@
+DOCKER=$1
+VERSION=$2
+IMAGE_GOALS=$3 #hooks
+USER_NAME=$(id -un)
+
+echo "DOCKER: $DOCKER"
+if [ "$DOCKER" = 'jupyter' ]; then
+    DOCKERFILE=./docker/Dockerfile.jupyter.${IMAGE_GOALS}
+    else 
+    DOCKERFILE=./docker/Dockerfile.rstudio.${IMAGE_GOALS}
+fi
+
+echo "Dockerfile: $DOCKERFILE"
+IMAGE_NAME=${PROJECT_NAME}-$DOCKER':'$VERSION-${Ua
+
+#read -p "Docker $DOCKER Dockerfile: $DOCKERFILE Image: $IMAGE_NAME"
+# Si la imagen depende de usuario para rutas
+# Usar :USER_NAME detrás de IMAGE_GOALS,
+# Antes de :latest
+
+
+echo "IMAGE_NAME: $IMAGE_NAME"
+docker build "${args[@]}" . -f ${DOCKERFILE} -t ${IMAGE_NAME}

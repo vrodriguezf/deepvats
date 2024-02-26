@@ -14,8 +14,17 @@ fi
 
 
 COMPOSE_FILE="./docker/docker-compose.yml"
+GH_TOKEN=$(grep -oP '^GH_TOKEN=\K.*' ./docker/.env)
 
-COMMAND="cd work && git add --all && git commit -m \"$COMMIT_MESSAGE\" && git push"
+USER_EMAIL=$(git config user.email)
+USER_NAME=$(git config user.name)
+
+
+COMMAND="cd work && "
+COMMAND=${COMMAND}"git config --global credential.helper store && echo "https://github.com:${GH_TOKEN}@github.com" > ~/.git-credentials"
+COMMAND=${COMMAND}" && git config --global user.email \"$USER_EMAIL\" && git config --global user.name \"$USER_NAME\""
+COMMAND=${COMMAND}" && git add --all && git commit -m \"$COMMIT_MESSAGE\" && git push"
+
 SERVICE_RUNNING=$(docker-compose -f ${COMPOSE_FILE} ps | grep $SERVICE_NAME | grep "Up")
 
 if [ -z "$SERVICE_RUNNING" ]; then

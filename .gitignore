@@ -29,6 +29,7 @@ tags
 
 #Macu
 app/shiny_logs
+./mi-santamaria/* #No sé por qué se han copiado mis proyectos de wandb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

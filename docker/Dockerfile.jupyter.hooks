@@ -14,6 +14,7 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 #####################
 # Install miniconda #
 #####################
-RUN  conda init bash \
+
+RUN  source /usr/local/share/miniconda3/bin/activate env \
      && mamba install -y -c conda-forge pre-commit \
      && mamba clean --all --yes

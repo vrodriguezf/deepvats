@@ -4,6 +4,4 @@ repos:
     hooks: 
     - id: nbdev_clean
     - id: nbdev_export
-    - id: check-added-large-files
-    - id: detect-private-key
 

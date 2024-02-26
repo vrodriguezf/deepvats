@@ -287,7 +287,6 @@ shinyServer(function(input, output, session) {
         clustering_options$selected <- req(input$clustering_options)
         log_print("Observe clustering options -->")
     })
-
     # Update clusters_config reactive values when user clicks on "calculate_clusters" button
     observeEvent(input$calculate_clusters, {
         send_log("Clusters config_start")
@@ -511,7 +510,6 @@ shinyServer(function(input, output, session) {
         list_used_arts$id = ts_ar$id
         list_used_arts$created_at = ts_ar$created_at
         list_used_arts
-        on.exit({print("reactive ts_ar_config -->"); flush.console()})
     })
     
     # Get encoder artifact
@@ -947,8 +945,12 @@ shinyServer(function(input, output, session) {
         # Create a reduced window list
         reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
         # Populate the first element of the list with the idx of the first window.
-        reduced_window_list[[1]] <- c(unlist_window_indices[idx_window_limits[1]],
-                            unlist_window_indices[idx_window_limits[1+1]])
+        #reduced_window_list[[1]] <- c(unlist_window_indices[idx_window_limits[1]],
+                            #unlist_window_indices[idx_window_limits[1+1]])
+        reduced_window_list[[1]] = c(
+            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
+            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[2]]]
+        ) 
         # Populate the rest of the list
         for (i in 2:(length(idx_window_limits)-1)){
             reduced_window_list[[i]]<- c(
@@ -958,6 +960,8 @@ shinyServer(function(input, output, session) {
                             as.Date(isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]])
                                )
         }
+
+        
         reduced_window_list
     })
     
@@ -1013,6 +1017,8 @@ shinyServer(function(input, output, session) {
                     to = end_event_date,
                     color = range_color
                 ) 
+            
+            print(c(start_date, end_date))
             ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
                 #%>% dyEvent(
                 #    start_event_date, 
@@ -1161,6 +1167,7 @@ shinyServer(function(input, output, session) {
     
     # Generate encoder info table
     output$enc_info = renderDataTable({
+        on.exit({print("Encoder artiffact -->"); flush.console()})
         selected_encoder_name <- req(input$encoder)
         on.exit({log_print("Encoder artiffact -->"); flush.console()})
         log_print(paste0("--> Encoder artiffact", selected_encoder_name))
@@ -1254,7 +1261,6 @@ shinyServer(function(input, output, session) {
             ) %>% withSpinner()
         }
     )
-
     # Render information about the selected point in the time series graph
     output$point <- renderText({
         req(input$ts_plot_dygraph_click$x_closest_point)

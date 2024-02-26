@@ -1,9 +1,16 @@
-repos: 
+repos:
   - repo: https://github.com/fastai/nbdev
     rev: 2.2.10
-    hooks: 
-    - id: nbdev_clean
-      args: ['--clear_all']
-      #files: ^nbs/.*\.ipynb|^nbs_pipeline/.*\.ipynb$
+    hooks:
     - id: nbdev_export
+    - id: nbdev_clean
+      files: ^nbs/.*\.ipynb|^nbs_pipeline/.*\.ipynb$
 
+  - repo: local
+    hooks:
+      - id: clean-jupyter-files
+        name: Clean jupyter notebooks
+        entry: ./clean-jupyter-files.sh
+        language: script
+        files: ^nbs/.*\.ipynb|^nbs_pipeline/.*\.ipynb$
+        always_run: true

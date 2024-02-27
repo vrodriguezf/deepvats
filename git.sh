@@ -43,14 +43,16 @@ if [ -z "$SERVICE_RUNNING" ]; then
 else
   echo "Service $SERVICE_NAME already running."
 fi
+
 docker-compose -f $COMPOSE_FILE exec -T $SERVICE_NAME sh -c "$COMMAND"
-echo "Commit done"
+
 # Verificar el estado de salida del comando anterior
   if [ $? -ne 0 ]; then
     echo "Error: Commit failed"
   else 
     echo "Commit done"
   fi  
+
 if [ -z "$SERVICE_RUNNING_" ]; then 
   echo "Stopping service $SERVICE_NAME..."
   docker-compose -f $COMPOSE_FILE stop $SERVICE_NAME

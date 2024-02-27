@@ -15,7 +15,9 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 # Install miniconda #
 #####################
 
-RUN  source /usr/local/share/miniconda3/bin/activate env \
+RUN  echo "--> Activate conda" \
+     && source /usr/local/share/miniconda3/bin/activate env \
+     && echo "--> Installing libraries" \
      && mamba install -y -c conda-forge pyscamp-gpu \
+     && mamba install -y -c conda-forge stumpy \
      && mamba clean --all --yes 
-

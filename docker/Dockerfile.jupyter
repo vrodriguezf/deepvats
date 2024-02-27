@@ -8,7 +8,7 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks-scamp
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
@@ -27,10 +27,11 @@ ENV LC_ALL=C.UTF-8 \
 ARG username=user\
     uid=1000 \
     gid=1000
+
 ENV USER=$username \
     UID=$uid \
-    GID=$gid 
-ENV HOME=/home/$USER
+    GID=$gid \
+    HOME=/home/$username
 
 #-- Passwordless sudo (TODO: mv to root section)
 RUN addgroup --gid $GID $USER  \
@@ -63,9 +64,8 @@ RUN echo "--> Activate conda"
 # Make conda activate command available from /bin/bash --interative shells
 RUN  conda init bash  \
     # Create a project directory inside user home
-    && mkdir -p $PROJECT_DIR 
-
-RUN echo "--> WORKDIR"
+    && mkdir -p $PROJECT_DIR \
+    && echo "--> WORKDIR"
 WORKDIR ${HOME}
 
 COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
@@ -73,7 +73,8 @@ COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
 # Make bash automatically activate the conda environment
 RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc \
     && echo "--> Exec entrypoint" \
-    && chmod u+x /usr/local/bin/entrypoint.sh
+    && chmod u+x /usr/local/bin/entrypoint.sh \
+    && source /usr/local/share/miniconda3/bin/activate env 
     
 ENV PATH /usr/local/share/miniconda3/envs/env/bin:$PATH
 
@@ -85,13 +86,10 @@ ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
 
 COPY --chown=$UID:$GID  ./ $HOME/work
 
-RUN  source /usr/local/share/miniconda3/bin/activate env \
-     && cd $HOME/work \
-     && ls -la $HOME/work \
-     && git --version 
+#RUN  source /usr/local/share/miniconda3/bin/activate env 
 
 SHELL [ "/bin/sh", "-c" ]
-RUN cd ${HOME}/work/ \
+RUN  cd ${HOME}/work/ \
     && git config --global --add safe.directory /home/macu/work \
     && git rev-parse --is-inside-work-tree || (echo "Not inside a Git repository"; exit 1) \
     && pre-commit install

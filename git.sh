@@ -38,14 +38,13 @@ if [ -z "$SERVICE_RUNNING" ]; then
   sleep 5
   
   echo "Executing command inside $SERVICE_NAME..."
-  echo "docker-compose -f $COMPOSE_FILE exec -T $SERVICE_NAME sh -c $COMMAND"
   
 else
   echo "Service $SERVICE_NAME already running."
+  
 fi
-
+echo "About to exec: docker-compose -f $COMPOSE_FILE exec -T $SERVICE_NAME sh -c $COMMAND"
 docker-compose -f $COMPOSE_FILE exec -T $SERVICE_NAME sh -c "$COMMAND"
-
 # Verificar el estado de salida del comando anterior
   if [ $? -ne 0 ]; then
     echo "Error: Commit failed"

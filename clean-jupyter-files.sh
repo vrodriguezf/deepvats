@@ -14,4 +14,6 @@ for notebook in "$@"; do
     echo "Clean $notebook -->"
 done
 
+echo "Files cleaned"
+
 exit 0

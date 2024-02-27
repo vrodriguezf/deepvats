@@ -70,4 +70,3 @@ dependencies:
   - fastai::fastai>=2.7.9
   - timeseriesai::tsai
   - conda-forge::feather-format
-  - conda-forge::python-kaleido #0.2.1

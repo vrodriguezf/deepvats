@@ -26,8 +26,10 @@ COMMAND=${COMMAND}" && git config --global user.email \"$USER_EMAIL\" && git con
 COMMAND=${COMMAND}" && git add --all && git commit -m \"$COMMIT_MESSAGE\" && git push"
 
 SERVICE_RUNNING=$(docker-compose -f ${COMPOSE_FILE} ps | grep $SERVICE_NAME | grep "Up")
+SERVICE_RUNNING_=FALSE
 
 if [ -z "$SERVICE_RUNNING" ]; then
+  SERVICE_RUNNING_=TRUE
   echo "Service $SERVICE_NAME not running. Commiting inside"
   
   echo "Starting service $SERVICE_NAME..."
@@ -37,24 +39,23 @@ if [ -z "$SERVICE_RUNNING" ]; then
   
   echo "Executing command inside $SERVICE_NAME..."
   echo "docker-compose -f $COMPOSE_FILE exec -T $SERVICE_NAME sh -c $COMMAND"
-  docker-compose -f $COMPOSE_FILE exec -T $SERVICE_NAME sh -c "$COMMAND"
-
-  # Verificar el estado de salida del comando anterior
+  
+else
+  echo "Service $SERVICE_NAME already running."
+fi
+docker-compose -f $COMPOSE_FILE exec -T $SERVICE_NAME sh -c "$COMMAND"
+echo "Commit done"
+# Verificar el estado de salida del comando anterior
   if [ $? -ne 0 ]; then
     echo "Error: Commit failed"
   else 
     echo "Commit done"
   fi  
-
+if [ -z "$SERVICE_RUNNING_" ]; then 
   echo "Stopping service $SERVICE_NAME..."
   docker-compose -f $COMPOSE_FILE stop $SERVICE_NAME
-  else 
-  echo "Service $SERVICE_NAME running. Please use git from inside the docker or stop it"
-  docker-compose -f $COMPOSE_FILE exec -T $SERVICE_NAME sh -c "$COMMAND"
-  echo "Commit done"
-  #read -p "PLEASE! TAKE CARE! IF YOU CONTINUE COMMITING OUTPUTS WILL BE ADDED TO GIT. PRESS ENTER TO CONTINUE."
-  #echo "Commit will not be done in this script. Decide if doing it from outside or inside. Ensure the correct git add..."
-fi
+  echo "Service $SERVICE_NAME stopped"
+fi 
 
 exit 0
 

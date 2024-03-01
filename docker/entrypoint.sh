@@ -9,9 +9,10 @@ echo $WANDB_ENTITY $USER $WANDB_PROJECT
 
 #!/bin/bash
 
-
-
-
+############################
+# Extra pre-commit options #
+############################
+/usr/local/bin/delete_entity_project.sh ${HOME}
 
 ########## Fix base.yaml for ensuring correct user & project directly ########## [TODO: Remove this section for directly using .env option]
 line_found=$(grep "^[[:space:]]*user: &wdb_user" /home/$USER/work/nbs_pipeline/config/base.yaml)

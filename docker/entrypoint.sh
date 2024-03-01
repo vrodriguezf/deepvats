@@ -48,4 +48,7 @@ else
     grep "project_name: &wdb_project" /home/$USER/work/nbs_pipeline/config/base.yaml
 fi
 
+[ -d "/home/$USER/data/wandb_artifacts" ] || mkdir -p "/home/$USER/data/wandb_artifacts"
+
+
 exec "$@"

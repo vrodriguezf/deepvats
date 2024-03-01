@@ -931,7 +931,7 @@ def force_artifact_config_sd2a(
         print("Selecting ", list(tested_configs.items())[id][0])
     config.artifact_name = to_set.alias
     config.data_cols = to_set.cols
-    #config.data_fpath= "~/data/"+to_set.fname+to_set.ftype
+    config.data_fpath= "~/data/"+to_set.fname+to_set.ftype
     config.freq=to_set.freq
     config.time_col = to_set.time_col
     config.csv_config = {}

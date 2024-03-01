@@ -713,37 +713,40 @@ shinyServer(function(input, output, session) {
     })
 
     window_list <- reactive({
-        print("--> window_list")
-        on.exit(print("window_list -->"))
-        # Get the window indices
-        req(length(embedding_ids() > 0))
-        embedding_idxs = embedding_ids()
-        window_indices = get_window_indices(embedding_idxs, input$wlen, input$stride)
-        # Put all the indices in one list and remove duplicates
-        unlist_window_indices = unique(unlist(window_indices))
-        # Calculate a vector of differences to detect idx where a new window should be created 
-        diff_vector <- diff(unlist_window_indices,1)
-        # Take indexes where the difference is greater than one (that represent a change of window)
-        idx_window_limits <- which(diff_vector!=1)
-        # Include the first and last index to have a whole set of indexes.
-        idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
-        # Create a reduced window list
-        reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
-        # Populate the first element of the list with the idx of the first window.
-        reduced_window_list[[1]] <- c(unlist_window_indices[idx_window_limits[1]],
-                            unlist_window_indices[idx_window_limits[1+1]])
+      print("--> window_list")
+      on.exit(print("window_list -->"))
+      # Get the window indices
+      req(length(embedding_ids() > 0))
+      embedding_idxs = embedding_ids()
+      window_indices = get_window_indices(embedding_idxs, input$wlen, input$stride)
+      # Put all the indices in one list and remove duplicates
+      unlist_window_indices = unique(unlist(window_indices))
+      # Calculate a vector of differences to detect idx where a new window should be created 
+      diff_vector <- diff(unlist_window_indices,1)
+      # Take indexes where the difference is greater than one (that represent a change of window)
+      idx_window_limits <- which(diff_vector!=1)
+      # Include the first and last index to have a whole set of indexes.
+      idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
+      # Create a reduced window list
+      reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
+      # Populate the first element of the list with the idx of the first window.
+      reduced_window_list[[1]] = c(
+        isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
+        isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[2]]]
+      ) 
+      if (length(idx_window_limits) > 2) {
         # Populate the rest of the list
         for (i in 2:(length(idx_window_limits)-1)){
-            reduced_window_list[[i]]<- c(
-                #unlist_window_indices[idx_window_limits[i]+1],
-                #unlist_window_indices[idx_window_limits[i+1]]
-                            as.Date(isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]]),
-                            as.Date(isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]])
-                               )
+          reduced_window_list[[i]]<- c(
+            #unlist_window_indices[idx_window_limits[i]+1],
+            #unlist_window_indices[idx_window_limits[i+1]]
+            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
+            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+          )
         }
-        reduced_window_list
+      }
+      reduced_window_list
     })
-    
 
     # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({

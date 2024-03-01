@@ -730,25 +730,21 @@ shinyServer(function(input, output, session) {
         # Create a reduced window list
         reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
         # Populate the first element of the list with the idx of the first window.
-        #reduced_window_list[[1]] <- c(unlist_window_indices[idx_window_limits[1]],
-                            #unlist_window_indices[idx_window_limits[1+1]])
         reduced_window_list[[1]] = c(
             isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
             isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[2]]]
         ) 
-        # Populate the rest of the list
         if (length(idx_window_limits) > 2) {
+            # Populate the rest of the list
             for (i in 2:(length(idx_window_limits)-1)){
                 reduced_window_list[[i]]<- c(
                     #unlist_window_indices[idx_window_limits[i]+1],
                     #unlist_window_indices[idx_window_limits[i+1]]
                     isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
                     isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
-                )
+               )
             }
         }
-
-        
         reduced_window_list
     })
     

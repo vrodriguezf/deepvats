@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
-           'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'learner_module_leaves',
+           'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'update_patch', 'learner_module_leaves',
            'learner_module_leaves_subtables']
 
 # %% ../nbs/utils.ipynb 3
@@ -197,7 +197,15 @@ def exec_with_and_feather_k_output(function_name, module_name = "main", path_inp
     if print_flag: print("Exec with feather --> ", path_output)
     return path_output
 
-# %% ../nbs/utils.ipynb 52
+# %% ../nbs/utils.ipynb 50
+#Function for making notebooks clearer
+from IPython.display import clear_output, DisplayHandle
+def update_patch(self, obj):
+    clear_output(wait=True)
+    self.display(obj)
+    print("... Enabling Vs Code execution ...")
+
+# %% ../nbs/utils.ipynb 54
 def learner_module_leaves(learner):
     modules = list(learner.modules())[0]  # Obtener el módulo raíz
     rows = []
@@ -223,7 +231,7 @@ def learner_module_leaves(learner):
     df = pd.DataFrame(rows, columns=['Path', 'Module_type', 'Module_name', 'Module'])
     return df
 
-# %% ../nbs/utils.ipynb 56
+# %% ../nbs/utils.ipynb 58
 def learner_module_leaves_subtables(learner, print_flag = False):
     df = pd.DataFrame(columns=['Path', 'Module_type', 'Module_name', 'Module'])
     md = learner_module_leaves(learner).drop(

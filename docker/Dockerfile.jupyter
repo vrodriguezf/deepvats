@@ -38,7 +38,7 @@ RUN addgroup --gid $GID $USER  \
     --gecos "Non-root user" \
     --uid $UID \
     --gid $GID \
-    --home $HOME $USER\
+    --home $HOME $USER\s
     && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 #-- Move to user
@@ -63,7 +63,7 @@ RUN echo "--> Activate conda"
 # Make conda activate command available from /bin/bash --interative shells
 RUN  conda init bash  \
     # Create a project directory inside user home
-    && mkdir -p $PROJECT_DIR 
+    && mkdir -p $PROJECT_DIR
 
 RUN echo "--> WORKDIR"
 WORKDIR ${HOME}

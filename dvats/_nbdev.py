@@ -30,7 +30,10 @@ modules = ["dr.py",
            "encoder.py",
            "load.py",
            "utils.py",
-           "visualization.py"]
+           "visualization.py",
+           "memory.py",
+           "config.py",
+           ]
 
 doc_url = "https://vrodriguezf.github.io/tchub/"
 

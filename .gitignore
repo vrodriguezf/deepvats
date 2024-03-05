@@ -30,6 +30,7 @@ tags
 #Macu
 app/shiny_logs
 ./mi-santamaria/* #No sé por qué se han copiado mis proyectos de wandb
+nbs_pipeline/test_torch.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -140,6 +141,7 @@ ENV/
 .DS_Store
 .DS_Store?
 .Trashes
+.Trash-1004
 ehthumbs.db
 Thumbs.db
 .idea

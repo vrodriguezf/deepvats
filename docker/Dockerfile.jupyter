@@ -8,7 +8,7 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-mplots
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks-mplots
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
@@ -38,7 +38,7 @@ RUN addgroup --gid $GID $USER  \
     --gecos "Non-root user" \
     --uid $UID \
     --gid $GID \
-    --home $HOME $USER\s
+    --home $HOME $USER\
     && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 #-- Move to user

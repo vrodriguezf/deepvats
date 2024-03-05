@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
-           'exec_with_feather_k_output', 'exec_with_and_feather_k_output']
+           'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'update_patch']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -195,3 +195,11 @@ def exec_with_and_feather_k_output(function_name, module_name = "main", path_inp
         print("Exec with feather | time: ", t_end-t_start)
     if print_flag: print("Exec with feather --> ", path_output)
     return path_output
+
+# %% ../nbs/utils.ipynb 50
+#Function for making notebooks clearer
+from IPython.display import clear_output, DisplayHandle
+def update_patch(self, obj):
+    clear_output(wait=True)
+    self.display(obj)
+    print("... Enabling Vs Code execution ...")

@@ -233,7 +233,7 @@ def unzip_mat(all_one, zip_path, extract_path, case = '', print_flag = True):
                     return "None "+case+".mat found."
         else:
             return "First parameter must be 'all' or 'one'."
-        print("unzip_path -->")
+        if print_flag: print("unzip_path -->")
 
 
 # %% ../nbs/load.ipynb 23
@@ -269,6 +269,6 @@ def mat2csv(mat_file_path, csv_file_folder = '~/data/', print_flag=False):
             print(data_df.shape)
             display(data_df.head(5))
             print(f"Matlab matrix '{variable_name}' converted to CSV in: {csv_file_path}")
-
+        return data_df
 
 

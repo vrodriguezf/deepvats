@@ -30,6 +30,7 @@ tags
 #Macu
 app/shiny_logs
 ./mi-santamaria/* #No sé por qué se han copiado mis proyectos de wandb
+nbs_pipeline/test_torch.ipybn
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

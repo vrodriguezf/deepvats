@@ -1,0 +1,23 @@
+############################################
+# CONDA & MINICONDA WITH PYBASE DOCKERFILE #
+# For Jupyter service                      #
+############################################
+##############
+# Base image #
+##############
+##--- Setup Ubuntu
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks
+
+##--- Setup bash
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+#####################
+# Install miniconda #
+#####################
+
+RUN  echo "--> Activate conda" \
+     && source /usr/local/share/miniconda3/bin/activate env \
+     && echo "--> Installing libraries" \
+     && mamba install -y -c conda-forge pyscamp-gpu \
+     && mamba install -y -c conda-forge stumpy \
+     && mamba clean --all --yes 

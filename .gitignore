@@ -31,7 +31,6 @@ tags
 app/shiny_logs
 ./mi-santamaria/* #No sé por qué se han copiado mis proyectos de wandb
 nbs_pipeline/test_torch.ipybn
-test_torch
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

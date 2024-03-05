@@ -1,0 +1,10 @@
+FROM misantamaria/dvats-rstudio:rocker-ml4.2
+
+RUN apt-get update && apt-get install -y \
+    libglu1-mesa-dev \
+    freeglut3-dev \
+    mesa-common-dev \ 
+    mesa-utils
+
+RUN R -e "install.packages(c('rgl', 'rglwidget'))"
+

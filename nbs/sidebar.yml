@@ -4,5 +4,7 @@ website:
       - dr.ipynb
       - encoder.ipynb
       - load.ipynb
+      - memory.ipybn
       - utils.ipynb
       - visualization.ipynb
+  

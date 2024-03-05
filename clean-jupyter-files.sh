@@ -15,3 +15,6 @@ for notebook in "$@"; do
 done
 
 exit 0
+
+#Direct exec example:"
+#find nbs/ -name '*.ipynb' -not -name '.*'  -print0 | xargs -0 ./clean-jupyter-files.sh 

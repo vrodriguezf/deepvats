@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Obtain a list of modified .yml files
-MODIFIED_YML_FILES=$(git diff --cached --name-only | grep '\.yml$')
+MODIFIED_YML_FILES=$(git diff --cached --name-only | grep '\.yml\?$')
 
 # Check if the list is empty
 if [ -z "$MODIFIED_YML_FILES" ]; then

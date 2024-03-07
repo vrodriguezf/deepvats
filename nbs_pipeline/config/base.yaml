@@ -4,7 +4,7 @@
 ###### Author: Maria Inmaculada Santamaria-Valenzuela   #
 ###### Date: 08-2023                                    #
 #########################################################
-hola, he puesto aquí esto para que pete el commit
+hola, he puesto aquí esto para que pete el commit jeje
 ##########################
 # Basic user preferences #
 ##########################
@@ -13,8 +13,8 @@ user_preferences:
   # Whether to use or not wandb for experiment tracking
   use_wandb: &use_wandb true
   wdb:
-    user: &wdb_user <your entity> 
-    project_name: &wdb_project <your project>
+    user: &wdb_user mi-santamaria
+    project_name: &wdb_project deepvats
     version: &wdb_version 'latest' #'6'
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode: &wdb_mode 'online'

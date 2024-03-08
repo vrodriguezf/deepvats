@@ -76,13 +76,6 @@ RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc \
     
 ENV PATH /usr/local/share/miniconda3/envs/env/bin:$PATH
 
-############################
-# Extra pre-commit options #
-############################
-COPY --chown=$UID:$GID docker/delete_entity_project.sh /usr/local/bin
-
-RUN chmod +x /usr/local/bin/delete_entity_project.sh 
-
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
 ARG JUPYTER_TOKEN

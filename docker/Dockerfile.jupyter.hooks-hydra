@@ -6,7 +6,7 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks
 
 ##--- Setup bash
 SHELL [ "/bin/bash", "--login", "-c" ]
@@ -16,6 +16,6 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 #####################
 
 RUN  source /usr/local/share/miniconda3/bin/activate env \
-     && mamba install -y -c conda-forge pre-commit \
+     && mamba install -y -c conda-forge hydra-core \
      && mamba clean --all --yes 
 

@@ -17,4 +17,9 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 
 RUN  source /usr/local/share/miniconda3/bin/activate env \
      && mamba install -y -c conda-forge pre-commit \
+<<<<<<< HEAD
      && mamba clean --all --yes
+=======
+     && mamba clean --all --yes 
+
+>>>>>>> chore-add-pre-commit-hooks-cleaned

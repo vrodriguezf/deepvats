@@ -6,6 +6,7 @@ __all__ = ['get_gpu_memory', 'color_for_percentage', 'create_bar', 'gpu_memory_s
 # %% ../nbs/memory.ipynb 2
 import subprocess
 import psutil
+import tsai.imports as ts
 
 # %% ../nbs/memory.ipynb 4
 def get_gpu_memory(device=0):
@@ -45,7 +46,7 @@ def gpu_memory_status(device=0):
     print(f"GPU | Used mem: {total}")
     print(f"GPU | Memory Usage: [{bar}] {color_code}{percentage}%\033[0m")
 
-# %% ../nbs/memory.ipynb 10
+# %% ../nbs/memory.ipynb 11
 def get_cpu_memory():
     mem = psutil.virtual_memory()
     total_memory = mem.total // (1024**2)  # Convertir a MB
@@ -53,7 +54,7 @@ def get_cpu_memory():
     percentage = mem.percent
     return used_memory, total_memory, percentage
 
-# %% ../nbs/memory.ipynb 11
+# %% ../nbs/memory.ipynb 12
 def cpu_memory_status():
     used, total, percentage = get_cpu_memory()
     color_code = color_for_percentage(percentage)

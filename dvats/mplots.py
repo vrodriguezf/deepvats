@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['eamonn_drive_mplots', 'Time', 'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles', 'plot_dataFrame',
            'plot_dataFrame_compareSubsequences', 'df_plot_colored_variables', 'plot_df_with_intervals_and_colors',
-           'plot_motif', 'plot_motif_separated', 'GD_Mat']
+           'plot_motif', 'plot_motif_separated', 'GD_Mat', 'MatrixProfilePlot']
 
 # %% ../nbs/mplots.ipynb 1
 import time
@@ -457,6 +457,87 @@ class GD_Mat:
     
 
 # %% ../nbs/mplots.ipynb 42
+@dataclass
+class MatrixProfilePlot:
+    """ Time series similarity matrix plot """
+    similarity_matrix : List[ List [ float ]] = field(default_factory=list)
+    data: np.array = field(default_factory=list)
+    subsequence_len: int = 0
+    def compute_similarity_matrix(
+        self,
+        subsequence_len : int = 0,
+        #reference_seq : List[float] = field(default_factory=list), 
+        method = 'scamp',
+        timed : bool = True, 
+        print_flag : bool = False
+    ) -> List [ List [ float ] ] :
+        n = len(self.data)
+        self.subsequence_len = subsequence_len
+        self.similarity_matrix = np.empty((n - subsequence_len + 1, n - subsequence_len + 1))
+        if timed: 
+            timer = Time()
+            timer.start()
+        match method:
+            case 'stump':
+                if print_flag: print("--> Stump")
+                    
+                for i in range(n - self.subsequence_len + 1):
+                    self.similarity_matrix[i,:] =  stump.core.mass(
+                        self.data[i:i + self.subsequence_len], self.data
+                    ) 
+                        
+            case 'scamp': 
+                if print_flag: print("--> Scamp")
+                for i in range(n - self.subsequence_len + 1):
+                    self.similarity_matrix[i, :] = scamp.abjoin(
+                            #reference_seq, 
+                            self.data[i:i + self.subsequence_len],
+                            self.data,
+                            self.subsequence_len
+                        )[0]
+
+            case _: #default scamp
+                if print_flag: print("--> Invalid method. Using scamp [default]")
+                if print_flag: print("--> Scamp")
+                for i in range(n - self.subsequence_len + 1):
+                    self.similarity_matrix[i, :] = scamp.abjoin(
+                            #reference_seq, 
+                        self.data[i:i + self.subsequence_len],
+                        self.data,
+                        self.subsequence_len
+                    )[0]
+        if timed: 
+            timer.end()
+            duration = timer.duration() 
+        if print_flag: 
+            if timed: 
+                print(f"matrix profile {duration} seconds -->")
+            else: 
+                print("matrix profile -->")
+        return self.similarity_matrix
+
+    def plot(self, ts_name, method = 'Scamp'):
+        fig = plt.figure(figsize=(10, 10))
+        gs = GridSpec(2, 1, height_ratios=[1, 4])
+
+        # Serie temporal
+        ax1 = fig.add_subplot(gs[0])
+        ax1.plot(self.data, label="Time Serie")
+        ax1.set_title(ts_name + " | " +  method)
+        ax1.legend()
+
+        # MPlot
+        ax2 = fig.add_subplot(gs[1], sharex=ax1)
+        # Utilizar 'imshow' para visualizar la matriz MPlot
+        ax2.imshow(self.similarity_matrix, aspect='auto', origin='lower', cmap='hot', extent=(0, len(self.data) - self.subsequence_len, 0, len(self.data) - self.subsequence_len))
+        ax2.set_title("MPlot")
+        ax2.set_xlabel('Subsecuencia Inicial')
+        ax2.set_ylabel('Subsecuencia Referencia')
+
+        plt.tight_layout()
+        plt.show()
+
+# %% ../nbs/mplots.ipynb 46
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

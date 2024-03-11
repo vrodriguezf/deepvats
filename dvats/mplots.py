@@ -48,9 +48,15 @@ class MatrixProfile:
     subsequence_len: int = 0
     method: str = ''
     motif_idx: int = 0
-    nearest_neighbor_idx: int = 0
-    nearest_neighbor_idx_left: int = 0
-    nearest_neighbor_idx_right: int = 0
+    motif_nearest_neighbor_idx: int = 0
+    motif_nearest_neighbor_idx_left: int = 0
+    motif_nearest_neighbor_idx_right: int = 0
+
+    discord_idx: int = 0
+    discord_nearest_neighbor_idx: int = 0
+    discord_nearest_neighbor_idx_left: int = 0
+    discord_nearest_neighbor_idx_right: int = 0
+    
     def __str__(self):
         return f"MP: {self.matrix_profile}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
@@ -164,23 +170,37 @@ class MatrixProfiles:
         plt.tight_layout()
         plt.show()
 
-    def get_motif_idx(self, id): 
+    def get_ordered_idx(self, id, pos):
         mp_sorted = np.argsort( self.matrix_profiles[id].matrix_profile )
-        motif_idx = mp_sorted[0]
+        return mp_sorted[pos]
+        
+    def get_motif_idx(self, id): 
+        motif_idx = self.get_ordered_idx(id, 0)
         self.matrix_profiles[id].motif_idx = motif_idx
-        self.matrix_profiles[id].nearest_neighbor_idx = self.matrix_profiles[id].index[motif_idx]
+        self.matrix_profiles[id].motif_nearest_neighbor_idx = self.matrix_profiles[id].index[motif_idx]
         
         if ( self.matrix_profiles[id].method == 'stump' ):
-            self.matrix_profiles[id].nearest_neighbor_idx_left = self.matrix_profiles[id].index_left[motif_idx]
-            self.matrix_profiles[id].nearest_neighbor_idx_right = self.matrix_profiles[id].index_right[motif_idx]
-        return self.matrix_profiles[id].motif_idx, self.matrix_profiles[id].nearest_neighbor_idx, self.matrix_profiles[id].nearest_neighbor_idx_left, self.matrix_profiles[id].nearest_neighbor_idx_right
+            self.matrix_profiles[id].motif_nearest_neighbor_idx_left = self.matrix_profiles[id].index_left[motif_idx]
+            self.matrix_profiles[id].motif_nearest_neighbor_idx_right = self.matrix_profiles[id].index_right[motif_idx]
+        return self.matrix_profiles[id].motif_idx, self.matrix_profiles[id].motif_nearest_neighbor_idx, self.matrix_profiles[id].motif_nearest_neighbor_idx_left, self.matrix_profiles[id].motif_nearest_neighbor_idx_right
+    
+    def get_anomaly_idx(self, id): 
+        discord_idx = self.get_ordered_idx(id, -1)
+        self.matrix_profiles[id].discord_idx = discord_idx
+        self.matrix_profiles[id].discord_nearest_neighbor_idx = self.matrix_profiles[id].index[discord_idx]
+        
+        if ( self.matrix_profiles[id].method == 'stump' ):
+            self.matrix_profiles[id].discord_nearest_neighbor_idx_left = self.matrix_profiles[id].index_left[discord_idx]
+            self.matrix_profiles[id].discord_nearest_neighbor_idx_right = self.matrix_profiles[id].index_right[discord_idx]
             
-
+        return self.matrix_profiles[id].discord_idx, self.matrix_profiles[id].discord_nearest_neighbor_idx, self.matrix_profiles[id].discord_nearest_neighbor_idx_left, self.matrix_profiles[id].discord_nearest_neighbor_idx_right
+    
+    
     def plot_motif(
         self, 
         ts_name,
         id, 
-        motif_idx, 
+        idx, 
         nearest_neighbor_idx, 
         title_fontsize = '30', 
         other_fontsize = '20'
@@ -190,13 +210,13 @@ class MatrixProfiles:
 
         axs[0].plot(self.data.values)
         axs[0].set_ylabel(ts_name, fontsize=other_fontsize)
-        rect = Rectangle((motif_idx, 0), self.subsequence_len, 40, facecolor='lightgrey')
+        rect = Rectangle((idx, 0), self.subsequence_len, 40, facecolor='lightgrey')
         axs[0].add_patch(rect)
         rect = Rectangle((nearest_neighbor_idx, 0), self.subsequence_len, 40, facecolor='lightgrey')
         axs[0].add_patch(rect)
         axs[1].set_xlabel('Index', fontsize =other_fontsize)
         axs[1].set_ylabel('Matrix Profile', fontsize=other_fontsize)
-        axs[1].axvline(x=motif_idx, linestyle="dashed", color = "black")
+        axs[1].axvline(x=idx, linestyle="dashed", color = "black")
         axs[1].axvline(x=nearest_neighbor_idx, linestyle="dashed", color="red")
         axs[1].plot(self.matrix_profiles[id].matrix_profile)
         plt.show()

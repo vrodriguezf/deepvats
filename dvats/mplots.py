@@ -47,6 +47,10 @@ class MatrixProfile:
     computation_time: float = 0.0
     subsequence_len: int = 0
     method: str = ''
+    motif_idx: int = 0
+    nearest_neighbor_idx: int = 0
+    nearest_neighbor_idx_left: int = 0
+    nearest_neighbor_idx_right: int = 0
     def __str__(self):
         return f"MP: {self.matrix_profile}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
@@ -59,7 +63,7 @@ def matrix_profile(
     debug = True, 
     timed = True
 ):
-    print("--> matrix profile")
+    if print_flag: print("--> matrix profile")
     duration = 0.0
     mp = []
     index = []
@@ -73,7 +77,7 @@ def matrix_profile(
             if print_flag: print("--> Stump")
             mp = stump.gpu_stump(data, subsequence_len)
             index = mp[:,1]
-            index_left = mp[:,1]
+            index_left = mp[:,2]
             index_right = mp[:,3]
             mp = mp[:,0]
         case 'scamp': 
@@ -116,11 +120,15 @@ from matplotlib.gridspec import GridSpec
 from copy import deepcopy
 
 # %% ../nbs/mplots.ipynb 17
+from matplotlib.patches import Rectangle
+
+# %% ../nbs/mplots.ipynb 18
 @dataclass
 class MatrixProfiles:
     matrix_profiles: List[MatrixProfile] =  field(default_factory=list)
     data: np.array = field(default_factory=list)
     subsequence_len: int = 0
+
     def append(self, mp: MatrixProfile):
         self.matrix_profiles.append(deepcopy(mp))
         self.subsequence_len = mp.subsequence_len
@@ -156,7 +164,50 @@ class MatrixProfiles:
         plt.tight_layout()
         plt.show()
 
-# %% ../nbs/mplots.ipynb 24
+    def get_motif_idx(self, id): 
+        mp_sorted = np.argsort( self.matrix_profiles[id].matrix_profile )
+        motif_idx = mp_sorted[0]
+        self.matrix_profiles[id].motif_idx = motif_idx
+        self.matrix_profiles[id].nearest_neighbor_idx = self.matrix_profiles[id].index[motif_idx]
+        
+        if ( self.matrix_profiles[id].method == 'stump' ):
+            self.matrix_profiles[id].nearest_neighbor_idx_left = self.matrix_profiles[id].index_left[motif_idx]
+            self.matrix_profiles[id].nearest_neighbor_idx_right = self.matrix_profiles[id].index_right[motif_idx]
+        return self.matrix_profiles[id].motif_idx, self.matrix_profiles[id].nearest_neighbor_idx, self.matrix_profiles[id].nearest_neighbor_idx_left, self.matrix_profiles[id].nearest_neighbor_idx_right
+            
+
+    def plot_motif(
+        self, 
+        ts_name,
+        id, 
+        motif_idx, 
+        nearest_neighbor_idx, 
+        title_fontsize = '30', 
+        other_fontsize = '20'
+    ): 
+        fig, axs = plt.subplots(2, sharex=True, gridspec_kw={'hspace': 0.4})
+        plt.suptitle('Motif (Pattern) Discovery | ' + self.matrix_profiles[id].method , fontsize=title_fontsize)
+
+        axs[0].plot(self.data.values)
+        axs[0].set_ylabel(ts_name, fontsize=other_fontsize)
+        rect = Rectangle((motif_idx, 0), self.subsequence_len, 40, facecolor='lightgrey')
+        axs[0].add_patch(rect)
+        rect = Rectangle((nearest_neighbor_idx, 0), self.subsequence_len, 40, facecolor='lightgrey')
+        axs[0].add_patch(rect)
+        axs[1].set_xlabel('Index', fontsize =other_fontsize)
+        axs[1].set_ylabel('Matrix Profile', fontsize=other_fontsize)
+        axs[1].axvline(x=motif_idx, linestyle="dashed", color = "black")
+        axs[1].axvline(x=nearest_neighbor_idx, linestyle="dashed", color="red")
+        axs[1].plot(self.matrix_profiles[id].matrix_profile)
+        plt.show()
+        
+        
+
+
+# %% ../nbs/mplots.ipynb 20
+import pandas as pd
+
+# %% ../nbs/mplots.ipynb 29
 import dvats.load as load
 import os
 import pandas as pd
@@ -170,7 +221,7 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from matplotlib.gridspec import GridSpec
 plt.style.use('https://raw.githubusercontent.com/TDAmeritrade/stumpy/main/docs/stumpy.mplstyle')
 
-# %% ../nbs/mplots.ipynb 26
+# %% ../nbs/mplots.ipynb 31
 def plot_dataFrame(title, df, vars = [], interval = 10000):
     if len(vars) > 0:
         num_vars = len(df.columns)
@@ -208,10 +259,7 @@ def plot_dataFrame(title, df, vars = [], interval = 10000):
         plt.show()
     else: raise ValueError("No variable proposed for plotting")
 
-# %% ../nbs/mplots.ipynb 27
-from matplotlib.patches import Rectangle
-
-# %% ../nbs/mplots.ipynb 28
+# %% ../nbs/mplots.ipynb 32
 def plot_dataFrame_compareSubsequences(
     title, df, var, subsequence_len, seq1_init, seq2_init, 
     title_fontsize = '30',
@@ -238,7 +286,7 @@ def plot_dataFrame_compareSubsequences(
     plt.show()
     
 
-# %% ../nbs/mplots.ipynb 30
+# %% ../nbs/mplots.ipynb 34
 def df_plot_colored_variables(df):
     # Show time series plot
     fig, ax = plt.subplots(1, figsize=(15,5), )
@@ -251,7 +299,7 @@ def df_plot_colored_variables(df):
     plt.legend()
     display(plt.show())
 
-# %% ../nbs/mplots.ipynb 31
+# %% ../nbs/mplots.ipynb 35
 def plot_df_with_intervals_and_colors(title, df, interval=10000):
     num_variables = len(df.columns)
     num_intervals = len(df) // interval + 1  # Calcula el número necesario de intervalos/subplots
@@ -282,7 +330,7 @@ def plot_df_with_intervals_and_colors(title, df, interval=10000):
     plt.tight_layout()
     plt.show()
 
-# %% ../nbs/mplots.ipynb 32
+# %% ../nbs/mplots.ipynb 36
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -308,7 +356,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 33
+# %% ../nbs/mplots.ipynb 37
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -347,7 +395,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 35
+# %% ../nbs/mplots.ipynb 39
 class GD_Mat:
     def __init__(self, id,  name, data_path = '~/data'):
         self.id = id
@@ -388,7 +436,7 @@ class GD_Mat:
         return str
     
 
-# %% ../nbs/mplots.ipynb 38
+# %% ../nbs/mplots.ipynb 42
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

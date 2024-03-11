@@ -2,8 +2,8 @@
 
 # %% auto 0
 __all__ = ['eamonn_drive_mplots', 'Time', 'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles', 'plot_dataFrame',
-           'df_plot_colored_variables', 'plot_df_with_intervals_and_colors', 'plot_motif', 'plot_motif_separated',
-           'GD_Mat']
+           'plot_dataFrame_compareSubsequences', 'df_plot_colored_variables', 'plot_df_with_intervals_and_colors',
+           'plot_motif', 'plot_motif_separated', 'GD_Mat']
 
 # %% ../nbs/mplots.ipynb 1
 import time
@@ -126,12 +126,13 @@ class MatrixProfiles:
         self.subsequence_len = mp.subsequence_len
     def compute(self : MatrixProfile, method = 'scamp',  print_flag = False, debug = False, timed = True):
         mp = MatrixProfile()
-        mp.matrix_profile, mp.index, mp.index_left, mp.index_right, mp.computation_time = matrix_profile(
+        mp.compute(
             self.data, self.subsequence_len, method, print_flag, debug, timed
         )
+        
         mp.method = method
         if print_flag: 
-            print("MPs | compute -> Subsequence len out: ", subsequence_len)
+            print("MPs | compute -> Subsequence len out: ", self.subsequence_len)
             print("MPs | compute -> Subsequence len inside: ", mp.subsequence_len)
         self.matrix_profiles.append(mp)
         return mp
@@ -155,7 +156,7 @@ class MatrixProfiles:
         plt.tight_layout()
         plt.show()
 
-# %% ../nbs/mplots.ipynb 23
+# %% ../nbs/mplots.ipynb 24
 import dvats.load as load
 import os
 import pandas as pd
@@ -169,9 +170,9 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from matplotlib.gridspec import GridSpec
 plt.style.use('https://raw.githubusercontent.com/TDAmeritrade/stumpy/main/docs/stumpy.mplstyle')
 
-# %% ../nbs/mplots.ipynb 25
+# %% ../nbs/mplots.ipynb 26
 def plot_dataFrame(title, df, vars = [], interval = 10000):
-    if len(vars > 0):
+    if len(vars) > 0:
         num_vars = len(df.columns)
     
         for var_num in vars:
@@ -207,7 +208,37 @@ def plot_dataFrame(title, df, vars = [], interval = 10000):
         plt.show()
     else: raise ValueError("No variable proposed for plotting")
 
-# %% ../nbs/mplots.ipynb 26
+# %% ../nbs/mplots.ipynb 27
+from matplotlib.patches import Rectangle
+
+# %% ../nbs/mplots.ipynb 28
+def plot_dataFrame_compareSubsequences(
+    title, df, var, subsequence_len, seq1_init, seq2_init, 
+    title_fontsize = '30',
+    others_fontsize='20'
+):
+    fig, axs = plt.subplots(2)
+    fig.subplots_adjust(hspace=0.4) 
+    plt.suptitle(title, fontsize=title_fontsize)
+    var_name = df.columns[var]
+    axs[0].set_ylabel(var_name, fontsize=others_fontsize)
+    axs[0].plot(df[var_name], alpha=0.5, linewidth=1)
+    axs[0].plot(df[var_name].iloc[seq1_init:seq1_init+subsequence_len])
+    axs[0].plot(df[var_name].iloc[seq2_init:seq2_init+subsequence_len])
+    rect = Rectangle((seq1_init, 0), subsequence_len, 40, facecolor='lightgrey')
+    axs[0].add_patch(rect)
+    axs[0].set_xlabel("Index", fontsize=others_fontsize)
+
+    rect = Rectangle((seq2_init, 0), subsequence_len, 40, facecolor='lightgrey')
+    axs[0].add_patch(rect)
+    axs[1].set_xlabel("Relative Index (subsequence)", fontsize=others_fontsize)
+    axs[1].set_ylabel(var_name, fontsize=others_fontsize)
+    axs[1].plot(df[var_name].values[seq1_init:seq1_init+subsequence_len], color='C1')
+    axs[1].plot(df[var_name].values[seq2_init:seq2_init+subsequence_len], color='C2')
+    plt.show()
+    
+
+# %% ../nbs/mplots.ipynb 30
 def df_plot_colored_variables(df):
     # Show time series plot
     fig, ax = plt.subplots(1, figsize=(15,5), )
@@ -220,7 +251,7 @@ def df_plot_colored_variables(df):
     plt.legend()
     display(plt.show())
 
-# %% ../nbs/mplots.ipynb 27
+# %% ../nbs/mplots.ipynb 31
 def plot_df_with_intervals_and_colors(title, df, interval=10000):
     num_variables = len(df.columns)
     num_intervals = len(df) // interval + 1  # Calcula el número necesario de intervalos/subplots
@@ -251,7 +282,7 @@ def plot_df_with_intervals_and_colors(title, df, interval=10000):
     plt.tight_layout()
     plt.show()
 
-# %% ../nbs/mplots.ipynb 28
+# %% ../nbs/mplots.ipynb 32
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -277,7 +308,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 29
+# %% ../nbs/mplots.ipynb 33
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -316,7 +347,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 31
+# %% ../nbs/mplots.ipynb 35
 class GD_Mat:
     def __init__(self, id,  name, data_path = '~/data'):
         self.id = id
@@ -357,7 +388,7 @@ class GD_Mat:
         return str
     
 
-# %% ../nbs/mplots.ipynb 34
+# %% ../nbs/mplots.ipynb 38
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

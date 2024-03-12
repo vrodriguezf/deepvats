@@ -466,46 +466,63 @@ class MatrixProfilePlot:
     def compute_similarity_matrix(
         self,
         subsequence_len : int = 0,
-        #reference_seq : List[float] = field(default_factory=list), 
+        reference_seq : List[float] = None, 
         method = 'scamp',
         timed : bool = True, 
         print_flag : bool = False
     ) -> List [ List [ float ] ] :
+        complete = reference_seq == None
         n = len(self.data)
         self.subsequence_len = subsequence_len
-        self.similarity_matrix = np.empty((n - subsequence_len + 1, n - subsequence_len + 1))
+        rows = n - subsequence_len + 1
+        if (complete): 
+            columns = rows
+            reference_seq = self.data
+        else: 
+            columns = len(reference_seq) + 1
+        self.similarity_matrix = np.empty((rows, columns))
         if timed: 
             timer = Time()
             timer.start()
         match method:
             case 'stump':
                 if print_flag: print("--> Stump")
-                    
                 for i in range(n - self.subsequence_len + 1):
                     self.similarity_matrix[i,:] =  stump.core.mass(
-                        self.data[i:i + self.subsequence_len], self.data
+                        self.data[i:i + self.subsequence_len], reference_seq
                     ) 
                         
             case 'scamp': 
                 if print_flag: print("--> Scamp")
-                for i in range(n - self.subsequence_len + 1):
-                    self.similarity_matrix[i, :] = scamp.abjoin(
-                            #reference_seq, 
+                if complete:
+                    self.similarity_matrix = scamp.selfjoin_matrix(
+                        self.data, 
+                        self.subsequence_len,
+                        gpus = [],
+                        mheight = n - self.subsequence_len + 1,
+                        mwidth = n - self.subsequence_len + 1,
+                        verbose = print_flag,
+                        pearson = True
+                    )
+                    if print_flag: print("--> Complete ", self.similarity_matrix.shape)
+                else: 
+                    for i in range(n - self.subsequence_len + 1):
+                        self.similarity_matrix[i, :] = scamp.abjoin(
+                            reference_seq, 
                             self.data[i:i + self.subsequence_len],
-                            self.data,
                             self.subsequence_len
                         )[0]
-
+                        
             case _: #default scamp
                 if print_flag: print("--> Invalid method. Using scamp [default]")
-                if print_flag: print("--> Scamp")
                 for i in range(n - self.subsequence_len + 1):
                     self.similarity_matrix[i, :] = scamp.abjoin(
-                            #reference_seq, 
+                        reference_seq, 
                         self.data[i:i + self.subsequence_len],
-                        self.data,
                         self.subsequence_len
                     )[0]
+                #if print_flag: print("--> Scamp")
+                #self.similarity_matrix, _ = scamp.selfjoin(self.data, self.subsequence_len)
         if timed: 
             timer.end()
             duration = timer.duration() 

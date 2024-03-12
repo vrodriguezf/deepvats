@@ -19,5 +19,6 @@ RUN  echo "--> Activate conda" \
      && source /usr/local/share/miniconda3/bin/activate env \
      && echo "--> Installing libraries" \
      && mamba install -y -c conda-forge pyscamp-gpu \
-     && mamba install -y -c conda-forge stumpy \
+	stumpy \
+	ipympl \
      && mamba clean --all --yes 

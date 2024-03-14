@@ -6,16 +6,34 @@ __all__ = ['eamonn_drive_mplots', 'MatrixProfile', 'matrix_profile', 'compute', 
            'plot_motif', 'plot_motif_separated', 'GD_Mat', 'MatrixProfilePlot']
 
 # %% ../nbs/mplots.ipynb 4
+## -- Deepvats
+import dvats.load as load
+import dvats.memory as mem
+import dvats.utils as ut
+
 ## -- Matrix profile
 import pyscamp as scamp
 import stumpy as stump 
 ## -- Utilities
-import dvats.memory as mem
-import dvats.utils as ut
+import os
 import numpy as np
+import pandas as pd
+import datetime as dt
 ## -- Classes & types
 from dataclasses import dataclass, field
 from typing import List
+## -- Plotting
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.dates as dates
+
+from matplotlib.gridspec import GridSpec
+from matplotlib.patches import Rectangle
+
+from mpl_toolkits.axes_grid1 import ImageGrid
+from copy import deepcopy
+plt.style.use('https://raw.githubusercontent.com/TDAmeritrade/stumpy/main/docs/stumpy.mplstyle')
+
 
 # %% ../nbs/mplots.ipynb 6
 @dataclass
@@ -179,15 +197,6 @@ def compute(
 MatrixProfile.compute = compute
 
 # %% ../nbs/mplots.ipynb 15
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import ImageGrid
-from matplotlib.gridspec import GridSpec
-from copy import deepcopy
-
-# %% ../nbs/mplots.ipynb 16
-from matplotlib.patches import Rectangle
-
-# %% ../nbs/mplots.ipynb 17
 @dataclass
 class MatrixProfiles:
     matrix_profiles: List[MatrixProfile] =  field(default_factory=list)
@@ -305,24 +314,7 @@ class MatrixProfiles:
         
 
 
-# %% ../nbs/mplots.ipynb 19
-import pandas as pd
-
-# %% ../nbs/mplots.ipynb 28
-import dvats.load as load
-import os
-import pandas as pd
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.dates as dates
-from matplotlib.patches import Rectangle
-import datetime as dt
-from mpl_toolkits.axes_grid1 import ImageGrid
-from matplotlib.gridspec import GridSpec
-plt.style.use('https://raw.githubusercontent.com/TDAmeritrade/stumpy/main/docs/stumpy.mplstyle')
-
-# %% ../nbs/mplots.ipynb 30
+# %% ../nbs/mplots.ipynb 25
 def plot_dataFrame(title, df, vars = [], interval = 10000):
     if len(vars) > 0:
         num_vars = len(df.columns)
@@ -360,7 +352,7 @@ def plot_dataFrame(title, df, vars = [], interval = 10000):
         plt.show()
     else: raise ValueError("No variable proposed for plotting")
 
-# %% ../nbs/mplots.ipynb 31
+# %% ../nbs/mplots.ipynb 26
 def plot_dataFrame_compareSubsequences(
     title, df, var, subsequence_len, seq1_init, seq2_init, 
     title_fontsize = '30',
@@ -387,7 +379,7 @@ def plot_dataFrame_compareSubsequences(
     plt.show()
     
 
-# %% ../nbs/mplots.ipynb 33
+# %% ../nbs/mplots.ipynb 28
 def df_plot_colored_variables(df):
     # Show time series plot
     fig, ax = plt.subplots(1, figsize=(15,5), )
@@ -400,7 +392,7 @@ def df_plot_colored_variables(df):
     plt.legend()
     display(plt.show())
 
-# %% ../nbs/mplots.ipynb 34
+# %% ../nbs/mplots.ipynb 29
 def plot_df_with_intervals_and_colors(title, df, interval=10000):
     num_variables = len(df.columns)
     num_intervals = len(df) // interval + 1  # Calcula el número necesario de intervalos/subplots
@@ -431,7 +423,7 @@ def plot_df_with_intervals_and_colors(title, df, interval=10000):
     plt.tight_layout()
     plt.show()
 
-# %% ../nbs/mplots.ipynb 35
+# %% ../nbs/mplots.ipynb 30
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -457,7 +449,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 36
+# %% ../nbs/mplots.ipynb 31
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -496,7 +488,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 38
+# %% ../nbs/mplots.ipynb 33
 class GD_Mat:
     def __init__(self, id,  name, data_path = '~/data'):
         self.id = id
@@ -537,7 +529,7 @@ class GD_Mat:
         return str
     
 
-# %% ../nbs/mplots.ipynb 41
+# %% ../nbs/mplots.ipynb 36
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -635,7 +627,7 @@ class MatrixProfilePlot:
         plt.tight_layout()
         plt.show()
 
-# %% ../nbs/mplots.ipynb 45
+# %% ../nbs/mplots.ipynb 40
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

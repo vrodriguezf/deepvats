@@ -18,7 +18,10 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 RUN  echo "--> Activate conda" \
      && source /usr/local/share/miniconda3/bin/activate env \
      && echo "--> Installing libraries" \
-     && mamba install -y -c conda-forge pyscamp-gpu \
+     && mamba install -y -c conda-forge \
+     pyscamp-gpu \
 	stumpy \
 	ipympl \
+     graph  \
      && mamba clean --all --yes 
+

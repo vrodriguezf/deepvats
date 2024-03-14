@@ -106,7 +106,7 @@ def matrix_profile(
     match method:
         case 'stump': # Not tested
             #-- use stumpy.gpu_stump
-            if print_flag: print("--> Stump")
+            if print_flag: print("--> Stump (CPU)")
             mp = stump.stump(data, subsequence_len, data_b)
             #-- Save in separated columns for compatibility with SCAMP
             index = mp[:,1]
@@ -115,7 +115,7 @@ def matrix_profile(
             mp = mp[:,0]
         
         case 'stump_gpu': # You are suposed to use this or scamp
-            if print_flag: print("--> Stump")
+            if print_flag: print("--> Stump (GPU)")
             #-- Matrix profile
             mp = stump.gpu_stump(data, subsequence_len, data_b)
             #-- Save in separate columns
@@ -134,7 +134,8 @@ def matrix_profile(
             if (data_b is None):
                 mp, index = scamp.selfjoin(data, subsequence_len)
             else: 
-                mp, index = scamp.abjoin(data, subsequence_len, threads, gpus)
+                if print_flag: print("--> data_b provided => Executing abjoin")
+                mp, index = scamp.abjoin(data, data_b, subsequence_len, threads, gpus)
         case _: #default scamp
             if print_flag: print("--> Invalid method. Using scamp [default]")
             if debug: 
@@ -143,7 +144,8 @@ def matrix_profile(
             if data_b is None:
                 mp, index = scamp.selfjoin(data, subsequence_len)
             else:
-                mp, index = scamp.abjoin(data, subsequence_len, threads, gpus)
+                if print_flag: print("--> data_b provided => Executing abjoin")
+                mp, index = scamp.abjoin(data, data_b, subsequence_len, threads, gpus)
     if timed: 
         timer.end()
         duration = timer.duration() 
@@ -161,16 +163,18 @@ def compute(
     subsequence_len : int, 
     data_b : List[float] = None,
     method : str = 'scamp',  
-    threads : int = 4,
+    threads : int = 1,
     gpus : List[int] = [],
     print_flag : bool = False, 
     debug : bool = False, 
-    timed :bool = True):
+    timed :bool = True
+):
     if print_flag: print("Subsequence len: ", subsequence_len)
     self.subsequence_len = subsequence_len
     self.method = method
     self.matrix_profile, self.index, self.index_left, self.index_right, self.computation_time = matrix_profile(
-        data, subsequence_len, method, print_flag, debug, timed)
+        data, subsequence_len, data_b, method, threads, gpus, print_flag, debug, timed
+    )
     return self.matrix_profile
 MatrixProfile.compute = compute
 
@@ -187,16 +191,38 @@ from matplotlib.patches import Rectangle
 @dataclass
 class MatrixProfiles:
     matrix_profiles: List[MatrixProfile] =  field(default_factory=list)
-    data: np.array = field(default_factory=list)
+    data: List[float] = field(default_factory=list)
+    data_b : List[float] = None
+    
     subsequence_len: int = 0
 
     def append(self, mp: MatrixProfile):
         self.matrix_profiles.append(deepcopy(mp))
         self.subsequence_len = mp.subsequence_len
-    def compute(self : MatrixProfile, method = 'scamp',  print_flag = False, debug = False, timed = True):
+    def compute(
+        self, 
+        method : str      = 'scamp',  
+        threads: int      = 1,
+        gpus : List[int]  = field(default_factory=list),
+        print_flag : bool = False, 
+        debug : bool      = False, 
+        timed : bool      = True
+    ):
+        """ 
+        Computes the Matrix Profile for data & data_b arrays using subsequence_len length.
+        Appends the resulting MP to the matrix_profiles list.
+        """
         mp = MatrixProfile()
         mp.compute(
-            self.data, self.subsequence_len, method, print_flag, debug, timed
+            data            = self.data, 
+            subsequence_len = self.subsequence_len, 
+            data_b          = self.data_b,
+            method          = method, 
+            threads         = threads,
+            gpus            = gpus,
+            print_flag      = print_flag, 
+            debug           = debug, 
+            timed           = timed
         )
         
         mp.method = method

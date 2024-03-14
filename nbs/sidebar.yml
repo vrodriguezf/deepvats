@@ -1,9 +1,12 @@
 website:
   sidebar:
     contents:
-      - index.ipynb
+      #- index.ipynb
+      - config.ipybn
       - dr.ipynb
       - encoder.ipynb
       - load.ipynb
+      - memory.ipybn
       - utils.ipynb
       - visualization.ipynb
+  

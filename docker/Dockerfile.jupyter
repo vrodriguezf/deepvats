@@ -41,6 +41,8 @@ RUN addgroup --gid $GID $USER  \
     --home $HOME $USER\
     && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+RUN sudo chown -R $UID:$GID /usr/local/share/miniconda3/envs/env
+
 #-- Move to user
 USER $USER
 

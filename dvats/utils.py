@@ -4,7 +4,7 @@
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
            'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'update_patch', 'learner_module_leaves',
-           'learner_module_leaves_subtables']
+           'learner_module_leaves_subtables', 'Time']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -251,3 +251,26 @@ def learner_module_leaves_subtables(learner, print_flag = False):
     if print_flag: display(md_modules)
     
     return md_types, md_modules
+
+# %% ../nbs/utils.ipynb 61
+import time
+from dataclasses import dataclass, field
+
+# %% ../nbs/utils.ipynb 62
+@dataclass
+class Time:
+    time_start: float =  None
+    time_end : float =  None
+    time_total : float =  0.0
+
+    def start(self): 
+        self.time_start = time.time()
+        return self.time_start
+
+    def end(self):
+        self.time_end = time.time()
+        return self.time_end
+        
+    def duration(self):
+        self.time_total=self.time_end - self.time_start
+        return self.time_total

@@ -20,18 +20,34 @@ from typing import List
 # %% ../nbs/mplots.ipynb 6
 @dataclass
 class MatrixProfile:
+    """ Class for better usability of Matrix Profile inside deepVATS"""
+    #---- Main information of the matrix profile ----#
+    #-- Matrix Profile (distance array)
     matrix_profile: List[float] =  field(default_factory=list)
-    index : List[int] =  field(default_factory=list)
-    index_left : List[int] =  field(default_factory=list)
-    index_right: List[int] = field(default_factory=list)
+
+    # Execution information
     computation_time: float = 0.0
+    
+    #-- Size used for the MP computation
     subsequence_len: int = 0
+    #-- Wether if stumpy or SCAMP or other method have been used 
     method: str = ''
+    
+    #-- Looking for motifs & neighbors
+    # Ordered array for finding motifs/anomalies
+    index : List[int] =  field(default_factory=list)
+    # Nearest neighbours in the past (if computed)
+    index_left : List[int] =  field(default_factory=list)
+    # Nearest neighbours in the future (if computed)
+    index_right: List[int] = field(default_factory=list)
+
+    #--- Save the main motif index and its neighbors' index    
     motif_idx: int = 0
     motif_nearest_neighbor_idx: int = 0
     motif_nearest_neighbor_idx_left: int = 0
     motif_nearest_neighbor_idx_right: int = 0
 
+    #--- Save the main anomaly index and its neighbors' index
     discord_idx: int = 0
     discord_nearest_neighbor_idx: int = 0
     discord_nearest_neighbor_idx_left: int = 0
@@ -40,45 +56,94 @@ class MatrixProfile:
     def __str__(self):
         return f"MP: {self.matrix_profile}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
-# %% ../nbs/mplots.ipynb 9
+# %% ../nbs/mplots.ipynb 8
 def matrix_profile(
     data, 
     subsequence_len, 
-    method = 'scamp', 
+    data_b     = None,
+    method     = 'scamp', 
+    threads    = 4, # For scamp abjoin
+    gpus       = [], # For scamp abjoin
     print_flag = False, 
-    debug = True, 
-    timed = True
+    debug      = True, 
+    timed      = True
 ):
+    """ 
+    This function 
+    Receives
+    - data: a 1D-array representing a time series values (expected to be long)
+    - subsequence_len: Matrix Profile subsequences length
+    - method: wether to use stump or scamp algorithm
+    - print_flag: for printing or not messages
+    - debug: for adding some comprobations on GPUs usability
+    - timed: for getting or not the execution time for the implementation analysis
+    - Threads: number of threads for scamp multithread execution
+    - GPUs: id of the GPUs to be used for scamp execution
+
+    and returns 
+    - mp: matrix profile
+    - index: patterns indices
+    - index_left: nearest neighbors in the past
+    - index_right: nearest neigbhbors in the future
+    """
+    
     if print_flag: print("--> matrix profile")
+    #Execution time
     duration = 0.0
+    # Matrix Profile (distances)
     mp = []
+    # Patterns indices (position within the MP)
     index = []
     index_left = []
     index_right = []
+    
+    #-- Start timing
     if timed: 
         timer = ut.Time()
         timer.start()
+
+    #-- Select the method
     match method:
-        case 'stump':
+        case 'stump': # Not tested
+            #-- use stumpy.gpu_stump
             if print_flag: print("--> Stump")
-            mp = stump.gpu_stump(data, subsequence_len)
+            mp = stump.stump(data, subsequence_len, data_b)
+            #-- Save in separated columns for compatibility with SCAMP
             index = mp[:,1]
             index_left = mp[:,2]
             index_right = mp[:,3]
             mp = mp[:,0]
-        case 'scamp': 
+        
+        case 'stump_gpu': # You are suposed to use this or scamp
+            if print_flag: print("--> Stump")
+            #-- Matrix profile
+            mp = stump.gpu_stump(data, subsequence_len, data_b)
+            #-- Save in separate columns
+            index = mp[:,1]
+            index_left = mp[:,2]
+            index_right = mp[:,3]
+            mp = mp[:,0]
+            
+        case 'scamp': # Yo should use GPU in Large TS
             if print_flag: print("--> Scamp")
             if debug: 
                 print("Check gpu use")
                 has_gpu_support = scamp.gpu_supported()
                 print(has_gpu_support)
-            mp, index = scamp.selfjoin(data, subsequence_len)
+            #-- Matrix profile & index. Nothing more to save
+            if (data_b is None):
+                mp, index = scamp.selfjoin(data, subsequence_len)
+            else: 
+                mp, index = scamp.abjoin(data, subsequence_len, threads, gpus)
         case _: #default scamp
             if print_flag: print("--> Invalid method. Using scamp [default]")
             if debug: 
                 has_gpu_support = scamp.gpu_supported()
                 print(has_gpu_support)
-            mp, index = scamp.selfjoin(data, subsequence_len)            
+            if data_b is None:
+                mp, index = scamp.selfjoin(data, subsequence_len)
+            else:
+                mp, index = scamp.abjoin(data, subsequence_len, threads, gpus)
     if timed: 
         timer.end()
         duration = timer.duration() 
@@ -90,7 +155,17 @@ def matrix_profile(
     return mp, index, index_left, index_right, duration
 
 # %% ../nbs/mplots.ipynb 10
-def compute(self : MatrixProfile, data, subsequence_len, method = 'scamp',  print_flag = False, debug = False, timed = True):
+def compute(
+    self : MatrixProfile, 
+    data : List[float],
+    subsequence_len : int, 
+    data_b : List[float] = None,
+    method : str = 'scamp',  
+    threads : int = 4,
+    gpus : List[int] = [],
+    print_flag : bool = False, 
+    debug : bool = False, 
+    timed :bool = True):
     if print_flag: print("Subsequence len: ", subsequence_len)
     self.subsequence_len = subsequence_len
     self.method = method

@@ -3,8 +3,7 @@
 # %% auto 0
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
-           'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'update_patch', 'learner_module_leaves',
-           'learner_module_leaves_subtables', 'Time']
+           'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'update_patch']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -97,7 +96,7 @@ def export_and_get(self:Learner, keep_exported_file=False):
     if not keep_exported_file: aux_path.unlink()
     return aux_learn
 
-# %% ../nbs/utils.ipynb 35
+# %% ../nbs/utils.ipynb 36
 def get_wandb_artifacts(project_path, type=None, name=None, last_version=True):
     """
         Get the artifacts logged in a wandb project.
@@ -198,65 +197,10 @@ def exec_with_and_feather_k_output(function_name, module_name = "main", path_inp
     return path_output
 
 # %% ../nbs/utils.ipynb 50
-#Function for making notebooks clearer
-from IPython.display import clear_output, DisplayHandle
-def update_patch(self, obj):
-    clear_output(wait=True)
-    self.display(obj)
-    print("... Enabling Vs Code execution ...")
-
-# %% ../nbs/utils.ipynb 54
-def learner_module_leaves(learner):
-    modules = list(learner.modules())[0]  # Obtener el módulo raíz
-    rows = []
-
-    def find_leave_modules(module, path=[]):
-        for name, sub_module in module.named_children():
-            current_path = path + [f"{type(sub_module).__name__}"]
-            if not list(sub_module.children()):
-                leave_name = ' -> '.join(current_path)
-                leave_params = str(sub_module).strip()  
-                rows.append([
-                    leave_name,
-                    f"{type(sub_module).__name__}",
-                    name,
-                    leave_params
-                ]
-                )
-
-            find_leave_modules(sub_module, current_path)
-
-    find_leave_modules(modules)
-    
-    df = pd.DataFrame(rows, columns=['Path', 'Module_type', 'Module_name', 'Module'])
-    return df
-
-# %% ../nbs/utils.ipynb 58
-def learner_module_leaves_subtables(learner, print_flag = False):
-    df = pd.DataFrame(columns=['Path', 'Module_type', 'Module_name', 'Module'])
-    md = learner_module_leaves(learner).drop(
-            'Path', axis = 1
-        ).sort_values(
-            by = 'Module_type'
-        )
-    if print_flag: print("The layers are of this types:")
-
-    md_types = pd.DataFrame(md['Module_type'].drop_duplicates())
-    if print_flag: 
-        display(md_types)
-        print("And they are called with this parameters:")
-    
-    md_modules = pd.DataFrame(md['Module'].drop_duplicates())
-    
-    if print_flag: display(md_modules)
-    
-    return md_types, md_modules
-
-# %% ../nbs/utils.ipynb 61
 import time
 from dataclasses import dataclass, field
 
-# %% ../nbs/utils.ipynb 62
+# %% ../nbs/utils.ipynb 51
 @dataclass
 class Time:
     time_start: float =  None
@@ -274,3 +218,11 @@ class Time:
     def duration(self):
         self.time_total=self.time_end - self.time_start
         return self.time_total
+
+# %% ../nbs/utils.ipynb 54
+#Function for making notebooks clearer
+from IPython.display import clear_output, DisplayHandle
+def update_patch(self, obj):
+    clear_output(wait=True)
+    self.display(obj)
+    print("... Enabling Vs Code execution ...")

@@ -12,25 +12,13 @@ FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks
 SHELL [ "/bin/bash", "--login", "-c" ]
 
 ##################
-# Install MATLAB #
+# Install OCTAVE # 
 ##################
-
-RUN apt-get update && apt-get install -y \
-    wget \
-    unzip \
+# Substitutes matlab as no inline installation found for matlab
+RUN apt-get update \
+    && apt-get install octave -y \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-
-WORKDIR /tmp
-RUN wget -q https://URL_de_descarga_de_MATLAB/ -O matlab.zip \
-    && unzip -q matlab.zip -d /tmp/matlab \
-    && /tmp/matlab/install -mode silent -agreeToLicense yes \
-    && rm -rf /tmp/matlab /tmp/matlab.zip
-
-RUN cd matlabroot/extern/engines/python && python setup.py install
-
-ENV MATLAB_HOME /usr/local/MATLAB/version
-ENV PATH $PATH:$MATLAB_HOME/bin
 
 #####################
 # Install miniconda #

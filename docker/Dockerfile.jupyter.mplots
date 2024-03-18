@@ -24,6 +24,8 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 # Install miniconda #
 #####################
 
+RUN apt-get update && apt-get install -y libgl1-mesa-glx
+
 RUN  echo "--> Activate conda" \
      && source /usr/local/share/miniconda3/bin/activate env \
      && echo "--> Installing libraries" \
@@ -33,5 +35,6 @@ RUN  echo "--> Activate conda" \
 	    ipympl \
         graph  \
         octave \
+        oct2py \
      && mamba clean --all --yes 
 

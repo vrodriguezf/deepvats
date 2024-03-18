@@ -15,10 +15,10 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 # Install OCTAVE # 
 ##################
 # Substitutes matlab as no inline installation found for matlab
-RUN apt-get update \
-    && apt-get install octave -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update \
+#    && apt-get install octave -y \
+#    && apt-get clean \
+    #&& rm -rf /var/lib/apt/lists/*
 
 #####################
 # Install miniconda #
@@ -29,8 +29,9 @@ RUN  echo "--> Activate conda" \
      && echo "--> Installing libraries" \
      && mamba install -y -c conda-forge \
         pyscamp-gpu \
-	stumpy \
-	ipympl \
+	    stumpy \
+	    ipympl \
         graph  \
+        octave \
      && mamba clean --all --yes 
 

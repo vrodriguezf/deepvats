@@ -459,6 +459,10 @@ shinyServer(function(input, output, session) {
         )
        
         #result <- system(python_string)
+        #------------------------------------------------
+        num_columns <- ncol(result)
+        print(paste("--------------------------ncol2 ", num_columns))
+        #-------------------------------------------------------------------
         t_embs_1 <- Sys.time()
         diff <- t_embs_1 - t_embs_0
         diff_secs <- as.numeric(diff, units = "secs")
@@ -488,7 +492,8 @@ shinyServer(function(input, output, session) {
                 print_flag  = TRUE,
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
-                random_state= as.integer(input$prj_random_state)
+                random_state= as.integer(input$prj_random_state),
+                n_components = as.integer(3)
             ),
             TSNE = dvats$get_TSNE_prjs(
                 X = embs, 
@@ -502,7 +507,7 @@ shinyServer(function(input, output, session) {
             )
         )
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
-      colnames(res) = c("xcoord", "ycoord")
+      colnames(res) = c("xcoord", "ycoord", "zcoord")
       on.exit({print(" prj_object -->"); flush.console()})
       flush.console()
       #browser()
@@ -532,7 +537,8 @@ shinyServer(function(input, output, session) {
                 print_flag  = TRUE,
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
-                random_state= as.integer(input$prj_random_state)
+                random_state= as.integer(input$prj_random_state),
+                n_components = as.integer(3)
             ),
             TSNE = dvats$get_TSNE_prjs(
                 X = embs, 
@@ -545,8 +551,12 @@ shinyServer(function(input, output, session) {
                 random_state=as.integer(input$prj_random_state)
             )
         )
+      #-----------------------------------------------------------------------------------
+      #print(paste("---------------------ncol", ncol(res)))
+      #print(res)
+      #-----------------------------------------------------------------------------------
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
-      colnames(res) = c("xcoord", "ycoord")
+      colnames(res) = c("xcoord", "ycoord", "zcoord")
       t_prj_1 = Sys.time()
       on.exit({print(paste0(" prj_object | ", t_prj_1-t_prj_0, " seconds -->")); flush.console()})
       flush.console()
@@ -592,6 +602,10 @@ shinyServer(function(input, output, session) {
         prjs <- prj_object()
         req(input$dataset, input$encoder, input$wlen, input$stride)
         print("Projections | before switch")
+        #------------------------------------------
+        num_columns <- ncol(prjs)
+        print(paste("----------------", num_columns))
+        #------------------------------------------
         switch(clustering_options$selected,
             precomputed_clusters = {
                filename <- req(selected_clusters_labels_ar())$metadata$ref$hash
@@ -631,8 +645,7 @@ shinyServer(function(input, output, session) {
                     print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
                 }
                 prjs$cluster <- clusters$labels_
-
-
+                
              })
         
         on.exit({print("Projections -->"); flush.console()})
@@ -1085,6 +1098,30 @@ shinyServer(function(input, output, session) {
         encoder_name <- basename(input$encoder)
         get_ts_plot_name(dataset_name, encoder_name)
     })
+    
+    # Dentro de la función reactive para la generación de la proyección de embedding
+    embedding_3d <- reactive({
+      # Obtener la proyección de embedding en tres dimensiones
+      prj <- req(projections())
+      print("------------------------------")
+      str(prj)
+      print("------------------------------")
+      # Suponiendo que las coordenadas de la proyección en tres dimensiones están en las primeras tres columnas
+      prj_3d <- prj[, 1:3]  # Seleccionar las primeras tres columnas
+      colnames(prj_3d) <- c("xcoord", "ycoord", "zcoord")  # Asignar nombres a las columnas
+      prj_3d
+    })
+    
+    # Dentro de la función renderPlotly para visualizar la proyección en 3D
+    output$embedding_plot_3d <- renderPlotly({
+      # Obtener la proyección en tres dimensiones
+      prj_3d <- embedding_3d()
+      
+      # Crear un gráfico 3D con Plotly
+      plot_ly(data = prj_3d, x = ~xcoord, y = ~ycoord, z = ~zcoord, type = "scatter3d", mode = "markers", marker = list(size = 5))
+    })
+    
+    
     
 })
 

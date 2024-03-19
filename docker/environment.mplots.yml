@@ -1,0 +1,12 @@
+name: env
+channels: 
+- conda-forge
+
+dependencies:
+  - pyscamp-gpu
+  - stumpy
+  - ipympl
+  - graph
+  - octave
+  - oct2py
+  - fltk

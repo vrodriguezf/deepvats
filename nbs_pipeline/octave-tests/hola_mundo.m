@@ -1,2 +1,2 @@
-% hello_world.m
+% hola_mundo.m
 disp('Hola Mundo');

@@ -26,15 +26,7 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 
 RUN apt-get update && apt-get install -y libgl1-mesa-glx
 
-RUN  echo "--> Activate conda" \
-     && source /usr/local/share/miniconda3/bin/activate env \
-     && echo "--> Installing libraries" \
-     && mamba install -y -c conda-forge \
-        pyscamp-gpu \
-	    stumpy \
-	    ipympl \
-        graph  \
-        octave \
-        oct2py \
-     && mamba clean --all --yes 
+COPY docker/environment.mplots.yml /tmp/environment.mplots.yml
 
+RUN mamba env update --name env --file /tmp/environment.mplots.yml \
+    && mamba clean --all --yes

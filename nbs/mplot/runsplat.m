@@ -47,9 +47,9 @@ function [result, time_splat] = runsplat(subsequence_length, timeseriesA, timese
         %[splat] = SPLAT(timeseriesA, subsequence_length, timeseriesB, display_mplot, multiresolution, calibration);
         [result] = SPLAT(timeseriesA, subsequence_length, timeseriesB, display_mplot, multiresolution, calibration);
         time_splat = toc;
-        disp("result ~")
-        disp(length(result))
-        disp("time: ")
-        disp(time_splat)
+        %disp("result ~")
+        %disp(length(result))
+        %disp("time: ")
+        %disp(time_splat)
     end
 end

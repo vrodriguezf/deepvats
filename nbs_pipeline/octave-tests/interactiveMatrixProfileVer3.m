@@ -44,6 +44,7 @@ preStep = floor(subLen * 0.25);
 
 %% check input
 dataLen = length(data);
+disp(dataLen) %%Added by macu for checking error
 if subLen > dataLen / 2
     error(['Error: Time series is too short ', ...
         'relative to desired subsequence length']);

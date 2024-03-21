@@ -1,5 +1,8 @@
 function [similarityMatrix] = SPLAT(timeSeriesA, subseqLen, timeSeriesB, plotting, multiresolution, calibration)
 
+disp("plotting inside")
+disp(plotting)
+
 if nargin < 2
     error('incorrect number of input arguments');
 elseif ~isvector(timeSeriesA)
@@ -124,7 +127,10 @@ if transposed_ || ~selfjoin  % matches the profile and profile index but not the
     similarityMatrix = transpose(similarityMatrix);
 end
 
+disp("plotting antes del if")
+disp(plotting)
 if plotting
+    disp("Ploteate")
     %histmaximum = max(similarityMatrix,[],'all');
     histmaximum = max(max(similarityMatrix));
     mplot = similarityMatrix > 0.9*histmaximum;
@@ -171,7 +177,9 @@ if plotting
         title('Mplot (AB-join similarity matrix)');
         
     end
-    
+    disp("--> drawnow")
+    drawnow; 
+    disp("drawnow -->")
 end
 
 end

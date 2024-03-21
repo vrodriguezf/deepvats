@@ -5,6 +5,13 @@
 %%
 function [similarityMatrix] = SimMat(timeSeriesA, subseqLen, timeSeriesB, minlag)
 
+disp(length(timeSeriesA))
+disp(subseqLen)
+#disp(length(timeSeriesB))
+#disp(minlag)
+disp("--- Go SimBat --- ")
+
+
 % Code and update formulas are by Kaveh Kamgar.  
 % GUI and top k motif critera are based on some code by Michael Yeh. 
 % The suggested use of the fourier transform to compute euclidean distance based on cross correlation 
@@ -62,7 +69,7 @@ else
     timeSeries  = timeSeriesA;
 end
 
-
+disp("--- timeSeries defined --")
 n = length(timeSeries);
 transposed_ = isrow(timeSeries);
 if transposed_
@@ -77,6 +84,8 @@ timeSeries(isnan(timeSeries)) = 0;
 mu = moving_mean(timeSeries, subseqLen);
 invsig = 1./movstd(timeSeries, [0 subseqLen-1], 1, 'Endpoints', 'discard');
 invsig(nanmap) = NaN;
+
+disp("---> ADFG A DG DGB2DGB ---")
 
 df = [0; (1/2)*(timeSeries(1 + subseqLen : n) - timeSeries(1 : n - subseqLen))];
 dg = [0; (timeSeries(1 + subseqLen : n) - mu(2 : n - subseqLen + 1)) + (timeSeries(1 : n - subseqLen) - mu(1 : n - subseqLen))];
@@ -93,8 +102,14 @@ end
 % This uses normalized cross correlation as an intermediate quantity for performance reasons. 
 % It is later reduced to z-normalized euclidean distance.
 
+disp("------> Hankel -------")
+disp("diag")
+disp (minlag + 1)
+disp (n - subseqLen+1)
 for diag = minlag + 1 : n - subseqLen + 1
     cov_ = (sum((timeSeries(diag : diag + subseqLen - 1) - mu(diag)) .* (timeSeries(1 : subseqLen) - mu(1))));
+    disp("row")
+    disp (n-subseqLen - diag + 2)
     for row = 1 : n - subseqLen - diag + 2
         if ~selfjoin && row > subsequenceCountA
            break;
@@ -114,9 +129,11 @@ for diag = minlag + 1 : n - subseqLen + 1
         end
     end
 end
-
+disp("------ Grettel ------->")
  
 similarityMatrix = sqrt(max(0, 2 * (subseqLen - similarityMatrix), 'includenan'));
+
+disp("------ Sqrt done ------->")
 
 if transposed_ || ~selfjoin  % matches the profile and profile index but not the motif or discord index to the input format
     similarityMatrix = transpose(similarityMatrix);
@@ -132,6 +149,7 @@ function [ res ] = moving_mean(a,w)
 % moving mean over sequence a with window length w
 % based on Ogita et. al, Accurate Sum and Dot Product
 
+disp("------> Rounding error blablabla  -------")
 % A major source of rounding error is accumulated error in the mean values, so we use this to compensate. 
 % While the error bound is still a function of the conditioning of a very long dot product, we have observed 
 % a reduction of 3 - 4 digits lost to numerical roundoff when compared to older solutions.
@@ -164,5 +182,5 @@ for i = w + 1 : length(a)
 end
 
 res = res ./ w;
-
+disp("------ Rounding error blablabla ------->")
 end

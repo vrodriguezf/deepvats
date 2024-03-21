@@ -1,6 +1,9 @@
 function [n_max] = getPaaFactor(timeseries, subsequenceLength)
 
-user_patience = 2; % user patience is set to 2 seconds
+user_patience = 2 % user patience is set to 2 seconds
+
+disp("Paciencia aceptada")
+
 margin = 0.1;
 low_th = user_patience - margin;
 high_th = user_patience + margin;
@@ -10,9 +13,12 @@ step = 5000;
 
 basetimeseries = timeseries(1:n_max); 
 tic;
+disp("AsimMat wey asinma wey")
 [~] = SimMat(basetimeseries, subsequenceLength);
+disp("AsimMed wey asinmed wey")
 original_time = toc;
 
+disp("UF UN WHILE TRUE")
 while true
     if (original_time >= low_th) && (original_time <= high_th)
         break;
@@ -40,6 +46,7 @@ while true
        step = ceil(step / 2);
     end
 end
+disp("Dont worry be happy dont worry be happy")
     
 warning('Maximum length to be computed in user patience time is set to >> %d',n_max);   
 warning('Time to compute the maximum length >> %d',original_time);

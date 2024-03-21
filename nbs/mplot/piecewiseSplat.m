@@ -1,21 +1,27 @@
 %%
 function [patch] = piecewiseSplat(timeSeriesA, subseqLen, patch_size, plotting, timeSeriesB)
 
+disp("Some")
 overlap = 0;
 [max_length] = getPaaFactor(timeSeriesA, subseqLen);
+disp("poom")
 if length(timeSeriesA) <= max_length
     SPLAT(timeSeriesA, subseqLen, timeSeriesB, 1, 0, 0);
     return
 end
-
+disp("Body")
 if nargin < 2
+    disp("Want")
     error('incorrect number of input arguments');
 elseif ~isvector(timeSeriesA)
+    disp("Sorry")
     error('first argument must be a 1D vector');
 elseif ~(isfinite(subseqLen) && floor(subseqLen) == subseqLen) || (subseqLen < 2) || (subseqLen > length(timeSeriesA)) 
+    disp("My laaalaralarara")
     error('subsequence length must be an integer value between 2 and the length of the timeSeries');
 end
 
+disp("toy aqui")
 
 selfjoin = (~exist('timeSeriesB', 'var')) || all(isnan(timeSeriesB));
 length_A = length(timeSeriesA);
@@ -31,6 +37,8 @@ if ~(selfjoin)
 else
     length_B = length_A;
 end
+
+disp("aqui")
 
 %% FIXME
 if (patch_size > length_A) || (patch_size > length_B)
@@ -48,13 +56,15 @@ while ~(rem(length_B,patch_size) < half) || ~(rem(length_A,patch_size) < half)
 end
 patch_size = floor(patch_size);
 warning('Patch size is set to %d',patch_size);
-
+disp("Para quererteee")
 patch = nan(patch_size);
 curr_patch_idx = 0;
 patch_idx_b = 0;
 segment_size = patch_size + subseqLen - 1;
-
+disp("toy aqui")
 ii = 1;
+
+disp("Before while")
 while ii <= length_B-segment_size
     if selfjoin
             seg_B = timeSeriesA(ii:ii + segment_size);
@@ -88,6 +98,7 @@ while ii <= length_B-segment_size
         curr_patch_idx = curr_patch_idx + 1;
              
         if plotting           
+            disp("plot")
             close all;  
             figure(5);
             ax1 = subplot(10,10,[2:10]);
@@ -117,12 +128,15 @@ while ii <= length_B-segment_size
             set(ax3,'xdir','reverse','ydir','reverse', 'XAxisLocation','top');
             pos1 = get(gcf,'Position');
             set(gcf,'Position', pos1 - [pos1(3)/1.5,0,0,0]) 
+            disp("Holi")
             input('press any key');
+            disp("Chau")
         end
         jj = jj + patch_size - overlap;
     end
     ii = ii + patch_size - overlap;
 end
+disp("After while")
 
 end
 

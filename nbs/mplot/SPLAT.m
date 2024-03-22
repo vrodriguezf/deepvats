@@ -10,31 +10,40 @@ elseif ~isvector(timeSeriesA)
 elseif ~(isfinite(subseqLen) && floor(subseqLen) == subseqLen) || (subseqLen < 2) || (subseqLen > length(timeSeriesA)) 
     error('subsequence length must be an integer value between 2 and the length of the timeSeries');
 end
-
+disp("Multires inside")
+disp(multiresolution)
 if ~multiresolution
+    disp("MultiRes option is false")
     max_length = inf;
 elseif ~exist('calibration','var') || ~(calibration)
+    disp("-> Here - option 2 calibration")
     max_length = 10000;
 else
+    disp("-> Or here - option 3 getPaafactor")
     [max_length] = getPaaFactor(timeSeriesA, subseqLen);
 end
+disp("minlag")
 minlag = 0;
-
+disp(minlag)
 selfjoin = (~exist('timeSeriesB', 'var')) || all(isnan(timeSeriesB));
 
 
 if length(timeSeriesA) > max_length || (~selfjoin && length(timeSeriesB) > max_length)
     if length(timeSeriesA) > max_length
+        disp("--> Getting paaFactor - Opction A")
         paa_factor = ceil(length(timeSeriesA)/max_length);
         warning('Downsampling rate is set to %d',paa_factor);
     elseif (~selfjoin && length(timeSeriesB) > max_length)
+        disp("--> Getting paaFactor - Opction B")
         paa_factor = ceil(length(timeSeriesB)/max_length);
         warning('Downsampling rate is set to %d',paa_factor);
     end
     if paa_factor ~= 1
+        disp("--> paaFactor not equal to 1")
         timeSeriesA = paa(timeSeriesA, ceil(length(timeSeriesA)/paa_factor));
         subseqLen = ceil(subseqLen/paa_factor);
         if ~(selfjoin)
+            disp("--> Adjust b (not selfjoin)")
             timeSeriesB_newlength = floor(length(timeSeriesB)/paa_factor);
             timeSeriesB = paa(timeSeriesB, timeSeriesB_newlength);
         end
@@ -49,10 +58,12 @@ if ~(selfjoin)
     end
     Atransposed_ = isrow(timeSeriesA);
     if Atransposed_
+        disp("--> Transpose A")
         timeSeriesA = transpose(timeSeriesA);
     end
     Btransposed_ = isrow(timeSeriesB);
     if Btransposed_
+        disp("--> Transpose B")
         timeSeriesB = transpose(timeSeriesB);
     end
     timeSeries = cat(1, timeSeriesA, timeSeriesB);
@@ -79,9 +90,11 @@ mu = moving_mean(timeSeries, subseqLen);
 invsig = 1./movstd(timeSeries, [0 subseqLen-1], 1, 'Endpoints', 'discard');
 invsig(nanmap) = NaN;
 
+disp("--> ADFG A DG DGF2DGF")
 df = [0; (1/2)*(timeSeries(1 + subseqLen : n) - timeSeries(1 : n - subseqLen))];
 dg = [0; (timeSeries(1 + subseqLen : n) - mu(2 : n - subseqLen + 1)) + (timeSeries(1 : n - subseqLen) - mu(1 : n - subseqLen))];
 
+disp("--> Output similarityMatrix")
 % Output Similarity matrix
 similarityMatrixLength = n - subseqLen + 1;
 if selfjoin

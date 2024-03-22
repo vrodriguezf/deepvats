@@ -238,7 +238,7 @@ shinyUI(fluidPage(
             dataTableOutput("enc_info")
           )
         ),
-      ######################## JSCript Logs button ###############################
+        ######################## JSCript Logs button ###############################
         tabPanel(
           "Logs",
           fluidRow(

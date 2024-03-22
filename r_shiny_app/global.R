@@ -24,6 +24,8 @@ library(fasttime)
 library(parallel)
 #library(shinythemes)
 library(xts)
+source("./global-helper-logs.R")
+
 
 reactlog::reactlog_enable()
 #options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")

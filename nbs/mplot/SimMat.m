@@ -103,13 +103,13 @@ end
 % It is later reduced to z-normalized euclidean distance.
 
 disp("------> Hankel -------")
-disp("diag")
-disp (minlag + 1)
-disp (n - subseqLen+1)
+#disp("diag")
+#disp (minlag + 1)
+#disp (n - subseqLen+1)
 for diag = minlag + 1 : n - subseqLen + 1
     cov_ = (sum((timeSeries(diag : diag + subseqLen - 1) - mu(diag)) .* (timeSeries(1 : subseqLen) - mu(1))));
-    disp("row")
-    disp (n-subseqLen - diag + 2)
+    #disp("row")
+    #disp (n-subseqLen - diag + 2)
     for row = 1 : n - subseqLen - diag + 2
         if ~selfjoin && row > subsequenceCountA
            break;

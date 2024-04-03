@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
-           'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'update_patch']
+           'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'funcname', 'update_patch']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -203,23 +203,40 @@ from dataclasses import dataclass, field
 # %% ../nbs/utils.ipynb 51
 @dataclass
 class Time:
-    time_start: float =  None
-    time_end : float =  None
-    time_total : float =  0.0
+    time_start  : float =  None
+    time_end    : float =  None
+    time_total  : float =  0.0
+    function    : str   =  ''
 
-    def start(self): 
+    def start(self, print_flag = False): 
+        if print_flag: print("--> Start: ", self.function)
         self.time_start = time.time()
         return self.time_start
 
-    def end(self):
+    def end(self, print_flag = False):
         self.time_end = time.time()
+        self.time_total = self.duration()
+        if print_flag: print("End: ", self.function, "-->")
         return self.time_end
         
     def duration(self):
         self.time_total=self.time_end - self.time_start
         return self.time_total
+    def show(self):
+        if self.time_start is None: 
+            print(f"[{self.function}] Not started")
+        elif self.time_end is None:
+            print(f"[{self.function}] Not ended | Start: ", self.time_start)
+        else:
+            print(f"[{self.function}] Start: {self.time_start} | End: {self.time_end} | Duration: {self.time_total} seconds")
+        return self.time_total     
 
-# %% ../nbs/utils.ipynb 54
+# %% ../nbs/utils.ipynb 52
+def funcname():
+    """Get calling function name"""
+    return inspect.stack()[1][3]
+
+# %% ../nbs/utils.ipynb 55
 #Function for making notebooks clearer
 from IPython.display import clear_output, DisplayHandle
 def update_patch(self, obj):

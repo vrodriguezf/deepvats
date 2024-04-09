@@ -27,8 +27,11 @@ minlag = 0;
 disp(minlag)
 selfjoin = (~exist('timeSeriesB', 'var')) || all(isnan(timeSeriesB));
 
+disp(strcat("[SPLAT] | ", num2str(selfjoin), " | ", num2str(length(timeSeriesA))))
+disp(timeSeriesA(1:10))
 
 if length(timeSeriesA) > max_length || (~selfjoin && length(timeSeriesB) > max_length)
+    disp("--> Getting paaFactor")
     if length(timeSeriesA) > max_length
         disp("--> Getting paaFactor - Opction A")
         paa_factor = ceil(length(timeSeriesA)/max_length);
@@ -51,6 +54,7 @@ if length(timeSeriesA) > max_length || (~selfjoin && length(timeSeriesB) > max_l
 end
 
 if ~(selfjoin)
+    disp("--> Not selfjoin")
     if ~isvector(timeSeriesB)
         error('Third argument must be a 1D vector');
     elseif ~(isfinite(subseqLen) && floor(subseqLen) == subseqLen) || (subseqLen < 2) || (subseqLen > length(timeSeriesB)) 
@@ -74,7 +78,7 @@ else
     timeSeries  = timeSeriesA;
 end
 
-
+disp("--> Computing!")
 n = length(timeSeries);
 transposed_ = isrow(timeSeries);
 if transposed_
@@ -103,6 +107,9 @@ else
     similarityMatrix = NaN(subsequenceCountA, subsequenceCountB);
 end
 
+disp("--> For diag loop")
+disp(minlag)
+disp(n-subseqLen+1)
 
 for diag = minlag + 1 : n - subseqLen + 1
     cov_ = (sum((timeSeries(diag : diag + subseqLen - 1) - mu(diag)) .* (timeSeries(1 : subseqLen) - mu(1))));
@@ -112,6 +119,7 @@ for diag = minlag + 1 : n - subseqLen + 1
         end
         cov_ = cov_ + df(row) * dg(row + diag - 1) + df(row + diag - 1) * dg(row);
         if selfjoin
+            disp(strcat("selfjoin corr_", num2str(row), " | ", num2str(diag)))
             corr_ = cov_ * invsig(row) * invsig(row + diag - 1);
             similarityMatrix(row, row + diag - 1) = corr_;
             similarityMatrix(row + diag - 1, row) = corr_;
@@ -124,6 +132,7 @@ for diag = minlag + 1 : n - subseqLen + 1
         end
     end
 end
+disp("After diag loop. Now for the rest")
 if selfjoin
     exclusionLength = ceil(subseqLen/2);
     for rr = 1:size(similarityMatrix,1)

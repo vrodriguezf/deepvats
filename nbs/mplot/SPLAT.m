@@ -119,7 +119,7 @@ for diag = minlag + 1 : n - subseqLen + 1
         end
         cov_ = cov_ + df(row) * dg(row + diag - 1) + df(row + diag - 1) * dg(row);
         if selfjoin
-            disp(strcat("selfjoin corr_", num2str(row), " | ", num2str(diag)))
+            %disp(strcat("selfjoin corr_", num2str(row), " | ", num2str(diag)))
             corr_ = cov_ * invsig(row) * invsig(row + diag - 1);
             similarityMatrix(row, row + diag - 1) = corr_;
             similarityMatrix(row + diag - 1, row) = corr_;

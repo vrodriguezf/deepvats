@@ -3,6 +3,25 @@
 %% First input time series (timeSeriesA) & subsequence length are required input arguments
 %% Second input time series (timeSeriesB) is optional and it's required only for AB join
 %%
+
+
+%%% Auxiliar function added by Inmaculada Santamaria-Valenzuela for Octave compatibility
+function maxValue = mymax(x, A, nanflag)
+   
+    if nargin < 3 || strcmp(nanflag, 'omitnan')
+        disp('Option 1: Ignore NaN');
+        A_no_NaN = A;
+        A_no_NaN(isnan(A)) = -Inf;  
+        maxValue = max(x, A_no_NaN); 
+    elseif strcmp(nanflag, 'includenan')
+        maxValue = max(x, A); 
+        maxValue(isnan(A)) = NaN;
+    else
+        error('nanflag inválido. Usa ''omitnan'' o ''includenan''.');
+    end
+end
+
+%%% Main simMat function
 function [similarityMatrix] = SimMat(timeSeriesA, subseqLen, timeSeriesB, minlag)
 
 disp(length(timeSeriesA))
@@ -131,7 +150,7 @@ for diag = minlag + 1 : n - subseqLen + 1
 end
 disp("------ Grettel ------->")
  
-similarityMatrix = sqrt(max(0, 2 * (subseqLen - similarityMatrix), 'includenan'));
+similarityMatrix = sqrt(maxValue(0, 2 * (subseqLen - similarityMatrix), 'includenan'));
 
 disp("------ Sqrt done ------->")
 

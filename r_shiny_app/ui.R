@@ -262,20 +262,13 @@ shinyUI(fluidPage(
         tabPanel(
           "MPlot",
           fluidRow(
-            h3("Logs"),
-            verbatimTextOutput("logsOutput"),
-            h3("Log dataframe"),
-            shiny::actionButton("update_logs", label = "Update logs", icon = icon("refresh")),
-            shiny::downloadButton("download_data", "Download logs as CSV"),
-            #shinyWidgets::sliderTextInput(
-            #  "timestamp_range", 
-            #  "Select Time Range:",
-            #  choices = c("Loading..."="Loading..."), #setNames(as.character(seq(0,10,1)), seq(0,10,1)),
-            #  selected = c("Loading...", "Loading..."),
-            #  animate = TRUE
-            #),
-            #verbatimTextOutput(outputId = "res"),
-            dataTableOutput("log_output")
+            h3("Distances Matrix Plot (MPlot)"),
+            verbatimTextOutput("mplot_range"),
+            shiny::actionButton("update_range", label = "Update range", icon = icon("refresh")),
+            shiny::downloadButton("download_image", "Download image as PNG"),
+            dataTableOutput("log_output"),
+            uiOutput("mplot_ui")%>% withSpinner(),
+            dygraphOutput("ts_plot_dygraph2") %>% withSpinner()
           )
         ),
       )

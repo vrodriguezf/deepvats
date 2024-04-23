@@ -1364,6 +1364,124 @@ shinyServer(function(input, output, session) {
             #send_log("Projections plot ui_end")
         }
     )
+
+
+    output$mplot <- renderPlot({
+        #Change 2 MPlot (He dejado projections para comprobar que lo voy montando bien)
+        #send_log("Projections plot_start")
+        req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
+        log_print("--> Projections_plot")
+        t_pp_0 = Sys.time()
+        prjs_ <- req(projections())
+        log_print("projections_plot | Prepare column highlights")
+        # Prepare the column highlight to color data
+        if (!is.null(input$ts_plot_dygraph_click)) {
+            log_print("Selected ts time points" , TRUE, log_path(), log_header())
+            selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
+            projections_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
+            prjs_$highlight = projections_idxs
+        } else {
+            prjs_$highlight = FALSE
+        }
+        # Prepare the column highlight to color data. If input$generate_cluster has not been clicked
+        # the column cluster will not exist in the dataframe, so we create with the value FALSE
+        if(!("cluster" %in% names(prjs_)))
+            prjs_$cluster = FALSE
+        log_print(paste0("projections_plot | GoGo Plot!", nrow(prjs_)))
+        plt <- ggplot(data = prjs_) + 
+            aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
+            scale_colour_manual(name = "clusters", values = req(update_palette())) +
+            geom_point(shape = 21,alpha = config_style$point_alpha, size = config_style$point_size) + 
+            scale_shape(solid = FALSE) +
+            #geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha) + 
+            guides() + 
+            scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA"))+
+            coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE)+
+            theme_void() + 
+            theme(legend.position = "none")
+        
+        if (input$show_lines){
+            #plt <- plt + geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
+            plt <- plt + geom_path(linewidth=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
+        }
+
+        observeEvent(input$savePlot, {
+            plt <- plt + theme(plot.background = element_rect(fill = "white"))
+            ggsave(filename = prjs_plot_name(), plot = plt, path = "../data/plots/")
+        })
+        #observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
+            #req(input$dataset, input$encoder)
+            #log_print("!-- CUDA?: ", torch$cuda$is_available())
+            #prjs_ <- req(projections())
+            #filename <- prjs_plot_name()
+            #log_print(paste("saving embedding plot to ",filename))
+            #ggsave(filename = filename, plot = plt, path="../data/plots/") 
+            #log_print("Embeding plot saved")
+        #})
+        t_pp_1 = Sys.time()
+        log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, log_path(), log_header())
+        temp_log <<- log_add(
+            log_mssg                = temp_log, 
+            function_               = "Projections Plot",
+            cpu_flag                = isolate(input$cpu_flag),
+            dr_method               = input$dr_method,
+            clustering_options      = input$clustering_options,
+            zoom                    = input$zoom_btn,
+            time                    = t_pp_1-t_pp_0, 
+            mssg                    = paste0("R execution time | Ts selected point", input$ts_plot_dygraph_click)
+        )
+        #send_log("Projections plot_end")
+        plt
+    })
+
+    # Generate time series plot
+    output$ts_plot_dygraph2 <- renderDygraph(
+        {
+            req (
+                input$dataset, 
+                input$encoder,
+                input$wlen != 0, 
+                input$stride != 0
+            )
+            #send_log("TsPlot dygraph_start")
+            log_print("ts_plot dygraph")
+            tspd_0 = Sys.time()
+            #log_print("Saving time series plot")
+            ts_plot <- req(ts_plot())
+            #save_path <- file.path("..", "data", "plots", ts_plot_name())
+            #htmlwidgets::saveWidget(ts_plot, file = save_path, selfcontained=TRUE)
+            #log_print(paste0("Time series plot saved to", save_path))
+            tspd_1 = Sys.time()
+            log_print(paste0("ts_plot dygraph | Execution_time: ", tspd_1 - tspd_0), TRUE, log_path(), log_header())
+            temp_log <<- log_add(
+                log_mssg                = temp_log, 
+                function_               = "TS Plot Dygraph",
+                cpu_flag                = isolate(input$cpu_flag),
+                dr_method               = isolate(input$dr_method),
+                clustering_options      = isolate(input$clustering_options),
+                zoom                    = isolate(input$zoom),
+                mssg                    = paste0("R execution time | Selected prj points: ", isolate(embedding_ids())),
+                time                    = tspd_1-tspd_0
+            )
+            #send_log("TsPlot dygraph_end")
+            ts_plot
+            #req(ts_plot())
+        }   
+    )
+
+    
+    output$mplot_ui <- renderUI(
+        {
+            #send_log("Projections plot ui_start")
+            plotOutput(
+                "mplot", 
+                click = "mplot_click",
+                brush = "mplot_brush",
+                height = input$embedding_plot_height
+            ) %>% withSpinner()
+            #send_log("Projections plot ui_end")
+        }
+    )
     
     
     # Render information about the selected point in the time series graph

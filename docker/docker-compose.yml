@@ -71,6 +71,7 @@ services:
          - ../dvats:/home/${USER_NAME}/dvats
          - conda-env:/usr/local/share/miniconda3/envs/env
          - miniconda:/home/user/local/share/miniconda3 
+         - ../nbs_pipeline:/home/${USER_NAME}/nbs_pipeline
       deploy:
         resources:
           #limits:

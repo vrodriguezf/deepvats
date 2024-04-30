@@ -28,6 +28,7 @@ tmp*
 tags
 
 #Macu
+nbs_pipeline/*.py
 app/shiny_logs
 ./mi-santamaria/* #No sé por qué se han copiado mis proyectos de wandb
 nbs_pipeline/test_torch.ipybn

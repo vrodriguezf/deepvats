@@ -5,8 +5,8 @@ services:
         - username=${USER_NAME}
         - uid=${USER_ID}
         - gid=${GROUP_ID}
-        - CUDA_VERSION=${CUDA_VERSION}
-        - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+        - CUDA_VERSION=12.2.0-devel-ubuntu20.04
+          - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       context: ../
       labels:
         - username=${USER_NAME}
@@ -61,7 +61,9 @@ services:
           - GROUPID=${GROUP_ID} #*
           - PASSWORD=${RSTUDIO_PASSWD} #*
           - ROOT=FALSE
-          - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+          - CUDA_VISIBLE_DEVICES=0,1,2
+          #- CUDA_VISIBLE_DEVICES=1
+            #          - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
           - GH_TOKEN=${GH_TOKEN} #*
           # TODO (28/03/2023): I don't know why it is not working without this
           - ENV_VARS=WANDB_ENTITY,WANDB_API_KEY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES
@@ -71,7 +73,6 @@ services:
          - ../dvats:/home/${USER_NAME}/dvats
          - conda-env:/usr/local/share/miniconda3/envs/env
          - miniconda:/home/user/local/share/miniconda3 
-         - ../nbs_pipeline:/home/${USER_NAME}/nbs_pipeline
       deploy:
         resources:
           #limits:

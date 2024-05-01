@@ -61,8 +61,8 @@ RUN conda install --name base --channel conda-forge mamba \
     && mamba update --name base --channel defaults conda \
     && mamba env create --prefix ${ENV_PREFIX} --file /tmp/environment.yml 
 
-#RUN conda install ploomber-engine -c conda-forge\
-#   && conda clean --all --yes 
+RUN conda install -p ${ENV_PREFIX} ploomber-engine -c conda-forge\
+   && conda clean --all --yes 
 
 #Checking the environment
 #RUN echo "source /usr/local/share/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc \

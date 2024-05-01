@@ -12,10 +12,10 @@ while IFS='=' read -r key value _; do
     else
         echo "Skipping $key = $value"
     fi
-done < .env
+done < docker/.env
 
 echo "Args:" "${args[@]}"
-#read -p "Press enter to continue"
+
 
 # Ejecuta docker build con los argumentos
 PROJECT_NAME='dvats'

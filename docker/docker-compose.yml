@@ -5,8 +5,8 @@ services:
         - username=${USER_NAME}
         - uid=${USER_ID}
         - gid=${GROUP_ID}
-        - CUDA_VERSION=12.2.0-devel-ubuntu20.04
-          - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+        - CUDA_VERSION=${CUDA_VERSION}
+        - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       context: ../
       labels:
         - username=${USER_NAME}

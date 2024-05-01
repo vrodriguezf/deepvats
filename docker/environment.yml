@@ -38,6 +38,7 @@ dependencies:
   - conda-forge::nbclassic=1.0.0=pyhb4ecaf3_1
   - conda-forge::nbdev=2.2.10=pyhd8ed1ab_0
   - nbformat>=5.1.3
+  - conda-forge::ploomber-engine
   #--- passwords & files
   - keyrings.alt
   - platformdirs=2.5.2
@@ -70,3 +71,4 @@ dependencies:
   - fastai::fastai>=2.7.9
   - timeseriesai::tsai
   - conda-forge::feather-format
+

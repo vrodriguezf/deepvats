@@ -64,6 +64,11 @@ RUN  conda init bash  \
     # Create a project directory inside user home
     && mkdir -p $PROJECT_DIR
 
+##### --- This part must me moved to the base image once everything is checked ----#####
+RUN conda init bash \
+    && conda install ploomber-engine -c conda-forge -y
+################################## ------------------- #################################
+
 RUN echo "--> WORKDIR"
 WORKDIR ${HOME}
 
@@ -73,7 +78,7 @@ COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
 RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc \
     && echo "--> Exec entrypoint" \
     && chmod u+x /usr/local/bin/entrypoint.sh
-    
+   
 ENV PATH /usr/local/share/miniconda3/envs/env/bin:$PATH
 
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]

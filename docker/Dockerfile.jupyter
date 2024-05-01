@@ -8,7 +8,7 @@
 # Base image #
 ##############
 ##--- Setup Ubuntu
-FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-ploomber_engine
 
 #--- Tags
 LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
@@ -63,11 +63,6 @@ RUN echo "--> Activate conda"
 RUN  conda init bash  \
     # Create a project directory inside user home
     && mkdir -p $PROJECT_DIR
-
-##### --- This part must me moved to the base image once everything is checked ----#####
-RUN conda init bash \
-    && conda install ploomber-engine -c conda-forge -y
-################################## ------------------- #################################
 
 RUN echo "--> WORKDIR"
 WORKDIR ${HOME}

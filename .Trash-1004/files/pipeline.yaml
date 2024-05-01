@@ -1,0 +1,15 @@
+tasks:
+    - source: ./02b_encoder_MVP.ipybn
+        product: ./02b_encoder_MVP-output.ipybn
+        name: mi_notebook
+        params:
+          print_flag                    : false
+          check_memory_usage            : false
+          time_flag                     : false
+          window_size_percentage        : false
+          show_plots                    : false
+          reset_kernel                  : false
+          pre_configured_case           : false
+          case_id                       : 1
+          frequency_factor              : 5
+          frequency_factor_change_alias : True

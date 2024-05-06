@@ -26,7 +26,7 @@ import pandas as pd
 import datetime as dt
 import math
 import warnings
-#! pip install aeon | TODO: Ponerlo en el dockerfile
+
 from aeon.segmentation._clasp import ClaSPSegmenter, find_dominant_window_sizes
 from aeon.datasets import load_electric_devices_segmentation
 from aeon.visualisation import plot_series_with_change_points, plot_series_with_profiles
@@ -41,6 +41,7 @@ import matplotlib.dates as dates
 
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Rectangle
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from mpl_toolkits.axes_grid1 import ImageGrid
 
@@ -455,7 +456,7 @@ def find_dominant_window_sizes_list(
     
     return sizes
 
-# %% ../nbs/mplots.ipynb 40
+# %% ../nbs/mplots.ipynb 42
 def plot_subsequences_aux(
     ax              : plt.Axes, 
     x_coords        : List[ int ],  
@@ -529,7 +530,7 @@ def plot_subsequences(
     buttons = widgets.HBox([prev_button, next_button])
     display(buttons)
 
-# %% ../nbs/mplots.ipynb 41
+# %% ../nbs/mplots.ipynb 43
 def plot_dataFrame(title, df, vars = [], interval = 10000):
     if len(vars) > 0:
         num_vars = len(df.columns)
@@ -567,7 +568,7 @@ def plot_dataFrame(title, df, vars = [], interval = 10000):
         plt.show()
     else: raise ValueError("No variable proposed for plotting")
 
-# %% ../nbs/mplots.ipynb 42
+# %% ../nbs/mplots.ipynb 44
 def plot_dataFrame_compareSubsequences(
     title, df, var, subsequence_len, seq1_init, seq2_init, 
     title_fontsize = '30',
@@ -594,7 +595,7 @@ def plot_dataFrame_compareSubsequences(
     plt.show()
     
 
-# %% ../nbs/mplots.ipynb 44
+# %% ../nbs/mplots.ipynb 46
 def df_plot_colored_variables(df):
     # Show time series plot
     fig, ax = plt.subplots(1, figsize=(15,5), )
@@ -607,7 +608,7 @@ def df_plot_colored_variables(df):
     plt.legend()
     display(plt.show())
 
-# %% ../nbs/mplots.ipynb 45
+# %% ../nbs/mplots.ipynb 47
 def plot_df_with_intervals_and_colors(title, df, interval=10000):
     num_variables = len(df.columns)
     num_intervals = len(df) // interval + 1  # Calcula el número necesario de intervalos/subplots
@@ -638,7 +639,7 @@ def plot_df_with_intervals_and_colors(title, df, interval=10000):
     plt.tight_layout()
     plt.show()
 
-# %% ../nbs/mplots.ipynb 47
+# %% ../nbs/mplots.ipynb 49
 def make_symmetric_(
         mat : List [ float ]
     ) -> None:
@@ -657,7 +658,7 @@ def check_symmetric(
     return sym
 
 
-# %% ../nbs/mplots.ipynb 50
+# %% ../nbs/mplots.ipynb 52
 def moving_mean(a, w):
   result = np.zeros((len(a) - w + 1,))
   p = a[0]
@@ -789,7 +790,7 @@ def distance_matrix(a,b,w):
     out[np.isnan(out)] = -2
     return out
 
-# %% ../nbs/mplots.ipynb 52
+# %% ../nbs/mplots.ipynb 54
 @dataclass
 class DistanceProfile:
     """ Vector of distances between each subsequence in TA and a reference sequence TB"""
@@ -969,7 +970,7 @@ class DistanceProfile:
         plt.tight_layout()
         plt.show()
 
-# %% ../nbs/mplots.ipynb 60
+# %% ../nbs/mplots.ipynb 62
 @dataclass
 class DistanceMatrix: 
     """ Similarity matrix """
@@ -1061,24 +1062,31 @@ class DistanceMatrix:
         parallel            : bool      = True,
         threads             : int       = 4,
         provide_len         : bool      = True,
-        nlens               : int       = 1
+        nlens               : int       = 1,
+        gpus                : List [ int ] = None,
+        pearson             : bool      = True,
     ) -> Tuple [ List [ List [ float ] ], Optional [ ut.Time ] ] :
         t = None
 
-        complete                    = self.data_b == None
+        complete                    = ( self.data_b is None )
         n                           = len(self.data)
         if self.subsequence_len is None:
             if provide_len or self.data_b is None:
                 self.provide_lens(nlens = nlens, print_flag = print_flag)
             else:
                 self.subsequence_len = len(self.data_b)
+        
         rows = n - self.subsequence_len + 1
+        
         if (complete): 
             columns = rows
             reference_seq = self.data
         else: 
             reference_seq = self.data_b
             columns = len(reference_seq) + 1
+
+        if print_flag:
+            print("[ DistanceMatrix | Compute ] | Rows: ", rows, "Columns: ", columns)
         self.distances = np.empty((rows, columns))
         if time_flag: 
             timer = ut.Time()
@@ -1157,11 +1165,11 @@ class DistanceMatrix:
                     self.distances = scamp.selfjoin_matrix(
                         self.data, 
                         self.subsequence_len,
-                        gpus    = [],
+                        gpus    = gpus,
                         mheight = mheight,
                         mwidth  = mwidth,
                         verbose = print_flag,
-                        pearson = True
+                        pearson = pearson
                     )
                     if print_flag: print("selfjoin_matrix -->", self.distances.shape)
                 else:
@@ -1259,7 +1267,7 @@ class DistanceMatrix:
             make_symmetric_(self.distances)
         return self.distances    
 
-# %% ../nbs/mplots.ipynb 64
+# %% ../nbs/mplots.ipynb 66
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -1285,7 +1293,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 65
+# %% ../nbs/mplots.ipynb 67
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -1324,7 +1332,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 66
+# %% ../nbs/mplots.ipynb 69
 @dataclass
 class MatrixProfile:
     """ Class for better usability of Matrix Profile inside deepVATS"""
@@ -1507,14 +1515,22 @@ class MatrixProfile:
             self.motif_nearest_neighbor_idx_right = self.index_right[motif_idx]
         return self.motif_idx, self.motif_nearest_neighbor_idx, self.motif_nearest_neighbor_idx_left, self.motif_nearest_neighbor_idx_right
     
-    def get_anomaly_idx(self : 'MatrixProfile', print_flag : bool = False ): 
+    def get_anomaly_idx(
+            self : 'MatrixProfile', 
+            print_flag : bool = False 
+        ): 
         discord_idx = self.get_ordered_idx(-1)
         self.discord_idx = discord_idx
         self.discord_nearest_neighbor_idx = self.index[discord_idx]
-        if print_flag: print("motif id", discord_idx, "index ~ ", len(self.index))
+        if print_flag: 
+            print("motif id", discord_idx, "index ~ ", len(self.index))
+            print("Nearest ", self.index[discord_idx])
         if ( self.method == 'stump' or self.method == 'gpu_stump'):
             self.discord_nearest_neighbor_idx_left = self.index_left[discord_idx]
             self.discord_nearest_neighbor_idx_right = self.index_right[discord_idx]
+            if print_flag: 
+                print("Nearest left ", self.index_left[discord_idx])
+                print("Nearest right ", self.index_right[discord_idx])
             
         return self.discord_idx, self.discord_nearest_neighbor_idx, self.discord_nearest_neighbor_idx_left, self.discord_nearest_neighbor_idx_right
     
@@ -1573,7 +1589,7 @@ class MatrixProfile:
     def __str__(self):
         return f"MP: {self.distances}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
-# %% ../nbs/mplots.ipynb 68
+# %% ../nbs/mplots.ipynb 71
 def matrix_profile(
     data            : List [ float ], 
     subsequence_len : Optional [ int ]              = None, 
@@ -1586,9 +1602,7 @@ def matrix_profile(
     print_flag      : bool                          = False, 
     debug           : bool                          = True, 
     time_flag       : bool                          = True,
-    plot_flag       : bool                          = False,
-    provide_len     : bool                          = True,
-    nlens           : int                           = 1
+    plot_flag       : bool                          = False,    
 ) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
     """ 
     This function 
@@ -1715,12 +1729,12 @@ def matrix_profile(
             print("matrix profile -->")
     return mp, index, index_left, index_right, duration
 
-# %% ../nbs/mplots.ipynb 69
+# %% ../nbs/mplots.ipynb 72
 def compute(
     self            : MatrixProfile,
     method          : str                           = 'naive', 
     d               : Callable                      = z_normalized_euclidean_distance,
-    threads         : int                           = 4, # For scamp abjoin
+    threads         : int                           = 4,  # For scamp abjoin
     gpus            : List[ int ]                   = [], # For scamp abjoin
     print_flag      : bool                          = False, 
     plot_flag       : bool                          = False,
@@ -1730,6 +1744,12 @@ def compute(
     nlens           : Optional [ int ]              = 1
 ) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
     self.method = method
+
+    if self.subsequence_len is None:
+        if provide_len or self.data_b is None:
+            self.provide_lens(nlens = nlens, print_flag = print_flag)
+        else:
+            self.subsequence_len = len(self.data_b)
 
     self.distances, self.index, self.index_left, self.index_right, self.computation_time = matrix_profile ( 
         data            = self.data, 
@@ -1744,20 +1764,19 @@ def compute(
         debug           = debug, 
         plot_flag       = plot_flag,
         time_flag       = time_flag, 
-        provide_len     = provide_len,
-        nlens           = nlens
     )
     return self.distances
 MatrixProfile.compute = compute
 
-# %% ../nbs/mplots.ipynb 79
+# %% ../nbs/mplots.ipynb 82
 @dataclass
 class MatrixProfiles:
     matrix_profiles : List[ MatrixProfile ] = field( default_factory=list )
     data            : List[float]           = field( default_factory=list )
     data_b          : List[float]           = None
     
-    subsequence_len: int = 0
+    subsequence_len : int                   = 0
+    dominant_lens   : List[ int ]           = None
 
     def append (self : 'MatrixProfiles', mp: MatrixProfile):
         self.matrix_profiles.append(deepcopy(mp))
@@ -1793,13 +1812,19 @@ class MatrixProfiles:
         )
         
         mp.method = method
+        if print_flag: print(f"Before Mps.len: {len(self.matrix_profiles)}")
         self.matrix_profiles.append(mp)
+        if print_flag: print(f"After Mps.len: {len(self.matrix_profiles)}")
         
         if print_flag: 
             print("MPs | compute -> Subsequence len outside: ", self.subsequence_len)
             print("MPs | compute -> Subsequence len inside: ", mp.subsequence_len)
             print("MPs | compute -> method outside: ", self.matrix_profiles[-1].method)
             print("MPs | compute -> method inside: ", mp.method)
+        
+        if not mp.dominant_lens is None:
+            self.dominant_lens = mp.dominant_lens
+        
         return mp
     
     def plot(
@@ -1881,34 +1906,36 @@ class MatrixProfiles:
         plt.show()
 
 
-# %% ../nbs/mplots.ipynb 96
+# %% ../nbs/mplots.ipynb 100
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
     # -- Distances
-    DM_AB : DistanceMatrix  = None
-    MP_AB : MatrixProfile   = None
+    DM_AB           : DistanceMatrix  = None
+    MP_AB           : MatrixProfile   = None
     # -- Compared Time Series
-    data : List [ float ]     = None
-    data_b : List [ float ]     = None
+    data            : List [ float ]     = None
+    data_b          : List [ float ]     = None
     subsequence_len : int   = 0
     
     # -- Algorithms
-    self_join : bool        = True
-    dm_method : str         = ''
-    mp_method : str         = ''
-
+    self_join       : bool        = True
+    dm_method       : str         = ''
+    mp_method       : str         = ''
+    dominant_lens   : List[ int ] = None
     
     def compute(
         self,
-        dm_method           : str       = 'naive',
-        mp_method           : str       = 'naive',
-        print_flag          : bool      = False,
-        d                   : Callable  = z_normalized_euclidean_distance,
-        debug               : bool      = False, 
-        time_flag           : bool      = True, 
-        allow_experimental  : bool      = True,
-        ensure_symetric     : bool      = True
+        dm_method           : str               = 'naive',
+        mp_method           : str               = 'naive',
+        print_flag          : bool              = False,
+        d                   : Callable          = z_normalized_euclidean_distance,
+        debug               : bool              = False, 
+        time_flag           : bool              = True, 
+        allow_experimental  : bool              = True,
+        ensure_symetric     : bool              = True,
+        provide_len         : bool              = True,
+        nlens               : Optional [ int ]  = 1
     ) -> Tuple [ List [ List [ float ] ], Optional [ float ] ]:
         t = None
         if time_flag:
@@ -1922,6 +1949,7 @@ class MatrixProfilePlot:
             subsequence_len = self.subsequence_len,
             self_join       = self.self_join
         )
+        
         self.MP_AB = MatrixProfile(
             data            = self.data, 
             data_b          = self.data_b,
@@ -1930,17 +1958,23 @@ class MatrixProfilePlot:
         )
 
         self.MP_AB.compute(
-            method = mp_method,
-            d = d,
-            time_flag = time_flag,
-            print_flag = print_flag
+            method      = mp_method,
+            d           = d,
+            time_flag   = time_flag,
+            print_flag  = print_flag,
+            provide_len = provide_len,
+            nlens       = nlens
         )
+        if not self.MP_AB.dominant_lens is None:
+            self.dominant_lens = self.MP_AB.dominant_lens
+        self.subsequence_len = self.MP_AB.subsequence_len
+        
         self.DM_AB.compute(
-            method = dm_method,
-            print_flag = print_flag,
-            time_flag = time_flag, 
-            allow_experimental = allow_experimental,
-            ensure_symetric = ensure_symetric
+            method              = dm_method,
+            print_flag          = print_flag,
+            time_flag           = time_flag, 
+            allow_experimental  = allow_experimental,
+            ensure_symetric     = ensure_symetric
         )
             
             
@@ -2078,7 +2112,7 @@ class MatrixProfilePlot:
         plt.tight_layout()
         return plt
 
-# %% ../nbs/mplots.ipynb 101
+# %% ../nbs/mplots.ipynb 105
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -2095,17 +2129,35 @@ class MatrixProfilePlotCached:
     cache            : dict[ Tuple [ int, int, int, int], DistanceMatrix]       = field(default_factory=dict)
     filename         : str                                                      = ""
     DM_AB            : DistanceMatrix                                           = None   
+    dominant_lens    : List[ int ]                                              = None
 
     def get_matrix(
         self,
         a_id_start  : int, 
         a_id_end    : int,
         b_id_start  : int, 
-        b_id_end    : int
+        b_id_end    : int,
+        provide_len : bool = True,
+        nlens       : Optional [ int ] = 1,
+        print_flag  : bool = False,
+        gpus        : List [ int ] = field(default_factory=list),
+        pearson     : bool = True,
+        ensure_symetric : bool = False
     ) -> List [ float ]: 
+        
+        
+        if print_flag: 
+            print("[ Get Matrix ]")
+            print(" About to get data & data_b")
+
         data   = self.data[a_id_start:a_id_end]
         data_b = self.data_b[b_id_start:b_id_end]
-        
+
+
+        if print_flag: 
+            print(f"    A: {a_id_start}, {a_id_end}: {data}")
+            print(f"    B: {b_id_start}, {b_id_end}: {data_b}")
+            
         cache_key = (a_id_start, a_id_end, b_id_start, b_id_end)
         matrix    = None
         
@@ -2115,36 +2167,60 @@ class MatrixProfilePlotCached:
             DM_AB = DistanceMatrix(
                 data            = data,
                 data_b          = data_b,
-                subsequence_len = self.subsequence_len        
+                subsequence_len = self.subsequence_len,
             )
             if len(self.data) > 1000 * self.matrix_dim and len(self.data_b) > 1000 * self.matrix_dim:
                 # Currently GPU Matrix summaries can leave some spotty output if the input size is not large enough. So only allow GPU computation when we can be sure we will fill in the whole matrix
                 # TODO Follow Zach (zpzim): Implement GPU Matrix summaries which will generate the same output as the CPU version.
-                
-                DM_AB.compute(method = 'scamp', mwidth = self.matrix_dim, mheight = self.matrix_dim)
+                if print_flag: print("Compute without GPU")
+                DM_AB.compute(
+                    method      = 'scamp', 
+                    mwidth      = self.matrix_dim, 
+                    mheight     = self.matrix_dim,
+                    provide_len = provide_len,
+                    nlens       = nlens,
+                    ensure_symetric=ensure_symetric
+                )
             
             else:
+                if print_flag: print("Compute with GPU")
                 DM_AB.compute(
-                    method = 'scamp', 
-                    mwidth = self.matrix_dim, 
-                    mheight = self.matrix_dim,
-                    gpus = [], 
-                    pearson = True
+                    method      = 'scamp', 
+                    mwidth      = self.matrix_dim, 
+                    mheight     = self.matrix_dim,
+                    gpus        = gpus, 
+                    pearson     = pearson,
+                    provide_len = provide_len,
+                    nlens       = nlens,
+                    ensure_symetric=ensure_symetric
                 )
-                
+            
+            matrix = DM_AB.distances
+            
+            matrix[np.isnan(matrix)] = 0
             self.cache[cache_key] = matrix
             ## Cuidado con esto. Si algún día lo metemos en MVP hay que tener cuidado
             ## Porque ya al usar MatrixProfile daba problemas por detectar el 0 como patrón
-            matrix[np.isnan(matrix)] = 0
+            if print_flag:
+                print(f"matrix [{cache_key}] = {matrix}")
         return matrix 
 
     def ids_int(self, ids ):
         id1, id2 = ids
         return int(id1), int(id2) 
-    def on_xlims_change(self, event_ax, print_flag = True):
+    
+    def on_xlims_change(self,event_ax, print_flag = True):
+    
+        if print_flag: print("x lims changued")
+        if print_flag: print("    event_ax.get_xlim()")  
+
         a_id_start, a_id_end = self.ids_int(event_ax.get_xlim())
+
+        if print_flag: print(f"    ax3 y lim")
+
         b_id_end, b_id_start = self.ids_int(self.ax3.get_ylim())
-        if print_flag: print(a_id_start, a_id_end, b_id_start, b_id_end)
+        
+        if print_flag:  print(a_id_start, a_id_end, b_id_start, b_id_end)
         self.redraw_matrix(a_id_start, a_id_end, b_id_start, b_id_end)
 
     def on_ylims_change(self,event_ax, print_flag = True):
@@ -2157,10 +2233,10 @@ class MatrixProfilePlotCached:
 
     def redraw_matrix(
         self,
-        a_id_start : int, 
-        a_id_end : int,
-        b_id_start : int,
-        b_id_end : int
+        a_id_start  : int, 
+        a_id_end    : int,
+        b_id_start  : int,
+        b_id_end    : int
     ) -> None:
         matrix = self.get_matrix(a_id_start, a_id_end, b_id_start, b_id_end)
         self.cax.remove()
@@ -2177,34 +2253,64 @@ class MatrixProfilePlotCached:
 
     def plot_matrix_interactive(
         self, 
-        data            : List [ float ], 
-        data_b          : List [ float ],
-        matrix_dim      : int, 
-        subsequence_len : int, 
-        filename        : str = "cached_matrix_plot.png",
-        print_flag      : bool = True
+        matrix_dim      : Optional [ int ] = None, 
+        subsequence_len : Optional [ int ] = None, 
+        filename        : str   = "cached_matrix_plot.png",
+        print_flag      : bool  = True,
+        ensure_symetric: bool  = False
     ) : 
-        if self.data is None : 
-            self.data = np.copy(data)
-        if self.data_b is None : 
-            if data_b is None:
-                self.data_b = self.data
-            else: 
-                self.data_b = np.copy(data_b)
+        if self.data_b is None:
+            self.data_b = np.copy(self.data)
+        
         self.subsequence_len = subsequence_len
-        self.matrix_dim = matrix_dim
+
+        if matrix_dim != None:
+            self.matrix_dim = matrix_dim
         if filename is not None:
             self.filename = filename
 
+
+        if self.subsequence_len is None:
+            self.subsequence_len = find_dominant_window_sizes(self.data)
+
+        if self.matrix_dim <= self.subsequence_len:
+            print(f"Selected dim {self.matrix_dim} smaller or equal than subsequence length {self.subsequence_len}, setting up to subsequence_len")
+            self.matrix_dim = self.subsequence_len
+            matrix_dim = 2*self.subsequence_len
+
+        if self.matrix_dim % self.subsequence_len != 0:
+            print(f"Selected dim {self.matrix_dim} not multiple of subsequence length {self.subsequence_len}, setting up to subsequence_len")
+            self.matrix_dim = ((self.matrix_dim + self.subsequence_len-1)//self.subsequence_len) * self.subsequence_len
+            matrix_dim = self.matrix_dim
+            print(f"Final size: {self.matrix_dim}")
+
+        if print_flag:
+            print(f"[ Plot Matrix Interactive ] {matrix_dim} | {subsequence_len}")
+        
         n_x = len(self.data) - self.subsequence_len + 1
         n_y = len(self.data_b) - self.subsequence_len + 1 
         
         ratio = len(self.data) / len(self.data_b)
 
+        print(f"    Ratio: {ratio}")
         matrix_dim_a = math.floor(ratio * matrix_dim)
         matrix_dim_b = self.matrix_dim
+        
+        print(f"dima {matrix_dim_a}, dimb {matrix_dim_b}")
+        #matrix = self.get_matrix(
+         #   0, len (self.data),
+          #  0, len(self.data_b),
+            #print_flag = print_flag
+        #)
 
-        matrix = self.get_matrix(0, len (self.data), 0, len(self.data_b))
+        matrix = self.get_matrix(
+            0, matrix_dim_a,
+            0, matrix_dim_b,
+            print_flag = print_flag,
+            ensure_symetric = ensure_symetric
+        )
+
+
         if print_flag : print(matrix.dtype)
         
         self.fig = plt.figure(
@@ -2254,15 +2360,20 @@ class MatrixProfilePlotCached:
         self.ax4.set_axis_off()
         self.ax4.axis('off')
 
-        self.ax2.plot([i for i in range(n_x)], data[:n_x])
+        self.ax2.plot([i for i in range(n_x)], self.data[:n_x])
         self.ax2.set_xlim(xmin=0, xmax=n_x)
         self.ax2.xaxis.set_ticks_position('top')
         self.ax2.set_axisbelow(False)
-        self.ax3.plot(b[:n_y], [i for i in range(n_y)])
+        self.ax3.plot(self.data_b[:n_y], [i for i in range(n_y)])
         self.ax3.set_ylim(ymin=0, ymax=n_y)
         self.ax3.invert_yaxis()
         self.ax3.invert_xaxis()
+        if print_flag: print(f"AX2: {self.ax2.callbacks.connect}")
+
         ### Callbacks
+        def on_xlims_change(event): self.on_xlims_change(event)
+        def on_ylims_change(event): self.on_ylims_change(event)
+        
         self.ax2.callbacks.connect('xlim_changed', on_xlims_change)
         self.ax3.callbacks.connect('ylim_changed', on_ylims_change)
         self.ax4.callbacks.connect('ylim_changed', on_xlims_change)
@@ -2298,11 +2409,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-
-    
-            
-
-# %% ../nbs/mplots.ipynb 105
+# %% ../nbs/mplots.ipynb 109
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

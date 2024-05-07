@@ -8,7 +8,7 @@ __all__ = ['mplot_path', 'eamonn_drive_mplots', 'euclidean_distance', 'z_normali
            'make_symmetric_', 'check_symmetric', 'moving_mean', 'sum_of_squared_differences', 'get_precomputes',
            'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'DistanceMatrix', 'plot_motif',
            'plot_motif_separated', 'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles', 'MatrixProfilePlot',
-           'MatrixProfilePlotCached']
+           'MatrixProfilePlotCached', 'Interpolator', 'PAATransformer']
 
 # %% ../nbs/mplots.ipynb 4
 ## -- Deepvats
@@ -2383,7 +2383,14 @@ class MatrixProfilePlotCached:
             self.fig.savefig(filename, bbox_inches='tight')
         return self.fig
     
-    def plot_matrix(self, matrix, arr, n, scale_factor, outfile):
+    def plot_matrix(
+        self, 
+        matrix, 
+        arr, 
+        n, 
+        scale_factor, 
+        outfile
+    ):
         #Auxiliar, para testear, por eso no son las globales (entiendo)
         plt.tight_layout()
         fig = plt.figure(constrained_layout=False, facecolor='0.9', figsize=(32,32))
@@ -2410,6 +2417,80 @@ class MatrixProfilePlotCached:
         plt.close(fig)
 
 # %% ../nbs/mplots.ipynb 109
+from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.pipeline import Pipeline
+
+# %% ../nbs/mplots.ipynb 110
+class Interpolator(BaseEstimator, TransformerMixin):
+    def __init__(self, method='linear', n_segments = 1, plot_interpolated = False):
+        self.method = method
+        self.n_segments = n_segments
+        self.plot_interpolated = plot_interpolated
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
+
+        n_samples, n_features = X.shape
+        if n_features % self.n_segments != 0:
+            raise ValueError(
+                f"El número de segmentos {self.n_segments} debe dividir el número de características {n_features} | Reminder: {n_features // n_samples}"
+            )
+
+        segment_size = n_features // self.n_segments
+        interpolated_result = np.full_like(X, np.nan)
+
+        for i in np.arange(self.n_segments):
+            start = i * segment_size
+            end = start + segment_size
+            segment_mean = np.nanmean(X[:, start:end], axis=1)
+            for j in np.arange(n_samples):
+                nan_mask = np.isnan(X[j, start:end])
+                interpolated_result[j, start:end][nan_mask] = segment_mean[j]
+        res = np.where(np.isnan(X), interpolated_result, X)
+        if self.plot_interpolated:
+            for dim in range (X.ndim-1):
+                plot_with_dots(
+                    res[dim], 
+                    sequence_flag = False, 
+                    title = f'Interpolated data | dim {dim}'
+                )
+            
+        return res
+
+# %% ../nbs/mplots.ipynb 111
+class PAATransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, n_segments):
+        self.n_segments = n_segments
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        n_samples, n_features = X.shape
+        if n_features < self.n_segments:
+            raise ValueError("El número de segmentos no puede ser mayor que el número total de puntos.")
+
+        segment_size = n_features // ( self.n_segments + 1)
+
+        remainder = n_features % ( self.n_segments + 1)
+
+        # Crear un array para los resultados
+        result = np.zeros((n_samples, self.n_segments + 1))
+
+        # Procesar cada segmento
+        for i in range(self.n_segments):
+            start = i * segment_size + min(i, remainder)
+            end = start + segment_size + (1 if i < remainder else 0)
+            result[:, i] = np.mean(X[:, start:end], axis=1)
+
+        return result
+
+
+# %% ../nbs/mplots.ipynb 114
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

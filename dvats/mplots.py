@@ -1978,13 +1978,21 @@ class MatrixProfilePlot:
         )
             
             
-    def plot(self, ts_name="", method='Brute Force', figsize=(5, 5), show_flag=True):
+    def plot(
+        self, 
+        ts_name     = "", 
+        method      = 'Brute Force', 
+        figsize     = (5, 5), 
+        show_flag   = True,
+        print_flag  = False,
+        less_labels = False
+    ):
         fig = plt.figure(figsize=figsize)
         gs = GridSpec(2, 1, height_ratios=[1, 4])
 
         # Matrix Profile
         ax1 = fig.add_subplot(gs[0])
-        ax1.plot(self.MP_AB.distances, label="Time Serie")
+        ax1.plot(self.MP_AB.distances, label = "Time Serie")
         ax1.set_title(ts_name + " | " + method)
         ax1.legend()
 
@@ -1992,7 +2000,21 @@ class MatrixProfilePlot:
         ax2 = fig.add_subplot(gs[1])
 
         # Create the heatmap for the distance matrix
-        heatmap = ax2.imshow(self.DM_AB.distances, aspect='auto', origin='lower', cmap='hot', extent=(0, len(self.DM_AB.distances), 0, len(self.DM_AB.distances[0])))
+        if print_flag:
+            print("DM_AB ~", self.DM_AB.distances.shape)
+            
+        heatmap = ax2.imshow(
+            self.DM_AB.distances, 
+            aspect = 'auto', 
+            origin = 'lower', 
+            cmap   = 'hot', 
+            extent = ( 
+                0, 
+                len(self.DM_AB.distances[0]), 
+                0, 
+                len(self.DM_AB.distances)
+            )
+        )
 
         ax2.set_title("MPlot")
         ax2.set_xlabel('TB Index')
@@ -2001,15 +2023,69 @@ class MatrixProfilePlot:
 
         
         # Set the tick marks to be at the center of the squares
-        ax2.set_xticks(np.arange(0.5, len(self.DM_AB.distances[0]), step=1))
-        ax2.set_yticks(np.arange(0.5, len(self.DM_AB.distances), step=1))
+
+    
+        if less_labels:
+            x_labels_count = max(1, len(self.DM_AB.distances[0]) // max(1, int(figsize[0] * 2)))
+            y_labels_count = max(1, len(self.DM_AB.distances) // max(1, int(figsize[1] * 2)))
+
+            x_start = 0.5
+            x_stop  = len(self.DM_AB.distances[0])
+            x_step  = x_labels_count
+            y_start = 0.5
+            y_stop  = len(self.DM_AB.distances)
+            y_step  = y_labels_count
         
-        # Set the tick labels to be the indices starting at 0
-        ax2.set_xticklabels(np.arange(0, len(self.DM_AB.distances[0])))
-        ax2.set_yticklabels(np.arange(0, len(self.DM_AB.distances)))
+            if print_flag:
+                print("x_start", x_start, "x_stop", x_stop, "x_step", x_step)
+                print("y_start", y_start, "y_stop", y_stop, "y_step", y_step)
+        
+            x_ticks = np.arange(x_start, x_stop, x_step)
+            y_ticks = np.arange(y_start, y_stop, y_step)
+
+            if print_flag:
+                print("...Adapt labels to...")
+                print("x_ticks", x_ticks)
+                print("y_ticks", y_ticks)
+                print("data ~ ", self.data.shape)
+                print("DM_AB ~ ", self.DM_AB.distances[0].shape)
+            
+        else:
+            
+            x_start = 0.5
+            x_stop  = len(self.DM_AB.distances[0])
+            x_step  = 1
+            y_start = 0.5
+            y_stop  = len(self.DM_AB.distances)
+            y_step  = 1
+            
+            x_ticks = np.arange(x_start, x_stop, x_step)
+            y_ticks = np.arange(y_start, y_stop, y_step)
+
+            if print_flag:
+                print("... No Adapt labels ...")
+                print("x_ticks", x_ticks)
+                print("y_ticks", y_ticks)
+                print("data ~ ", self.data.shape)
+                print("DM_AB ~ ", self.DM_AB.distances[0].shape)
+            
+        
+        #ax2.set_xticks(np.arange(0.5, len(self.DM_AB.distances[0]), step=1))
+        #ax2.set_yticks(np.arange(0.5, len(self.DM_AB.distances), step=1))
+        
+        ax2.set_xticks(x_ticks)
+        ax2.set_yticks(y_ticks)
+        
+        ax2.set_xticklabels(x_ticks)
+        ax2.set_yticklabels(y_ticks)
 
         # Rotate tick labels for readability
-        plt.setp(ax2.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        plt.setp(
+            ax2.get_xticklabels(), 
+            rotation      = 45, 
+            ha            = "right", 
+            rotation_mode = "anchor"
+        )
 
         plt.tight_layout()
         if show_flag:
@@ -2028,7 +2104,7 @@ class MatrixProfilePlot:
         fig = plt.figure(figsize=figsize)
         gs = GridSpec(4, 1, height_ratios=[1, 1, 1, 6])
       
-         # Time Series Plot
+        # Time Series Plot
         ax0 = fig.add_subplot(gs[0])
         ax0.plot(self.TA.data, label=ta_name+" Data")
         ax0.set_title(f"{ta_name} Data")
@@ -2437,7 +2513,7 @@ class Interpolator(BaseEstimator, TransformerMixin):
         n_samples, n_features = X.shape
         if n_features % self.n_segments != 0:
             raise ValueError(
-                f"El número de segmentos {self.n_segments} debe dividir el número de características {n_features} | Reminder: {n_features // n_samples}"
+                f"El número de segmentos {self.n_segments} debe dividir el número de características {n_features} | Reminder: {n_features // self.n_segments}"
             )
 
         segment_size = n_features // self.n_segments

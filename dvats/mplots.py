@@ -15,7 +15,11 @@ __all__ = ['mplot_path', 'eamonn_drive_mplots', 'euclidean_distance', 'z_normali
 import dvats.load as load
 import dvats.memory as mem
 import dvats.utils as ut
-
+## -- Ñapa por si tienes problemas de memoria en el current device -- ##
+## De normal debe estar comentado
+import torch
+torch. cuda.set_device(1)
+## -- Hasta aquí la ñapa -- ##
 ## -- Matrix profile
 import pyscamp as scamp
 import stumpy as stump 
@@ -2498,18 +2502,40 @@ from sklearn.pipeline import Pipeline
 
 # %% ../nbs/mplots.ipynb 110
 class Interpolator(BaseEstimator, TransformerMixin):
-    def __init__(self, method='linear', n_segments = 1, plot_interpolated = False):
-        self.method = method
-        self.n_segments = n_segments
-        self.plot_interpolated = plot_interpolated
+    def __init__(
+        self              : 'Interpolator', 
+        method            : str  ='linear', 
+        n_segments        : int  = 1, 
+        plot_original_data: bool = False,
+        plot_interpolated : bool = False,
+        print_flag        : bool = False
+        
+    ):
+        self.method             = method
+        self.n_segments         = n_segments
+        self.plot_interpolated  = plot_interpolated
+        self.plot_original_data = plot_original_data
+        self.print_flag         = print_flag
 
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
+    
+                
         if X.ndim == 1:
             X = X.reshape(1, -1)
 
+        if self.plot_original_data:
+            if self.print_flag: print("Interpolator | Plot original data")
+            for dim in range (X.ndim-1):
+                if self.print_flag: print(f"Interpolator | Plot original data dimension {dim}")
+                plot_with_dots(
+                    X[dim], 
+                    sequence_flag = False, 
+                    title = f'Original data | dim {dim}'
+                )
+                
         n_samples, n_features = X.shape
         if n_features % self.n_segments != 0:
             raise ValueError(
@@ -2539,8 +2565,15 @@ class Interpolator(BaseEstimator, TransformerMixin):
 
 # %% ../nbs/mplots.ipynb 111
 class PAATransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, n_segments):
+    def __init__(
+        self, 
+        n_segments, 
+        plot_aggregated : bool = False, 
+        print_flag      : bool = False
+    ):
         self.n_segments = n_segments
+        self.plot_aggregated = plot_aggregated
+        self.print_flag = print_flag
 
     def fit(self, X, y=None):
         return self
@@ -2562,6 +2595,16 @@ class PAATransformer(BaseEstimator, TransformerMixin):
             start = i * segment_size + min(i, remainder)
             end = start + segment_size + (1 if i < remainder else 0)
             result[:, i] = np.mean(X[:, start:end], axis=1)
+
+        if self.plot_aggregated:
+            for dim in range (X.ndim-1):
+                if self.print_flag:
+                    print("Plos res | Dim", dim)
+                plot_with_dots(
+                    result[dim], 
+                    sequence_flag = False, 
+                    title = f'Aggregated data | dim {dim}'
+                )
 
         return result
 

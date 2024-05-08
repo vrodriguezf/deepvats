@@ -21,14 +21,14 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder: &path '~/data/'
-    fname: &fname "australian_electricity_demand_dataset"
-    ftype: &ftype '.tsf'
+    fname: &fname "Insect_one_million"
+    ftype: &ftype '.csv'
     cols: &cols [0]
-    freq: &freq '1h'
+    freq: &freq '1s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    alias: &alias 'Monash-Australian_electricity_demand'
-    algorithm: &alg 'mvp-SWV'
+    alias: &alias 'Eamonn_Insect_one_million'
+    algorithm: &alg 'mvp'
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 

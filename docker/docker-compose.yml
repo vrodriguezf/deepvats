@@ -6,7 +6,7 @@ services:
         - uid=${USER_ID}
         - gid=${GROUP_ID}
         - CUDA_VERSION=12.2.0-devel-ubuntu20.04
-          - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+        - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       context: ../
       labels:
         - username=${USER_NAME}

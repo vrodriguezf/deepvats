@@ -8,6 +8,7 @@
 ##--- Setup Ubuntu
 FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04
 
+
 ##--- Setup bash
 SHELL [ "/bin/bash", "--login", "-c" ]
 

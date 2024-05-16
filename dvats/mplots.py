@@ -6,9 +6,10 @@ __all__ = ['mplot_path', 'eamonn_drive_mplots', 'euclidean_distance', 'z_normali
            'find_dominant_window_sizes_list', 'plot_subsequences_aux', 'plot_subsequences', 'plot_dataFrame',
            'plot_dataFrame_compareSubsequences', 'df_plot_colored_variables', 'plot_df_with_intervals_and_colors',
            'make_symmetric_', 'check_symmetric', 'moving_mean', 'sum_of_squared_differences', 'get_precomputes',
-           'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'DistanceMatrix', 'plot_motif',
-           'plot_motif_separated', 'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles', 'MatrixProfilePlot',
-           'MatrixProfilePlotCached', 'Interpolator', 'PAATransformer']
+           'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'Interpolator', 'PAATransformer',
+           'DistanceMatrix', 'plot_motif', 'plot_motif_separated', 'MatrixProfile', 'matrix_profile', 'compute',
+           'MatrixProfiles', 'ensure_valid_limits', 'downsample', 'restore_index', 'MatrixProfilePlot',
+           'MatrixProfilePlotCached']
 
 # %% ../nbs/mplots.ipynb 4
 ## -- Deepvats
@@ -18,11 +19,12 @@ import dvats.utils as ut
 ## -- Ñapa por si tienes problemas de memoria en el current device -- ##
 ## De normal debe estar comentado
 import torch
-torch. cuda.set_device(1)
+torch. cuda.set_device(0)
 ## -- Hasta aquí la ñapa -- ##
 ## -- Matrix profile
 import pyscamp as scamp
 import stumpy as stump 
+from stumpy import config as stump_cfg
 ## -- Utilities
 import os
 import numpy as np
@@ -77,7 +79,8 @@ def euclidean_distance (
     vector_a    : List [ float ],
     vector_b    : List [ float ],
     print_flag  : bool = False,
-    time_flag   : bool = False
+    time_flag   : bool = False,
+    print_depth : int  = 1
 ) -> Tuple[float, Optional[ ut.Time ]]:
     """
     Calculates the Euclidean distance between two vectors.
@@ -95,36 +98,37 @@ def euclidean_distance (
     #if print_flag: print("--> Ensuring the vectors are numpy arrays")
     vector_a = np.array(vector_a)
     vector_b = np.array(vector_b)
-    if print_flag: 
+    if print_flag and print_depth > 0: 
         print("va", vector_a)
         print("vb", vector_b)
     if time_flag:
         t = ut.Time(function = ut.funcname())
-        t.start(print_flag = print_flag)
+        t.start(print_flag = print_flag and print_depth > 1)
     dist = np.linalg.norm(vector_a - vector_b)
     if time_flag: 
-        t.end(print_flag = print_flag)
-        if print_flag: t.show()
+        t.end(print_flag = print_flag and print_depth > 1)
+        if print_flag and print_depth > 0: t.show()
     return dist, t
 
 # %% ../nbs/mplots.ipynb 13
 def z_normalize(
     sequence    : List [ float ],
     print_flag  : bool = False,
-    time_flag   : bool = False
+    time_flag   : bool = False,
+    print_depth : int  = 1
 ) -> Tuple[ List[ float ], Optional[ ut.Time ] ]:
     t = None
     if time_flag:
         t = ut.Time(function=ut.funcname())
-        t.start(print_flag)
+        t.start(print_flag and print_depth > 1)
     
     mean    = np.mean(sequence)
     std     = np.std(sequence)
     res     = (sequence - mean) / std
     
     if time_flag: 
-        t.end(print_flag)
-        if print_flag: t.show()
+        t.end(print_flag and print_depth > 1)
+        if print_flag and print_depth > 0: t.show()
     return res, t
 
 # %% ../nbs/mplots.ipynb 15
@@ -133,11 +137,12 @@ def z_normalized_euclidean_distance(
     vector_b    : List [ float ],
     print_flag  : bool = False,
     time_flag   : bool = False,
-    inside_times: bool = False
+    inside_times: bool = False,
+    print_depth : int  = 1
 ) -> Tuple[ List [ float ], Optional[ ut.Time ], Optional [ List [ ut.Time ] ] ]:
     t = None
     ts = [ None, None, None ]
-    if print_flag: 
+    if print_flag and print_depth > 0: 
         print("va", vector_a)
         print("vb", vector_b)
 
@@ -155,7 +160,7 @@ def z_normalized_euclidean_distance(
     if time_flag:
         t.end(print_flag)
         if print_flag: t.show()
-    if print_flag: 
+    if print_flag and print_depth > 0: 
         print("zn-va", vector_a)
         print("zn-vb", vector_b)
         print("dist", res)
@@ -332,11 +337,12 @@ class MatlabMatrix:
     def load(
         self, 
         #Col in the matrix containing the time serie
-        numcol : int, 
+        numcol      : int, 
         #Wether to print messages for debugging or not
-        print_flag : bool = False,
-        force_smooth : bool = False,
-        path = "."
+        print_flag  : bool  = False,
+        force_smooth: bool  = False,
+        path        : str   = ".",
+        print_depth : int   = 1
     ) -> List [ float ] : 
         """ Reads the file and load the column numcol of the matrix as time series data. """
         
@@ -348,7 +354,7 @@ class MatlabMatrix:
         dict = octave.load(dir)
         data = dict[self.matname]
         
-        if print_flag: print(data.dtype)
+        if print_flag and print_depth > 0: print(data.dtype)
         
         self.data = np.array(data[:,numcol])
         
@@ -356,9 +362,10 @@ class MatlabMatrix:
 
     def smooth(
         self, 
-        window_len=11, 
-        print_flag = False,
-        force_smooth = False
+        window_len  : int   = 11, 
+        print_flag  : bool  = False,
+        force_smooth: bool  = False,
+        print_depth : int   = 1
     ) -> List [ float ]:
         """ Applies moving average for smoothing the time serie data. """
         # window_len: smoothing window size needs, which must be odd number,
@@ -374,7 +381,7 @@ class MatlabMatrix:
                 warnings.warn("Window len must be odd! Adding 1 to your length.")
                 self.smoothing_window_len += 1
             
-            if print_flag: print("---> About to get out0")
+            if print_flag and print_depth > 0: print("---> About to get out0")
             
             out0 = np.convolve(
                 self.data, 
@@ -411,15 +418,16 @@ class MatlabMatrix:
             self.data = np.concatenate((start, out0, stop))
             return self.data
 
-# %% ../nbs/mplots.ipynb 36
+# %% ../nbs/mplots.ipynb 37
 def find_dominant_window_sizes_list(
         X           : List [ float ], 
         nsizes      : int               = 1,
         offset      : float             = 0.05, 
-        print_flag  : bool              = False
+        print_flag  : bool              = False,
+        print_depth : int               = 1
     ) -> List [ int ]:
 
-    if print_flag:
+    if print_flag and print_depth > 0:
         print( "-----> Find dominant_window_sizes_list -----" )
         print( "    X ~ ",  len(X) )
         print( "    Looking for - at most - the best", nsizes, "window sizes")
@@ -454,13 +462,13 @@ def find_dominant_window_sizes_list(
     else:
         sizes = valid_window_sizes[:nsizes]
     
-    if print_flag:
+    if print_flag and print_depth > 0:
         print("    Sizes:", sizes)
         print( "----- Find dominant_window_sizes_list ----->" )
     
     return sizes
 
-# %% ../nbs/mplots.ipynb 42
+# %% ../nbs/mplots.ipynb 43
 def plot_subsequences_aux(
     ax              : plt.Axes, 
     x_coords        : List[ int ],  
@@ -468,7 +476,8 @@ def plot_subsequences_aux(
     subsequence_len : int, 
     i               : int   = 0, 
     distance        : float = 0, 
-    print_flag      : bool  = False
+    print_flag      : bool  = False,
+    print_depth     : int   = 1
 ) -> None:
     ax.clear()
     ax.plot(x_coords, TA, label='TA')
@@ -486,7 +495,8 @@ def plot_subsequences(
     subsequence_len     : int, 
     distances           : List [ float ], 
     print_flag          : bool              = False,
-    fig_size            : Tuple[int, int]   = (12, 10)
+    fig_size            : Tuple[int, int]   = (12, 10),
+    print_depth         : int               = 1
 ) -> None:
     n = len(TA)
     x_coords = range(n)
@@ -497,20 +507,20 @@ def plot_subsequences(
     )
 
     # Plot the ax0 always on top
-    if print_flag: print("--> Plotting ax0")
+    if print_flag and print_depth > 0: print("--> Plotting ax0")
     ax0.plot(x_coords, TA, label='Time Series')
-    if print_flag: print("adding TB ", subsequence_len, len(TB))
+    if print_flag and print_depth > 0: print("adding TB ", subsequence_len, len(TB))
     ax0.plot(x_coords[reference_i:reference_i+subsequence_len], TB, color='darkgray', label='TB_reference')
-    if print_flag: print("TB added")
+    if print_flag and print_depth > 0: print("TB added")
     ax0.legend()
     ax0.set_title('Pairwise differences')
-    if print_flag: print("Plotting ax0 done -->")
+    if print_flag and print_depth > 0: print("Plotting ax0 done -->")
     # Function to handle button click to go to the next plot
     def on_next_clicked(b):
         nonlocal current_index
         if current_index < len(distances) - 1:
             current_index += 1
-            plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], print_flag)
+            plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], print_flag, print_depth = print_depth -1)
             plt.tight_layout()
             plt.draw()
 
@@ -519,12 +529,12 @@ def plot_subsequences(
         nonlocal current_index
         if current_index > 0:
             current_index -= 1
-            plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], print_flag)
+            plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], print_flag, print_depth = print_depth-1)
             plt.tight_layout()
             plt.draw()
 
     # Initialize the first subsequence plot
-    plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], print_flag)
+    plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], print_flag, print_depth=print_depth-1)
 
     # Create and display prev/next buttons
     prev_button = widgets.Button(description='Previous')
@@ -534,7 +544,7 @@ def plot_subsequences(
     buttons = widgets.HBox([prev_button, next_button])
     display(buttons)
 
-# %% ../nbs/mplots.ipynb 43
+# %% ../nbs/mplots.ipynb 44
 def plot_dataFrame(title, df, vars = [], interval = 10000):
     if len(vars) > 0:
         num_vars = len(df.columns)
@@ -572,7 +582,7 @@ def plot_dataFrame(title, df, vars = [], interval = 10000):
         plt.show()
     else: raise ValueError("No variable proposed for plotting")
 
-# %% ../nbs/mplots.ipynb 44
+# %% ../nbs/mplots.ipynb 45
 def plot_dataFrame_compareSubsequences(
     title, df, var, subsequence_len, seq1_init, seq2_init, 
     title_fontsize = '30',
@@ -599,7 +609,7 @@ def plot_dataFrame_compareSubsequences(
     plt.show()
     
 
-# %% ../nbs/mplots.ipynb 46
+# %% ../nbs/mplots.ipynb 47
 def df_plot_colored_variables(df):
     # Show time series plot
     fig, ax = plt.subplots(1, figsize=(15,5), )
@@ -612,7 +622,7 @@ def df_plot_colored_variables(df):
     plt.legend()
     display(plt.show())
 
-# %% ../nbs/mplots.ipynb 47
+# %% ../nbs/mplots.ipynb 48
 def plot_df_with_intervals_and_colors(title, df, interval=10000):
     num_variables = len(df.columns)
     num_intervals = len(df) // interval + 1  # Calcula el número necesario de intervalos/subplots
@@ -643,7 +653,7 @@ def plot_df_with_intervals_and_colors(title, df, interval=10000):
     plt.tight_layout()
     plt.show()
 
-# %% ../nbs/mplots.ipynb 49
+# %% ../nbs/mplots.ipynb 50
 def make_symmetric_(
         mat : List [ float ]
     ) -> None:
@@ -662,7 +672,7 @@ def check_symmetric(
     return sym
 
 
-# %% ../nbs/mplots.ipynb 52
+# %% ../nbs/mplots.ipynb 53
 def moving_mean(a, w):
   result = np.zeros((len(a) - w + 1,))
   p = a[0]
@@ -794,7 +804,7 @@ def distance_matrix(a,b,w):
     out[np.isnan(out)] = -2
     return out
 
-# %% ../nbs/mplots.ipynb 54
+# %% ../nbs/mplots.ipynb 55
 @dataclass
 class DistanceProfile:
     """ Vector of distances between each subsequence in TA and a reference sequence TB"""
@@ -813,26 +823,32 @@ class DistanceProfile:
     method                          = 'naive',
     computation_time: float         = 0.0
     dominant_lens   : List[ int ]   = None
+    shape           : Tuple[ int, int ] = 0,0
     def provide_lens(
         self        : 'DistanceProfile',
         nlens       : int               = 1,
         offset      : float             = 0.05,
-        print_flag  : bool              = False
+        print_flag  : bool              = False,
+        print_depth : int               = 1
     ) -> List [ int ]:
         if nlens == 1:
+            if print_flag and print_depth > 0: print(f"Computing {nlens} dominant lens")
             self.subsequence_len = find_dominant_window_sizes(self.data, offset = offset)
             self.dominant_lens = [self.subsequence_len]
         else:
+            if print_flag: print(f"Computing {nlens} dominant lens")
             self.dominant_lens = find_dominant_window_sizes_list(
                 self.data,
                 nsizes      = nlens,
                 offset      = offset,
-                print_flag  = print_flag
+                print_flag  = print_flag,
+                print_depth = print_depth
             )
             self.subsequence_len = self.dominant_lens[0]
     
     def compute(
         self            : 'DistanceProfile',
+        min_lag         : int               = None,
         d               : Callable          = euclidean_distance,
         method          : str               = 'naive',
         fig_size        : tuple             = (12, 10),
@@ -841,18 +857,19 @@ class DistanceProfile:
         time_flag       : bool              = False,
         ensure_symetric : bool              = False,
         provide_len     : bool              = True,
-        nlens           : Optional [ int ]  = 1
+        nlens           : Optional [ int ]  = 1,
+        print_depth     : int               = 1
     ) -> Tuple[ List [ float ], ut.Time ]:
         """ Compute the Distance Profile """    
         t = None
         if time_flag:
             t = ut.Time(function=ut.funcname())
-            t.start(print_flag)
+            t.start(print_flag and print_depth > 0)
         
 
         if self.subsequence_len is None:
             if provide_len or self.data_b is None:
-                self.provide_lens(nlens = nlens, print_flag = print_flag)
+                self.provide_lens(nlens = nlens, print_flag = print_flag, print_depth = print_depth-1)
             else:
                 self.subsequence_len = len(self.data_b)
         
@@ -860,47 +877,58 @@ class DistanceProfile:
             if print_flag : print("--> Self join", "TB_i", self.data_b_i, "TA", self.data)
             self.data_b = self.data[self.data_b_i:self.data_b_i+self.subsequence_len]
 
-        if print_flag:
-            print("TA: ", self.data)
-            print("TB: ", self.data_b)
+        #if print_flag:
+            #print("TA: ", self.data)
+            #print("TB: ", self.data_b)
         
 
-        n = len(self.data)
+        n_a = len(self.data)
         m = self.subsequence_len
-        expected_size = n - m + 1
+        expected_size = n_a - m + 1
 
-        if print_flag: print("Expected_size", expected_size)
+        if print_flag and print_depth > 0: print("Expected_size", expected_size)
         self.method = method
         match self.method:
             case 'stumpy.mass':
-                if print_flag: print("--> Using stumpy.mass")
+                if print_flag and print_depth > 0: print("--> Using stumpy.mass")
                 if (d.__name__ == 'z_normalized_euclidean_distance'):
                     if print_flag: print("Normalized")
                     self.distances = stump.core.mass(
-                        Q = self.data_b.astype(np.float64),
+                        Q = self.data_b[self.data_b_i:self.data_b_i+m].astype(np.float64),
                         T = self.data.astype(np.float64)
                     )
                 else:
                     if print_flag: print("Non-Normalized")
                     self.distances = stump.core.mass(
-                        Q = self.data_b.data.astype(np.float64),
+                        Q = self.data_b[self.data_b_i:self.data_b_i+m].data.astype(np.float64),
                         T = self.data.astype(np.float64),
                         normalize = False
                     )
+                # Following the stumpy convention
+                if not(min_lag is None):
+                    for row in range(len(self.distances)):
+                        self.distances[row][row-min_lag:row+min_lag+1] = np.inf
             case _:
-                print("--> Using naive made distance profile [ default | Not recommended ]")
+                if print_flag and print_depth > 0: print("--> Using naive made distance profile [ default | Not recommended ]")
+                
                 self.distances = np.zeros(expected_size)
+                if print_flag and print_depth > 0: print(f"--> Computing distances TA ~ {n_a} TB ~ {len(self.data_b)}")
                 for i in range(expected_size):
-                    vector_a = self.data_b
-                    vector_b = self.data[i:i+m]
-                    if print_flag: 
-                        print(f"[DP] Computing distance {i} \nTA: {self.data},\nTB: {self.data_b}")
+                    vector_a = self.data[i:i+m]
+                    vector_b = self.data_b[self.data_b_i:self.data_b_i+m]
+                    if print_flag and print_depth > 0: 
+                        print(f"[DP] Computing distance {i} \nTA: {self.data},\nTB: {self.data_b[self.data_b_i:self.data_b_i+m]}")
                     self.distances[i] = d (
                         vector_a    = vector_a,
-                        vector_b    = vector_b,
+                        vector_b    = vector_b[self.data_b_i:self.data_b_i+m],
                         print_flag  = print_flag,
-                        time_flag   = time_flag
-                    )[0]
+                        time_flag   = time_flag,
+                        print_depth = print_depth-1
+                    )[0] #Returns (distance, time)
+                # Following the stumpy convention
+                if not(min_lag is None):
+                    for row in range(len(self.distances)):
+                        self.distances[row][row-min_lag:row+min_lag+1] = np.inf
 
 
                 #self.distances = np.array([
@@ -916,9 +944,10 @@ class DistanceProfile:
         if (ensure_symetric):
             make_symmetric_(self.distances)
             
+        #????????????
         if (self.self_join):
             if print_flag: print("--> Self join")
-            self.distances[self.data_b_i] = np.nan
+            self.distances[self.data_b_i] = np.inf
             
         if plot_flag: 
             if print_flag: print("--> plot")
@@ -934,13 +963,17 @@ class DistanceProfile:
             t.end(print_flag)
             t.show()
             self.computation_time = t.time_total
+        
+        self.shape = self.distances.shape
+
         return self.distances, t
     
     def plot_subsequence_compared(
         self,
-        sequence_i : int = 0,
-        print_flag : bool = False,
-        fig_width = 12
+        sequence_i  : int = 0,
+        print_flag  : bool = False,
+        fig_width   : int = 12,
+        print_depth : int = 1
     ) -> None:
         if (self.data_b is None or self.self_join) :
             if print_flag: print("--> TB = TA")
@@ -949,22 +982,22 @@ class DistanceProfile:
         m = self.subsequence_len
         expected_size = n - m + 1
         x_coords = range(n)
-        if print_flag:
+        if print_flag and print_depth > 0:
             print("expected size", expected_size)
             print("--> Getting height")
         fig_height_in = 0.59 *2 + 2
         fig, axs = plt.subplots(2, 1, figsize=(fig_width, fig_height_in), sharex=True)
-        if print_flag: print("--> TB")
+        if print_flag and print_depth > 0: print("--> TB")
         TB_sub = self.data_b[self.data_b_i: m]
-        if print_flag: print("TA", self.data, len(self.data))
-        if print_flag: print("TB", self.data_b, len(self.data_b), " subsequence ", self.data_b_i, m, TB_sub)
+        if print_flag and print_depth > 0: print("TA", self.data, len(self.data))
+        if print_flag and print_depth > 0: print("TB", self.data_b, len(self.data_b), " subsequence ", self.data_b_i, m, TB_sub)
         axs[0].plot(x_coords, self.data_b, label='Time Series')
         if print_flag : print("m", m, "TB_i", self.data_b_i, "TB_i+m", self.data_b_i+m)
         axs[0].plot(x_coords[self.data_b_i:self.data_b_i+m], TB_sub, color='darkgray', label='TB_reference')
         axs[0].legend()
         axs[0].set_title('Pairwise differences')
 
-        if print_flag: print("--> TA")
+        if print_flag and print_depth > 0: print("--> TA")
         axs[1].plot(x_coords, self.data, label='TA')
         i = sequence_i
         axs[1].plot(x_coords[i:i+m], self.data[i:i+m], color='green', label='Subsequence' if i == 0 else "")
@@ -975,6 +1008,119 @@ class DistanceProfile:
         plt.show()
 
 # %% ../nbs/mplots.ipynb 62
+from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.pipeline import Pipeline
+
+# %% ../nbs/mplots.ipynb 63
+class Interpolator(BaseEstimator, TransformerMixin):
+    def __init__(
+        self              : 'Interpolator', 
+        method            : str  ='linear', 
+        n_segments        : int  = 1, 
+        plot_original_data: bool = False,
+        plot_interpolated : bool = False,
+        print_flag        : bool = False,
+        
+    ):
+        self.method             = method
+        self.n_segments         = n_segments
+        self.plot_interpolated  = plot_interpolated
+        self.plot_original_data = plot_original_data
+        self.print_flag         = print_flag
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+    
+                
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
+
+        if self.plot_original_data:
+            if self.print_flag: print("Interpolator | Plot original data")
+            for dim in range (X.ndim-1):
+                if self.print_flag: print(f"Interpolator | Plot original data dimension {dim}")
+                plot_with_dots(
+                    X[dim], 
+                    sequence_flag = False, 
+                    title = f'Original data | dim {dim}'
+                )
+                
+        n_samples, n_features = X.shape
+        if n_features % self.n_segments != 0:
+            raise ValueError(
+                f"El número de segmentos {self.n_segments} debe dividir el número de características {n_features} | Reminder: {n_features // self.n_segments}"
+            )
+
+        segment_size = n_features // self.n_segments
+        interpolated_result = np.full_like(X, np.nan)
+
+        for i in np.arange(self.n_segments):
+            start = i * segment_size
+            end = start + segment_size
+            segment_mean = np.nanmean(X[:, start:end], axis=1)
+            for j in np.arange(n_samples):
+                nan_mask = np.isnan(X[j, start:end])
+                interpolated_result[j, start:end][nan_mask] = segment_mean[j]
+        res = np.where(np.isnan(X), interpolated_result, X)
+        if self.plot_interpolated:
+            for dim in range (X.ndim-1):
+                plot_with_dots(
+                    res[dim], 
+                    sequence_flag = False, 
+                    title = f'Interpolated data | dim {dim}'
+                )
+            
+        return res
+
+# %% ../nbs/mplots.ipynb 64
+class PAATransformer(BaseEstimator, TransformerMixin):
+    def __init__(
+        self, 
+        n_segments, 
+        plot_aggregated : bool = False, 
+        print_flag      : bool = False
+    ):
+        self.n_segments = n_segments
+        self.plot_aggregated = plot_aggregated
+        self.print_flag = print_flag
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        n_samples, n_features = X.shape
+        if n_features < self.n_segments:
+            raise ValueError("El número de segmentos no puede ser mayor que el número total de puntos.")
+
+        segment_size = n_features // ( self.n_segments + 1)
+
+        remainder = n_features % ( self.n_segments + 1)
+
+        # Crear un array para los resultados
+        result = np.zeros((n_samples, self.n_segments + 1))
+
+        # Procesar cada segmento
+        for i in range(self.n_segments):
+            start = i * segment_size + min(i, remainder)
+            end = start + segment_size + (1 if i < remainder else 0)
+            result[:, i] = np.mean(X[:, start:end], axis=1)
+
+        if self.plot_aggregated:
+            for dim in range (X.ndim-1):
+                if self.print_flag:
+                    print("Plos res | Dim", dim)
+                plot_with_dots(
+                    result[dim], 
+                    sequence_flag = False, 
+                    title = f'Aggregated data | dim {dim}'
+                )
+
+        return result
+
+
+# %% ../nbs/mplots.ipynb 69
 @dataclass
 class DistanceMatrix: 
     """ Similarity matrix """
@@ -992,12 +1138,14 @@ class DistanceMatrix:
     method          : str                       = 'naive'
     computation_time: float                     = 0.0
     dominant_lens   : List[ int ]               = None
+    shape           : Tuple[ int, int ]         = (0,0)
 
     def provide_lens(
         self        : 'DistanceMatrix',
         nlens       : int               = 1,
         offset      : float             = 0.05,
-        print_flag  : bool              = False
+        print_flag  : bool              = False,
+        print_depth : int               = 1
     ) -> List [ int ]:
         if nlens == 1:
             self.subsequence_len = find_dominant_window_sizes(self.data, offset = offset)
@@ -1013,15 +1161,16 @@ class DistanceMatrix:
 
     def load_data_from_matlab(
         self, 
-        matrix : MatlabMatrix = None,
-        filename : str = None,
-        matname : str = None,
-        smoothing_window_len : int = None,
-        path : str = ".",
-        numcol : int  = 0,
-        force_smooth : bool = False,
-        set_a_or_b : bool = True,
-        print_flag : bool = False
+        matrix              : MatlabMatrix = None,
+        filename            : str = None,
+        matname             : str = None,
+        smoothing_window_len: int = None,
+        path                : str = ".",
+        numcol              : int  = 0,
+        force_smooth        : bool = False,
+        set_a_or_b          : bool = True,
+        print_flag          : bool = False,
+        print_depth         : int = 1
     ) ->  List [ float ] :
         if matrix is None:
             matrix = MatlabMatrix(
@@ -1035,10 +1184,10 @@ class DistanceMatrix:
         )
 
         if (set_a_or_b):   
-            if print_flag: print("Copy A")
+            if print_flag and print_depth > 0: print("Copy A")
             self.data = deepcopy(matrix_data)
         else: 
-            if print_flag: print("Copy B")
+            if print_flag and print_depth > 0: print("Copy B")
             self.data_b = deepcopy(matrix_data)
 
         return matrix_data
@@ -1046,61 +1195,72 @@ class DistanceMatrix:
     
     def compute(
         self                : 'DistanceMatrix',
-        method              : 'str'     = 'naive',
-        d                   : Callable  = z_normalized_euclidean_distance,
-        ensure_symetric     : bool      = True,
+        method              : 'str'         = 'naive',
+        d                   : Callable      = z_normalized_euclidean_distance,
+        ensure_symetric     : bool          = True,
         #--- Scamp
-        mheight             : int       = None,
-        mwidth              : int       = None,
+        mheight             : int           = None,
+        mwidth              : int           = None,
         #--- Octave functions expected parameters ---
-        min_lag             : int       = 0, #May be needed if SimMat is used
+        min_lag             : int           = 0, #May be needed if SimMat is used
         #--- may be needed by runsplat, splat & piecewiseSplat
-        multiresolution     : int       = 0,
-        calibration         : int       = 0,
-        piecewise           : bool      = False,
-        patch_size          : int       = 5000, #Size of patches to compute (the final matrix, similar to mheight, mwidht)
-        print_flag          : bool      = False,
-        plot_flag           : bool      = False,
-        time_flag           : bool      = True,
-        allow_experimental  : bool      = True, #Allows the use of experimental code
-        parallel            : bool      = True,
-        threads             : int       = 4,
-        provide_len         : bool      = True,
-        nlens               : int       = 1,
-        gpus                : List [ int ] = None,
-        pearson             : bool      = True,
+        multiresolution     : int           = 0,
+        calibration         : int           = 0,
+        piecewise           : bool          = False,
+        patch_size          : int           = 5000, #Size of patches to compute (the final matrix, similar to mheight, mwidht)
+        print_flag          : bool          = False,
+        plot_flag           : bool          = False,
+        time_flag           : bool          = True,
+        allow_experimental  : bool          = True, # Allows the use of experimental code when specified in the used libraries
+        parallel            : bool          = False, # Some parts of the code can be parallelized. Not very tested.
+        threads             : int           = 4,    # Threads for parallelization 
+        provide_len         : bool          = True, # Wether if subsequence length is provided or calculated via Fourier Transformation
+        nlens               : int           = 1,    # How many lengths to get from Fourier's transform
+        gpus                : List [ int ]  = None, # Gpus to use
+        pearson             : bool          = True,    # Wether to apply or not pearson correlation. Needed by scamp,
+        print_depth         : int           = 1
     ) -> Tuple [ List [ List [ float ] ], Optional [ ut.Time ] ] :
         t = None
 
         complete                    = ( self.data_b is None )
         n                           = len(self.data)
+                
         if self.subsequence_len is None:
             if provide_len or self.data_b is None:
-                self.provide_lens(nlens = nlens, print_flag = print_flag)
+                self.provide_lens(nlens = nlens, print_flag = print_flag, print_depth = print_depth-1)
             else:
                 self.subsequence_len = len(self.data_b)
         
-        rows = n - self.subsequence_len + 1
+        columns = n - self.subsequence_len + 1
         
-        if (complete): 
-            columns = rows
+        if (self.self_join): 
+            if print_flag and print_depth > 0: print("[ DistanceMatrix | Compute ]  --> Self_join")
+            rows = columns
             reference_seq = self.data
-        else: 
+        else: #AB-join
+            if print_flag and print_depth > 0: print("[ DistanceMatrix | Compute ] | --> AB-join")
             reference_seq = self.data_b
-            columns = len(reference_seq) + 1
+            rows = len(reference_seq) - self.subsequence_len + 1
+            if print_flag and print_depth > 0:
+                print(f"[ DistanceMatrix | Compute ] | reference_seq ~ {len(reference_seq)} | subsequence_len ~ {self.subsequence_len}")
+            
 
-        if print_flag:
-            print("[ DistanceMatrix | Compute ] | Rows: ", rows, "Columns: ", columns)
         self.distances = np.empty((rows, columns))
+
+        if print_flag and print_depth > 0: 
+            print(f"[ DistanceMatrix | Compute ] | Rows: {rows} Columns: {columns} | distances ~ {self.distances.shape}")
+            
         if time_flag: 
             timer = ut.Time()
-            timer.start()
+            timer.start(print_flag = print_flag and print_depth > 0)
 
         DP_AB : DistanceProfile = None
+        
 
         match method:
             case 'stump':
-                if print_flag: print("--> Stump")
+                self.method = 'stump'
+                if print_flag and print_depth > 0: print("--> Stump")
                 if self.data_b is None: 
                     data_b = deepcopy(self.data)
                 else: 
@@ -1117,7 +1277,7 @@ class DistanceMatrix:
                     nonlocal DP_AB
 
                     if parallel:
-                        if print_flag: print(f"Creating {i} ~ DP_AB")
+                        if print_flag and print_depth > 0: print(f"Creating {i} ~ DP_AB")
                         DP_AB_ = DistanceProfile(
                             data            = deepcopy(self.data),
                             data_b          = deepcopy(data_b),
@@ -1125,47 +1285,47 @@ class DistanceMatrix:
                             self_join       = self.self_join, 
                             subsequence_len = self.subsequence_len
                         )
-                        if print_flag: 
-                            print(f"data {i} ~ {DP_AB_.data.shape}")
-                            print(f"data_b {i} ~ ", DP_AB_.data_b.shape)
+
                     else:
                         DP_AB_ = DP_AB
                         DP_AB_.data_b_i = i
                         DP_AB.data_b = data_b
 
                     DP_AB_.compute(
-                        print_flag=print_flag,
-                        plot_flag=plot_flag,
-                        d=d,
-                        method='stumpy.mass',
+                        print_flag  = print_flag,
+                        plot_flag   = plot_flag,
+                        d           = d,
+                        method      ='stumpy.mass',
+                        print_depth = print_depth-1
                     )
 
-                    if print_flag:
+                    if print_flag  and print_depth > 0:
                         print(f"DP {i} = {DP_AB_.distances}")
                         print(f"DP {i} ~ {DP_AB_.distances.shape}")
                     
                     return DP_AB_.distances
                 
                 if (parallel):
-                    if print_flag: print("Parallel")
+                    if print_flag and print_depth > 0: print("Parallel")
                     with ThreadPoolExecutor(max_workers=threads) as executor:
                         distances = list(executor.map(compute_distance_i, range(rows)))
                     self.distances = np.array(distances)
                 else:
                     for i in range(rows):
-                        if print_flag: print(f"[ DistanceMatrix ] | Compute row {i} / {rows} stump")
+                        if print_flag and print_depth > 0: print(f"[ DistanceMatrix ] | Compute row {i} / {rows} stump | {self.distances.shape}")
                         self.distances[i] = compute_distance_i(i)
                         
-            case 'scamp': 
-                if print_flag: print("--> Scamp")
+            case 'scamp':
+                
+                self.method = 'scamp'
+                if print_flag and print_depth > 0: print(f"[ Distance Matrix | Compute ] --> Scamp | {self.distances.shape}")
                 if complete and allow_experimental:
-                    if print_flag: 
-                        print("--> selfjoin_matrix", self.distances.shape)
-
+                    if print_flag and print_depth > 0: print("Complete and allow experimental")
                     if mheight is None: 
                         mheight = n - self.subsequence_len + 1
                     if mwidth is None:
                         mwidth =  n - self.subsequence_len + 1
+                    
                     self.distances = scamp.selfjoin_matrix(
                         self.data, 
                         self.subsequence_len,
@@ -1175,14 +1335,16 @@ class DistanceMatrix:
                         verbose = print_flag,
                         pearson = pearson
                     )
-                    if print_flag: print("selfjoin_matrix -->", self.distances.shape)
                 else:
+                    if print_flag and print_depth > 0: print("Not allowing experimental")
                     self.distances = distance_matrix(
                             self.data, #a_data
                             reference_seq,  #b_data
                             self.subsequence_len #windos
                         )
+                if print_flag and print_depth > 0: print(f"[ Distance Matrix | Compute ] Scamp --> | {self.distances.shape}")
             case 'octave-mpx':
+                self.method = 'octave-mpx'
                 self.distances = octave.SimMat(
                     self.data,
                     self.subsequence_len,
@@ -1191,6 +1353,7 @@ class DistanceMatrix:
                     nout=1
                 )
             case 'octave-runsplat':
+                self.method = 'octave-runsplat'
                 self.distances = octave.runsplat(
                     self.subsequence_len,
                     self.data, 
@@ -1202,6 +1365,7 @@ class DistanceMatrix:
                     patch_size = patch_size
                 )
             case 'octave-splat':
+                self.method = 'octave-splat'
                 print("multiresolution before octave call", multiresolution)
                 args = {
                     'timeSeriesA': self.data, 
@@ -1218,6 +1382,7 @@ class DistanceMatrix:
                     multiresolution, calibration
                 )
             case 'octave-piecewiseSplat':
+                self.method = 'octave-piecewiseSplat'
                 self.distances = octave.piecewiseSplat(
                     self.data,
                     self.subsequence_len, 
@@ -1226,7 +1391,8 @@ class DistanceMatrix:
                     self.data_b
                 )
             case _: #default naive
-                if print_flag: print("--> Invalid method. Using naive [default]")
+                self.method = 'naive'
+                if print_flag and print_depth > 0: print("--> Invalid method. Using naive [default]")
                 if ( self.self_join ) : self.data_b = deepcopy(self.data)
 
                 DP_AB = DistanceProfile(
@@ -1240,7 +1406,7 @@ class DistanceMatrix:
                     DP_AB.data_b   = deepcopy(self.data_b)
                     DP_AB.data_b_i = i
 
-                    if print_flag: 
+                    if print_flag and print_depth > 0: 
                         print( f"[ DistanceMatrix ] | Compute row {i}" )
                         print( f"TA{DP_AB.data}" )
                         print( f"TB{DP_AB.data_b}" ) 
@@ -1251,14 +1417,15 @@ class DistanceMatrix:
                         plot_flag  = plot_flag,
                         d          = d,
                         method     = 'naive',
-
+                        print_depth = print_depth-1
                     )
+
                     self.distances[i] = DP_AB.distances
                         
         if time_flag: 
             timer.end()
             self.computation_time = timer.duration() 
-        if print_flag: 
+        if print_flag and print_depth > 0: 
             if time_flag: 
                 print(f"matrix profile {self.computation_time} seconds -->")
             else: 
@@ -1269,9 +1436,11 @@ class DistanceMatrix:
         # -> Pensar en cómo afectaría. Tiene sentido para el caso en que rows = columns.
         if (ensure_symetric and rows == columns) : 
             make_symmetric_(self.distances)
+        
+        self.shape = self.distances.shape
         return self.distances    
 
-# %% ../nbs/mplots.ipynb 66
+# %% ../nbs/mplots.ipynb 73
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -1297,7 +1466,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 67
+# %% ../nbs/mplots.ipynb 74
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -1336,7 +1505,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 69
+# %% ../nbs/mplots.ipynb 76
 @dataclass
 class MatrixProfile:
     """ Class for better usability of Matrix Profile inside deepVATS"""
@@ -1354,8 +1523,9 @@ class MatrixProfile:
     #-- Wether if stumpy or SCAMP or other method have been used 
     method: str = 'naive'
     #-- Interactive Plot
-    current_index_pos_plot  : int  = 0
-
+    current_index_pos_plot  : int   = 0
+    max_points              : int   = 10000
+    show_full               : bool  = False
     
     #-- Looking for motifs & neighbors
     # Ordered array for finding motifs/anomalies
@@ -1421,11 +1591,12 @@ class MatrixProfile:
                 figsize=figsize, 
                 sharex=True
             )  
+            
+
             ax1.plot(self.distances, label='Matrix Profile')
             ax1.set_title('Matrix Profile')
             ax1.set_xlabel('Subsequence Index')
             ax1.set_ylabel('Distance')
-
             ax1.legend()
             plt.tight_layout()
             plt.show()
@@ -1441,7 +1612,14 @@ class MatrixProfile:
     
 
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=figsize, sharex=True)
-
+        y_start = np.min(self.distances)
+        y_stop  = np.max(self.distances)
+        y_step  = (y_stop-y_start)/4
+        ax1.set_yticks(np.arange(y_start, y_stop, y_step))
+        x_start = np.min(self.data)
+        x_stop  = np.max(self.data)
+        x_step  = (x_stop-x_start)/4
+        ax2.set_xticks(np.arange(x_start, x_stop, x_step))
         
         def update(pos : int = 0, add : int = 0):
             nonlocal print_flag 
@@ -1449,18 +1627,31 @@ class MatrixProfile:
             
             self.current_index_pos_plot = pos+add
             
-            if (self.current_index_pos_plot < 0): self.current_index_pos_plot = len(self.distances) - 1
-            if (self.current_index_pos_plot >= len(self.distances)): self.current_index_pos_plot = 0
+            if (self.current_index_pos_plot < 0): 
+                self.current_index_pos_plot = len(self.distances) - 1
+            if (self.current_index_pos_plot >= len(self.distances)): 
+                self.current_index_pos_plot = 0
             
             selected_index = self.distances_ordered[self.current_index_pos_plot]
             
             if print_flag: 
-                print("After: Pos", self.current_index_pos_plot, "Selected index", selected_index)
-                print("Distances: ", self.distances)
+                print("Plot Interactive | After: Pos", self.current_index_pos_plot, "Selected index", selected_index)
+                print("Plot Interactive | Distances: ", self.distances)
             
+            ##--- MaxPoints
+            if self.show_full:
+                x_min = 0
+                x_max = len(self.data) - self.subsequence_len + 1
+            else:
+                half_window = int( self.max_points//2 )
+                x_min = selected_index - half_window
+                x_max = selected_index + half_window
+                if print_flag: print(f"Plot Interactive | Window [{x_min}, {x_max}]")
+
             ax1.clear()
-            ax1.plot(self.distances, label='Matrix Profile')
-            ax1.scatter(selected_index, self.distances[selected_index], color='red')
+            ax1.plot( self.distances, label='Matrix Profile' )
+            ax1.scatter( selected_index, self.distances[selected_index], color='red' )
+            ax1.set_xlim([x_min, x_max])  # Aplica el zoom aquí
 
             ax1.text(0.5, 0.9, f'Posición actual: {self.current_index_pos_plot} de {len(self.distances_ordered) - 1}', horizontalalignment='center', verticalalignment='center', transform=ax1.transAxes)
 
@@ -1471,9 +1662,16 @@ class MatrixProfile:
             ax2.plot(self.data, label='Time Series', color='lightgrey')
             ax2.axvline(x=selected_index, color='grey', linestyle='--')
             ax2.scatter(selected_index, self.data[selected_index], color='red')
-            ax2.plot(range(selected_index, selected_index + self.subsequence_len),
-                 self.data[selected_index:selected_index + self.subsequence_len],
-                 color='orange', label=f'Subsequence {selected_index}')  # Subsecuencia en naranja
+            ax2.set_xlim([x_min, x_max])  # Aplica el zoom aquí
+            # Subsecuencia en naranja
+            ax2.plot(
+                range(
+                    selected_index, 
+                    selected_index + self.subsequence_len
+                ),
+                self.data[selected_index:selected_index + self.subsequence_len],
+                color='orange', label=f'Subsequence {selected_index}'
+            )  
             ax2.set_xlabel('Index (time)')
             ax2.set_ylabel('Value')
             ax2.legend()
@@ -1579,25 +1777,35 @@ class MatrixProfile:
         print_flag  : bool              = False
     ) -> List [ int ]:
         if nlens == 1:
+            if print_flag: 
+                print("DistanceProfile | provide_lens | nlens == 1 | --> find dominant window sizes")
             self.subsequence_len = find_dominant_window_sizes(self.data, offset = offset)
+            if print_flag: 
+                print("DistanceProfile | provide_lens | nlens == 1 | --> instantiate dominant lens")
             self.dominant_lens = [self.subsequence_len]
         else:
+            if print_flag: 
+                print(f"DistanceProfile | provide_lens | nlens == {nlens} | --> find dominant window sizes")
+                print(f"DistanceProfile | provide_lens | nlens == {nlens} | --> find dominant window sizes data ~", len(self.data))
             self.dominant_lens = find_dominant_window_sizes_list(
                 self.data,
                 nsizes      = nlens,
                 offset      = offset,
                 print_flag  = print_flag
             )
+            if print_flag: 
+                print(f"DistanceProfile | provide_lens | nlens == {nlens} | --> instantiate dominant lens")
             self.subsequence_len = self.dominant_lens[0]
     
     def __str__(self):
         return f"MP: {self.distances}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
-# %% ../nbs/mplots.ipynb 71
+# %% ../nbs/mplots.ipynb 79
 def matrix_profile(
     data            : List [ float ], 
     subsequence_len : Optional [ int ]              = None, 
     data_b          : Optional [ List [ float ] ]   = None,
+    min_lag         : Optional [ int ]              = None,
     self_join       : bool                          = True,
     method          : str                           = 'naive', 
     d               : Callable                      = z_normalized_euclidean_distance,
@@ -1607,12 +1815,15 @@ def matrix_profile(
     debug           : bool                          = True, 
     time_flag       : bool                          = True,
     plot_flag       : bool                          = False,    
+    print_depth     : int                           = 1
 ) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
     """ 
     This function 
     Receives
     - data: a 1D-array representing a time series values (expected to be long)
     - subsequence_len: Matrix Profile subsequences length
+    - data_b: a 1D-array representing a second time series' values. If none, data is used for self-join
+    - min_lag: used for excluding the nearest neighbors in the MP for avoiding trivial matches
     - method: wether to use stump or scamp algorithm
     - print_flag: for printing or not messages
     - debug: for adding some comprobations on GPUs usability
@@ -1646,19 +1857,29 @@ def matrix_profile(
 
     #-- Select the method
     match method:
-        case 'stump': # Not tested
+        case 'stump':
             #-- use stumpy.gpu_stump
             normalize = (d.__name__ == 'z_normalized_euclidean_distance')
-            if print_flag: 
+            if print_flag and print_depth > 0: 
                 print("--> Stump (CPU)")
                 print("MP | Compute | Using stumpy.stump | normalize?", normalize)
+            if not (min_lag is None):
+                # Stump's default: m/4
+                # The exclusion zone is i ± int(np.ceil(m / STUMPY_EXCL_ZONE_DENOM))
+                # If everything is exact...
+                # min_lag = m/STUMPY_EXCL_ZONE_DENOM => STUMPY_EXCL_ZONE_DENOM = m/min_lag
+                exclusion_zone = subsequence_len/min_lag
+            else:
+                exclusion_zone = 4 #Default
             
+            stump_cfg.STUMPY_EXCL_ZONE_DENOM = exclusion_zone
+
             mp = stump.stump(
-                T_A = data.astype(np.float64), 
-                m = subsequence_len, 
-                T_B = data_b,
-                ignore_trivial = True,
-                normalize = normalize
+                T_A             = data.astype(np.float64), 
+                m               = subsequence_len, 
+                T_B             = data_b,
+                ignore_trivial  = True,
+                normalize       = normalize
             )
             #-- Save in separated columns for compatibility with SCAMP
             index = mp[:,1]
@@ -1675,12 +1896,23 @@ def matrix_profile(
             if not T_B is None : 
                 print("TB provided", T_B)
                 T_B = T_B.astype(np.float64)
+            if not (min_lag is None):
+                # Stump's default: m/4
+                # The exclusion zone is i ± int(np.ceil(m / STUMPY_EXCL_ZONE_DENOM))
+                # If everything is exact...
+                # min_lag = m/STUMPY_EXCL_ZONE_DENOM => STUMPY_EXCL_ZONE_DENOM = m/min_lag
+                exclusion_zone = subsequence_len/min_lag
+            else:
+                exclusion_zone = 4 #Default
+            
+            stump_cfg.STUMPY_EXCL_ZONE_DENOM = exclusion_zone
+            
             mp = stump.gpu_stump(
-                T_A = T_A, 
-                m = subsequence_len, 
-                T_B = T_B,
-                ignore_trivial = True,
-                normalize = normalize
+                T_A             = T_A, 
+                m               = subsequence_len, 
+                T_B             = T_B,
+                ignore_trivial  = True,
+                normalize       = normalize,
             )
             #-- Save in separate columns
             index = mp[:,1]
@@ -1689,19 +1921,26 @@ def matrix_profile(
             mp = mp[:,0]
             
         case 'scamp': # Yo should use GPU in Large TS
-            if print_flag: print("--> Scamp")
+            if  not ( min_lag is None):
+                warnings.warn("SCAMP does not have exclusion zone parameter. | Not yet implemented/found.")
+                
+            if print_flag and print_depth > 0: print("--> Scamp")
             if debug: 
-                print("Check gpu use")
+                if print_flag and print_depth > 0: print("Check gpu use")
                 has_gpu_support = scamp.gpu_supported()
-                print(has_gpu_support)
+                if print_flag and print_depth > 0: print(has_gpu_support)
             #-- Matrix profile & index. Nothing more to save
             if (data_b is None):
                 mp, index = scamp.selfjoin(data, subsequence_len)
             else: 
-                if print_flag: print("--> data_b provided => Executing abjoin")
-                mp, index = scamp.abjoin(data, data_b, subsequence_len, threads, gpus)
+                if print_flag and print_depth > 0: print("--> data_b provided => Executing abjoin")
+                mp, index = scamp.abjoin(
+                    a = data, 
+                    b = data_b, 
+                    m = subsequence_len
+                )
         case _: #default naive
-            if print_flag: print("--> Invalid method. Using naive approach [default]")
+            if print_flag and print_depth > 0: print("--> Invalid method. Using naive approach [default]")
             if ( data_b is None or self_join ): 
                 data_b = data
             n_a     = len(data)
@@ -1710,7 +1949,7 @@ def matrix_profile(
             rows    = n_b-m+1
             columns = n_a-m+1
 
-            if print_flag:
+            if print_flag and print_depth > 0:
                 print("TA ~ ", n_a)
                 print("TB ~ ", n_b)
                 print("m =", m)
@@ -1718,25 +1957,35 @@ def matrix_profile(
         
             DP_AB : DistanceProfile = None
             mp = np.zeros(rows)
+            if min_lag is None:
+                min_lag = np.ceil(subsequence_len/4)
+            
             for i in range(rows):
-                DP_AB = DistanceProfile(data = data, data_b = data_b, data_b_i = i, self_join = self_join, subsequence_len = subsequence_len)
-                DP_AB.compute(print_flag = print_flag, plot_flag = plot_flag, d = d)
+                DP_AB = DistanceProfile(
+                    data            = data, 
+                    data_b          = data_b, 
+                    data_b_i        = i, 
+                    self_join       = self_join, 
+                    subsequence_len = subsequence_len
+                )
+                DP_AB.compute(print_flag = print_flag, plot_flag = plot_flag, d = d, minLag = min_lag)
                 mp[i] = np.nanmin(DP_AB.distances)
             
     if time_flag: 
         timer.end()
         duration = timer.duration() 
-    if print_flag: 
+    if print_flag and print_depth > 0: 
         if time_flag: 
             print(f"matrix profile {duration} seconds -->")
         else: 
             print("matrix profile -->")
     return mp, index, index_left, index_right, duration
 
-# %% ../nbs/mplots.ipynb 72
+# %% ../nbs/mplots.ipynb 80
 def compute(
     self            : MatrixProfile,
     method          : str                           = 'naive', 
+    min_lag         : int                           = None,
     d               : Callable                      = z_normalized_euclidean_distance,
     threads         : int                           = 4,  # For scamp abjoin
     gpus            : List[ int ]                   = [], # For scamp abjoin
@@ -1745,7 +1994,8 @@ def compute(
     debug           : bool                          = True, 
     time_flag       : bool                          = True,
     provide_len     : bool                          = True,
-    nlens           : Optional [ int ]              = 1
+    nlens           : Optional [ int ]              = 1,
+    print_depth     : int                           = 1
 ) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
     self.method = method
 
@@ -1768,16 +2018,18 @@ def compute(
         debug           = debug, 
         plot_flag       = plot_flag,
         time_flag       = time_flag, 
+        min_lag         = min_lag,
+        print_depth     = print_depth
     )
     return self.distances
 MatrixProfile.compute = compute
 
-# %% ../nbs/mplots.ipynb 82
+# %% ../nbs/mplots.ipynb 90
 @dataclass
 class MatrixProfiles:
     matrix_profiles : List[ MatrixProfile ] = field( default_factory=list )
-    data            : List[float]           = field( default_factory=list )
-    data_b          : List[float]           = None
+    data            : List[ float ]         = field( default_factory=list )
+    data_b          : List[ float ]         = None
     
     subsequence_len : int                   = 0
     dominant_lens   : List[ int ]           = None
@@ -1794,7 +2046,8 @@ class MatrixProfiles:
         gpus        : List[int] = field( default_factory=list ),
         print_flag  : bool      = False, 
         debug       : bool      = False, 
-        time_flag   : bool      = True
+        time_flag   : bool      = True,
+        print_depth : int       = 1
     ):
         """ 
         Computes the Matrix Profile for data & data_b arrays using subsequence_len length.
@@ -1812,15 +2065,16 @@ class MatrixProfiles:
             gpus            = gpus,
             print_flag      = print_flag, 
             debug           = debug,
-            time_flag       = time_flag
+            time_flag       = time_flag,
+            print_depth     = print_depth-1
         )
         
         mp.method = method
-        if print_flag: print(f"Before Mps.len: {len(self.matrix_profiles)}")
+        if print_flag and print_depth > 0: print(f"Before Mps.len: {len(self.matrix_profiles)}")
         self.matrix_profiles.append(mp)
-        if print_flag: print(f"After Mps.len: {len(self.matrix_profiles)}")
+        if print_flag and print_depth > 0: print(f"After Mps.len: {len(self.matrix_profiles)}")
         
-        if print_flag: 
+        if print_flag and print_depth > 0: 
             print("MPs | compute -> Subsequence len outside: ", self.subsequence_len)
             print("MPs | compute -> Subsequence len inside: ", mp.subsequence_len)
             print("MPs | compute -> method outside: ", self.matrix_profiles[-1].method)
@@ -1910,7 +2164,93 @@ class MatrixProfiles:
         plt.show()
 
 
-# %% ../nbs/mplots.ipynb 100
+# %% ../nbs/mplots.ipynb 108
+def ensure_valid_limits(
+    subsequence_len : int, # divisor
+    min_position    : int, # range[0] -> to change to multiple of subsequence_len
+    max_position    : int, # range[1] -> to change to multiple of subsequence_len
+    print_flag      : bool = False, # Debugging flag
+    print_depth     : int  = 1
+) -> Tuple [ int, int ]:
+    """
+    Looks for the smallest [a,b] such that a and b are multiples of subsequence_len and {min_position, max_position} is subset of [a,b]
+    """
+    #First multiple <= min_pos
+    k_min = min_position // subsequence_len
+    min_position_adjusted = k_min * subsequence_len
+    #First multiple >= max_pos
+    k_max = max_position // subsequence_len
+    max_position_adjusted = ( k_max + 1) * subsequence_len
+    #Just in case. Shouldn't happen
+    if max_position_adjusted <= min_position_adjusted:
+        max_position_adjusted = (k_max + 2) * subsequence_len
+    if print_flag and print_depth > 0:print(f"Ensure valid limits | Original [{min_position}, {max_position}]\nFinal [{min_position_adjusted}, {max_position_adjusted}]")
+    
+    return min_position_adjusted, max_position_adjusted
+     
+
+def downsample(
+    data  : List [ float ] = None,
+    min_position : int  = 0,
+    max_position : int  = -1, 
+    max_points   : int  = 10000,
+    print_flag   : bool = False,
+    show_plots   : bool = False,
+    print_depth  : int  = 1
+):    
+    n_timestamps = max_position - min_position
+    paa_factor = np.maximum(1, n_timestamps // max_points)
+    if print_flag and print_depth > 0:
+        print("Downsample | N timestamps", n_timestamps)
+        print("Downsample | PAA factor:", paa_factor)
+    potential_segments = np.floor(n_timestamps // paa_factor).astype(int)
+    while (
+                n_timestamps % potential_segments != 0 
+            and potential_segments < n_timestamps
+        ):
+            potential_segments+=1
+
+    n_segments = potential_segments
+    if print_flag and print_depth > 0:
+        print("Downsample | N segments:", n_segments)
+        print("Downsample | Final w:", n_timestamps // ( n_segments))
+        print("Downsample | Reminder:", n_timestamps % n_segments)
+
+    #| export
+    paa_pipeline = Pipeline([
+        (
+            # Step for interpolating NaNs in the original data
+            'interpolator', 
+            Interpolator(
+                method             = 'polynomial', 
+                n_segments         = n_segments, 
+                plot_original_data = show_plots,
+                plot_interpolated  = show_plots
+            )
+        ),
+        (
+            # Step for applying Peicewise Aggregated Approximation
+            'paa', PAATransformer(
+                n_segments      = n_segments, 
+                plot_aggregated = show_plots
+            )
+        )
+    ])
+
+    ts_paa = paa_pipeline.fit_transform(data[min_position:max_position])[0]
+    if print_flag and print_depth > 0: 
+        print(f"Downsample | ts_paa~{len(ts_paa)}")
+    return ts_paa, paa_factor
+
+def restore_index(
+    index        : int,
+    min_position : int, 
+    max_points   : int = 10000,
+    n_timestamps : int = 10000
+) -> int:
+    return min_position + np.floor(index * n_timestamps // max_points).astype(int)
+
+# %% ../nbs/mplots.ipynb 109
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -1927,11 +2267,27 @@ class MatrixProfilePlot:
     dm_method       : str         = ''
     mp_method       : str         = ''
     dominant_lens   : List[ int ] = None
+
+    # -- Zoom
+    x_min  : int = 0
+    x_max  : int = -1
+    y_min  : int = 0
+    y_max  : int = 0
+
+    data_paa            : List [ float ] = None 
+    data_b_paa          : List [ float ] = None
+    data_paa_factor     : int            = 1
+    data_b_paa_factor   : int            = 1
+
+    # -- Plot
+    fig = None
+    gs  = None
     
     def compute(
         self,
         dm_method           : str               = 'naive',
         mp_method           : str               = 'naive',
+        min_lag             : int               = None,
         print_flag          : bool              = False,
         d                   : Callable          = z_normalized_euclidean_distance,
         debug               : bool              = False, 
@@ -1939,7 +2295,18 @@ class MatrixProfilePlot:
         allow_experimental  : bool              = True,
         ensure_symetric     : bool              = True,
         provide_len         : bool              = True,
-        nlens               : Optional [ int ]  = 1
+        subsequence_len     : int               = None,
+        nlens               : Optional [ int ]  = 1,
+        offset              : int               = 0.05,
+        x_min               : int               = None,
+        x_max               : int               = None,
+        y_min               : int               = None,
+        y_max               : int               = None,
+        max_points          : int               = 10000,
+        show_plots          : bool              = False,
+        downsample_flag     : bool              = True,
+        include_padding     : bool              = True,
+        print_depth         : int               = 1
     ) -> Tuple [ List [ List [ float ] ], Optional [ float ] ]:
         t = None
         if time_flag:
@@ -1947,141 +2314,335 @@ class MatrixProfilePlot:
             t.start()
         self.dm_method = dm_method
         self.mp_method = mp_method
-        self.DM_AB = DistanceMatrix(
-            data            = self.data, 
-            data_b          = self.data_b,
-            subsequence_len = self.subsequence_len,
-            self_join       = self.self_join
-        )
+        y_maxvalue = len(self.data) if self.data_b is None else len(self.data_b)
         
+        if (
+                x_min is None 
+            or  x_max is None
+            or  y_min is None
+            or  y_max is None
+
+        ):
+            if print_flag and print_depth > 0: print("MatrixProfilePlot | Compute | No range provided")
+            self.x_min = 0
+            self.x_max = len(self.data)
+            self.y_min = 0
+            if self.data_b is None:
+                self.y_max = self.x_max
+            else: 
+                self.y_max = len(self.data_b)
+        else:
+            if print_flag and print_depth > 0: print("MatrixProfilePlot | Compute | Range provided")
+            self.x_min  = max(0, x_min)
+            self.x_max  = min(x_max, len(self.data))
+            self.y_min  = max(0, y_min)
+            self.y_max  = min(y_max, y_maxvalue)
+            if include_padding:
+                x_padd  = self.x_max + self.subsequence_len - 1
+                y_padd  = self.y_max + self.subsequence_len - 1
+                self.x_max = min(len(self.data), x_padd)
+                self.y_max = min(y_maxvalue, y_padd)
+        
+            
+
+        if print_flag and print_depth > 0:
+            print(f"MatrixProfilePlot | Compute | Range [{self.x_min}:{self.x_max}, {self.y_min}:{self.y_max}]")
+
+        data = self.data[self.x_min:self.x_max]
+        
+        if self.data_b is None or self.self_join:
+            data_b = self.data[self.y_min:self.y_max]
+        else:
+            data_b = self.data[self.y_min:self.y_max]
+
+        ## Addapt time serie ('zoom', PAA)
+        if downsample_flag : 
+            if print_flag: print( "[ MPlot | Compute ] | -->  Downsample ")
+            if len(data) > max_points:
+                if print_flag: print("[ MPlot | Compute ] | ---> Downsample TA")
+                
+                self.data_paa, self.data_paa_factor = downsample(
+                    data         = data,
+                    min_position = x_min,
+                    max_position = x_max,
+                    max_points   = max_points,
+                    print_flag   = print_flag,
+                    show_plots   = show_plots,
+                    print_depth  = print_depth-1
+                )
+
+            if len(data_b) > max_points: 
+                if print_flag:print("[ MPlot | Compute ] |  --> Downsample TB ")
+
+                self.data_b_paa, self.data_b_paa_factor = self.data_b_paa = downsample(
+                    data         = data_b,
+                    min_position = y_min,
+                    max_position = y_max,
+                    max_points   = max_points,
+                    print_flag   = print_flag,
+                    show_plots   = show_plots,
+                    print_depth  = print_depth-1
+                )
+            if print_flag: print( "[ MPlot | Compute ] |Downsample -->")
+        else:
+            if print_flag: 
+                print("MPlot | Compute | Do not downsample => use original time series")
+            self.data_paa   = data
+            self.data_b_paa = data_b
+            
+        
+        ## Ensure parameters
+        if print_flag and print_depth > 0:
+            print("MPlot | Compute | --> Ensure parameters")
         self.MP_AB = MatrixProfile(
             data            = self.data, 
             data_b          = self.data_b,
             subsequence_len = self.subsequence_len,
             self_join       = self.self_join
         )
+        
+        ## Ensure parameters
+        if print_flag and print_depth > 0:
+            print("MPlot | Compute | --> provide_len | data ~ ", self.data.shape )
+        if provide_len or self.data_b is None:
+            if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | IF ")
+            if self.dominant_lens is None:
+                if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | IF | No dominant lens")
+                if self.MP_AB.dominant_lens is None:
+                    if print_flag: 
+                        print("MPlot | Compute | --> provide_len | IF | No dominant lens | provide_lens")
+                        print("Before: data ~", len(self.MP_AB.data))
+                    self.MP_AB.provide_lens(
+                        nlens = nlens, 
+                        print_flag = print_flag, 
+                        offset = offset,
+                        print_depth = print_depth-1
+                    )
+                self.dominant_lens = self.MP_AB.dominant_lens
+            if print_flag and print_depth > 0:  print(f"MPlot | Compute | --> provide_len | IF | Setup sequence len to dominant_lens[0]={ self.dominant_lens[0]}")
+            self.subsequence_len = self.dominant_lens[0]
+        elif not provide_len:
+            if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | Elif provide_len")
+            self.subsequence_len = subsequence_len
+        else:
+            if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | Else")
+            self.subsequence_len = len(self.data_b_paa)
+        
+        ## Ensure valid limits (so the compared subsequences are the same than with the global matrix)
+        self.x_min, self.x_max = ensure_valid_limits(self.subsequence_len, self.x_min, self.x_max, print_flag)
+        self.y_min, self.y_max = ensure_valid_limits(self.subsequence_len, self.y_min, self.y_max, print_flag)
+        
+        if print_flag and print_depth > 0: print(f"MatrixProfilePlot | Compute | Final Range [{self.x_min}:{self.x_max}, {self.y_min}:{self.y_max}]")
+        
+        ## Instantiate self.DM_AB & MP_AB
+        if print_flag and print_depth > 0: print("MPlot | Compute | --> Instantiate DM & MP")
 
+        self.DM_AB = DistanceMatrix(
+            data            = self.data_paa, 
+            data_b          = self.data_b_paa,
+            subsequence_len = self.subsequence_len,
+            self_join       = self.self_join
+        )
+        
+        self.MP_AB.subsequence_len = self.subsequence_len
+
+        if print_flag and print_depth > 0:
+            print("MPlot | Compute | ... Checking inicializations ...")
+            print(f"MP_AB self_join {self.MP_AB.self_join}")
+            print(f"DM_AB self_join {self.DM_AB.self_join}")
+            print(f"DM_AB ~ {self.DM_AB.shape}")
+            print(f"MP_AB method: {self.MP_AB.method}")
+            print(f"DM_AB method: {self.DM_AB.method}")
+            print("MPlot | Compute | ... Checking inicializations ...")
+
+        ## Compute       
+        if print_flag and print_depth > 0:  print("MPlot | Compute | --> Compute MP")
         self.MP_AB.compute(
             method      = mp_method,
             d           = d,
             time_flag   = time_flag,
             print_flag  = print_flag,
             provide_len = provide_len,
-            nlens       = nlens
+            nlens       = nlens,
+            min_lag     = min_lag,
+            print_depth = print_depth-1
         )
-        if not self.MP_AB.dominant_lens is None:
-            self.dominant_lens = self.MP_AB.dominant_lens
-        self.subsequence_len = self.MP_AB.subsequence_len
-        
+        if print_flag:  print("MPlot | Compute | --> Compute DM")
         self.DM_AB.compute(
             method              = dm_method,
             print_flag          = print_flag,
             time_flag           = time_flag, 
             allow_experimental  = allow_experimental,
-            ensure_symetric     = ensure_symetric
+            ensure_symetric     = ensure_symetric,
+            min_lag             = min_lag,
+            print_depth         = 1
         )
             
-            
-    def plot(
-        self, 
-        ts_name     = "", 
-        method      = 'Brute Force', 
-        figsize     = (5, 5), 
-        show_flag   = True,
-        print_flag  = False,
-        less_labels = False
-    ):
-        fig = plt.figure(figsize=figsize)
-        gs = GridSpec(2, 1, height_ratios=[1, 4])
+    def plot_check_limits(
+        self,
+        x_min : float, 
+        x_max : float, 
+        y_min : float, 
+        y_max : float
+    ) -> Tuple[ float, float, float, float ]:
+        if x_min is None:
+            x_min = self.x_min
+        else:
+            if (x_min < self.x_min):
+                x_min = self.x_min
+                warnings.warn(f"Adjusted x_min to {x_min} as previous values have not been computed yet", UserWarning)
+        if x_max is None: 
+            x_max = self.x_max
+        else:
+            if (x_max > self.x_max):
+                x_max = self.x_max
+                warnings.warn(f"Adjusted x_max  to {x_max} as no longer values have been computed yet", UserWarning)
+            if (x_max > self.DM_AB.distances.shape[0]+x_min):
+                x_max = self.DM_AB.distances.shape[0]+x_min
+                warnings.warn(f"Adjusted x_max to {x_max} as it was bigger than the number of rows (nA-m+1)", UserWarning)
+        
+        if y_min is None:
+            y_min = self.y_min
+        else:
+            if (y_min < self.y_min):
+                y_min = self.y_min
+                warnings.warn(f"Adjusted to {y_min} as no previous values have been computed yet", UserWarning)
+        if y_max is None: 
+            y_max = self.y_max
+        else:
+            if (y_max > self.y_max):
+                y_max = self.y_max
+                warnings.warn(f"Adjusted to {y_max} as no longer values have been computed yet", UserWarning)
+            if (y_max > self.DM_AB.distances.shape[1]+x_max):
+                y_max = self.DM_AB.distances.shape[1]+x_max
+                warnings.warn(f"Adjusted y_max to {y_max} as it was bigger than the number of columns (nB-m+1)", UserWarning)
+        return (x_min, x_max, y_min, y_max)
 
+    def plot_MP(
+            self, 
+            x_min, x_max, x_start, x_end, n_x,
+            figsize, 
+            label = "Data Matrix Profile", 
+            ts_name = "", 
+            method = "Naive"
+        ):
         # Matrix Profile
-        ax1 = fig.add_subplot(gs[0])
-        ax1.plot(self.MP_AB.distances, label = "Time Serie")
-        ax1.set_title(ts_name + " | " + method)
+        ax1 = self.fig.add_subplot(self.gs[0])
+
+        ax1.plot(self.MP_AB.distances[x_start:x_end], label = label)
+        ax1.set_title(f"{ts_name}[{x_min-self.x_min}, {x_max}] | {method}")
         ax1.legend()
-
-        # MPlot (Distance Profile)
-        ax2 = fig.add_subplot(gs[1])
-
-        # Create the heatmap for the distance matrix
-        if print_flag:
-            print("DM_AB ~", self.DM_AB.distances.shape)
-            
-        heatmap = ax2.imshow(
-            self.DM_AB.distances, 
-            aspect = 'auto', 
-            origin = 'lower', 
-            cmap   = 'hot', 
-            extent = ( 
+        ax1.set_xticks(
+            np.linspace(
                 0, 
-                len(self.DM_AB.distances[0]), 
-                0, 
-                len(self.DM_AB.distances)
+                n_x,
+                num=int(figsize[0]*2)
             )
         )
-
-        ax2.set_title("MPlot")
-        ax2.set_xlabel('TB Index')
-        ax2.set_ylabel('TA Index')
-        plt.colorbar(heatmap, ax=ax2, orientation='vertical', label='Distance')
-
         
-        # Set the tick marks to be at the center of the squares
+        ax1.set_yticks(
+            np.linspace(
+                min(self.MP_AB.distances), 
+                max(self.MP_AB.distances),
+                num=int(figsize[1]//2)
+            )
+        )
+        plt.setp(
+            ax1.get_xticklabels(), 
+            rotation      = 45, 
+            ha            = "right", 
+            rotation_mode = "anchor"
+        )
 
-    
+
+
+
+    def plot_base(
+        self,
+        x_min, x_max, 
+        y_min, y_max, 
+        figsize, plot_mp_flag
+    ):
+        
+        # Ensure computed
+        if (plot_mp_flag and self.MP_AB.method is None):
+            raise ValueError(f"The Matrix Profile has not been computed yet")
+        if (self.DM_AB.method is None):
+            raise ValueError(f"The Distances Matrix/Similarity Matrix has not been computed yet")
+        x_min, x_max, y_min, y_max = self.plot_check_limits(x_min, x_max, y_min, y_max)
+
+        # Setup complete figure distribution
+        self.fig = plt.figure(figsize=figsize)
+        if plot_mp_flag:
+            self.gs  = GridSpec(2, 1, height_ratios=[1, 4])
+        else: 
+            self.gs  = GridSpec(1, 1, height_ratios=[1, 4])
+        return x_min, x_max, y_min, y_max
+
+    def plot_DM(
+        self, 
+        x_min, x_max, 
+        y_min, y_max,
+        x_start, x_end,
+        y_start, y_end,
+        n_x, n_y, 
+        figsize,
+        plot_mp_flag, 
+        print_flag,
+        MPlot_title     = "MPlot", 
+        MPlot_xlabel    = "TB Index", 
+        MPlot_ylabel    = "TA Index",
+        less_labels     = True,
+        print_depth     = 1
+    ):
+        # MPlot (Distance Profile)
+        x = 1 if plot_mp_flag else 0
+        ax2 = self.fig.add_subplot(self.gs[x])
+        
+        ax2.set_title(MPlot_title)
+        ax2.set_xlabel(MPlot_xlabel)
+        ax2.set_ylabel(MPlot_ylabel)
+
         if less_labels:
-            x_labels_count = max(1, len(self.DM_AB.distances[0]) // max(1, int(figsize[0] * 2)))
-            y_labels_count = max(1, len(self.DM_AB.distances) // max(1, int(figsize[1] * 2)))
 
-            x_start = 0.5
-            x_stop  = len(self.DM_AB.distances[0])
-            x_step  = x_labels_count
-            y_start = 0.5
-            y_stop  = len(self.DM_AB.distances)
-            y_step  = y_labels_count
-        
-            if print_flag:
-                print("x_start", x_start, "x_stop", x_stop, "x_step", x_step)
-                print("y_start", y_start, "y_stop", y_stop, "y_step", y_step)
-        
-            x_ticks = np.arange(x_start, x_stop, x_step)
-            y_ticks = np.arange(y_start, y_stop, y_step)
+            x_labels_count = max(1, n_x // max(1, int(figsize[0] * 2)))
+            y_labels_count = max(1, n_y // max(1, int(figsize[1] * 2)))
 
-            if print_flag:
-                print("...Adapt labels to...")
-                print("x_ticks", x_ticks)
-                print("y_ticks", y_ticks)
-                print("data ~ ", self.data.shape)
-                print("DM_AB ~ ", self.DM_AB.distances[0].shape)
-            
-        else:
-            
-            x_start = 0.5
-            x_stop  = len(self.DM_AB.distances[0])
-            x_step  = 1
-            y_start = 0.5
-            y_stop  = len(self.DM_AB.distances)
-            y_step  = 1
-            
-            x_ticks = np.arange(x_start, x_stop, x_step)
-            y_ticks = np.arange(y_start, y_stop, y_step)
+            tx_start = 0.5
+            tx_stop  = n_x
+            tx_step  = x_labels_count
+            ty_start = 0.5
+            ty_stop  = n_y
+            ty_step  = y_labels_count
+        
+            if print_flag and print_depth > 0:
+                print("tx_start", tx_start, "tx_stop", tx_stop, "tx_step", tx_step)
+                print("ty_start", ty_start, "ty_stop", ty_stop, "ty_step", ty_step)
+        else:    
+            tx_start = 0.5
+            tx_stop  = n_x
+            tx_step  = 1
+            ty_start = 0.5
+            ty_stop  = n_y
+            ty_step  = 1
+        
+        # Set the tick marks to be at the center of the squares           
+        x_ticks = np.arange(tx_start, tx_stop, tx_step)
+        y_ticks = np.arange(ty_start, ty_stop, ty_step)
 
-            if print_flag:
-                print("... No Adapt labels ...")
-                print("x_ticks", x_ticks)
-                print("y_ticks", y_ticks)
-                print("data ~ ", self.data.shape)
-                print("DM_AB ~ ", self.DM_AB.distances[0].shape)
-            
-        
-        #ax2.set_xticks(np.arange(0.5, len(self.DM_AB.distances[0]), step=1))
-        #ax2.set_yticks(np.arange(0.5, len(self.DM_AB.distances), step=1))
-        
+        if print_flag and print_depth > 0:
+            print("MPlot | Plot DM | ... No Adapt labels ...")
+            print("MPlot | Plot DM | x_ticks", x_ticks)
+            print("MPlot | Plot DM | y_ticks", y_ticks)
+            print("MPlot | Plot DM | data ~ ", self.data.shape)
+            print("MPlot | Plot DM | DM_AB ~ ", self.DM_AB.distances.shape)
+            print(f"MPlot | Plot DM | DM_AB[{x_min}:{x_max}] ~ {self.DM_AB.distances[x_min:x_max].shape}")
+
         ax2.set_xticks(x_ticks)
         ax2.set_yticks(y_ticks)
         
-        ax2.set_xticklabels(x_ticks)
-        ax2.set_yticklabels(y_ticks)
+        ax2.set_xticklabels(x_ticks + x_min)
+        ax2.set_yticklabels(y_ticks + y_min)
 
         # Rotate tick labels for readability
         plt.setp(
@@ -2090,12 +2651,108 @@ class MatrixProfilePlot:
             ha            = "right", 
             rotation_mode = "anchor"
         )
+        return ax2
 
+    def plot_heatmap(
+        self, 
+        x_min, x_max, x_start, x_end,
+        n_x, n_y, 
+        ax2, 
+        print_flag  = False,
+        print_depth = 1
+    ):
+        # Create the heatmap for the distance matrix
+        if print_flag and print_depth > 0:
+            print(f"MPlot | Plot DM | DM_AB[{x_min}:{x_max}] ~ {self.DM_AB.distances[x_start:x_end].shape}")
+        
+        heatmap = ax2.imshow(
+            self.DM_AB.distances[x_start:x_end], 
+            aspect = 'auto', 
+            origin = 'lower', 
+            cmap   = 'hot', 
+            extent = ( 
+                0, 
+                n_x,
+                0, 
+                n_y
+            )
+        )
+        plt.colorbar(heatmap, ax=ax2, orientation='vertical', label='Distance')
+        return heatmap
+
+    def plot_xrange(self, x_min, x_max):
+        #n_x = len(self.DM_AB.distances)
+        n_x = x_max-x_min+1
+        return n_x
+    def plot_yrange(self, y_min, y_max):
+        #n_y = len(self.DM_AB.distances[0])
+        n_y = y_max-y_min+1
+        return n_y
+
+
+    def plot(
+        self, 
+        ts_name         = "", 
+        figsize         = (5, 5), 
+        show_flag       = True,
+        print_flag      = False,
+        less_labels     = False,
+        x_min           = None,
+        x_max           = None,
+        y_min           = None,
+        y_max           = None,
+        mp_label        = None,
+        plot_mp_flag    = True,
+        MPlot_title     = None,
+        MPlot_xlabel    = None,
+        MPlot_ylabel    = None
+    ):
+        
+        x_min, x_max, y_min, y_max = self.plot_base(
+            x_min, x_max, 
+            y_min, y_max, 
+            figsize, plot_mp_flag
+        )                
+        x_start = x_min - self.x_min
+        x_end   = x_max - self.x_min
+        y_start = y_min - self.y_min
+        y_end   = y_max - self.y_min
+
+        n_x = self.plot_xrange(x_min, x_max)
+        n_y = self.plot_yrange(y_min, y_max)
+
+
+        
+        
+        if plot_mp_flag:
+            self.plot_MP(
+                x_min, x_max, 
+                x_start, x_end,
+                n_x, 
+                figsize, 
+                mp_label, 
+                ts_name, 
+                self.MP_AB.method
+            )
+
+        ax2 = self.plot_DM(
+            x_min, x_max, 
+            y_min, y_max, 
+            x_start, x_end,
+            y_start, y_end,
+            n_x, n_y, 
+            figsize,
+            plot_mp_flag, print_flag,
+            MPlot_title, MPlot_xlabel, MPlot_ylabel,
+            less_labels
+        )
+        
+        self.plot_heatmap(x_min, x_max, x_start, x_end, n_x, n_y,ax2, print_flag)
+                
         plt.tight_layout()
         if show_flag:
             plt.show()
         return plt
-
     
     def plot_interactive(
         self, 
@@ -2103,7 +2760,8 @@ class MatrixProfilePlot:
         tb_name="TB",
         method='Brute Force', 
         figsize=(5, 5),
-        print_flag = False
+        print_flag = False,
+        print_depth = 1
     ):
         fig = plt.figure(figsize=figsize)
         gs = GridSpec(4, 1, height_ratios=[1, 1, 1, 6])
@@ -2129,9 +2787,18 @@ class MatrixProfilePlot:
         
         heatmap = ax3.imshow(
             self.DM_AB.distances, 
-            aspect='auto', origin='lower', cmap='hot', 
-            extent=(0, len(self.DM_AB.distances), 
-                    0, len(self.DM_AB.distances[0]))
+            aspect ='auto', 
+            origin ='lower', 
+            cmap   ='hot', 
+            extent =(
+                0, 
+                len(self.DM_AB.distances), 
+                0, 
+                len(self.DM_AB.distances[0])
+            ),
+            vmin    = np.min(self.DM_AB.distances),
+            vmax    = np.max(self.DM_AB.distances)
+            
         )
         
         cbar = fig.colorbar(heatmap, ax=ax3, orientation='vertical')
@@ -2162,17 +2829,18 @@ class MatrixProfilePlot:
                 ta_index = int(event.xdata)
                 mp_row = self.DM_AB.distances[ta_index]
                 ta_distance = self.MP_AB.distances[ta_index]
-                print("ta_distance", ta_distance)
-                print("mp_row", mp_row)
+                if print_flag  and print_depth > 0 : 
+                    print("ta_distance", ta_distance)
+                    print("mp_row", mp_row)
                 tb_index = np.where(
                     mp_row == ta_distance
                 )[0]
                 if len(tb_index) > 0:
                     tb_index = tb_index[0]
-                    if print_flag: print("Ta_index", ta_index, "tb_index", tb_index)
+                    if print_flag and print_depth > 0: print("Ta_index", ta_index, "tb_index", tb_index)
                 
                     #if print_flag: 
-                    if print_flag: print("Ta_index", ta_index, "tb_index", tb_index)
+                    if print_flag and print_depth > 0: print("Ta_index", ta_index, "tb_index", tb_index)
                     if 0 <= ta_index < len(self.MP_AB.distances):
                         if marker is not None: marker.remove()
                         if span0 is not None: span0.remove()
@@ -2192,7 +2860,7 @@ class MatrixProfilePlot:
         plt.tight_layout()
         return plt
 
-# %% ../nbs/mplots.ipynb 105
+# %% ../nbs/mplots.ipynb 114
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -2222,11 +2890,12 @@ class MatrixProfilePlotCached:
         print_flag  : bool = False,
         gpus        : List [ int ] = field(default_factory=list),
         pearson     : bool = True,
-        ensure_symetric : bool = False
+        ensure_symetric : bool = False,
+        print_depth     : int  = 1
     ) -> List [ float ]: 
         
         
-        if print_flag: 
+        if print_flag and print_depth > 0: 
             print("[ Get Matrix ]")
             print(" About to get data & data_b")
 
@@ -2234,7 +2903,7 @@ class MatrixProfilePlotCached:
         data_b = self.data_b[b_id_start:b_id_end]
 
 
-        if print_flag: 
+        if print_flag and print_depth > 0: 
             print(f"    A: {a_id_start}, {a_id_end}: {data}")
             print(f"    B: {b_id_start}, {b_id_end}: {data_b}")
             
@@ -2252,14 +2921,15 @@ class MatrixProfilePlotCached:
             if len(self.data) > 1000 * self.matrix_dim and len(self.data_b) > 1000 * self.matrix_dim:
                 # Currently GPU Matrix summaries can leave some spotty output if the input size is not large enough. So only allow GPU computation when we can be sure we will fill in the whole matrix
                 # TODO Follow Zach (zpzim): Implement GPU Matrix summaries which will generate the same output as the CPU version.
-                if print_flag: print("Compute without GPU")
+                if print_flag and print_depth > 0: print("Compute without GPU")
                 DM_AB.compute(
                     method      = 'scamp', 
                     mwidth      = self.matrix_dim, 
                     mheight     = self.matrix_dim,
                     provide_len = provide_len,
                     nlens       = nlens,
-                    ensure_symetric=ensure_symetric
+                    ensure_symetric=ensure_symetric,
+                    print_depth=print_depth-1
                 )
             
             else:
@@ -2272,7 +2942,8 @@ class MatrixProfilePlotCached:
                     pearson     = pearson,
                     provide_len = provide_len,
                     nlens       = nlens,
-                    ensure_symetric=ensure_symetric
+                    ensure_symetric=ensure_symetric,
+                    print_depth=print_depth-1
                 )
             
             matrix = DM_AB.distances
@@ -2281,7 +2952,7 @@ class MatrixProfilePlotCached:
             self.cache[cache_key] = matrix
             ## Cuidado con esto. Si algún día lo metemos en MVP hay que tener cuidado
             ## Porque ya al usar MatrixProfile daba problemas por detectar el 0 como patrón
-            if print_flag:
+            if print_flag and print_depth > 0:
                 print(f"matrix [{cache_key}] = {matrix}")
         return matrix 
 
@@ -2291,23 +2962,23 @@ class MatrixProfilePlotCached:
     
     def on_xlims_change(self,event_ax, print_flag = True):
     
-        if print_flag: print("x lims changued")
-        if print_flag: print("    event_ax.get_xlim()")  
+        if print_flag and print_depth > 0: print("x lims changued")
+        if print_flag and print_depth > 0: print("    event_ax.get_xlim()")  
 
         a_id_start, a_id_end = self.ids_int(event_ax.get_xlim())
 
-        if print_flag: print(f"    ax3 y lim")
+        if print_flag and print_depth > 0: print(f"    ax3 y lim")
 
         b_id_end, b_id_start = self.ids_int(self.ax3.get_ylim())
         
-        if print_flag:  print(a_id_start, a_id_end, b_id_start, b_id_end)
+        if print_flag and print_depth > 0:  print(a_id_start, a_id_end, b_id_start, b_id_end)
         self.redraw_matrix(a_id_start, a_id_end, b_id_start, b_id_end)
 
-    def on_ylims_change(self,event_ax, print_flag = True):
+    def on_ylims_change(self,event_ax, print_flag = True, print_depth = 1):
         st_a, ed_a = self.ids_int(self.ax2.get_xlim())
         ed_b, st_b = self.ids_int(event_ax.get_ylim())
         
-        if print_flag: print(st_a, ed_a, st_b, ed_b)
+        if print_flag and print_depth > 0: print(st_a, ed_a, st_b, ed_b)
         
         self.redraw_matrix(st_a, ed_a, st_b, ed_b)
 
@@ -2337,7 +3008,8 @@ class MatrixProfilePlotCached:
         subsequence_len : Optional [ int ] = None, 
         filename        : str   = "cached_matrix_plot.png",
         print_flag      : bool  = True,
-        ensure_symetric: bool  = False
+        ensure_symetric: bool  = False,
+        print_depth     : int   = 1
     ) : 
         if self.data_b is None:
             self.data_b = np.copy(self.data)
@@ -2354,17 +3026,17 @@ class MatrixProfilePlotCached:
             self.subsequence_len = find_dominant_window_sizes(self.data)
 
         if self.matrix_dim <= self.subsequence_len:
-            print(f"Selected dim {self.matrix_dim} smaller or equal than subsequence length {self.subsequence_len}, setting up to subsequence_len")
+            if print_flag  and print_depth > 0 : print(f"Selected dim {self.matrix_dim} smaller or equal than subsequence length {self.subsequence_len}, setting up to subsequence_len")
             self.matrix_dim = self.subsequence_len
             matrix_dim = 2*self.subsequence_len
 
         if self.matrix_dim % self.subsequence_len != 0:
-            print(f"Selected dim {self.matrix_dim} not multiple of subsequence length {self.subsequence_len}, setting up to subsequence_len")
+            if print_flag  and print_depth > 0 : print(f"Selected dim {self.matrix_dim} not multiple of subsequence length {self.subsequence_len}, setting up to subsequence_len")
             self.matrix_dim = ((self.matrix_dim + self.subsequence_len-1)//self.subsequence_len) * self.subsequence_len
             matrix_dim = self.matrix_dim
-            print(f"Final size: {self.matrix_dim}")
+            if print_flag  and print_depth > 0 : print(f"Final size: {self.matrix_dim}")
 
-        if print_flag:
+        if print_flag  and print_depth > 0 : 
             print(f"[ Plot Matrix Interactive ] {matrix_dim} | {subsequence_len}")
         
         n_x = len(self.data) - self.subsequence_len + 1
@@ -2372,11 +3044,11 @@ class MatrixProfilePlotCached:
         
         ratio = len(self.data) / len(self.data_b)
 
-        print(f"    Ratio: {ratio}")
+        if print_flag  and print_depth > 0 : print(f"    Ratio: {ratio}")
         matrix_dim_a = math.floor(ratio * matrix_dim)
         matrix_dim_b = self.matrix_dim
         
-        print(f"dima {matrix_dim_a}, dimb {matrix_dim_b}")
+        if print_flag  and print_depth > 0 : print(f"dima {matrix_dim_a}, dimb {matrix_dim_b}")
         #matrix = self.get_matrix(
          #   0, len (self.data),
           #  0, len(self.data_b),
@@ -2448,7 +3120,7 @@ class MatrixProfilePlotCached:
         self.ax3.set_ylim(ymin=0, ymax=n_y)
         self.ax3.invert_yaxis()
         self.ax3.invert_xaxis()
-        if print_flag: print(f"AX2: {self.ax2.callbacks.connect}")
+        if print_flag  and print_depth > 0 :  print(f"AX2: {self.ax2.callbacks.connect}")
 
         ### Callbacks
         def on_xlims_change(event): self.on_xlims_change(event)
@@ -2496,120 +3168,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-# %% ../nbs/mplots.ipynb 109
-from sklearn.base import TransformerMixin, BaseEstimator
-from sklearn.pipeline import Pipeline
-
-# %% ../nbs/mplots.ipynb 110
-class Interpolator(BaseEstimator, TransformerMixin):
-    def __init__(
-        self              : 'Interpolator', 
-        method            : str  ='linear', 
-        n_segments        : int  = 1, 
-        plot_original_data: bool = False,
-        plot_interpolated : bool = False,
-        print_flag        : bool = False
-        
-    ):
-        self.method             = method
-        self.n_segments         = n_segments
-        self.plot_interpolated  = plot_interpolated
-        self.plot_original_data = plot_original_data
-        self.print_flag         = print_flag
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-    
-                
-        if X.ndim == 1:
-            X = X.reshape(1, -1)
-
-        if self.plot_original_data:
-            if self.print_flag: print("Interpolator | Plot original data")
-            for dim in range (X.ndim-1):
-                if self.print_flag: print(f"Interpolator | Plot original data dimension {dim}")
-                plot_with_dots(
-                    X[dim], 
-                    sequence_flag = False, 
-                    title = f'Original data | dim {dim}'
-                )
-                
-        n_samples, n_features = X.shape
-        if n_features % self.n_segments != 0:
-            raise ValueError(
-                f"El número de segmentos {self.n_segments} debe dividir el número de características {n_features} | Reminder: {n_features // self.n_segments}"
-            )
-
-        segment_size = n_features // self.n_segments
-        interpolated_result = np.full_like(X, np.nan)
-
-        for i in np.arange(self.n_segments):
-            start = i * segment_size
-            end = start + segment_size
-            segment_mean = np.nanmean(X[:, start:end], axis=1)
-            for j in np.arange(n_samples):
-                nan_mask = np.isnan(X[j, start:end])
-                interpolated_result[j, start:end][nan_mask] = segment_mean[j]
-        res = np.where(np.isnan(X), interpolated_result, X)
-        if self.plot_interpolated:
-            for dim in range (X.ndim-1):
-                plot_with_dots(
-                    res[dim], 
-                    sequence_flag = False, 
-                    title = f'Interpolated data | dim {dim}'
-                )
-            
-        return res
-
-# %% ../nbs/mplots.ipynb 111
-class PAATransformer(BaseEstimator, TransformerMixin):
-    def __init__(
-        self, 
-        n_segments, 
-        plot_aggregated : bool = False, 
-        print_flag      : bool = False
-    ):
-        self.n_segments = n_segments
-        self.plot_aggregated = plot_aggregated
-        self.print_flag = print_flag
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        n_samples, n_features = X.shape
-        if n_features < self.n_segments:
-            raise ValueError("El número de segmentos no puede ser mayor que el número total de puntos.")
-
-        segment_size = n_features // ( self.n_segments + 1)
-
-        remainder = n_features % ( self.n_segments + 1)
-
-        # Crear un array para los resultados
-        result = np.zeros((n_samples, self.n_segments + 1))
-
-        # Procesar cada segmento
-        for i in range(self.n_segments):
-            start = i * segment_size + min(i, remainder)
-            end = start + segment_size + (1 if i < remainder else 0)
-            result[:, i] = np.mean(X[:, start:end], axis=1)
-
-        if self.plot_aggregated:
-            for dim in range (X.ndim-1):
-                if self.print_flag:
-                    print("Plos res | Dim", dim)
-                plot_with_dots(
-                    result[dim], 
-                    sequence_flag = False, 
-                    title = f'Aggregated data | dim {dim}'
-                )
-
-        return result
-
-
-# %% ../nbs/mplots.ipynb 114
+# %% ../nbs/mplots.ipynb 118
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

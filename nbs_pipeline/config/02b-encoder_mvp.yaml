@@ -42,8 +42,15 @@ configuration:
       #ws1: 1 #Monash-Australian_electricity_demand
       #ws2: &wlen365 #Monash-Australian_electricity_demand
       # Insect one million
+      #ws1: 1
+      #ws2: &wlen 187
+      # Exoplanets
+      #ws1: 1
+      #ws2: &wlen 190
+
+      # PulsusParadoxus SP02
       ws1: 1
-      ws2: &wlen 187
+      ws2: &wlen 100
       # probability of masking in MVP
       r: 0.710
       valid_size: 0.2

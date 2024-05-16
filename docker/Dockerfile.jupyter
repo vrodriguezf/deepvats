@@ -23,7 +23,7 @@ ENV LC_ALL=C.UTF-8 \
 
 
 #-- Octave GUI - uing interactive octave plots
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     xvfb \
     x11-xserver-utils \
     gnuplot \

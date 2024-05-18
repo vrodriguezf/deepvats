@@ -8,7 +8,7 @@ __all__ = ['mplot_path', 'eamonn_drive_mplots', 'euclidean_distance', 'z_normali
            'make_symmetric_', 'check_symmetric', 'moving_mean', 'sum_of_squared_differences', 'get_precomputes',
            'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'Interpolator', 'PAATransformer',
            'DistanceMatrix', 'plot_motif', 'plot_motif_separated', 'MatrixProfile', 'matrix_profile', 'compute',
-           'MatrixProfiles', 'ensure_valid_limits', 'downsample', 'restore_index', 'MatrixProfilePlot',
+           'MatrixProfiles', 'ensure_valid_limits', 'downsample', 'zoom_index', 'restore_index', 'MatrixProfilePlot',
            'MatrixProfilePlotCached']
 
 # %% ../nbs/mplots.ipynb 4
@@ -19,7 +19,7 @@ import dvats.utils as ut
 ## -- Ñapa por si tienes problemas de memoria en el current device -- ##
 ## De normal debe estar comentado
 import torch
-torch. cuda.set_device(0)
+torch. cuda.set_device(2)
 ## -- Hasta aquí la ñapa -- ##
 ## -- Matrix profile
 import pyscamp as scamp
@@ -60,6 +60,9 @@ from copy import deepcopy
 plt.style.use('https://raw.githubusercontent.com/TDAmeritrade/stumpy/main/docs/stumpy.mplstyle')
 
 from concurrent.futures import ThreadPoolExecutor
+
+#-- Generic
+import sys
 
 
 
@@ -892,7 +895,7 @@ class DistanceProfile:
             case 'stumpy.mass':
                 if print_flag and print_depth > 0: print("--> Using stumpy.mass")
                 if (d.__name__ == 'z_normalized_euclidean_distance'):
-                    if print_flag: print("Normalized")
+                    if print_flag and print_depth > 0: print("Normalized")
                     self.distances = stump.core.mass(
                         Q = self.data_b[self.data_b_i:self.data_b_i+m].astype(np.float64),
                         T = self.data.astype(np.float64)
@@ -904,10 +907,6 @@ class DistanceProfile:
                         T = self.data.astype(np.float64),
                         normalize = False
                     )
-                # Following the stumpy convention
-                if not(min_lag is None):
-                    for row in range(len(self.distances)):
-                        self.distances[row][row-min_lag:row+min_lag+1] = np.inf
             case _:
                 if print_flag and print_depth > 0: print("--> Using naive made distance profile [ default | Not recommended ]")
                 
@@ -917,37 +916,19 @@ class DistanceProfile:
                     vector_a = self.data[i:i+m]
                     vector_b = self.data_b[self.data_b_i:self.data_b_i+m]
                     if print_flag and print_depth > 0: 
-                        print(f"[DP] Computing distance {i} \nTA: {self.data},\nTB: {self.data_b[self.data_b_i:self.data_b_i+m]}")
+                        print(f"[DP] Computing distance {i} \nTA: {vector_a.shape},\nTB ~ {vector_b.shape}")
+                    #    print(f"[DP] Computing distance {i} \nTA: {self.data},\nTB: {self.data_b[self.data_b_i:self.data_b_i+m]}")
                     self.distances[i] = d (
                         vector_a    = vector_a,
-                        vector_b    = vector_b[self.data_b_i:self.data_b_i+m],
+                        vector_b    = vector_b,
                         print_flag  = print_flag,
                         time_flag   = time_flag,
                         print_depth = print_depth-1
                     )[0] #Returns (distance, time)
-                # Following the stumpy convention
-                if not(min_lag is None):
-                    for row in range(len(self.distances)):
-                        self.distances[row][row-min_lag:row+min_lag+1] = np.inf
-
-
-                #self.distances = np.array([
-                #    d(
-                #        vector_a = deepcopy(self.data_b),
-                #        vector_b = deepcopy(self.data[i:i+m]),
-                #        print_flag = print_flag,
-                #        time_flag = time_flag
-                #    )
-                #    [0] for i in range(expected_size)
-                #]
-                #)
+            
+        
         if (ensure_symetric):
             make_symmetric_(self.distances)
-            
-        #????????????
-        if (self.self_join):
-            if print_flag: print("--> Self join")
-            self.distances[self.data_b_i] = np.inf
             
         if plot_flag: 
             if print_flag: print("--> plot")
@@ -1237,13 +1218,14 @@ class DistanceMatrix:
             if print_flag and print_depth > 0: print("[ DistanceMatrix | Compute ]  --> Self_join")
             rows = columns
             reference_seq = self.data
+            
         else: #AB-join
             if print_flag and print_depth > 0: print("[ DistanceMatrix | Compute ] | --> AB-join")
             reference_seq = self.data_b
             rows = len(reference_seq) - self.subsequence_len + 1
-            if print_flag and print_depth > 0:
-                print(f"[ DistanceMatrix | Compute ] | reference_seq ~ {len(reference_seq)} | subsequence_len ~ {self.subsequence_len}")
-            
+        if print_flag and print_depth > 0:
+            print(f"[ DistanceMatrix | Compute ] | reference_seq ~ {len(reference_seq)} | subsequence_len ~ {self.subsequence_len} | rows {rows} | columns {columns}")
+        sys.stdout.flush()    
 
         self.distances = np.empty((rows, columns))
 
@@ -1318,9 +1300,11 @@ class DistanceMatrix:
             case 'scamp':
                 
                 self.method = 'scamp'
-                if print_flag and print_depth > 0: print(f"[ Distance Matrix | Compute ] --> Scamp | {self.distances.shape}")
+                if print_flag and print_depth > 0: 
+                    print(f"[ Distance Matrix | Compute ] --> Scamp | {self.distances.shape}")
                 if complete and allow_experimental:
-                    if print_flag and print_depth > 0: print("Complete and allow experimental")
+                    if print_flag and print_depth > 0: 
+                        print("Complete and allow experimental")
                     if mheight is None: 
                         mheight = n - self.subsequence_len + 1
                     if mwidth is None:
@@ -1421,6 +1405,15 @@ class DistanceMatrix:
                     )
 
                     self.distances[i] = DP_AB.distances
+
+        ############################
+        ### Apply exclusion zone ###
+        ############################
+        # Following the stumpy convention
+        if  not ( min_lag is None ):
+            for row in range(len(self.distances)):
+                for col in range(max(row-min_lag,0),min(row+min_lag+1, self.distances.shape[0])):
+                    self.distances[row][col] = np.inf
                         
         if time_flag: 
             timer.end()
@@ -1922,7 +1915,7 @@ def matrix_profile(
             
         case 'scamp': # Yo should use GPU in Large TS
             if  not ( min_lag is None):
-                warnings.warn("SCAMP does not have exclusion zone parameter. | Not yet implemented/found.")
+                warnings.warn("SCAMP does not have exclusion zone parameter. | Seems to be m/4 by default | See https://github.com/zpzim/SCAMP/blob/b55f1baf31b03ffb824c22336919cecfbf40ea92/src/core/tile.cpp#L12.")
                 
             if print_flag and print_depth > 0: print("--> Scamp")
             if debug: 
@@ -1968,7 +1961,7 @@ def matrix_profile(
                     self_join       = self_join, 
                     subsequence_len = subsequence_len
                 )
-                DP_AB.compute(print_flag = print_flag, plot_flag = plot_flag, d = d, minLag = min_lag)
+                DP_AB.compute(print_flag = print_flag, plot_flag = plot_flag, d = d, min_lag = min_lag)
                 mp[i] = np.nanmin(DP_AB.distances)
             
     if time_flag: 
@@ -2166,6 +2159,7 @@ class MatrixProfiles:
 
 # %% ../nbs/mplots.ipynb 108
 def ensure_valid_limits(
+    total_len       : int,
     subsequence_len : int, # divisor
     min_position    : int, # range[0] -> to change to multiple of subsequence_len
     max_position    : int, # range[1] -> to change to multiple of subsequence_len
@@ -2184,7 +2178,12 @@ def ensure_valid_limits(
     #Just in case. Shouldn't happen
     if max_position_adjusted <= min_position_adjusted:
         max_position_adjusted = (k_max + 2) * subsequence_len
-    if print_flag and print_depth > 0:print(f"Ensure valid limits | Original [{min_position}, {max_position}]\nFinal [{min_position_adjusted}, {max_position_adjusted}]")
+
+    min_position_adjusted = max(0, min_position_adjusted)
+    max_position_adjusted = min(max_position_adjusted, total_len)
+    if print_flag and print_depth > 0:
+        print(f"Ensure valid limits | Original [{min_position}, {max_position}]")
+        print(f"Final [{min_position_adjusted}, {max_position_adjusted}]")
     
     return min_position_adjusted, max_position_adjusted
      
@@ -2201,6 +2200,7 @@ def downsample(
     n_timestamps = max_position - min_position
     paa_factor = np.maximum(1, n_timestamps // max_points)
     if print_flag and print_depth > 0:
+        print(f"------------------------> Downsample")
         print("Downsample | N timestamps", n_timestamps)
         print("Downsample | PAA factor:", paa_factor)
     potential_segments = np.floor(n_timestamps // paa_factor).astype(int)
@@ -2240,17 +2240,41 @@ def downsample(
     ts_paa = paa_pipeline.fit_transform(data[min_position:max_position])[0]
     if print_flag and print_depth > 0: 
         print(f"Downsample | ts_paa~{len(ts_paa)}")
+        print(f"Downsample ------------------------>")
     return ts_paa, paa_factor
 
-def restore_index(
-    index        : int,
-    min_position : int, 
-    max_points   : int = 10000,
-    n_timestamps : int = 10000
-) -> int:
-    return min_position + np.floor(index * n_timestamps // max_points).astype(int)
+"""
+def zoom_index(id, n_timestamps, minv, maxv):
+    a = (maxv-minv)/n_timestamps
+    b = - a * minv
+    return int(np.ceil(a * id + b))
 
-# %% ../nbs/mplots.ipynb 109
+def restore_index(
+    id, 
+    minv, 
+    maxv,
+    n_timestamps
+):
+    a = (maxv - minv) / n_timestamps
+    b = -a * minv
+    return int((id - b)/a)
+"""
+
+def zoom_index(id, ts_len, ts_paa_len):
+    a = ts_paa_len / ts_len
+    return int(min(ts_paa_len, np.ceil(a * id)))
+
+def restore_index(
+    id, 
+    ts_len,
+    ts_paa_len
+):
+    a = (ts_len)/ts_paa_len
+    return int(min(np.ceil(id*a), ts_len))
+
+
+
+# %% ../nbs/mplots.ipynb 110
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -2342,6 +2366,8 @@ class MatrixProfilePlot:
                 y_padd  = self.y_max + self.subsequence_len - 1
                 self.x_max = min(len(self.data), x_padd)
                 self.y_max = min(y_maxvalue, y_padd)
+                print(f"Xpadd {x_padd}, YPadd {y_padd}, A ~ {len(self.data)}, B ~ {y_maxvalue}")
+        
         
             
 
@@ -2359,30 +2385,36 @@ class MatrixProfilePlot:
         if downsample_flag : 
             if print_flag: print( "[ MPlot | Compute ] | -->  Downsample ")
             if len(data) > max_points:
-                if print_flag: print("[ MPlot | Compute ] | ---> Downsample TA")
+                if print_flag: 
+                    print(f"[ MPlot | Compute ] | ---> Downsample TA to {self.x_min} : {self.x_max}")
                 
                 self.data_paa, self.data_paa_factor = downsample(
                     data         = data,
-                    min_position = x_min,
-                    max_position = x_max,
+                    min_position = self.x_min,
+                    max_position = self.x_max,
                     max_points   = max_points,
                     print_flag   = print_flag,
                     show_plots   = show_plots,
                     print_depth  = print_depth-1
                 )
-
+                if print_flag: 
+                    print(f"[ MPlot | Compute ] | Downsample TA ~ {len(self.data_paa)} ---> ")
+            
             if len(data_b) > max_points: 
-                if print_flag:print("[ MPlot | Compute ] |  --> Downsample TB ")
+                if print_flag:
+                    print("[ MPlot | Compute ] |  --> Downsample TB ")
 
-                self.data_b_paa, self.data_b_paa_factor = self.data_b_paa = downsample(
+                self.data_b_paa, self.data_b_paa_factor = downsample(
                     data         = data_b,
-                    min_position = y_min,
-                    max_position = y_max,
+                    min_position = self.y_min,
+                    max_position = self.y_max,
                     max_points   = max_points,
                     print_flag   = print_flag,
                     show_plots   = show_plots,
                     print_depth  = print_depth-1
                 )
+                if print_flag: 
+                    print(f"[ MPlot | Compute ] | Downsample TB_paa ~ {len(self.data_b_paa)} ---> ")
             if print_flag: print( "[ MPlot | Compute ] |Downsample -->")
         else:
             if print_flag: 
@@ -2393,7 +2425,7 @@ class MatrixProfilePlot:
         
         ## Ensure parameters
         if print_flag and print_depth > 0:
-            print("MPlot | Compute | --> Ensure parameters")
+            print("MPlot | Compute | --> Ensure parameters ")
         self.MP_AB = MatrixProfile(
             data            = self.data, 
             data_b          = self.data_b,
@@ -2404,6 +2436,7 @@ class MatrixProfilePlot:
         ## Ensure parameters
         if print_flag and print_depth > 0:
             print("MPlot | Compute | --> provide_len | data ~ ", self.data.shape )
+        
         if provide_len or self.data_b is None:
             if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | IF ")
             if self.dominant_lens is None:
@@ -2419,23 +2452,31 @@ class MatrixProfilePlot:
                         print_depth = print_depth-1
                     )
                 self.dominant_lens = self.MP_AB.dominant_lens
-            if print_flag and print_depth > 0:  print(f"MPlot | Compute | --> provide_len | IF | Setup sequence len to dominant_lens[0]={ self.dominant_lens[0]}")
+            
+            if print_flag and print_depth > 0:  
+                print(f"MPlot | Compute | --> provide_len | IF | Setup sequence len to dominant_lens[0]={ self.dominant_lens[0]} | TB_paa ~ {len(self.data_b_paa)}")
             self.subsequence_len = self.dominant_lens[0]
         elif not provide_len:
-            if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | Elif provide_len")
+            if print_flag and print_depth > 0: 
+                print(f"MPlot | Compute | --> provide_len | Elif provide_len | TB_paa {len(self.data_b_paa)}")
             self.subsequence_len = subsequence_len
+
         else:
             if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | Else")
             self.subsequence_len = len(self.data_b_paa)
         
+        if print_flag: 
+            print(f"[ MPlot | Compute ] | Ensure Parameters TB_paa ~ {len(self.data_b_paa)} ---> ")
+
         ## Ensure valid limits (so the compared subsequences are the same than with the global matrix)
-        self.x_min, self.x_max = ensure_valid_limits(self.subsequence_len, self.x_min, self.x_max, print_flag)
-        self.y_min, self.y_max = ensure_valid_limits(self.subsequence_len, self.y_min, self.y_max, print_flag)
+        self.x_min, self.x_max = ensure_valid_limits(len(self.data_paa), self.subsequence_len, self.x_min, self.x_max, print_flag)
+        self.y_min, self.y_max = ensure_valid_limits(len(self.data_b_paa), self.subsequence_len, self.y_min, self.y_max, print_flag)
         
         if print_flag and print_depth > 0: print(f"MatrixProfilePlot | Compute | Final Range [{self.x_min}:{self.x_max}, {self.y_min}:{self.y_max}]")
         
         ## Instantiate self.DM_AB & MP_AB
-        if print_flag and print_depth > 0: print("MPlot | Compute | --> Instantiate DM & MP")
+        if print_flag and print_depth > 0: 
+            print(f"MPlot | Compute | --> Instantiate DM & MP | TA ~ {len(self.data_paa)} | TB ~ {len(self.data_b_paa)}")
 
         self.DM_AB = DistanceMatrix(
             data            = self.data_paa, 
@@ -2453,6 +2494,8 @@ class MatrixProfilePlot:
             print(f"DM_AB ~ {self.DM_AB.shape}")
             print(f"MP_AB method: {self.MP_AB.method}")
             print(f"DM_AB method: {self.DM_AB.method}")
+            print(f"MP_AB data_b ~ {len(self.MP_AB.data_b)}")
+            print(f"DM_AB data_b ~ {len(self.DM_AB.data_b)}")
             print("MPlot | Compute | ... Checking inicializations ...")
 
         ## Compute       
@@ -2467,7 +2510,8 @@ class MatrixProfilePlot:
             min_lag     = min_lag,
             print_depth = print_depth-1
         )
-        if print_flag:  print("MPlot | Compute | --> Compute DM")
+        if print_flag:  
+            print("MPlot | Compute | --> Compute DM")
         self.DM_AB.compute(
             method              = dm_method,
             print_flag          = print_flag,
@@ -2475,7 +2519,7 @@ class MatrixProfilePlot:
             allow_experimental  = allow_experimental,
             ensure_symetric     = ensure_symetric,
             min_lag             = min_lag,
-            print_depth         = 1
+            #print_depth         = print_depth-1
         )
             
     def plot_check_limits(
@@ -2860,7 +2904,7 @@ class MatrixProfilePlot:
         plt.tight_layout()
         return plt
 
-# %% ../nbs/mplots.ipynb 114
+# %% ../nbs/mplots.ipynb 115
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -3168,7 +3212,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-# %% ../nbs/mplots.ipynb 118
+# %% ../nbs/mplots.ipynb 119
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

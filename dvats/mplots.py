@@ -2304,8 +2304,9 @@ class MatrixProfilePlot:
     data_b_paa_factor   : int            = 1
 
     # -- Plot
-    fig = None
-    gs  = None
+    fig             = None
+    gs              = None
+    plot_as_matlab  = True
     
     def compute(
         self,
@@ -2366,11 +2367,9 @@ class MatrixProfilePlot:
                 y_padd  = self.y_max + self.subsequence_len - 1
                 self.x_max = min(len(self.data), x_padd)
                 self.y_max = min(y_maxvalue, y_padd)
-                print(f"Xpadd {x_padd}, YPadd {y_padd}, A ~ {len(self.data)}, B ~ {y_maxvalue}")
-        
-        
-            
-
+                print(f"Xpadd {x_padd}, YPadd {y_padd}, A ~ {len(self.data)}, B ~ {y_maxvalue}"
+            )
+                
         if print_flag and print_depth > 0:
             print(f"MatrixProfilePlot | Compute | Range [{self.x_min}:{self.x_max}, {self.y_min}:{self.y_max}]")
 
@@ -2672,8 +2671,11 @@ class MatrixProfilePlot:
         
         # Set the tick marks to be at the center of the squares           
         x_ticks = np.arange(tx_start, tx_stop, tx_step)
-        y_ticks = np.arange(ty_start, ty_stop, ty_step)
-
+        
+        if self.plot_as_matlab:
+            y_ticks = np.arange(ty_stop, ty_start, -ty_step)
+        else:
+            y_ticks = np.arange(ty_start, ty_stop, ty_step)
         if print_flag and print_depth > 0:
             print("MPlot | Plot DM | ... No Adapt labels ...")
             print("MPlot | Plot DM | x_ticks", x_ticks)
@@ -2710,7 +2712,7 @@ class MatrixProfilePlot:
             print(f"MPlot | Plot DM | DM_AB[{x_min}:{x_max}] ~ {self.DM_AB.distances[x_start:x_end].shape}")
         
         heatmap = ax2.imshow(
-            self.DM_AB.distances[x_start:x_end], 
+            np.flip(self.DM_AB.distances[x_start:x_end], axis = 0),
             aspect = 'auto', 
             origin = 'lower', 
             cmap   = 'hot', 
@@ -2749,7 +2751,7 @@ class MatrixProfilePlot:
         plot_mp_flag    = True,
         MPlot_title     = None,
         MPlot_xlabel    = None,
-        MPlot_ylabel    = None
+        MPlot_ylabel    = None      
     ):
         
         x_min, x_max, y_min, y_max = self.plot_base(

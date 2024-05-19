@@ -2304,8 +2304,9 @@ class MatrixProfilePlot:
     data_b_paa_factor   : int            = 1
 
     # -- Plot
-    fig             = None
-    gs              = None
+    graph           = None
+    mp_plot         = None
+    dm_plot         = None
     plot_as_matlab  = True
     
     def compute(
@@ -2509,7 +2510,7 @@ class MatrixProfilePlot:
             min_lag     = min_lag,
             print_depth = print_depth-1
         )
-        if print_flag:  
+        if print_flag and print_depth > 0:  
             print("MPlot | Compute | --> Compute DM")
         self.DM_AB.compute(
             method              = dm_method,
@@ -2518,7 +2519,7 @@ class MatrixProfilePlot:
             allow_experimental  = allow_experimental,
             ensure_symetric     = ensure_symetric,
             min_lag             = min_lag,
-            #print_depth         = print_depth-1
+            print_depth         = print_depth-1
         )
             
     def plot_check_limits(
@@ -2561,50 +2562,13 @@ class MatrixProfilePlot:
                 warnings.warn(f"Adjusted y_max to {y_max} as it was bigger than the number of columns (nB-m+1)", UserWarning)
         return (x_min, x_max, y_min, y_max)
 
-    def plot_MP(
-            self, 
-            x_min, x_max, x_start, x_end, n_x,
-            figsize, 
-            label = "Data Matrix Profile", 
-            ts_name = "", 
-            method = "Naive"
-        ):
-        # Matrix Profile
-        ax1 = self.fig.add_subplot(self.gs[0])
-
-        ax1.plot(self.MP_AB.distances[x_start:x_end], label = label)
-        ax1.set_title(f"{ts_name}[{x_min-self.x_min}, {x_max}] | {method}")
-        ax1.legend()
-        ax1.set_xticks(
-            np.linspace(
-                0, 
-                n_x,
-                num=int(figsize[0]*2)
-            )
-        )
-        
-        ax1.set_yticks(
-            np.linspace(
-                min(self.MP_AB.distances), 
-                max(self.MP_AB.distances),
-                num=int(figsize[1]//2)
-            )
-        )
-        plt.setp(
-            ax1.get_xticklabels(), 
-            rotation      = 45, 
-            ha            = "right", 
-            rotation_mode = "anchor"
-        )
-
-
-
 
     def plot_base(
         self,
         x_min, x_max, 
         y_min, y_max, 
-        figsize, plot_mp_flag
+        figsize,
+        plot_mp_flag
     ):
         
         # Ensure computed
@@ -2615,12 +2579,53 @@ class MatrixProfilePlot:
         x_min, x_max, y_min, y_max = self.plot_check_limits(x_min, x_max, y_min, y_max)
 
         # Setup complete figure distribution
-        self.fig = plt.figure(figsize=figsize)
+        fig = plt.figure(figsize=figsize)
         if plot_mp_flag:
-            self.gs  = GridSpec(2, 1, height_ratios=[1, 4])
-        else: 
-            self.gs  = GridSpec(1, 1, height_ratios=[1, 4])
+            gs = GridSpec(2, 1, height_ratios=[1, 3])  # Adjust height_ratios as needed
+            self.mp_plot = fig.add_subplot(gs[0])
+            self.dm_plot = fig.add_subplot(gs[1])
+        else:
+            gs = GridSpec(1, 1, height_ratios=[1])
+            self.dm_plot = fig.add_subplot(gs[0])
+
+        self.graph = fig
         return x_min, x_max, y_min, y_max
+    
+    def plot_MP(
+            self, 
+            x_min, x_max, x_start, x_end, n_x,
+            figsize, 
+            label = "Data Matrix Profile", 
+            ts_name = "", 
+            method = "Naive"
+        ):
+        # Matrix Profile
+        self.mp_plot.plot(self.MP_AB.distances[x_start:x_end], label = label)
+        self.mp_plot.set_title(f"{ts_name} [{x_start}:{x_end}] | {method}")
+        
+        self.mp_plot.set_xticks(
+            np.linspace(
+                0, 
+                n_x,
+                num=int(figsize[0]*2)
+            )
+        )
+        
+        self.mp_plot.set_yticks(
+            np.linspace(
+                0, 
+                max(self.MP_AB.distances[x_start:x_end]),
+                num=int(figsize[1]//2)
+            )
+        )
+        
+        plt.setp(
+            self.mp_plot.get_xticklabels(), 
+            rotation      = 45, 
+            ha            = "right", 
+            rotation_mode = "anchor"
+        )
+        self.mp_plot.legend()
 
     def plot_DM(
         self, 
@@ -2639,15 +2644,11 @@ class MatrixProfilePlot:
         print_depth     = 1
     ):
         # MPlot (Distance Profile)
-        x = 1 if plot_mp_flag else 0
-        ax2 = self.fig.add_subplot(self.gs[x])
-        
-        ax2.set_title(MPlot_title)
-        ax2.set_xlabel(MPlot_xlabel)
-        ax2.set_ylabel(MPlot_ylabel)
+        self.dm_plot.set_title(MPlot_title)
+        self.dm_plot.set_xlabel(MPlot_xlabel)
+        self.dm_plot.set_ylabel(MPlot_ylabel)
 
         if less_labels:
-
             x_labels_count = max(1, n_x // max(1, int(figsize[0] * 2)))
             y_labels_count = max(1, n_y // max(1, int(figsize[1] * 2)))
 
@@ -2672,10 +2673,11 @@ class MatrixProfilePlot:
         # Set the tick marks to be at the center of the squares           
         x_ticks = np.arange(tx_start, tx_stop, tx_step)
         
-        if self.plot_as_matlab:
-            y_ticks = np.arange(ty_stop, ty_start, -ty_step)
-        else:
-            y_ticks = np.arange(ty_start, ty_stop, ty_step)
+        #if self.plot_as_matlab:
+        #    y_ticks = np.arange(ty_stop, ty_start, -ty_step)
+        #else:
+        y_ticks = np.arange(ty_start, ty_stop, ty_step)
+        
         if print_flag and print_depth > 0:
             print("MPlot | Plot DM | ... No Adapt labels ...")
             print("MPlot | Plot DM | x_ticks", x_ticks)
@@ -2684,26 +2686,25 @@ class MatrixProfilePlot:
             print("MPlot | Plot DM | DM_AB ~ ", self.DM_AB.distances.shape)
             print(f"MPlot | Plot DM | DM_AB[{x_min}:{x_max}] ~ {self.DM_AB.distances[x_min:x_max].shape}")
 
-        ax2.set_xticks(x_ticks)
-        ax2.set_yticks(y_ticks)
+        self.dm_plot.set_xticks(x_ticks)
+        self.dm_plot.set_yticks(y_ticks)
         
-        ax2.set_xticklabels(x_ticks + x_min)
-        ax2.set_yticklabels(y_ticks + y_min)
+        self.dm_plot.set_xticklabels(x_ticks + x_min)
+        self.dm_plot.set_yticklabels(y_ticks + y_min)
+        
 
         # Rotate tick labels for readability
         plt.setp(
-            ax2.get_xticklabels(), 
+            self.dm_plot.get_xticklabels(), 
             rotation      = 45, 
             ha            = "right", 
             rotation_mode = "anchor"
         )
-        return ax2
 
     def plot_heatmap(
         self, 
         x_min, x_max, x_start, x_end,
         n_x, n_y, 
-        ax2, 
         print_flag  = False,
         print_depth = 1
     ):
@@ -2711,9 +2712,9 @@ class MatrixProfilePlot:
         if print_flag and print_depth > 0:
             print(f"MPlot | Plot DM | DM_AB[{x_min}:{x_max}] ~ {self.DM_AB.distances[x_start:x_end].shape}")
         
-        heatmap = ax2.imshow(
-            np.flip(self.DM_AB.distances[x_start:x_end], axis = 0),
-            aspect = 'auto', 
+        heatmap = self.dm_plot.imshow(
+            self.DM_AB.distances[x_start:x_end],
+            aspect = 'equal', 
             origin = 'lower', 
             cmap   = 'hot', 
             extent = ( 
@@ -2723,13 +2724,14 @@ class MatrixProfilePlot:
                 n_y
             )
         )
-        plt.colorbar(heatmap, ax=ax2, orientation='vertical', label='Distance')
+        plt.colorbar(heatmap, ax=self.dm_plot, orientation='vertical', label='Distance')
         return heatmap
 
     def plot_xrange(self, x_min, x_max):
         #n_x = len(self.DM_AB.distances)
         n_x = x_max-x_min+1
         return n_x
+    
     def plot_yrange(self, y_min, y_max):
         #n_y = len(self.DM_AB.distances[0])
         n_y = y_max-y_min+1
@@ -2751,13 +2753,15 @@ class MatrixProfilePlot:
         plot_mp_flag    = True,
         MPlot_title     = None,
         MPlot_xlabel    = None,
-        MPlot_ylabel    = None      
+        MPlot_ylabel    = None,
+        debug_flag      = False
     ):
         
         x_min, x_max, y_min, y_max = self.plot_base(
             x_min, x_max, 
             y_min, y_max, 
-            figsize, plot_mp_flag
+            figsize,
+            plot_mp_flag
         )                
         x_start = x_min - self.x_min
         x_end   = x_max - self.x_min
@@ -2769,6 +2773,8 @@ class MatrixProfilePlot:
 
 
         
+        if debug_flag:
+            print("--> Plotting MP")
         
         if plot_mp_flag:
             self.plot_MP(
@@ -2780,8 +2786,9 @@ class MatrixProfilePlot:
                 ts_name, 
                 self.MP_AB.method
             )
-
-        ax2 = self.plot_DM(
+            
+        
+        self.plot_DM(
             x_min, x_max, 
             y_min, y_max, 
             x_start, x_end,
@@ -2793,9 +2800,31 @@ class MatrixProfilePlot:
             less_labels
         )
         
-        self.plot_heatmap(x_min, x_max, x_start, x_end, n_x, n_y,ax2, print_flag)
-                
-        plt.tight_layout()
+        self.plot_heatmap(x_min, x_max, x_start, x_end, n_x, n_y,print_flag)
+        
+        if (self.plot_as_matlab):
+            print("Plotting as MATLAB")
+            self.dm_plot.invert_yaxis()
+        else:
+            print("Plotting as Python")
+        
+        #### Setup width
+        # Get the current size of the figure
+    
+        #current_size = self.graph.get_size_inches()
+        #current_width, current_height = current_size
+
+        # Calculate the aspect ratio of the figure (width / height)
+        #aspect_ratio = current_width / current_height
+
+        # Calculate the new height to maintain the aspect ratio
+        #new_height = figsize[0] / aspect_ratio
+
+        # Set the new size of the figure
+        self.graph.set_size_inches(figsize[0], figsize[1]) #new_height)
+        
+        #--- Layout & show
+        self.graph.tight_layout()
         if show_flag:
             plt.show()
         return plt

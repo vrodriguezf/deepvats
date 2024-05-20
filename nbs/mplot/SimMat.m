@@ -140,6 +140,9 @@ for diag = minlag + 1 : n - subseqLen + 1
             similarityMatrix(row + diag - 1, row) = corr_;
             %init = similarityMatrixLength - subsequenceCountB;
         elseif row + diag - 1 < similarityMatrixLength - subsequenceCountB + 1
+            disp("Entro por elif ¿minLag?")
+            disp(similarityMatrixLength)
+            disp(subsequenceCountB)
             continue;
         else
             corr_ = cov_ * invsig(row) * invsig(row + diag - 1);

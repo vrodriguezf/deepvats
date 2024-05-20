@@ -8,19 +8,16 @@ __all__ = ['mplot_path', 'eamonn_drive_mplots', 'euclidean_distance', 'z_normali
            'make_symmetric_', 'check_symmetric', 'moving_mean', 'sum_of_squared_differences', 'get_precomputes',
            'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'Interpolator', 'PAATransformer',
            'DistanceMatrix', 'plot_motif', 'plot_motif_separated', 'MatrixProfile', 'matrix_profile', 'compute',
-           'MatrixProfiles', 'ensure_valid_limits', 'downsample', 'zoom_index', 'restore_index', 'MatrixProfilePlot',
-           'MatrixProfilePlotCached']
+           'MatrixProfiles', 'ensure_valid_limits', 'downsample', 'zoom_index', 'restore_index', 'threshold_interval',
+           'MatrixProfilePlot', 'MatrixProfilePlotCached']
 
 # %% ../nbs/mplots.ipynb 4
 ## -- Deepvats
 import dvats.load as load
 import dvats.memory as mem
 import dvats.utils as ut
-## -- Ñapa por si tienes problemas de memoria en el current device -- ##
-## De normal debe estar comentado
-import torch
-torch. cuda.set_device(2)
-## -- Hasta aquí la ñapa -- ##
+
+# %% ../nbs/mplots.ipynb 6
 ## -- Matrix profile
 import pyscamp as scamp
 import stumpy as stump 
@@ -66,7 +63,7 @@ import sys
 
 
 
-# %% ../nbs/mplots.ipynb 5
+# %% ../nbs/mplots.ipynb 7
 #-- "Importing" MPlots MATLAB code
 from oct2py import octave
 mplot_path = os.path.expanduser('~/work/nbs/mplot')
@@ -77,7 +74,7 @@ octave.register_graphics_toolkit('fltk')
 octave.graphics_toolkit('fltk')
 octave.set(0, 'defaultfigurevisible', 'on');
 
-# %% ../nbs/mplots.ipynb 10
+# %% ../nbs/mplots.ipynb 12
 def euclidean_distance (
     vector_a    : List [ float ],
     vector_b    : List [ float ],
@@ -113,7 +110,7 @@ def euclidean_distance (
         if print_flag and print_depth > 0: t.show()
     return dist, t
 
-# %% ../nbs/mplots.ipynb 13
+# %% ../nbs/mplots.ipynb 15
 def z_normalize(
     sequence    : List [ float ],
     print_flag  : bool = False,
@@ -134,7 +131,7 @@ def z_normalize(
         if print_flag and print_depth > 0: t.show()
     return res, t
 
-# %% ../nbs/mplots.ipynb 15
+# %% ../nbs/mplots.ipynb 17
 def z_normalized_euclidean_distance(
     vector_a    : List [ float ],
     vector_b    : List [ float ],
@@ -169,7 +166,7 @@ def z_normalized_euclidean_distance(
         print("dist", res)
     return res, t, ts
 
-# %% ../nbs/mplots.ipynb 18
+# %% ../nbs/mplots.ipynb 20
 def show_sequence(
     data         : List[ List [ float ] ] = None, 
     hide_rows    : bool = False, 
@@ -196,7 +193,7 @@ def show_sequence(
     ])
     display(styled_df)
 
-# %% ../nbs/mplots.ipynb 19
+# %% ../nbs/mplots.ipynb 21
 def plot_with_dots(
     time_series             : List [ float ]    = None,
     xlabel                  : str               = 'Index (time)',
@@ -223,7 +220,7 @@ def plot_with_dots(
 
 
 
-# %% ../nbs/mplots.ipynb 22
+# %% ../nbs/mplots.ipynb 24
 def show_subsequence(
         data         : List [ float ], 
         i            : int  = 0, 
@@ -238,7 +235,7 @@ def show_subsequence(
                 hide_columns    = hide_columns, 
         )
 
-# %% ../nbs/mplots.ipynb 24
+# %% ../nbs/mplots.ipynb 26
 def plot_subsequence(
     TA              : List [ float ]    = None,
     sequence_i      : int               = 0,
@@ -282,7 +279,7 @@ def plot_subsequence(
     plt.show()
     if sequence_flag : show_sequence([TA[sequence_i:sequence_i + subsequence_len]], hide_rows, hide_columns)
 
-# %% ../nbs/mplots.ipynb 27
+# %% ../nbs/mplots.ipynb 29
 class GD_Mat:
     def __init__(self, id,  name, data_path = '~/data'):
         self.id                 = id #GD id
@@ -322,7 +319,7 @@ class GD_Mat:
         str +=f"\nnum_mats: {self.num_mats}"
         return str
 
-# %% ../nbs/mplots.ipynb 28
+# %% ../nbs/mplots.ipynb 30
 @dataclass
 class MatlabMatrix: 
     #File name
@@ -421,7 +418,7 @@ class MatlabMatrix:
             self.data = np.concatenate((start, out0, stop))
             return self.data
 
-# %% ../nbs/mplots.ipynb 37
+# %% ../nbs/mplots.ipynb 39
 def find_dominant_window_sizes_list(
         X           : List [ float ], 
         nsizes      : int               = 1,
@@ -471,7 +468,7 @@ def find_dominant_window_sizes_list(
     
     return sizes
 
-# %% ../nbs/mplots.ipynb 43
+# %% ../nbs/mplots.ipynb 45
 def plot_subsequences_aux(
     ax              : plt.Axes, 
     x_coords        : List[ int ],  
@@ -547,7 +544,7 @@ def plot_subsequences(
     buttons = widgets.HBox([prev_button, next_button])
     display(buttons)
 
-# %% ../nbs/mplots.ipynb 44
+# %% ../nbs/mplots.ipynb 46
 def plot_dataFrame(title, df, vars = [], interval = 10000):
     if len(vars) > 0:
         num_vars = len(df.columns)
@@ -585,7 +582,7 @@ def plot_dataFrame(title, df, vars = [], interval = 10000):
         plt.show()
     else: raise ValueError("No variable proposed for plotting")
 
-# %% ../nbs/mplots.ipynb 45
+# %% ../nbs/mplots.ipynb 47
 def plot_dataFrame_compareSubsequences(
     title, df, var, subsequence_len, seq1_init, seq2_init, 
     title_fontsize = '30',
@@ -612,7 +609,7 @@ def plot_dataFrame_compareSubsequences(
     plt.show()
     
 
-# %% ../nbs/mplots.ipynb 47
+# %% ../nbs/mplots.ipynb 49
 def df_plot_colored_variables(df):
     # Show time series plot
     fig, ax = plt.subplots(1, figsize=(15,5), )
@@ -625,7 +622,7 @@ def df_plot_colored_variables(df):
     plt.legend()
     display(plt.show())
 
-# %% ../nbs/mplots.ipynb 48
+# %% ../nbs/mplots.ipynb 50
 def plot_df_with_intervals_and_colors(title, df, interval=10000):
     num_variables = len(df.columns)
     num_intervals = len(df) // interval + 1  # Calcula el número necesario de intervalos/subplots
@@ -656,7 +653,7 @@ def plot_df_with_intervals_and_colors(title, df, interval=10000):
     plt.tight_layout()
     plt.show()
 
-# %% ../nbs/mplots.ipynb 50
+# %% ../nbs/mplots.ipynb 52
 def make_symmetric_(
         mat : List [ float ]
     ) -> None:
@@ -675,7 +672,7 @@ def check_symmetric(
     return sym
 
 
-# %% ../nbs/mplots.ipynb 53
+# %% ../nbs/mplots.ipynb 55
 def moving_mean(a, w):
   result = np.zeros((len(a) - w + 1,))
   p = a[0]
@@ -746,7 +743,10 @@ def convert_non_finite_to_zero(T, m):
     steps_since_last_nan += 1
   return timeseries_clean, nanvals
 # Computes the distance matrix using the diagonal update method used in SCAMP
-def distance_matrix(a,b,w):
+def distance_matrix(a,b,w, minlag = None):
+    warnings.warn(
+        "Tried to use this function as in simMat but the MPlot gets really different. | TODO: Fix"
+    )
     has_b = True
     if b is None:
         has_b = False
@@ -776,10 +776,11 @@ def distance_matrix(a,b,w):
         mub, sigb, dfb, dgb = get_precomputes(b,w, nan_b)
 
     diagmax = na
-    if not has_b:
+    if minlag is None:
+      if not has_b:
         minlag = w // 4
-    else:
-        minlag = 0
+      else:
+          minlag = 0
 
     
     c = np.zeros((diagmax - minlag,)) 
@@ -805,9 +806,13 @@ def distance_matrix(a,b,w):
         c = x[:-1]
 
     out[np.isnan(out)] = -2
+
+    ### Added in a trial to get the same result as in SimMat (Matlab)
+    out = np.sqrt(np.maximum(0, 2 * (w - out)));
+
     return out
 
-# %% ../nbs/mplots.ipynb 55
+# %% ../nbs/mplots.ipynb 57
 @dataclass
 class DistanceProfile:
     """ Vector of distances between each subsequence in TA and a reference sequence TB"""
@@ -988,11 +993,11 @@ class DistanceProfile:
         plt.tight_layout()
         plt.show()
 
-# %% ../nbs/mplots.ipynb 62
+# %% ../nbs/mplots.ipynb 64
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.pipeline import Pipeline
 
-# %% ../nbs/mplots.ipynb 63
+# %% ../nbs/mplots.ipynb 65
 class Interpolator(BaseEstimator, TransformerMixin):
     def __init__(
         self              : 'Interpolator', 
@@ -1055,7 +1060,7 @@ class Interpolator(BaseEstimator, TransformerMixin):
             
         return res
 
-# %% ../nbs/mplots.ipynb 64
+# %% ../nbs/mplots.ipynb 66
 class PAATransformer(BaseEstimator, TransformerMixin):
     def __init__(
         self, 
@@ -1101,7 +1106,7 @@ class PAATransformer(BaseEstimator, TransformerMixin):
         return result
 
 
-# %% ../nbs/mplots.ipynb 69
+# %% ../nbs/mplots.ipynb 71
 @dataclass
 class DistanceMatrix: 
     """ Similarity matrix """
@@ -1199,7 +1204,8 @@ class DistanceMatrix:
         nlens               : int           = 1,    # How many lengths to get from Fourier's transform
         gpus                : List [ int ]  = None, # Gpus to use
         pearson             : bool          = True,    # Wether to apply or not pearson correlation. Needed by scamp,
-        print_depth         : int           = 1
+        print_depth         : int           = 1,
+        debug               : bool          = False
     ) -> Tuple [ List [ List [ float ] ], Optional [ ut.Time ] ] :
         t = None
 
@@ -1302,30 +1308,48 @@ class DistanceMatrix:
                 self.method = 'scamp'
                 if print_flag and print_depth > 0: 
                     print(f"[ Distance Matrix | Compute ] --> Scamp | {self.distances.shape}")
-                if complete and allow_experimental:
-                    if print_flag and print_depth > 0: 
-                        print("Complete and allow experimental")
-                    if mheight is None: 
-                        mheight = n - self.subsequence_len + 1
-                    if mwidth is None:
-                        mwidth =  n - self.subsequence_len + 1
-                    
-                    self.distances = scamp.selfjoin_matrix(
-                        self.data, 
-                        self.subsequence_len,
-                        gpus    = gpus,
-                        mheight = mheight,
-                        mwidth  = mwidth,
-                        verbose = print_flag,
-                        pearson = pearson
-                    )
+                if allow_experimental:
+                    if complete:
+                        if print_flag and print_depth > 0: 
+                            print("Complete and allow experimental")
+                        if mheight is None: 
+                            mheight = n - self.subsequence_len + 1
+                        if mwidth is None:
+                            mwidth =  n - self.subsequence_len + 1
+                        
+                        self.distances = scamp.selfjoin_matrix(
+                            self.data, 
+                            self.subsequence_len,
+                            gpus    = gpus,
+                            mheight = mheight,
+                            mwidth  = mwidth,
+                            verbose = print_flag,
+                            pearson = pearson
+                        )
+                    else:
+                        if print_flag and print_depth > 0: 
+                            print("AB-Join and allow experimental")
+                        if mheight is None: 
+                            mheight = n - self.subsequence_len + 1
+                        if mwidth is None:
+                            mwidth =  n - self.subsequence_len + 1
+                        
+                        self.distances = scamp.selfjoin_matrix(
+                            a       = self.data, 
+                            b       = reference_seq,
+                            m       = self.subsequence_len,
+                            mheight = mheight,
+                            mwidth  = mwidth
+                        )
                 else:
                     if print_flag and print_depth > 0: print("Not allowing experimental")
                     self.distances = distance_matrix(
                             self.data, #a_data
                             reference_seq,  #b_data
-                            self.subsequence_len #windos
+                            self.subsequence_len, #window,
+                            min_lag
                         )
+                
                 if print_flag and print_depth > 0: print(f"[ Distance Matrix | Compute ] Scamp --> | {self.distances.shape}")
             case 'octave-mpx':
                 self.method = 'octave-mpx'
@@ -1418,11 +1442,11 @@ class DistanceMatrix:
         if time_flag: 
             timer.end()
             self.computation_time = timer.duration() 
-        if print_flag and print_depth > 0: 
-            if time_flag: 
-                print(f"matrix profile {self.computation_time} seconds -->")
-            else: 
-                print("matrix profile -->")
+        
+        if time_flag: 
+            print(f"matrix profile {self.computation_time} seconds -->")
+        elif print_flag and print_depth > 0: 
+            print("matrix profile -->")
         #TODO: En mplot_explorer se asegura de que la matriz sea simétrica respecto a la diagonal
         # y tiene sentido, cuando es cuadrada, pero.... siendo así... 
         # ¿Por qué la guardo entera? Ya he guardado antes matrices simétricas como triangulares...
@@ -1433,7 +1457,7 @@ class DistanceMatrix:
         self.shape = self.distances.shape
         return self.distances    
 
-# %% ../nbs/mplots.ipynb 73
+# %% ../nbs/mplots.ipynb 75
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -1459,7 +1483,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 74
+# %% ../nbs/mplots.ipynb 76
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -1498,7 +1522,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 76
+# %% ../nbs/mplots.ipynb 78
 @dataclass
 class MatrixProfile:
     """ Class for better usability of Matrix Profile inside deepVATS"""
@@ -1793,7 +1817,7 @@ class MatrixProfile:
     def __str__(self):
         return f"MP: {self.distances}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
-# %% ../nbs/mplots.ipynb 79
+# %% ../nbs/mplots.ipynb 81
 def matrix_profile(
     data            : List [ float ], 
     subsequence_len : Optional [ int ]              = None, 
@@ -1913,7 +1937,9 @@ def matrix_profile(
             index_right = mp[:,3]
             mp = mp[:,0]
             
-        case 'scamp': # Yo should use GPU in Large TS
+        case 'scamp': # You should use GPU in Large TS
+            if print_flag and print_depth > 0:
+                print("[ Matrix Profile | Compute | matrix_profile ] --> scamp")
             if  not ( min_lag is None):
                 warnings.warn("SCAMP does not have exclusion zone parameter. | Seems to be m/4 by default | See https://github.com/zpzim/SCAMP/blob/b55f1baf31b03ffb824c22336919cecfbf40ea92/src/core/tile.cpp#L12.")
                 
@@ -1927,20 +1953,23 @@ def matrix_profile(
                 mp, index = scamp.selfjoin(data, subsequence_len)
             else: 
                 if print_flag and print_depth > 0: print("--> data_b provided => Executing abjoin")
+                warnings.warn("Sometimes this execution returns a 0 array. Please take care of that.")
                 mp, index = scamp.abjoin(
-                    a = data, 
-                    b = data_b, 
+                    a = data,
+                    b = data_b,
                     m = subsequence_len
                 )
+                if print_flag and print_depth > 0: print("--> data_b provided => Executing abjoin")
+                
         case _: #default naive
             if print_flag and print_depth > 0: print("--> Invalid method. Using naive approach [default]")
             if ( data_b is None or self_join ): 
                 data_b = data
-            n_a     = len(data)
-            n_b     = len(data_b)
-            m       = subsequence_len
-            rows    = n_b-m+1
-            columns = n_a-m+1
+                n_a     = len(data)
+                n_b     = len(data_b)
+                m       = subsequence_len
+                rows    = n_b-m+1
+                columns = n_a-m+1
 
             if print_flag and print_depth > 0:
                 print("TA ~ ", n_a)
@@ -1974,7 +2003,7 @@ def matrix_profile(
             print("matrix profile -->")
     return mp, index, index_left, index_right, duration
 
-# %% ../nbs/mplots.ipynb 80
+# %% ../nbs/mplots.ipynb 82
 def compute(
     self            : MatrixProfile,
     method          : str                           = 'naive', 
@@ -1989,7 +2018,7 @@ def compute(
     provide_len     : bool                          = True,
     nlens           : Optional [ int ]              = 1,
     print_depth     : int                           = 1
-) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
+) -> List [ float ]:
     self.method = method
 
     if self.subsequence_len is None:
@@ -2017,7 +2046,7 @@ def compute(
     return self.distances
 MatrixProfile.compute = compute
 
-# %% ../nbs/mplots.ipynb 90
+# %% ../nbs/mplots.ipynb 92
 @dataclass
 class MatrixProfiles:
     matrix_profiles : List[ MatrixProfile ] = field( default_factory=list )
@@ -2041,7 +2070,7 @@ class MatrixProfiles:
         debug       : bool      = False, 
         time_flag   : bool      = True,
         print_depth : int       = 1
-    ):
+    ) -> MatrixProfile:
         """ 
         Computes the Matrix Profile for data & data_b arrays using subsequence_len length.
         Appends the resulting MP to the matrix_profiles list.
@@ -2051,6 +2080,7 @@ class MatrixProfiles:
             subsequence_len=self.subsequence_len,
             data_b = self.data_b
         )
+        
         mp.compute(
             method          = method, 
             d               = d,
@@ -2157,7 +2187,7 @@ class MatrixProfiles:
         plt.show()
 
 
-# %% ../nbs/mplots.ipynb 108
+# %% ../nbs/mplots.ipynb 110
 def ensure_valid_limits(
     total_len       : int,
     subsequence_len : int, # divisor
@@ -2274,7 +2304,27 @@ def restore_index(
 
 
 
-# %% ../nbs/mplots.ipynb 110
+# %% ../nbs/mplots.ipynb 112
+def threshold_interval(
+    data            : List [ List [ float ] ],
+    threshold_min   : float,
+    threshold_max   : float,
+    include_min     : bool = False,
+    include_max     : bool = False
+) -> List [ List [ float ] ]:
+    result = deepcopy(data)    
+    if include_min:
+        result[ result < 1]  = np.inf
+    else:
+        result[ result <= threshold_min]  = np.inf
+    
+    if include_max:
+        result[ result > threshold_max]  = np.inf
+    else:
+        result[ result >= threshold_max]  = np.inf
+    return result
+
+# %% ../nbs/mplots.ipynb 114
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -2511,7 +2561,8 @@ class MatrixProfilePlot:
             print_depth = print_depth-1
         )
         if print_flag and print_depth > 0:  
-            print("MPlot | Compute | --> Compute DM")
+            print("MPlot | Compute | --> Compute DM | Allow experimental: ", allow_experimental)
+        
         self.DM_AB.compute(
             method              = dm_method,
             print_flag          = print_flag,
@@ -2519,7 +2570,8 @@ class MatrixProfilePlot:
             allow_experimental  = allow_experimental,
             ensure_symetric     = ensure_symetric,
             min_lag             = min_lag,
-            print_depth         = print_depth-1
+            print_depth         = print_depth-1,
+            debug               = debug
         )
             
     def plot_check_limits(
@@ -2702,18 +2754,27 @@ class MatrixProfilePlot:
         )
 
     def plot_heatmap(
-        self, 
-        x_min, x_max, x_start, x_end,
-        n_x, n_y, 
-        print_flag  = False,
-        print_depth = 1
+        self        : 'MatrixProfilePlot', 
+        x_min       : int, 
+        x_max       : int, 
+        x_start     : int, 
+        x_end       : int,
+        n_x         : int, 
+        n_y         : int, 
+        print_flag  : bool      = False,
+        print_depth : int       = 1,
+        dm_filter   : Callable  = threshold_interval,
+        th_min      : float     = - np.inf,
+        th_max      : float     = np.inf,
+        include_min : bool      = False,
+        include_max : bool      = False
     ):
         # Create the heatmap for the distance matrix
         if print_flag and print_depth > 0:
             print(f"MPlot | Plot DM | DM_AB[{x_min}:{x_max}] ~ {self.DM_AB.distances[x_start:x_end].shape}")
         
         heatmap = self.dm_plot.imshow(
-            self.DM_AB.distances[x_start:x_end],
+            dm_filter(self.DM_AB.distances[x_start:x_end], th_min, th_max, include_min, include_max),
             aspect = 'equal', 
             origin = 'lower', 
             cmap   = 'hot', 
@@ -2739,22 +2800,27 @@ class MatrixProfilePlot:
 
 
     def plot(
-        self, 
-        ts_name         = "", 
-        figsize         = (5, 5), 
-        show_flag       = True,
-        print_flag      = False,
-        less_labels     = False,
-        x_min           = None,
-        x_max           = None,
-        y_min           = None,
-        y_max           = None,
-        mp_label        = None,
-        plot_mp_flag    = True,
-        MPlot_title     = None,
-        MPlot_xlabel    = None,
-        MPlot_ylabel    = None,
-        debug_flag      = False
+        self            : 'MatrixProfilePlot',	 
+        ts_name         : str               = "", 
+        figsize         : Tuple[ int, int ] = (5, 5), 
+        show_flag       : bool              = True,
+        print_flag      : bool              = False,
+        less_labels     : bool              = False,
+        x_min           : Optional [ int ]  = None,
+        x_max           : Optional [ int ]  = None,
+        y_min           : Optional [ int ]  = None,
+        y_max           : Optional [ int ]  = None,
+        mp_label        : Optional [ str ]  = None,
+        plot_mp_flag    : Optional [ bool ] = True,
+        MPlot_title     : Optional [ str ]  = None,
+        MPlot_xlabel    : Optional [ str ]  = None,
+        MPlot_ylabel    : Optional [ str ]  = None,
+        debug_flag      : bool              = False,
+        dm_filter       : Callable          = threshold_interval,
+        th_min      : float     = - np.inf,
+        th_max      : float     = np.inf,
+        include_min : bool      = False,
+        include_max : bool      = False
     ):
         
         x_min, x_max, y_min, y_max = self.plot_base(
@@ -2789,18 +2855,34 @@ class MatrixProfilePlot:
             
         
         self.plot_DM(
-            x_min, x_max, 
-            y_min, y_max, 
-            x_start, x_end,
-            y_start, y_end,
-            n_x, n_y, 
-            figsize,
-            plot_mp_flag, print_flag,
-            MPlot_title, MPlot_xlabel, MPlot_ylabel,
-            less_labels
+            x_min = x_min, x_max = x_max, 
+            y_min = y_min, y_max = y_max, 
+            x_start = x_start, x_end = x_end,
+            y_start = y_start, y_end = y_end,
+            n_x = n_x, n_y = n_y, 
+            figsize = figsize,
+            plot_mp_flag = plot_mp_flag, print_flag = print_flag,
+            MPlot_title = MPlot_title, MPlot_xlabel = MPlot_xlabel, 
+            MPlot_ylabel = MPlot_ylabel,
+            less_labels=less_labels,
+            print_depth = 1 if debug_flag else 0
+
         )
         
-        self.plot_heatmap(x_min, x_max, x_start, x_end, n_x, n_y,print_flag)
+        self.plot_heatmap(
+            x_min       = x_min, 
+            x_max       = x_max, 
+            x_start     = x_start,
+            x_end       = x_end, 
+            n_x         = n_x, 
+            n_y         = n_y,
+            print_flag  = print_flag, 
+            dm_filter   = dm_filter,
+            th_min      = th_min,
+            th_max      = th_max,
+            include_min = include_min, 
+            include_max = include_max
+        )
         
         if (self.plot_as_matlab):
             print("Plotting as MATLAB")
@@ -2935,7 +3017,7 @@ class MatrixProfilePlot:
         plt.tight_layout()
         return plt
 
-# %% ../nbs/mplots.ipynb 115
+# %% ../nbs/mplots.ipynb 119
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -3243,7 +3325,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-# %% ../nbs/mplots.ipynb 119
+# %% ../nbs/mplots.ipynb 123
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

@@ -12,3 +12,4 @@ dependencies:
   - octave
   - oct2py
   - fltk
+  - aeon

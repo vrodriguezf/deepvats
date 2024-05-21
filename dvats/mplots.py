@@ -1334,7 +1334,7 @@ class DistanceMatrix:
                         if mwidth is None:
                             mwidth =  n - self.subsequence_len + 1
                         
-                        self.distances = scamp.selfjoin_matrix(
+                        self.distances = scamp.abjoin_matrix(
                             a       = self.data, 
                             b       = reference_seq,
                             m       = self.subsequence_len,
@@ -1832,7 +1832,8 @@ def matrix_profile(
     debug           : bool                          = True, 
     time_flag       : bool                          = True,
     plot_flag       : bool                          = False,    
-    print_depth     : int                           = 1
+    print_depth     : int                           = 1,
+    allow_experimental : bool                      = False
 ) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
     """ 
     This function 
@@ -1957,10 +1958,41 @@ def matrix_profile(
                 mp, index = scamp.abjoin(
                     a = data,
                     b = data_b,
-                    m = subsequence_len
+                    m = subsequence_len,
+                    threads = threads,
+                    gpus = gpus
                 )
-                if print_flag and print_depth > 0: print("--> data_b provided => Executing abjoin")
+                if print_flag and print_depth > 0: print("data_b provided => Executing abjoin -->")
                 
+        case "scamp_naive":
+            if print_flag and print_depth > 0: 
+                print("--> Scamp Naive")
+            
+            DM_AB = DistanceMatrix(
+                data = data, 
+                data_b = data_b, 
+                subsequence_len = subsequence_len, 
+                self_join = self_join
+            )
+            
+            DM_AB.compute(
+                method = 'scamp',
+                d = d,        
+                print_flag = print_flag, 
+                threads = threads,
+                gpus = gpus, 
+                debug = debug, 
+                print_depth=print_depth,
+                min_lag = min_lag,
+                allow_experimental=allow_experimental
+            )
+            dm_non_zeros = np.where(DM_AB.distances == np.nan, np.inf, DM_AB.distances)
+            dm_non_zeros = np.where(dm_non_zeros == 0, np.inf, dm_non_zeros)
+            if print_flag and print_depth > 0 and debug:
+                print(dm_non_zeros)
+            
+            mp = np.min(dm_non_zeros, axis = 0)
+            
         case _: #default naive
             if print_flag and print_depth > 0: print("--> Invalid method. Using naive approach [default]")
             if ( data_b is None or self_join ): 
@@ -2017,7 +2049,8 @@ def compute(
     time_flag       : bool                          = True,
     provide_len     : bool                          = True,
     nlens           : Optional [ int ]              = 1,
-    print_depth     : int                           = 1
+    print_depth     : int                           = 1,
+    allow_experimental : bool                      = False
 ) -> List [ float ]:
     self.method = method
 
@@ -2028,20 +2061,21 @@ def compute(
             self.subsequence_len = len(self.data_b)
 
     self.distances, self.index, self.index_left, self.index_right, self.computation_time = matrix_profile ( 
-        data            = self.data, 
-        subsequence_len = self.subsequence_len, 
-        data_b          = self.data_b, 
-        self_join       = self.self_join, 
-        method          = method, 
-        d               = d, 
-        threads         = threads, 
-        gpus            = gpus, 
-        print_flag      = print_flag, 
-        debug           = debug, 
-        plot_flag       = plot_flag,
-        time_flag       = time_flag, 
-        min_lag         = min_lag,
-        print_depth     = print_depth
+        data                = self.data, 
+        subsequence_len     = self.subsequence_len, 
+        data_b              = self.data_b, 
+        self_join           = self.self_join, 
+        method              = method, 
+        d                   = d, 
+        threads             = threads, 
+        gpus                = gpus, 
+        print_flag          = print_flag, 
+        debug               = debug, 
+        plot_flag           = plot_flag,
+        time_flag           = time_flag, 
+        min_lag             = min_lag,
+        print_depth         = print_depth,
+        allow_experimental  = allow_experimental
     )
     return self.distances
 MatrixProfile.compute = compute
@@ -2360,7 +2394,7 @@ class MatrixProfilePlot:
     plot_as_matlab  = True
     
     def compute(
-        self,
+        self                : 'MatrixProfilePlot',
         dm_method           : str               = 'naive',
         mp_method           : str               = 'naive',
         min_lag             : int               = None,
@@ -2382,7 +2416,9 @@ class MatrixProfilePlot:
         show_plots          : bool              = False,
         downsample_flag     : bool              = True,
         include_padding     : bool              = True,
-        print_depth         : int               = 1
+        print_depth         : int               = 1,
+        threads             : int               = 4,
+        gpus                : List[ int ]       = []
     ) -> Tuple [ List [ List [ float ] ], Optional [ float ] ]:
         t = None
         if time_flag:
@@ -2480,7 +2516,7 @@ class MatrixProfilePlot:
             data            = self.data, 
             data_b          = self.data_b,
             subsequence_len = self.subsequence_len,
-            self_join       = self.self_join
+            self_join       = self.self_join,
         )
         
         ## Ensure parameters
@@ -2551,14 +2587,17 @@ class MatrixProfilePlot:
         ## Compute       
         if print_flag and print_depth > 0:  print("MPlot | Compute | --> Compute MP")
         self.MP_AB.compute(
-            method      = mp_method,
-            d           = d,
-            time_flag   = time_flag,
-            print_flag  = print_flag,
-            provide_len = provide_len,
-            nlens       = nlens,
-            min_lag     = min_lag,
-            print_depth = print_depth-1
+            method              = mp_method,
+            d                   = d,
+            time_flag           = time_flag,
+            print_flag          = print_flag,
+            provide_len         = provide_len,
+            nlens               = nlens,
+            min_lag             = min_lag,
+            print_depth         = print_depth-1,
+            threads             = threads,
+            gpus                = gpus,
+            allow_experimental  = allow_experimental
         )
         if print_flag and print_depth > 0:  
             print("MPlot | Compute | --> Compute DM | Allow experimental: ", allow_experimental)

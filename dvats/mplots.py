@@ -2344,18 +2344,25 @@ def threshold_interval(
     threshold_min   : float,
     threshold_max   : float,
     include_min     : bool = False,
-    include_max     : bool = False
+    include_max     : bool = False,
+    gray_color      : bool = True
 ) -> List [ List [ float ] ]:
     result = deepcopy(data)    
     if include_min:
-        result[ result < 1]  = np.inf
+        result = np.where(result > threshold_min, result, np.inf)
     else:
-        result[ result <= threshold_min]  = np.inf
+        result = np.where(result >= threshold_min, result, np.inf)
     
     if include_max:
-        result[ result > threshold_max]  = np.inf
+        if gray_color:
+            result = np.where(result < threshold_max, result, np.inf)
+        else:
+            result = result < threshold_max
     else:
-        result[ result >= threshold_max]  = np.inf
+        if gray_color:
+            result = np.where(result <= threshold_max, result, np.inf)
+        else:
+            result = result <= threshold_max
     return result
 
 # %% ../nbs/mplots.ipynb 114
@@ -2377,10 +2384,10 @@ class MatrixProfilePlot:
     dominant_lens   : List[ int ] = None
 
     # -- Zoom
-    x_min  : int = 0
-    x_max  : int = -1
-    y_min  : int = 0
-    y_max  : int = 0
+    r_min  : int = 0
+    r_max  : int = -1
+    c_min  : int = 0
+    c_max  : int = 0
 
     data_paa            : List [ float ] = None 
     data_b_paa          : List [ float ] = None
@@ -2408,10 +2415,10 @@ class MatrixProfilePlot:
         subsequence_len     : int               = None,
         nlens               : Optional [ int ]  = 1,
         offset              : int               = 0.05,
-        x_min               : int               = None,
-        x_max               : int               = None,
-        y_min               : int               = None,
-        y_max               : int               = None,
+        r_min               : int               = None,
+        r_max               : int               = None,
+        c_min               : int               = None,
+        c_max               : int               = None,
         max_points          : int               = 10000,
         show_plots          : bool              = False,
         downsample_flag     : bool              = True,
@@ -2426,58 +2433,57 @@ class MatrixProfilePlot:
             t.start()
         self.dm_method = dm_method
         self.mp_method = mp_method
-        y_maxvalue = len(self.data) if self.data_b is None else len(self.data_b)
+    
+        n_a = len(self.data)
+        n_b = n_a if self.data_b is None else len(self.data_b)
         
         if (
-                x_min is None 
-            or  x_max is None
-            or  y_min is None
-            or  y_max is None
+                r_min is None 
+            or  r_max is None
+            or  c_min is None
+            or  c_max is None
 
         ):
             if print_flag and print_depth > 0: print("MatrixProfilePlot | Compute | No range provided")
-            self.x_min = 0
-            self.x_max = len(self.data)
-            self.y_min = 0
-            if self.data_b is None:
-                self.y_max = self.x_max
-            else: 
-                self.y_max = len(self.data_b)
+            self.c_min = 0
+            self.c_max = n_a
+            self.r_min = 0
+            self.r_max = n_b
         else:
             if print_flag and print_depth > 0: print("MatrixProfilePlot | Compute | Range provided")
-            self.x_min  = max(0, x_min)
-            self.x_max  = min(x_max, len(self.data))
-            self.y_min  = max(0, y_min)
-            self.y_max  = min(y_max, y_maxvalue)
-            if include_padding:
-                x_padd  = self.x_max + self.subsequence_len - 1
-                y_padd  = self.y_max + self.subsequence_len - 1
-                self.x_max = min(len(self.data), x_padd)
-                self.y_max = min(y_maxvalue, y_padd)
-                print(f"Xpadd {x_padd}, YPadd {y_padd}, A ~ {len(self.data)}, B ~ {y_maxvalue}"
+            self.r_min  = max(0, r_min)
+            self.r_max  = min(r_max, n_b)
+            self.c_min  = max(0, c_min)
+            self.c_max  = min(c_max, n_a)
+            if include_padding: #Ensure full square is computed & shown
+                r_padd  = self.r_max + self.subsequence_len - 1
+                c_padd  = self.c_max + self.subsequence_len - 1
+                self.r_max = min(n_b, r_padd)
+                self.c_max = min(n_a, c_padd)
+                print(f"Xpadd {r_padd}, YPadd {c_padd}, A ~ {n_a}, B ~ {n_b}"
             )
                 
         if print_flag and print_depth > 0:
-            print(f"MatrixProfilePlot | Compute | Range [{self.x_min}:{self.x_max}, {self.y_min}:{self.y_max}]")
+            print(f"MatrixProfilePlot | Compute | Range [{self.r_min}:{self.r_max}, {self.c_min}:{self.c_max}]")
 
-        data = self.data[self.x_min:self.x_max]
+        data = self.data[self.r_min:self.r_max]
         
         if self.data_b is None or self.self_join:
-            data_b = self.data[self.y_min:self.y_max]
+            data_b = self.data[self.c_min:self.c_max]
         else:
-            data_b = self.data[self.y_min:self.y_max]
+            data_b = self.data[self.c_min:self.c_max]
 
         ## Addapt time serie ('zoom', PAA)
         if downsample_flag : 
             if print_flag: print( "[ MPlot | Compute ] | -->  Downsample ")
             if len(data) > max_points:
                 if print_flag: 
-                    print(f"[ MPlot | Compute ] | ---> Downsample TA to {self.x_min} : {self.x_max}")
+                    print(f"[ MPlot | Compute ] | ---> Downsample TA to {self.r_min} : {self.r_max}")
                 
                 self.data_paa, self.data_paa_factor = downsample(
                     data         = data,
-                    min_position = self.x_min,
-                    max_position = self.x_max,
+                    min_position = self.c_min,
+                    max_position = self.c_max,
                     max_points   = max_points,
                     print_flag   = print_flag,
                     show_plots   = show_plots,
@@ -2492,8 +2498,8 @@ class MatrixProfilePlot:
 
                 self.data_b_paa, self.data_b_paa_factor = downsample(
                     data         = data_b,
-                    min_position = self.y_min,
-                    max_position = self.y_max,
+                    min_position = self.r_min,
+                    max_position = self.r_max,
                     max_points   = max_points,
                     print_flag   = print_flag,
                     show_plots   = show_plots,
@@ -2555,10 +2561,12 @@ class MatrixProfilePlot:
             print(f"[ MPlot | Compute ] | Ensure Parameters TB_paa ~ {len(self.data_b_paa)} ---> ")
 
         ## Ensure valid limits (so the compared subsequences are the same than with the global matrix)
-        self.x_min, self.x_max = ensure_valid_limits(len(self.data_paa), self.subsequence_len, self.x_min, self.x_max, print_flag)
-        self.y_min, self.y_max = ensure_valid_limits(len(self.data_b_paa), self.subsequence_len, self.y_min, self.y_max, print_flag)
+        n_a_paa = len(self.data_paa)
+        n_b_paa = len(self.data_b_paa)
+        self.r_min, self.r_max = ensure_valid_limits(n_b_paa, self.subsequence_len, self.r_min, self.r_max, print_flag)
+        self.c_min, self.c_max = ensure_valid_limits(n_a_paa, self.subsequence_len, self.c_min, self.c_max, print_flag)
         
-        if print_flag and print_depth > 0: print(f"MatrixProfilePlot | Compute | Final Range [{self.x_min}:{self.x_max}, {self.y_min}:{self.y_max}]")
+        if print_flag and print_depth > 0: print(f"MatrixProfilePlot | Compute | Final Range [{self.r_min}:{self.r_max}, {self.c_min}:{self.c_max}]")
         
         ## Instantiate self.DM_AB & MP_AB
         if print_flag and print_depth > 0: 
@@ -2615,49 +2623,49 @@ class MatrixProfilePlot:
             
     def plot_check_limits(
         self,
-        x_min : float, 
-        x_max : float, 
-        y_min : float, 
-        y_max : float
+        r_min : float, 
+        r_max : float, 
+        c_min : float, 
+        c_max : float
     ) -> Tuple[ float, float, float, float ]:
-        if x_min is None:
-            x_min = self.x_min
+        if r_min is None:
+            r_min = self.r_min
         else:
-            if (x_min < self.x_min):
-                x_min = self.x_min
-                warnings.warn(f"Adjusted x_min to {x_min} as previous values have not been computed yet", UserWarning)
-        if x_max is None: 
-            x_max = self.x_max
+            if (r_min < self.r_min):
+                r_min = self.r_min
+                warnings.warn(f"Adjusted x_min to {r_min} as previous values have not been computed yet", UserWarning)
+        if r_max is None: 
+            r_max = self.r_max
         else:
-            if (x_max > self.x_max):
-                x_max = self.x_max
-                warnings.warn(f"Adjusted x_max  to {x_max} as no longer values have been computed yet", UserWarning)
-            if (x_max > self.DM_AB.distances.shape[0]+x_min):
-                x_max = self.DM_AB.distances.shape[0]+x_min
-                warnings.warn(f"Adjusted x_max to {x_max} as it was bigger than the number of rows (nA-m+1)", UserWarning)
+            if (r_max > self.r_max):
+                r_max = self.r_max
+                warnings.warn(f"Adjusted x_max  to {r_max} as no longer values have been computed yet", UserWarning)
+            if (r_max > self.DM_AB.distances.shape[0]+r_min):
+                r_max = self.DM_AB.distances.shape[0]+r_min
+                warnings.warn(f"Adjusted x_max to {r_max} as it was bigger than the number of rows (n_b-m+1)", UserWarning)
         
-        if y_min is None:
-            y_min = self.y_min
+        if c_min is None:
+            c_min = self.c_min
         else:
-            if (y_min < self.y_min):
-                y_min = self.y_min
-                warnings.warn(f"Adjusted to {y_min} as no previous values have been computed yet", UserWarning)
-        if y_max is None: 
-            y_max = self.y_max
+            if (c_min < self.c_min):
+                c_min = self.c_min
+                warnings.warn(f"Adjusted to {c_min} as no previous values have been computed yet", UserWarning)
+        if c_max is None: 
+            c_max = self.c_max
         else:
-            if (y_max > self.y_max):
-                y_max = self.y_max
-                warnings.warn(f"Adjusted to {y_max} as no longer values have been computed yet", UserWarning)
-            if (y_max > self.DM_AB.distances.shape[1]+x_max):
-                y_max = self.DM_AB.distances.shape[1]+x_max
-                warnings.warn(f"Adjusted y_max to {y_max} as it was bigger than the number of columns (nB-m+1)", UserWarning)
-        return (x_min, x_max, y_min, y_max)
+            if (c_max > self.c_max):
+                c_max = self.c_max
+                warnings.warn(f"Adjusted to {c_max} as no longer values have been computed yet", UserWarning)
+            if (c_max > self.DM_AB.distances.shape[1]+r_max):
+                c_max = self.DM_AB.distances.shape[1]+r_max
+                warnings.warn(f"Adjusted y_max to {c_max} as it was bigger than the number of columns (n_a-m+1)", UserWarning)
+        return (r_min, r_max, c_min, c_max)
 
 
     def plot_base(
         self,
-        x_min, x_max, 
-        y_min, y_max, 
+        r_min, r_max, 
+        c_min, c_max, 
         figsize,
         plot_mp_flag
     ):
@@ -2667,7 +2675,7 @@ class MatrixProfilePlot:
             raise ValueError(f"The Matrix Profile has not been computed yet")
         if (self.DM_AB.method is None):
             raise ValueError(f"The Distances Matrix/Similarity Matrix has not been computed yet")
-        x_min, x_max, y_min, y_max = self.plot_check_limits(x_min, x_max, y_min, y_max)
+        r_min, r_max, c_min, c_max = self.plot_check_limits(r_min, r_max, c_min, c_max)
 
         # Setup complete figure distribution
         fig = plt.figure(figsize=figsize)
@@ -2680,24 +2688,24 @@ class MatrixProfilePlot:
             self.dm_plot = fig.add_subplot(gs[0])
 
         self.graph = fig
-        return x_min, x_max, y_min, y_max
+        return r_min, r_max, c_min, c_max
     
     def plot_MP(
             self, 
-            x_min, x_max, x_start, x_end, n_x,
+            c_min, c_max, c_start, c_end, n_c,
             figsize, 
             label = "Data Matrix Profile", 
             ts_name = "", 
             method = "Naive"
         ):
         # Matrix Profile
-        self.mp_plot.plot(self.MP_AB.distances[x_start:x_end], label = label)
-        self.mp_plot.set_title(f"{ts_name} [{x_start}:{x_end}] | {method}")
+        self.mp_plot.plot(self.MP_AB.distances[c_start:c_end], label = label)
+        self.mp_plot.set_title(f"{ts_name} [{c_start}:{c_end}] | {method}")
         
         self.mp_plot.set_xticks(
             np.linspace(
                 0, 
-                n_x,
+                n_c,
                 num=int(figsize[0]*2)
             )
         )
@@ -2705,7 +2713,7 @@ class MatrixProfilePlot:
         self.mp_plot.set_yticks(
             np.linspace(
                 0, 
-                max(self.MP_AB.distances[x_start:x_end]),
+                max(self.MP_AB.distances[c_start:c_end]),
                 num=int(figsize[1]//2)
             )
         )
@@ -2720,11 +2728,11 @@ class MatrixProfilePlot:
 
     def plot_DM(
         self, 
-        x_min, x_max, 
-        y_min, y_max,
-        x_start, x_end,
-        y_start, y_end,
-        n_x, n_y, 
+        c_min, c_max, 
+        r_min, r_max,
+        c_start, c_end,
+        r_start, r_end,
+        n_r, n_c, 
         figsize,
         plot_mp_flag, 
         print_flag,
@@ -2740,14 +2748,14 @@ class MatrixProfilePlot:
         self.dm_plot.set_ylabel(MPlot_ylabel)
 
         if less_labels:
-            x_labels_count = max(1, n_x // max(1, int(figsize[0] * 2)))
-            y_labels_count = max(1, n_y // max(1, int(figsize[1] * 2)))
+            x_labels_count = max(1, n_c // max(1, int(figsize[0] * 2)))
+            y_labels_count = max(1, n_r // max(1, int(figsize[1] * 2)))
 
             tx_start = 0.5
-            tx_stop  = n_x
+            tx_stop  = n_c
             tx_step  = x_labels_count
             ty_start = 0.5
-            ty_stop  = n_y
+            ty_stop  = n_r
             ty_step  = y_labels_count
         
             if print_flag and print_depth > 0:
@@ -2755,10 +2763,10 @@ class MatrixProfilePlot:
                 print("ty_start", ty_start, "ty_stop", ty_stop, "ty_step", ty_step)
         else:    
             tx_start = 0.5
-            tx_stop  = n_x
+            tx_stop  = n_c
             tx_step  = 1
             ty_start = 0.5
-            ty_stop  = n_y
+            ty_stop  = n_r
             ty_step  = 1
         
         # Set the tick marks to be at the center of the squares           
@@ -2775,13 +2783,13 @@ class MatrixProfilePlot:
             print("MPlot | Plot DM | y_ticks", y_ticks)
             print("MPlot | Plot DM | data ~ ", self.data.shape)
             print("MPlot | Plot DM | DM_AB ~ ", self.DM_AB.distances.shape)
-            print(f"MPlot | Plot DM | DM_AB[{x_min}:{x_max}] ~ {self.DM_AB.distances[x_min:x_max].shape}")
+            print(f"MPlot | Plot DM | DM_AB[{r_min}:{r_max},{c_min}:{c_max}] ~ {self.DM_AB.distances[r_min:r_max, c_min:c_max].shape}")
 
         self.dm_plot.set_xticks(x_ticks)
         self.dm_plot.set_yticks(y_ticks)
         
-        self.dm_plot.set_xticklabels(x_ticks + x_min)
-        self.dm_plot.set_yticklabels(y_ticks + y_min)
+        self.dm_plot.set_xticklabels(x_ticks + c_min)
+        self.dm_plot.set_yticklabels(y_ticks + r_min)
         
 
         # Rotate tick labels for readability
@@ -2794,48 +2802,84 @@ class MatrixProfilePlot:
 
     def plot_heatmap(
         self        : 'MatrixProfilePlot', 
-        x_min       : int, 
-        x_max       : int, 
-        x_start     : int, 
-        x_end       : int,
-        n_x         : int, 
-        n_y         : int, 
+        r_min       : int, 
+        r_max       : int, 
+        r_start     : int, 
+        r_end       : int,
+        c_min       : int,
+        c_max       : int,
+        c_start     : int,
+        c_end       : int,
+        n_r         : int, 
+        n_c         : int, 
         print_flag  : bool      = False,
         print_depth : int       = 1,
         dm_filter   : Callable  = threshold_interval,
         th_min      : float     = - np.inf,
         th_max      : float     = np.inf,
         include_min : bool      = False,
-        include_max : bool      = False
+        include_max : bool      = False,
+        gray_color  : bool      = True
     ):
         # Create the heatmap for the distance matrix
         if print_flag and print_depth > 0:
-            print(f"MPlot | Plot DM | DM_AB[{x_min}:{x_max}] ~ {self.DM_AB.distances[x_start:x_end].shape}")
+            print(f"MPlot | Plot DM | DM_AB[{r_min}:{r_max}, {c_min}:{c_max}] ~ {self.DM_AB.distances[r_start:r_end][c_start:c_end].shape}")
         
+        
+        op1= f"Boolean MPlot ({r_start}:{r_max}, {c_start}:{c_end}) | th({th_min}, {th_max}) | include({include_min}, {include_max})"
+        op2= f"MPlot ({r_start}:{r_max}, {c_start}:{c_end}) | th({th_min}, {th_max}) | include({include_min}, {include_max})"
+        self.dm_plot.set_title(op2 if gray_color else op1)
+        """
+        if self.plot_as_matlab:
+            heatmap = self.dm_plot.imshow(
+                dm_filter(
+                    self.DM_AB.distances[y_start:y_end, x_start:x_end], 
+                    th_min, th_max, 
+                    include_min, include_max, 
+                    gray_color
+                ),
+                aspect = 'equal', 
+                origin = 'lower', 
+                cmap   = 'hot' if gray_color else 'gray',
+                interpolation = 'none',
+                extent = ( 
+                    0, 
+                    n_x,
+                    0, 
+                    n_y
+                )
+            )
+        else:
+            """
         heatmap = self.dm_plot.imshow(
-            dm_filter(self.DM_AB.distances[x_start:x_end], th_min, th_max, include_min, include_max),
+            dm_filter(self.DM_AB.distances[r_start:r_end, c_start:c_end], th_min, th_max, include_min, include_max, gray_color),
             aspect = 'equal', 
             origin = 'lower', 
-            cmap   = 'hot', 
+            cmap   = 'hot' if gray_color else 'gray',
+            interpolation = 'none',
             extent = ( 
                 0, 
-                n_x,
+                n_c,
                 0, 
-                n_y
+                n_r
             )
         )
-        plt.colorbar(heatmap, ax=self.dm_plot, orientation='vertical', label='Distance')
+            
+        plt.colorbar(
+            heatmap, 
+            ax = self.dm_plot, 
+            orientation='vertical', 
+            label='Distance' if gray_color else 'Boolean values (0 = False, 1 = True)'
+        )
         return heatmap
 
-    def plot_xrange(self, x_min, x_max):
-        #n_x = len(self.DM_AB.distances)
-        n_x = x_max-x_min+1
-        return n_x
+    def plot_row_range(self, r_min, r_max):
+        n_r = r_max-r_min+1
+        return n_r
     
-    def plot_yrange(self, y_min, y_max):
-        #n_y = len(self.DM_AB.distances[0])
-        n_y = y_max-y_min+1
-        return n_y
+    def plot_column_range(self, c_min, c_max):
+        n_c = c_max-c_min+1
+        return n_c
 
 
     def plot(
@@ -2845,10 +2889,10 @@ class MatrixProfilePlot:
         show_flag       : bool              = True,
         print_flag      : bool              = False,
         less_labels     : bool              = False,
-        x_min           : Optional [ int ]  = None,
-        x_max           : Optional [ int ]  = None,
-        y_min           : Optional [ int ]  = None,
-        y_max           : Optional [ int ]  = None,
+        r_min           : Optional [ int ]  = None,
+        r_max           : Optional [ int ]  = None,
+        c_min           : Optional [ int ]  = None,
+        c_max           : Optional [ int ]  = None,
         mp_label        : Optional [ str ]  = None,
         plot_mp_flag    : Optional [ bool ] = True,
         MPlot_title     : Optional [ str ]  = None,
@@ -2856,25 +2900,27 @@ class MatrixProfilePlot:
         MPlot_ylabel    : Optional [ str ]  = None,
         debug_flag      : bool              = False,
         dm_filter       : Callable          = threshold_interval,
-        th_min      : float     = - np.inf,
-        th_max      : float     = np.inf,
-        include_min : bool      = False,
-        include_max : bool      = False
+        th_min          : float             = - np.inf,
+        th_max          : float             = np.inf,
+        include_min     : bool              = False,
+        include_max     : bool              = False,
+        gray_color      : bool              = True,
+        print_depth     : int               = 1
     ):
         
-        x_min, x_max, y_min, y_max = self.plot_base(
-            x_min, x_max, 
-            y_min, y_max, 
+        r_min, r_max, c_min, c_max = self.plot_base(
+            r_min, r_max, 
+            c_min, c_max, 
             figsize,
             plot_mp_flag
-        )                
-        x_start = x_min - self.x_min
-        x_end   = x_max - self.x_min
-        y_start = y_min - self.y_min
-        y_end   = y_max - self.y_min
+        )             
+        r_start = r_min - self.r_min
+        r_end   = r_max - self.r_min
+        c_start = c_min - self.c_min
+        c_end   = c_max - self.c_min
 
-        n_x = self.plot_xrange(x_min, x_max)
-        n_y = self.plot_yrange(y_min, y_max)
+        n_r = self.plot_row_range(r_min, r_max)
+        n_c = self.plot_column_range(c_min, c_max)
 
 
         
@@ -2883,9 +2929,9 @@ class MatrixProfilePlot:
         
         if plot_mp_flag:
             self.plot_MP(
-                x_min, x_max, 
-                x_start, x_end,
-                n_x, 
+                r_min, r_max, 
+                r_start, r_end,
+                n_r, 
                 figsize, 
                 mp_label, 
                 ts_name, 
@@ -2894,40 +2940,47 @@ class MatrixProfilePlot:
             
         
         self.plot_DM(
-            x_min = x_min, x_max = x_max, 
-            y_min = y_min, y_max = y_max, 
-            x_start = x_start, x_end = x_end,
-            y_start = y_start, y_end = y_end,
-            n_x = n_x, n_y = n_y, 
+            c_min = c_min, 
+            c_max = c_max, 
+            r_min = r_min, 
+            r_max = r_max, 
+            c_start = c_start, c_end = c_end,
+            r_start = r_start, r_end = r_end,
+            n_r = n_r, n_c = n_c, 
             figsize = figsize,
             plot_mp_flag = plot_mp_flag, print_flag = print_flag,
             MPlot_title = MPlot_title, MPlot_xlabel = MPlot_xlabel, 
             MPlot_ylabel = MPlot_ylabel,
             less_labels=less_labels,
-            print_depth = 1 if debug_flag else 0
+            print_depth = print_depth -1
 
         )
         
         self.plot_heatmap(
-            x_min       = x_min, 
-            x_max       = x_max, 
-            x_start     = x_start,
-            x_end       = x_end, 
-            n_x         = n_x, 
-            n_y         = n_y,
+            r_min       = r_min, 
+            r_max       = r_max, 
+            r_start     = r_start,
+            r_end       = r_end, 
+            c_min       = c_min,
+            c_max       = c_max,
+            c_start     = c_start,
+            c_end       = c_end,
+            n_r         = n_r, 
+            n_c         = n_c,
             print_flag  = print_flag, 
             dm_filter   = dm_filter,
             th_min      = th_min,
             th_max      = th_max,
             include_min = include_min, 
-            include_max = include_max
+            include_max = include_max,
+            gray_color  = gray_color
         )
         
         if (self.plot_as_matlab):
-            print("Plotting as MATLAB")
+            if print_flag and print_depth > 0: print("Plotting as MATLAB")
             self.dm_plot.invert_yaxis()
         else:
-            print("Plotting as Python")
+            if print_flag and print_depth > 0: print("Plotting as Python")
         
         #### Setup width
         # Get the current size of the figure
@@ -2949,7 +3002,7 @@ class MatrixProfilePlot:
         if show_flag:
             plt.show()
         return plt
-    
+    """
     def plot_interactive(
         self, 
         ta_name="TA", 
@@ -3055,6 +3108,7 @@ class MatrixProfilePlot:
         fig.canvas.mpl_connect('motion_notify_event', on_hover)
         plt.tight_layout()
         return plt
+        """
 
 # %% ../nbs/mplots.ipynb 119
 @dataclass 

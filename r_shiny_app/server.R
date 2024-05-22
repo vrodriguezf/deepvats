@@ -584,7 +584,8 @@ shinyServer(function(input, output, session) {
                     print("Reactive tsdf | Read feather --> ")
                     flush.console()
                     df_read_option <- "Read from feather"
-                }, error function (e) {
+                }, 
+                error = function (e) {
                     # --- Download from Weight & Biases and save the feather for the future --- #
                     warning(paste0("Reactive tsdf | Read feather --> | Failed to read feather file: ", e$message))
                     print(paste0("Reactive tsdf | --> Download from Weight & Biases"))
@@ -602,17 +603,7 @@ shinyServer(function(input, output, session) {
                         mmap = TRUE
                     ) %>% rename('timeindex' = __index_level_0__)
                     df_read_option <- "Download from W&B and read from feather"
-                }
-                
-                t_end <- Sys.time()
-                print(paste0("Reactive tsdf | Read feather from artifact | ", df_read_option, " | Execution time: ", t_end - t_init, " seconds"))
-                flush.console()
-                df
-            )
-
-            
-
-            
+                })
             
             t_end = Sys.time()
             on.exit({print(paste0("Reactive tsdf | Execution time: ", t_end - t_init, " seconds"));flush.console()})

@@ -562,18 +562,60 @@ shinyServer(function(input, output, session) {
             ts_ar <- req(ts_ar())
             print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
             flush.console()
-                        
-            t_init <- Sys.time()
-            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
-            print(paste0("Reactive tsdf | Read feather ", path ))
-            flush.console()
-            df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
-            t_end = Sys.time()
-            print(paste0("Reactive tsdf | Read feather | Execution time: ", t_end - t_init, " seconds"))
-            flush.console()
 
+            # Initialize df
+            df <- NULL 
+            df_read_option <- ""
+            t_init <- Sys.time()
+            
+            df <- tryCatch(
+                {
+                    # --- Read from feather file --- #
+                    # Get the full path
+                    path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
+                    print(paste0("Reactive tsdf | --> Read feather ", path ))
+                    flush.console()
+                    # Read from feather
+                    df <- read_feather(
+                        path = path, 
+                        as_data_frame = TRUE, 
+                        mmap = TRUE
+                    ) %>% rename('timeindex' = `__index_level_0__`) 
+                    print("Reactive tsdf | Read feather --> ")
+                    flush.console()
+                    df_read_option <- "Read from feather"
+                }, error function (e) {
+                    # --- Download from Weight & Biases and save the feather for the future --- #
+                    warning(paste0("Reactive tsdf | Read feather --> | Failed to read feather file: ", e$message))
+                    print(paste0("Reactive tsdf | --> Download from Weight & Biases"))
+                    fflush.console()
+                    # Get the artifact
+                    dataset_artifact <- api$artifact(input$dataset, type = 'dataset')
+                    # Download the artifact and return the dataset's feather local path
+                    dataset_artifact_dir <- arrtifact$download()
+                    # Get feather path
+                    path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
+                    # Read from feather
+                    df <- read_feather(
+                        path = path, 
+                        as_data_frame = TRUE, 
+                        mmap = TRUE
+                    ) %>% rename('timeindex' = __index_level_0__)
+                    df_read_option <- "Download from W&B and read from feather"
+                }
+                
+                t_end <- Sys.time()
+                print(paste0("Reactive tsdf | Read feather from artifact | ", df_read_option, " | Execution time: ", t_end - t_init, " seconds"))
+                flush.console()
+                
+            )
+
+            
+
+            
+            
             t_end = Sys.time()
-            on.exit({print(paste0("Reactive tsdf | Column to index | Execution time: ", t_end - t_init, " seconds"));flush.console()})
+            on.exit({print(paste0("Reactive tsdf | Execution time: ", t_end - t_init, " seconds"));flush.console()})
             df
         })
     

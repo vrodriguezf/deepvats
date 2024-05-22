@@ -601,7 +601,7 @@ shinyServer(function(input, output, session) {
                         path = path, 
                         as_data_frame = TRUE, 
                         mmap = TRUE
-                    ) %>% rename('timeindex' = __index_level_0__)
+                    ) %>% rename('timeindex' = `__index_level_0__`)
                     df_read_option <- "Download from W&B and read from feather"
                 })
             

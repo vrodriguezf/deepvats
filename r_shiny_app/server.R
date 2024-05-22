@@ -607,7 +607,7 @@ shinyServer(function(input, output, session) {
                 t_end <- Sys.time()
                 print(paste0("Reactive tsdf | Read feather from artifact | ", df_read_option, " | Execution time: ", t_end - t_init, " seconds"))
                 flush.console()
-                
+                df
             )
 
             

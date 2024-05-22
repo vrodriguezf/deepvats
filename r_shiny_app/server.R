@@ -398,13 +398,36 @@ shinyServer(function(input, output, session) {
         req(input$dataset, input$encoder)
         print("--> eventReactive enc | load encoder ")
         encoder_artifact <- enc_ar()
-        enc <- py_load_object(
-            file.path(
-                DEFAULT_PATH_WANDB_ARTIFACTS, 
-                encoder_artifact$metadata$ref$hash
+        encoder_read_option <- ""
+        encoder_filename <- encoder_artifact$metadata$ref$hash
+        default_path <- file.path(DEFAULT_PATH_WANDB_ARTIFACTS, encoder_filename)
+        
+        tryCatch({ # The perfect case
+            # --- Load from binary file --- #
+            encoder_read_option <- "Load from binary file"
+            enc <- py_load_object(default_path)
+            enc
+        }, error = function(e){
+            # --- Download from W&B and load from binary file --- #
+            encoder_read_option <- "Download from Weights & Biases and load from binary file"
+            print(paste0("eventReactive enc | Download from Weight & Biases | dataset artifact dir: ", encoder_artifact_dir))
+            encoder_artifact_dir <- encoder_artifact$download()
+            encoder_path <- file.path(encoder_artifact_dir, encoder_filename)
+            # Move the file to the default path
+            file.copy(
+                from        = encoder_path, 
+                to          = default_path, 
+                overwrite   = TRUE, 
+                recursive   = FALSE, 
+                copy.mode   = TRUE
             )
-        )
-        on.exit({print("eventReactive enc | load encoder -->"); flush.console()})
+            # Load from binary file
+            enc <- py_load_object(default_path)
+            enc
+        }, finally{# In any case
+            on.exit({print(paste0("eventReactive enc | load encoder | ", encoder_read_option, " -->")); flush.console()})
+            enc
+        })        
         enc
     })
 

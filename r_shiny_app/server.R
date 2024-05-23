@@ -8,8 +8,8 @@
 #
 ###########
 
-source("./server-helper-logs.R")
-source("./server-helper-plots.R")
+source("./helper/server-helper-logs.R")
+source("./helper/server-helper-plots.R")
 
 shinyServer(function(input, output, session) {
     options(shiny.verbose = TRUE)

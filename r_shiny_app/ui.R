@@ -1,3 +1,4 @@
+source("./modules/load.R")
 #
 # This is the user-interface definition of a Shiny web application. You can
 # run the application by clicking 'Run App' above.
@@ -86,10 +87,7 @@ shinyUI(fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
-      fluidRow(
-        shiny::actionButton("load_dataset", label = "Load dataset", icon = icon("database")),
-        shiny::actionButton("load_embs", label = "Load embeddings", icon = icon("project-diagram"))
-      ),
+      loadUI("load"),
       hr(),
       selectizeInput("dataset", label = "Dataset", choices = NULL),
       selectizeInput("encoder", label = "Encoder", choices = NULL),

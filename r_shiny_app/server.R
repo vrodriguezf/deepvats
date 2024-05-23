@@ -347,8 +347,7 @@ shinyServer(function(input, output, session) {
             print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
             
             print(paste0("reactive X | Update sliding window | Apply stride ", input$stride," | enc_input ~ ", dim(enc_input), "-->"))
-            print("| Update | X" )
-            on.exit({print("| Outside| X"); flush.console()})
+            on.exit({print("reactive X -->"); flush.console()})
             X(enc_input)
         }
         X()
@@ -391,24 +390,109 @@ shinyServer(function(input, output, session) {
         ignoreInit = T
     )
    
-   # Encoder
+    # Encoder
     enc <- eventReactive(
         enc_ar(), 
     {
         req(input$dataset, input$encoder)
         print("--> eventReactive enc | load encoder ")
         encoder_artifact <- enc_ar()
-        enc <- py_load_object(
-            file.path(
-                DEFAULT_PATH_WANDB_ARTIFACTS, 
-                encoder_artifact$metadata$ref$hash
+        encoder_read_option <- ""
+        encoder_artifact_dir <- ""
+        encoder_filename <- encoder_artifact$metadata$ref$hash
+        default_path <- file.path(DEFAULT_PATH_WANDB_ARTIFACTS, encoder_filename)
+        enc <- NULL
+        
+        print(paste0("eventReactive enc | load encoder | Check if the encoder file exists: ", default_path))
+        
+        if (file.exists(default_path)) {
+            print(paste0("eventReactive enc | load encoder ", encoder_filename ," | --> Load from binary file "))
+            # --- Load from binary file --- #
+            encoder_read_option <- "Load from binary file"
+            enc <- py_load_object(default_path)
+
+        } else { # If the encoder file has not been found in the default path
+            # --- Download from W&B and load from binary file --- #
+            encoder_read_option <- "Download from Weights & Biases and load from binary file"
+            print(
+                paste0(
+                    "eventReactive enc | load encoder ",
+                    encoder_filename ," | ", 
+                    encoder_read_option,
+                    " | --> Load from binary file "
+                )
             )
-        )
-        on.exit({print("eventReactive enc | load encoder -->"); flush.console()})
+            
+            tryCatch({
+                print(paste0("eventReactive enc | Download encoder's artifact ",encoder_filename, ", ",enc_ar()$name))
+                encoder_artifact_dir <- encoder_artifact$download()
+                encoder_artifact_dir
+            }, error = function(e){
+                stop(
+                    paste0(
+                        "eventReactive enc | Download encoder's artifact. The encoder artifact ",
+                        encoder_filename, ", ",
+                        enc_ar()$name,
+                        " does not exist in W&B. Looking for the nearest encoder trained with the same dataset. | Error: ", 
+                        e$message,
+                        "
+                        Here we should look for the nearest encoder trained with the same dataset. But it is not yet implemented... 
+                        Please just delete the problematic encoder in W&B. \n
+                        For some reason, W&B does not find the encoders of MVP-WSV logged in other machines.
+                        Please, copy them if possible, or if you need to use another artifact and can delete the first that the app uses, just delete it in W&B.\n
+                        "
+                    )
+                )
+                
+                #print(paste0("eventReactive enc | Download encoder's artifact | Looking for the nearest encoder trained with the same dataset"))
+                #runs <- isolate(ts_ar())$used_by()
+                #children <- list()
+                #for ( run in runs ) {
+                #    if (grepl("^02",run$name)){
+                #        generated_artifacts <- run$logged_artifacts()
+                #        for ( ar in ls( generated_artifacts )){
+                #            filtered_artifacts <- Filter(
+                #                function(art) {
+                #                    art$metadata$ref$type == "learner"
+                #                }, 
+                #                generated_artifacts
+                #            )
+                #             children <- append(children, list(filtered_artifacts))
+                #        }
+                #    }
+                #}
+                #print(paste0("eventReactive enc | Download encoder's artifact | Found ", length(children), " children"))
+
+                #for (child in filtered_children){
+                #    print(paste0("Child: ", child$name, " | ", child$metadata$ref$hash))
+                ##}
+                #encoder_artifact_dir <- children[[2]]$download()
+                encoder_artifact_dir
+            })
+
+            print(paste0("eventReactive enc | Download from Weight & Biases | encoder artifact dir: ", encoder_artifact_dir))
+            
+            encoder_path <- file.path(encoder_artifact_dir, encoder_filename)
+            print(paste0("eventReactive enc | Download from Weight & Biases | encoder path: ", encoder_path))
+            # Move the file to the default path
+            file.copy(
+                from        = encoder_path, 
+                to          = default_path, 
+                overwrite   = TRUE, 
+                recursive   = FALSE, 
+                copy.mode   = TRUE
+            )
+            # Load from binary file
+            enc <- py_load_object(default_path)
+            if (is.null(enc)) {
+                stop("Encoder null after loading from the binary file. Something went wrong.")
+            }
+        } # End of else 
+
+        on.exit({print(paste0("eventReactive enc | load encoder ", encoder_filename ," | ", encoder_read_option, " -->")); flush.console()})
+        
         enc
     })
-
-    
     
     embs <- reactive({
         req(X(), enc_l <- enc())
@@ -557,25 +641,73 @@ shinyServer(function(input, output, session) {
     
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
-        {    
-            req(input$encoder, ts_ar())
-            ts_ar <- req(ts_ar())
-            print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
-            flush.console()
-                        
-            t_init <- Sys.time()
-            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
-            print(paste0("Reactive tsdf | Read feather ", path ))
-            flush.console()
-            df <- read_feather(path, as_data_frame = TRUE, mmap = TRUE) %>% rename('timeindex' = `__index_level_0__`) 
-            t_end = Sys.time()
-            print(paste0("Reactive tsdf | Read feather | Execution time: ", t_end - t_init, " seconds"))
-            flush.console()
+    {    
+        req(input$encoder, ts_ar())
+        ts_ar <- req(ts_ar())
+        print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
+        flush.console()
 
+        # Initialize df
+        df <- NULL 
+        df_read_option <- ""
+        t_init <- Sys.time()
+            
+        df <- tryCatch({ # The perfect case
+            # --- Read from feather file --- #
+            # Get the full path
+            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
+            print(paste0("Reactive tsdf | --> Read feather ", path ))
+            flush.console()
+            # Read from feather
+            df <- read_feather(
+                path, 
+                as_data_frame = TRUE, 
+                mmap = TRUE
+            ) %>% rename('timeindex' = `__index_level_0__`) 
+            print("Reactive tsdf | Read feather --> ")
+            flush.console()
+            df_read_option <- "Read from feather"
+            df
+        }, error = function (e) { # Execute in case of error
+            # --- Download from Weight & Biases and save the feather for the future --- #
+            warning(paste0("Reactive tsdf | Read feather --> | Failed to read feather file: ", e$message))
+            print(paste0("Reactive tsdf | --> Download from Weight & Biases"))
+            flush.console()
+            # Download the artifact and return the dataset's feather local path
+            dataset_artifact_dir <- ts_ar$download()
+            print(paste0("Reactive tsdf | Download from Weight & Biases | dataset artifact dir: ", dataset_artifact_dir))
+            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
+            ar_path = file.path(dataset_artifact_dir, ts_ar$metadata$TS$hash)
+            # Move the file to the default path
+            file.copy(
+                from        = ar_path, 
+                to          = path, 
+                overwrite   = TRUE, 
+                recursive   = FALSE, 
+                copy.mode   = TRUE
+            )
+            # Get feather path
+            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar$metadata$TS$hash)
+            # Read from feather
+            df <- read_feather(
+                path, 
+                as_data_frame = TRUE, 
+                mmap = TRUE
+            ) %>% rename('timeindex' = `__index_level_0__`)
+            df_read_option <- "Download from W&B and read from feather"
+            df
+        }, finally = { # Execute in any case
             t_end = Sys.time()
-            on.exit({print(paste0("Reactive tsdf | Column to index | Execution time: ", t_end - t_init, " seconds"));flush.console()})
+            on.exit({
+                print(paste0("Reactive tsdf | ", df_read_option , " | Execution time: ", t_end - t_init, " seconds -->"));
+                #--- This prints are only for debugging in case of error, TMI
+                #print(df)
+                #print(paste0("Time0: ", df$timeindex[1]))
+                flush.console()
+            })
             df
         })
+    })
     
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
@@ -682,9 +814,10 @@ shinyServer(function(input, output, session) {
         tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected, - "timeindex")
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
         t_end <- Sys.time()
-        print(paste0("ts_plot_base | tsdf_xts time", t_end-t_init)) 
-        print(head(tsdf_xts))
-        print(tail(tsdf_xts))
+        print(paste0("ts_plot_base | tsdf_xts time: ", t_end-t_init)) 
+        #--- For debugging TMI
+        #print(head(tsdf_xts))
+        #print(tail(tsdf_xts))
         ts_plt = dygraph(
             tsdf_xts,
             width="100%", height = "400px"

@@ -13,8 +13,13 @@ user_preferences:
   # Whether to use or not wandb for experiment tracking
   use_wandb: &use_wandb true
   wdb:
+<<<<<<< HEAD
     user: &wdb_user mi-santamaria
     project_name: &wdb_project deepvats
+=======
+    user: &wdb_user ${WANDB_ENTITY}
+    project_name: &wdb_project ${WANDB_PROJECT}
+>>>>>>> fix-open-app-in-new-machine
     version: &wdb_version 'latest' 
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode: &wdb_mode 'online'

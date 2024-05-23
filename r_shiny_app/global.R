@@ -1,6 +1,7 @@
 # Dependencies
 source("./dependencies.R")
-options(shiny.trace = TRUE, shiny.loglevel = "DEBUG")
+## -- Un comment for printing shiny logs
+#options(shiny.trace = TRUE, shiny.loglevel = "DEBUG")
 # Logs handling and configuration
 source("./lib/global/logs.R")
 source("./lib/global/plots.R")

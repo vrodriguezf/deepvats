@@ -6,8 +6,76 @@
 #
 #    http://shiny.rstudio.com/
 #
+#source("./ui-helper-logs.R")
 
 shinyUI(fluidPage(
+  ################################################
+  ################## JScript Logs ################
+  ################################################
+  tags$head(
+  tags$script(HTML("
+    function saveLogInLocalStorage(functionName, timeDiff) {
+      var filename = 'app/witc2024_6';
+      var existingLogs = localStorage.getItem(filename);
+      existingLogs = existingLogs ? JSON.parse(existingLogs) : [];
+      existingLogs.push({ functionName: functionName, timeDiff: timeDiff, timestamp: new Date().toISOString() });
+      localStorage.setItem(filename, JSON.stringify(existingLogs));
+    }
+
+    function showLogs() {
+      var filename = 'app/witc2024_6';
+      var logs = localStorage.getItem(filename);
+      if (logs) {
+        // Mostrar los logs en el contenedor de la UI
+        Shiny.setInputValue('logData', logs);
+      }
+    }
+
+    $(document).ready(function() {
+      Shiny.addCustomMessageHandler('showLogs', function(message) {
+        showLogs();
+      });
+    });
+  
+
+    var timers = {
+      'projections_plot': null,
+      'ts_plot_dygraph': null
+    }
+
+    var timeTaken = {
+      'projections_plot': null,
+      'ts_plot_dygraph': null
+    }
+
+    var renderTimes = {
+      'projections_plot': [],
+      'ts_plot_dygraph': []
+    }
+
+    $(document).on('shiny:outputinvalidated', function(event) {
+      if (timers.hasOwnProperty(event.target.id)) {
+        timers[event.target.id] = new Date().getTime();
+        console.log('Start rendering ' + event.target.id);
+      }
+    });
+
+    $(document).on('shiny:value', function(event) {
+      if (timers.hasOwnProperty(event.target.id) && timers[event.target.id] != null) {
+          var endTime = new Date().getTime();
+          var timeDiff = endTime - timers[event.target.id];
+          console.log('Pushing time for ' + event.target.id + ': ' + timeDiff + ' ms');
+          renderTimes[event.target.id].push(timeDiff);
+          Shiny.setInputValue('renderTimes', JSON.stringify(renderTimes)); // Enviar el objeto como un string JSON
+          console.log('Render time for ' + event.target.id + ': ' + timeDiff + ' ms');
+          
+          timers[event.target.id] = null;
+          timeTaken[event.target.id] = null;
+        }
+      }); 
+    "))
+  ),
+
   #theme = shinythemes::shinytheme("cerulean"),
   # Application title
   titlePanel("DeepVATS"),
@@ -171,9 +239,27 @@ shinyUI(fluidPage(
             dataTableOutput("enc_info")
           )
         ),
+      ######################## JSCript Logs button ###############################
+        tabPanel(
+          "Logs",
+          fluidRow(
+            h3("Logs"),
+            verbatimTextOutput("logsOutput"),
+            h3("Log dataframe"),
+            shiny::actionButton("update_logs", label = "Update logs", icon = icon("refresh")),
+            shiny::downloadButton("download_data", "Download logs as CSV"),
+            #shinyWidgets::sliderTextInput(
+            #  "timestamp_range", 
+            #  "Select Time Range:",
+            #  choices = c("Loading..."="Loading..."), #setNames(as.character(seq(0,10,1)), seq(0,10,1)),
+            #  selected = c("Loading...", "Loading..."),
+            #  animate = TRUE
+            #),
+            #verbatimTextOutput(outputId = "res"),
+            dataTableOutput("log_output")
+          )
+        ),
       )
     )
   )
-
-  
 ))

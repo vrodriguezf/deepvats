@@ -1,5 +1,6 @@
-source("./modules/load.R")
 source("./lib/ui/ui.R")
+source("./modules/load.R")
+source("./modules/parameters.R")
 #
 # This is the user-interface definition of a Shiny web application. You can
 # run the application by clicking 'Run App' above.
@@ -8,14 +9,13 @@ source("./lib/ui/ui.R")
 #
 #    http://shiny.rstudio.com/
 #
-#source("./ui-helper-logs.R")
 
 shinyUI(fluidPage(
   ################################################
   ################## JScript Logs ################
   ################################################
   tags$head(tags$script(log_script)),
-
+  
   #theme = shinythemes::shinytheme("cerulean"),
   # Application title
   titlePanel("DeepVATS"),
@@ -28,7 +28,7 @@ shinyUI(fluidPage(
     sidebarPanel(
       loadUI("load"),
       hr(),
-      selectizeInput("dataset", label = "Dataset", choices = NULL),
+      select_datasetUI("datasetModule"),
       selectizeInput("encoder", label = "Encoder", choices = NULL),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),

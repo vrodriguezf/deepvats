@@ -17,3 +17,4 @@ load <- function(input, output, session) {
         log_print("Loading embeddings", debug_level = 1, debug_group = 'main')
     })
 }
+

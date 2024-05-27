@@ -1,6 +1,7 @@
 source("./lib/ui/ui.R")
 source("./modules/load.R")
-source("./modules/parameters.R")
+source("./modules/information.R")
+source("./modules/mplots.R")
 #
 # This is the user-interface definition of a Shiny web application. You can
 # run the application by clicking 'Run App' above.
@@ -167,15 +168,8 @@ shinyUI(fluidPage(
           #verbatimTextOutput("point")
           
         ),
-        tabPanel(
-          "Information",
-          fluidRow(
-            h3("Time series"),
-            dataTableOutput("ts_ar_info"),
-            h3("Configuration of the associated encoder"),
-            dataTableOutput("enc_info")
-          )
-        ),
+        info_tabUI("info"),
+        mplot_tabUI("mplots"),
       ######################## JSCript Logs button ###############################
         tabPanel(
           "Logs",

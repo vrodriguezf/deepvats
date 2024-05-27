@@ -7,7 +7,7 @@
 #    http://shiny.rstudio.com/
 #
 ###########
-
+#TODO: Separar la aplicación en módulos y limpiar el código. 
 source("./lib/server/logs.R")
 source("./lib/server/plots.R")
 source("./modules/load.R")

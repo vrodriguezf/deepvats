@@ -1,18 +1,21 @@
 # R dependencies
 library(shiny)
 library(shinyjs)
+library(shinycssloaders)
+library(shinyWidgets)
+
 library(reticulate)
 library(purrr)
 library(jsonlite)
 library(tibble)
 library(ggplot2)
 library(glue)
-library(shinycssloaders)
+
 library(tidyr)
 library(data.table)
 library(dplyr)
 library(dygraphs)
-library(shinyWidgets)
+
 library(RColorBrewer)
 library(pals)
 library(stringr)

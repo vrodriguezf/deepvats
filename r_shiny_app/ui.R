@@ -4,6 +4,7 @@ source("./modules/information.R")
 source("./modules/mplots.R")
 source("./modules/embeddings.R")
 source("./modules/parameters.R")
+source("./modules/_module_test.R")
 #
 # This is the user-interface definition of a Shiny web application. You can
 # run the application by clicking 'Run App' above.
@@ -78,7 +79,8 @@ shinyUI(fluidPage(
         id = "tabs",
         embeddings_tabUI("embs_tab"),
         info_tabUI("inf_tab"),
-        mplot_tabUI("mp_tab"),
+        mplot_tabUI("mplot_tab1"),
+        #myModuleUI("myModule1"),
       ######################## JSCript Logs button ###############################
         tabPanel(
           "Logs",

@@ -1,34 +1,58 @@
+#--- UI ---#
+matrix_profile_plot_switch <- function(id){
+  ns <- NS(id)
+  materialSwitch(
+    inputId  = ns("matrix_profile_flag"),  # Usando ns() para el ID
+    label    = "Plot Matrix Profile",
+    status   = "info",
+    value    = TRUE,
+    inline   = TRUE
+  )
+}
+
 mplot_tabUI <- function(id) {
-    ns <- NS(id)
-    tabPanel(
-        "MPlot | Similarity Matrix Plot",
-        # --- Aquí hay que poner los controladores
-        # --- Hay que tener cuidado con el alto y el ancho para pasárselo a python
-        fluidRow(
-            h3("MPlot | Similarity Matrix Plot"),
-            #embeddings_aesthetics("embeddings_aesthetics"),
-            column(
-                8,
-                #embeddings_zoom_button("embeddings_zoom_button"),
-                #embeddings_plot_windows("embeddings_plot_windows"),
-            ),
-            column(3)
+  ns <- NS(id)
+  tabPanel(
+    "MPlot",
+    fluidRow(
+        h3("MPlot | Similarity Matrix Plot"),
+        column(
+            8,
+            matrix_profile_plot_switch(id)
         ),
-        #-- Aqui va la referencia al output
-        fluidRow(
-            # Matrix profile plot
-            # uiOutput("matrix_profile_plot_ui")
-            # Similarity matrix plot (MPlot)
-            # uiOutput("mplot_ui")
+        column(3)
+    ),
+    fluidRow(
+        column(8)
+    ),
+
+    
+  )
+
+}
+
+#--- SERVER ---#
+
+debug_plot_flag <- function(id, input, output, session){
+    ns <- NS(id)
+    observeEvent(input$matrix_profile_flag, {
+        print(
+            paste0(
+                "matrix_profile_flag changed: ", 
+                input$matrix_profile_flag
+            )
         )
-    )
-    #-- Aqui hay que poner un plot para TA y otro para TB
-    #original_data_plot1("original_data_plot2")
-    #original_data_plot2("original_data_plot2")
+    })
     
 }
 
-mplot_tab <- function(input, output, session) {
-    #-- Aqui habra que poner el plot del output
-    
+# Función del módulo
+mplot_tabServer <- function(id) {
+  moduleServer(
+    id, 
+    function(input, output, session){
+        debug_plot_flag(id, input, output, session)
+    }
+  )
+  
 }

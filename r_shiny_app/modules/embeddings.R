@@ -73,6 +73,55 @@ embeddings_aesthetics <- function(id){
   )
 }
 
+#-- Time Series Plot --#
+
+original_data_plot_controllers <- function(id){
+  ns <- NS(id)
+  fluidRow(
+    dropdownButton(
+      tags$b("Select/deselect variables"),
+      tags$div(
+        style = 'height:200px; overflow-y: scroll', 
+        checkboxGroupInput(
+          inputId   = "select_variables",
+          label     = NULL, 
+          choices   = NULL, 
+          selected  = NULL
+        )
+      ),
+      actionBttn(
+        inputId = "selectall",
+        label   = "Select/Deselect all",
+        style   = "simple",
+        color   = "primary",
+        icon    = icon("check-double"),
+        size    = "xs", 
+        block   = TRUE
+      ),
+      hr(),
+      prettySwitch(
+        inputId = "dygraph_sel",
+        label = "Show stacked graphs (Not available yet)",
+        status = "success",fill = TRUE
+      ),
+      circle = FALSE, status = "primary", size = "xs",
+      icon = icon("gear"), width = "300px",
+      tooltip = tooltipOptions(title = "Configure the TS appearance"),
+      inputId = "ts_config"
+    )
+  )
+}
+original_data_plot <- function(id){
+  ns <- NS(id)
+  fluidRow(
+    column(12,
+      dygraphOutput("ts_plot_dygraph") %>% withSpinner(),
+      plotOutput("windows_plot"),
+      uiOutput("windows_text")
+    )
+  )
+}
+
 # -- Controllers -- #
 embeddings_zoom_button <- function(id){
   ns <- NS(id)
@@ -104,59 +153,31 @@ embeddings_plot_windows <- function(id){
 
 # -- Tab UI function -- #
 embeddings_tabUI <- function(id) {
-    ns <- NS(id)
-    tabPanel(
-          "Projections",
-          fluidRow(
-            h3("Embedding projections"),
-            fluidRow(
-              embeddings_aesthetics("embeddings_aesthetics"),
-              column(8,
-                     embeddings_zoom_button("embeddings_zoom_button"),
-                     embeddings_plot_windows("embeddings_plot_windows"),
-              ),
-              column(3)
-            ),
-            fluidRow(
-              uiOutput("projections_plot_ui")
-            )
-          ),
-          fluidRow(h3("Original data")),
-          fluidRow(
-            dropdownButton(
-              tags$b("Select/deselect variables"),
-              tags$div(style= 'height:200px; overflow-y: scroll', 
-                       checkboxGroupInput(inputId = "select_variables",
-                                          label=NULL, choices = NULL, selected = NULL)
-              ),
-              actionBttn(inputId = "selectall",label = "Select/Deselect all",style = "simple",
-                         color = "primary",icon = icon("check-double"),size = "xs", block = TRUE),
-              hr(),
-              prettySwitch(inputId = "dygraph_sel",label = "Show stacked graphs (Not available yet)",
-                           status = "success",fill = TRUE),
-              circle = FALSE, status = "primary", size = "xs",
-              icon = icon("gear"), width = "300px",
-              tooltip = tooltipOptions(title = "Configure the TS appearance"),
-              inputId = "ts_config"
-            )
-          ),
-          fluidRow(
-            column(12,
-              #sliderInput(
-                #"nrows", "Select initial data range:", 
-                #min = 0, max = 10000, 
-                #value = c(0,0),
-                #step = 1000000
-              #),
-              dygraphOutput("ts_plot_dygraph") %>% withSpinner(),
-              plotOutput("windows_plot"),
-              uiOutput("windows_text")
-            )
-          )
-          #verbatimTextOutput("projections_plot_interaction_info"),
-          #verbatimTextOutput("point")
-          
-        )
+  ns <- NS(id)
+  tabPanel(
+    "Projections",
+    fluidRow(
+    h3("Embedding projections"),
+    fluidRow(
+      embeddings_aesthetics("embeddings_aesthetics"),
+        column(
+          8,
+          embeddings_zoom_button("embeddings_zoom_button"),
+          embeddings_plot_windows("embeddings_plot_windows"),
+        ),
+        column(3)
+      ),
+      fluidRow(
+        uiOutput("projections_plot_ui")
+      )
+    ),
+    fluidRow(h3("Original data")),
+    original_data_plot_controllers("original_data_plot_controllers"),
+    original_data_plot("original_data_plot")
+    #verbatimTextOutput("projections_plot_interaction_info"),
+    #verbatimTextOutput("point")
+    
+  )
 }
 
 embeddings_tab <- function(input, output, session) {

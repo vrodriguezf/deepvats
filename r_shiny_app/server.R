@@ -12,6 +12,7 @@ source("./lib/server/logs.R")
 source("./lib/server/plots.R")
 source("./modules/load.R")
 source("./modules/parameters.R")
+source("./modules/mplots.R")
 
 shinyServer(function(input, output, session) {
     options(shiny.verbose = TRUE)
@@ -1583,5 +1584,8 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
             write.csv(log_df(), file)
         }
     )
+    
+    mplot_tabServer("mplot_tab1")
+
 })
 

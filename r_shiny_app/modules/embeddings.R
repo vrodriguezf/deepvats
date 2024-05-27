@@ -50,6 +50,7 @@ embeddings_aesthetics_update <- function(id) {
     size = "xs", block = TRUE
   )
 }
+
 embeddings_aesthetics <- function(id){
   ns <- NS(id)
   column(1,

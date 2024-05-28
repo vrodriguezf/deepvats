@@ -72,7 +72,7 @@ shinyServer(function(input, output, session) {
         label = "input_dataset"
     )
     
-    select_dataset(encs_l, input, output, session)
+    select_datasetServer(encs_l, input, output, session)
     
     # observeEvent(input$encoder, {
     #   freezeReactiveValue(input, "embs_ar")

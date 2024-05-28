@@ -21,9 +21,9 @@ matrix_profile_plot_max_points_slider <- function(id){
   )
 }
 similarity_matrix <- function(data, wlen) {
-  sim_matrix <- dvats$mplots$MatrixProfilePlot(
-    DM_AB           = dvats$mplots$DistanceMatrix(),
-    MP_AB           = dvats$mplots$MatrixProfile(),
+  sim_matrix <- mplots$MatrixProfilePlot(
+    DM_AB           = mplots$DistanceMatrix(),
+    MP_AB           = mplots$MatrixProfile(),
     data            = data(),
     data_b          = data(),
     subsequence_len = wlen,
@@ -123,10 +123,13 @@ mplot_compute <- function(id, input, output, session, data, input2){
       if(total_points > 0){
         sim_matrix <- similarity_matrix(data, input2$wlen)
         log_print("Similarity matrix initialized")     
-        flens <- fourierLens(sim_matrix)
-        output$fourierLensOutput <- renderText({
-          paste0("Proposed lengths:", flens)
-        })
+        if ( length(sim_matrix$DM_AB$distances) > 0 ) {
+          flens <- fourierLens(sim_matrix)
+          log_print("Fourier lens computed")
+          output$fourierLensOutput <- renderText({
+            paste0("Proposed lengths:", flens)
+          })
+        }
       }
     }
   )

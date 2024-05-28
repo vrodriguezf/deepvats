@@ -55,7 +55,7 @@ load_datasetUI <- function(id) {
     )
 }
 
-debug_load_dataset_action <-function(input, output, session){
+load_datasetActionDebug <-function(input, output, session){
     observeEvent(
         input$load_dataset,
     {
@@ -69,7 +69,7 @@ debug_load_dataset_action <-function(input, output, session){
     })
 }
 
-load_dataset_action <- function(input, output, session){
+load_datasetAction <- function(input, output, session){
     #En esta función hay que meter el código de ángel para cargar datasets & embeddings
     #Estructurar en funciones según se vaya utilizando para poder asegurar una correcta
     #ejecución y depuración en caso de bloqueos de reactividades.
@@ -81,12 +81,11 @@ load_datasetServer <- function(id) {
     moduleServer(
         id, 
         function(input, output, session){
-            debug_load_dataset_action(input, output, session)
-            load_dataset_action(input, output, session)
+            load_datasetActionDebug(input, output, session)
+            load_datasetAction(input, output, session)
         }
     )
 }
-
 
 ##################
 # SIDEBAR PANEL #

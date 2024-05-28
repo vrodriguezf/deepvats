@@ -1584,7 +1584,7 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
         }
     )
     
-    mplot_tabServer("mplot_tab1")
+    mplot_tabServer("mplot_tab1", tsdf = tsdf, input2 = input)
     load_datasetServer("load_dataset1")
 
 })

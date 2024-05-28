@@ -9,16 +9,36 @@ matrix_profile_plot_switch <- function(id){
     inline   = TRUE
   )
 }
+matrix_profile_plot_max_points_slider <- function(id){
+  ns <- NS(id)
+  sliderInput(
+    ns("maxPoints"), 
+    "Select max number of points to plot", 
+    min   = 10000, 
+    max   = 100000, 
+    value = 10000, 
+    step  = 1000
+  )
+}
+similarity_matrix <- function(data, wlen) {
+  sim_matrix <- dvats$mplots$MatrixProfilePlot(
+    DM_AB           = dvats$mplots$DistanceMatrix(),
+    MP_AB           = dvats$mplots$MatrixProfile(),
+    data            = data(),
+    data_b          = data(),
+    subsequence_len = wlen,
+    self_join       = FALSE
+  )
+  return(sim_matrix)
+}
 
-mplot_selectors <- function(id){
-    ns <- NS(id)
-        # loadUI("load") -> Dar aquí también la opción a cargar serie temporal
-        # hr()
-        br()
-        sliderInput("wlen", "Select window size", min = 0, max = 0, value =0 , step = 1)
-        sliderInput("maxPoints", "Select max number of points to plot", min = 0, max = 0, value = 0, step = 1)
-        textOutput(ns("fourierLens"))
-
+fourierLens <- function(sim_matrix) {
+  if ( sim_matrix$dominant_lens == NULL){
+    #Poner slider si se quiere o fijar un valor con sentido
+    sim_matrix$MP_AB$provide_lens(nlens = 5)
+    sim_matrix$dominant_lens = sim_matrix$MP_AB$dominant_lens
+  }
+  return(sim_matrix$dominant_lens)
 }
 
 mplot_tabUI <- function(id) {
@@ -27,9 +47,10 @@ mplot_tabUI <- function(id) {
       "MPlot",
       fluidRow(
         h3("MPlot | Similarity Matrix Plot"),
-        column(
-            8,
-            matrix_profile_plot_switch(id)
+        fluidRow(
+          column(4,matrix_profile_plot_switch(id)),
+          column(6,matrix_profile_plot_max_points_slider(id)),
+          column(4,textOutput(ns("fourierLensOutput")))
         ),
         column(3)
       ),
@@ -61,10 +82,6 @@ mplot_dygraph <- function(id, data){
     fluidRow(
         column(12,
             #dygraphOutput(ns("dygraph"))
-            output$fourierLens <- renderText({
-                #--- aqui calcular las mejores longitudes segun fourier
-                paste0("Proposed lengths:", 1)
-            })
         )
     )
 }
@@ -91,12 +108,39 @@ tsB_data_plot <- function(id){
 }
 
 # Función del módulo
-mplot_tabServer <- function(id) {
+mplot_compute <- function(id, input, output, session, data, input2){
+    ns <- NS(id)
+    observeEvent(
+      list(data(), input2$wlen, input$maxPoints),
+    {
+      req(data(), input2$wlen, input$maxPoints)
+      total_points <- length(data())
+      log_print(paste0(
+        " [ MPlot Compute ] data ", total_points, "\n", 
+        " [ MPlot Compute ] wlen ", input2$wlen, "\n",
+        " [ MPlot Compute ] maxPoints ", input$maxPoints, "\n"
+      ))
+      if(total_points > 0){
+        sim_matrix <- similarity_matrix(data, input2$wlen)
+        log_print("Similarity matrix initialized")     
+        flens <- fourierLens(sim_matrix)
+        output$fourierLensOutput <- renderText({
+          paste0("Proposed lengths:", flens)
+        })
+      }
+    }
+  )
+}
+
+# Función del módulo
+mplot_tabServer <- function(id, tsdf, input2) {
   moduleServer(
     id, 
     function(input, output, session){
-        debug_plot_flag(id, input, output, session)
+      debug_plot_flag(id, input, output, session)
+      mplot_compute(id, input, output, session, tsdf, input2)
     }
   )
   
 }
+

@@ -7,3 +7,4 @@ from .memory import *
 from .dr import *
 from .encoder import *
 from .visualization import *
+from .mplots import *

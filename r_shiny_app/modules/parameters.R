@@ -1,10 +1,17 @@
+###############################
+# Parameters seLection & load #
+###############################
 
+###########
+# HELPERS #
+###########
+
+# Dataset selection
 select_datasetUI <- function(id){
     selectizeInput("dataset", label = "Dataset", choices = NULL)
 }
 
-
-select_dataset <- function(encs_l, input, output, session){
+select_datasetServer <- function(encs_l, input, output, session){
     observeEvent(input$dataset, {
         #req(encs_l)
         log_print("--> observeEvent input_dataset | update encoder list")
@@ -27,3 +34,61 @@ select_dataset <- function(encs_l, input, output, session){
         )
     }, label = "input_encoder")    
 }
+
+
+# Dataset load
+load_datasetUI <- function(id) {
+    ns <- NS(id)
+    tagList(
+        fluidRow(
+        shiny::actionButton(
+            ns("load_dataset"), 
+            label = "Load dataset", 
+            icon = icon("database")
+        ),
+        shiny::actionButton(
+            ns("load_embs"), 
+            label = "Load embeddings", 
+            icon = icon("project-diagram")
+        )
+      ),
+    )
+}
+
+debug_load_dataset_action <-function(input, output, session){
+    observeEvent(
+        input$load_dataset,
+    {
+        log_print("Loading dataset", debug_level = 1, debug_group = 'main')
+    })
+            
+    observeEvent(
+    input$load_embs,
+    {
+        log_print("Loading embeddings", debug_level = 1, debug_group = 'main')
+    })
+}
+
+load_dataset_action <- function(input, output, session){
+    #En esta función hay que meter el código de ángel para cargar datasets & embeddings
+    #Estructurar en funciones según se vaya utilizando para poder asegurar una correcta
+    #ejecución y depuración en caso de bloqueos de reactividades.
+}
+
+load_datasetServer <- function(id) {
+    #Lo que sean funciones de cargar & descargar, en lib/load.R 
+    #Lo que sean llamadas básicas, usar load_dataset_action / load_embeddings_action
+    moduleServer(
+        id, 
+        function(input, output, session){
+            debug_load_dataset_action(input, output, session)
+            load_dataset_action(input, output, session)
+        }
+    )
+}
+
+
+##################
+# SIDEBAR PANEL #
+##################
+

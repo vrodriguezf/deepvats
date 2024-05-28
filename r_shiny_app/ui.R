@@ -1,5 +1,4 @@
 source("./lib/ui/ui.R")
-source("./modules/load.R")
 source("./modules/information.R")
 source("./modules/mplots.R")
 source("./modules/embeddings.R")
@@ -30,7 +29,7 @@ shinyUI(fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
-      loadUI("load"),
+      load_datasetUI("load_dataset1"),
       hr(),
       select_datasetUI("datasetModule"),
       selectizeInput("encoder", label = "Encoder", choices = NULL),

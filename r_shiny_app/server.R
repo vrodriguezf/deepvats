@@ -10,7 +10,6 @@
 #TODO: Separar la aplicación en módulos y limpiar el código. 
 source("./lib/server/logs.R")
 source("./lib/server/plots.R")
-source("./modules/load.R")
 source("./modules/parameters.R")
 source("./modules/mplots.R")
 
@@ -1586,6 +1585,7 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
     )
     
     mplot_tabServer("mplot_tab1")
+    load_datasetServer("load_dataset1")
 
 })
 

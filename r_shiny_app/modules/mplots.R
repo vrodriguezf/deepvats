@@ -52,6 +52,7 @@ mplot_variable_selector <- function(id){
   )
 }
 
+
 mplot_tabUI <- function(id) {
   ns <- NS(id)
   tabPanel(
@@ -65,6 +66,14 @@ mplot_tabUI <- function(id) {
         ),
         fluidRow(
           column(4, mplot_variable_selector(id)),
+          column(4, actionBttn(
+            inputId = ns("mplot_compute_flag"), 
+            label = "Activate/Deactivate Compute MPlot", 
+            style = "bordered", 
+            color = "primary", 
+            size = "sm", 
+            block = TRUE)
+          ),
           column(8)
           )
         ),
@@ -121,6 +130,8 @@ tsB_data_plot <- function(id){
   )
 }
 
+
+
 # Función del módulo
 mplot_compute <- function(
   id, 
@@ -140,11 +151,12 @@ mplot_compute <- function(
       data(), 
       input_caller_2$wlen, 
       input$maxPoints, 
-      input_caller_2[[ variableInputId ]]
+      input_caller_2[[ variableInputId ]],
+      input_caller_2[[ ns("mplot_compute_flag") ]]
     ),
   {
 
-    log_print(paste0(" [ MPlot Compute ] MPlot Compute Allow ", mplot_compute_allow(), "\n"))
+    log_print(paste0(" [ MPlot Compute ] MPlot Compute Allow ", mplot_compute_allow_inside(), "\n"))
 
     req(
       data(), 
@@ -169,7 +181,16 @@ mplot_compute <- function(
 
       selected_variable <- input_caller_2[[ variableInputId ]]
 
-      sim_matrix <- similarity_matrix(data()[selected_variable], input_caller_2$wlen)
+      variable_data <- data()$selected_variable
+
+      log_print(
+        paste0(
+          "[ MPlot Compute ] ", "\n", 
+          "[ MPlot Compute ] Selected ", selected_variable, "~", length(variable_data), "\n"
+        )
+      )     
+
+      sim_matrix <- similarity_matrix(variable_data, input_caller_2$wlen)
       
       log_print("Similarity matrix initialized")     
       
@@ -264,6 +285,25 @@ mplot_tabServer <- function(
         log_print(paste0("[ MPlot_tab Server ]", "\n",
           "[ MPlot_tab Server ] Variable changed: ", input_caller[[ variableInputId ]], "\n"
           ))
+      })
+
+      mplot_compute_allow_inside <- reactiveVal(TRUE)
+
+      observeEvent( input_caller [[ ns("mplot_compute_flag") ]] , {
+        log_print(
+          paste0(
+            "mplot_compute_flag changed to: ", 
+            input_caller [[ ns("mplot_compute_flag") ]]
+          )
+        )
+        if (input_caller [[ ns("mplot_compute_flag") ]] ){
+          mplot_compute_allow(TRUE)
+          mplot_compute_allow_inside(TRUE)
+          log_print(paste0("mplot_compute_allow changed to: ", mplot_compute_allow()))
+        } else {
+          mplot_compute_allow(FALSE)
+          mplot_compute_allow_inside(FALSE)
+        }
       })
 
       mplot_compute(id, input, output, session, tsdf, input_caller, mplot_compute_allow)

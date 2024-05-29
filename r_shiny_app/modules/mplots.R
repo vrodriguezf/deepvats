@@ -43,11 +43,9 @@ fourierLens <- function(sim_matrix) {
 
 mplot_variable_selector <- function(id){
   ns <- NS(id)
-  log_print(paste0("|||||| label: ", ns("select_variable")))
-  #radioButtons(
+  inputId <- ns("select_variable")
   selectInput(
-    #inputId   = ns("select_variable"),
-    inputId   = "select_variable",
+    inputId   = inputId,
     label     = "Select a variable",
     choices   = list("No variables available" = ""),
     selected  = ""
@@ -124,24 +122,41 @@ tsB_data_plot <- function(id){
 }
 
 # Función del módulo
-mplot_compute <- function(id, input, output, session, data, input2){
+mplot_compute <- function(
+  id, 
+  input, 
+  output, 
+  session, 
+  data, 
+  input_caller_2
+){
   ns <- NS(id)
+
+  inputId <- ns("select_variable")
+
   observeEvent(
-    list(data(), input2$wlen, input$maxPoints),
+    list(data(), input_caller_2$wlen, input$maxPoints, input[[ inputId ]]),
   {
-    req(data(), input2$wlen, input$maxPoints)
+    req(data(), input_caller_2$wlen, input$maxPoints, input[[ inputId ]])
     total_points <- length(data())
-    log_print(paste0(
+
+    
+
+    log_print(paste0(" [ MPlot Compute ]", "\n",
       " [ MPlot Compute ] data ", total_points, "\n", 
-      " [ MPlot Compute ] wlen ", input2$wlen, "\n",
-      " [ MPlot Compute ] maxPoints ", input$maxPoints, "\n"
+      " [ MPlot Compute ] wlen ", input_caller_2$wlen, "\n",
+      " [ MPlot Compute ] maxPoints ", input$maxPoints, "\n",
+      " [ MPlot Compute ] inputId ", inputId, "\n"
     ))
-    #if(total_points > 0 && ( ! is.null(input[[ns("select_variable")]]))){
-    if(total_points > 0 && ( ! is.null(input$elect_variable))){
-      #selected_variable <- input[[ns("select_variable")]]
-      selected_variable <- input$select_variable
+    
+    if(total_points > 0 && ( ! is.null(input[[ inputId ]]))){
+
+      selected_variable <- input[[ inputId ]]
+
       sim_matrix <- similarity_matrix(data()[selected_variable], input2$wlen)
+      
       log_print("Similarity matrix initialized")     
+      
       tryCatch({
         log_print(paste0("SM data_b: ", length(sim_matrix$data_b)))
         ## Añadir los parámetros faltantes como sliders
@@ -193,28 +208,40 @@ mplot_tabServer <- function(
     id, 
     function(input, output, session){
       ns <- session$ns
+
       debug_plot_flag(id, input, output, session)
-      mplot_compute(id, input, output, session, tsdf, input_caller)
+      
       ts_variables <- reactiveValues(selected = NULL)
       
-      observeEvent(tsdf(), {
-        log_print("Data changed")
-        freezeReactiveValue(input, "select_variable")
-        
+      variableInputId <- ns("select_variable") 
+
+      observeEvent(tsdf(), {  
+        freezeReactiveValue(input, variableInputId)
         data <- isolate(tsdf())
         
         if (!is.null(data)) {
+          log_print(paste0(" [ MPlot_tabServer ]", "\n", 
+          " [ MPlot_tab Server ] inputID ", variableInputId, "\n"))
+
           ts_variables$selected = names(data)[names(data) != "timeindex"]
-          id <- "select_variable"           
-          
           updateSelectInput(
             session   = session_caller, 
-            inputId   = id,
+            inputId   = variableInputId,
             choices   = ts_variables$selected,
             selected  = ts_variables$selected[1]
           )
         }
       })
+      
+      ## Checking the input level of the selected variable
+      observeEvent( input_caller [[ variableInputId ]], {
+        log_print(paste0("[ MPlot_tab Server ]",
+          "[ MPlot_tab Server ] Variable changed: ", 
+          input_caller[[ variableInputId ]]
+          ))
+      })
+
+      mplot_compute(id, input, output, session, tsdf, input_caller)
     }
   )
 }

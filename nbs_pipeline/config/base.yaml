@@ -46,7 +46,9 @@ data:
     # Put here the idxs of the columns of interest ([] for all)
     cols: *cols
     # CSV file config ({} if this setting is not required)
-    csv_config: {}
+    #csv_config: {}
+    #For files with no header
+    csv_config: {'header': null}
     # Frequency offset used to set the date index (null to omit it) [Example pd.offsets.MonthEnd(0)]
     date_offset: null
     # Default date format (only for .tsf files)

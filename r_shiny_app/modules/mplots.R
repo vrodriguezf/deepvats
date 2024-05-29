@@ -43,7 +43,7 @@ fourierLens <- function(sim_matrix) {
 
 mplot_variable_selector <- function(id){
   ns <- NS(id)
-  inputId <- ns("select_variable")
+  inputId <- ns("mplot_variable")
   selectInput(
     inputId   = inputId,
     label     = "Select a variable",
@@ -128,16 +128,31 @@ mplot_compute <- function(
   output, 
   session, 
   data, 
-  input_caller_2
+  input_caller_2,
+  mplot_compute_allow
 ){
   ns <- NS(id)
 
-  inputId <- ns("select_variable")
+  variableInputId <- ns("mplot_variable")
 
   observeEvent(
-    list(data(), input_caller_2$wlen, input$maxPoints, input[[ inputId ]]),
+    list(
+      data(), 
+      input_caller_2$wlen, 
+      input$maxPoints, 
+      input_caller_2[[ variableInputId ]]
+    ),
   {
-    req(data(), input_caller_2$wlen, input$maxPoints, input[[ inputId ]])
+
+    log_print(paste0(" [ MPlot Compute ] MPlot Compute Allow ", mplot_compute_allow(), "\n"))
+
+    req(
+      data(), 
+      input_caller_2$wlen, 
+      input$maxPoints, 
+      input_caller_2[[ variableInputId ]],
+      mplot_compute_allow() == TRUE
+    )
     total_points <- length(data())
 
     
@@ -146,14 +161,15 @@ mplot_compute <- function(
       " [ MPlot Compute ] data ", total_points, "\n", 
       " [ MPlot Compute ] wlen ", input_caller_2$wlen, "\n",
       " [ MPlot Compute ] maxPoints ", input$maxPoints, "\n",
-      " [ MPlot Compute ] inputId ", inputId, "\n"
+      " [ MPlot Compute ] inputId ", variableInputId, "\n",
+      " [ MPlot Compute ] MPlot Compute Allow ", mplot_compute_allow(), "\n"
     ))
     
-    if(total_points > 0 && ( ! is.null(input[[ inputId ]]))){
+    if(total_points > 0 && ( ! is.null(input_caller_2[[ variableInputId ]]))){
 
-      selected_variable <- input[[ inputId ]]
+      selected_variable <- input_caller_2[[ variableInputId ]]
 
-      sim_matrix <- similarity_matrix(data()[selected_variable], input2$wlen)
+      sim_matrix <- similarity_matrix(data()[selected_variable], input_caller_2$wlen)
       
       log_print("Similarity matrix initialized")     
       
@@ -175,7 +191,7 @@ mplot_compute <- function(
           r_max               = total_points,
           ################################################################
           max_points          = input$maxPoints,
-          subsequence_len     = input2$wlen,
+          subsequence_len     = input_caller_2$wlen,
           provide_len         = FALSE,
           downsample_flag     = TRUE,
           min_lag             = 8, #Añadir selector
@@ -189,8 +205,15 @@ mplot_compute <- function(
         log_print(paste0("Error computing similarity matrix: ", e$message))
       })
 
-      flens <- fourierLens(sim_matrix)
-      log_print("Fourier lens computed")
+      flens <- {1}
+
+      tryCatch({
+        flens <- fourierLens(sim_matrix)
+        log_print("Fourier lens computed")
+      }, error = function(e){
+        log_print(paste0("Error computing fourier lens: ", e$message))
+      })
+      
       output$fourierLensOutput <- renderText({
         paste0("Proposed lengths:", flens)
       })
@@ -202,7 +225,7 @@ mplot_compute <- function(
 
 # Función del módulo
 mplot_tabServer <- function(
-  id, tsdf, input_caller, output_caller, session_caller
+  id, tsdf, mplot_compute_allow, input_caller, output_caller, session_caller
 ) {
   moduleServer(
     id, 
@@ -213,10 +236,12 @@ mplot_tabServer <- function(
       
       ts_variables <- reactiveValues(selected = NULL)
       
-      variableInputId <- ns("select_variable") 
+      variableInputId <- ns("mplot_variable") 
 
       observeEvent(tsdf(), {  
+
         freezeReactiveValue(input, variableInputId)
+        
         data <- isolate(tsdf())
         
         if (!is.null(data)) {
@@ -235,13 +260,13 @@ mplot_tabServer <- function(
       
       ## Checking the input level of the selected variable
       observeEvent( input_caller [[ variableInputId ]], {
-        log_print(paste0("[ MPlot_tab Server ]",
-          "[ MPlot_tab Server ] Variable changed: ", 
-          input_caller[[ variableInputId ]]
+        mplot_compute_allow(TRUE)
+        log_print(paste0("[ MPlot_tab Server ]", "\n",
+          "[ MPlot_tab Server ] Variable changed: ", input_caller[[ variableInputId ]], "\n"
           ))
       })
 
-      mplot_compute(id, input, output, session, tsdf, input_caller)
+      mplot_compute(id, input, output, session, tsdf, input_caller, mplot_compute_allow)
     }
   )
 }

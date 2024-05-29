@@ -72,7 +72,9 @@ shinyServer(function(input, output, session) {
         label = "input_dataset"
     )
     
-    select_datasetServer(encs_l, input, output, session)
+    mplot_compute_allow <- reactiveVal(TRUE)
+
+    select_datasetServer(encs_l, mplot_compute_allow, input, output, session)
     
     # observeEvent(input$encoder, {
     #   freezeReactiveValue(input, "embs_ar")
@@ -1584,12 +1586,15 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
         }
     )
     
+    
+
     mplot_tabServer(
         "mplot_tab1", 
-        tsdf            = tsdf, 
-        input_caller    = input,
-        output_caller   = output,
-        session_caller  = session
+        tsdf                = tsdf, 
+        mplot_compute_allow = mplot_compute_allow,
+        input_caller        = input,
+        output_caller       = output,
+        session_caller      = session
     )
     load_datasetServer("load_dataset1")
 

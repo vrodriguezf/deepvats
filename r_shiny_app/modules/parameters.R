@@ -14,9 +14,10 @@ select_datasetUI <- function(id){
 }
 
 select_datasetServer <- function(
-    encs_l, input, output, session
+    encs_l, mplot_compute_allow, input, output, session
 ){
     observeEvent(input$dataset, {
+        mplot_compute_allow(FALSE)
         #req(encs_l)
         log_print("--> observeEvent input_dataset | update encoder list")
         log_print(input$dataset)

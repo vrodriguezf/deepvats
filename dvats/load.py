@@ -43,7 +43,15 @@ class TSArtifact(wandb.Artifact):
 
 
     @classmethod
-    def from_daily_csv_files(cls, root_path, fread=pd.read_csv, start_date=None, end_date=None, metadata=None, **kwargs):
+    def from_daily_csv_files(
+        cls, 
+        root_path, 
+        fread     = pd.read_csv, 
+        start_date= None, 
+        end_date  = None, 
+        metadata  = None, 
+        **kwargs
+    ):
 
         "Create a wandb artifact of type `dataset`, containing the CSV files from `start_date` \
         to `end_date`. Dates must be pased as `datetime.datetime` objects. If a `wandb_run` is \

@@ -43,23 +43,14 @@ fourierLens <- function(sim_matrix) {
 
 mplot_variable_selector <- function(id){
   ns <- NS(id)
-  fluidRow(
-    dropdownButton(
-      tags$b("Select a variable"),
-      tags$div(
-        style = 'height:200px; overflow-y: scroll',
-        radioButtons(
-          inputId   = ns("select_variable"),
-          label     = NULL,
-          choices   = list("No variables available" = ""),
-          selected  = NULL
-        )
-      ),
-      circle = FALSE, status = "primary", size = "xs",
-      icon = icon("gear"), width = "300px",
-      tooltip = tooltipOptions(title = "Select the variable"),
-      inputId = ns("mplot_variable_selector")
-    )
+  log_print(paste0("|||||| label: ", ns("select_variable")))
+  #radioButtons(
+  selectInput(
+    #inputId   = ns("select_variable"),
+    inputId   = "select_variable",
+    label     = "Select a variable",
+    choices   = list("No variables available" = ""),
+    selected  = ""
   )
 }
 
@@ -145,8 +136,10 @@ mplot_compute <- function(id, input, output, session, data, input2){
       " [ MPlot Compute ] wlen ", input2$wlen, "\n",
       " [ MPlot Compute ] maxPoints ", input$maxPoints, "\n"
     ))
-    if(total_points > 0 && ( ! is.null(input[[ns("select_variable")]]))){
-      selected_variable <- input[[ns("select_variable")]]
+    #if(total_points > 0 && ( ! is.null(input[[ns("select_variable")]]))){
+    if(total_points > 0 && ( ! is.null(input$elect_variable))){
+      #selected_variable <- input[[ns("select_variable")]]
+      selected_variable <- input$select_variable
       sim_matrix <- similarity_matrix(data()[selected_variable], input2$wlen)
       log_print("Similarity matrix initialized")     
       tryCatch({
@@ -190,26 +183,39 @@ mplot_compute <- function(id, input, output, session, data, input2){
   })
 }
 
+
+
 # Función del módulo
-mplot_tabServer <- function(id, tsdf, input2) {
+mplot_tabServer <- function(
+  id, tsdf, input_caller, output_caller, session_caller
+) {
   moduleServer(
     id, 
     function(input, output, session){
+      ns <- session$ns
       debug_plot_flag(id, input, output, session)
-      mplot_compute(id, input, output, session, tsdf, input2)
+      mplot_compute(id, input, output, session, tsdf, input_caller)
+      ts_variables <- reactiveValues(selected = NULL)
+      
       observeEvent(tsdf(), {
-        data <- tsdf()
+        log_print("Data changed")
+        freezeReactiveValue(input, "select_variable")
+        
+        data <- isolate(tsdf())
+        
         if (!is.null(data)) {
-          ns <- NS(id)
-          updateRadioButtons(
-            session, 
-            ns("select_variable"),
-            choices = colnames(data),
-            selected = colnames(data)[1])
-          }
-        })
+          ts_variables$selected = names(data)[names(data) != "timeindex"]
+          id <- "select_variable"           
+          
+          updateSelectInput(
+            session   = session_caller, 
+            inputId   = id,
+            choices   = ts_variables$selected,
+            selected  = ts_variables$selected[1]
+          )
+        }
+      })
     }
   )
-  
 }
 

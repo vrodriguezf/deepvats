@@ -8,10 +8,14 @@
 
 # Dataset selection
 select_datasetUI <- function(id){
-    selectizeInput("dataset", label = "Dataset", choices = NULL)
+    selectizeInput(
+        "dataset", label = "Dataset", choices = NULL
+    )
 }
 
-select_datasetServer <- function(encs_l, input, output, session){
+select_datasetServer <- function(
+    encs_l, input, output, session
+){
     observeEvent(input$dataset, {
         #req(encs_l)
         log_print("--> observeEvent input_dataset | update encoder list")

@@ -86,7 +86,7 @@ original_data_plot_controllers <- function(id){
         checkboxGroupInput(
           inputId   = "select_variables",
           label     = NULL, 
-          choices   = list("No variables available" = ""), 
+          choices   = NULL, 
           selected  = NULL
         )
       ),

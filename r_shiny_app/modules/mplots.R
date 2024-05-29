@@ -33,12 +33,34 @@ similarity_matrix <- function(data, wlen) {
 }
 
 fourierLens <- function(sim_matrix) {
-  if ( sim_matrix$dominant_lens == NULL){
+  if ( is.null(sim_matrix$dominant_lens)){
     #Poner slider si se quiere o fijar un valor con sentido
-    sim_matrix$MP_AB$provide_lens(nlens = 5)
+    sim_matrix$MP_AB$provide_lens(nlens = 5, print_flag = TRUE)
     sim_matrix$dominant_lens = sim_matrix$MP_AB$dominant_lens
   }
   return(sim_matrix$dominant_lens)
+}
+
+mplot_variable_selector <- function(id){
+  ns <- NS(id)
+  fluidRow(
+    dropdownButton(
+      tags$b("Select a variable"),
+      tags$div(
+        style = 'height:200px; overflow-y: scroll',
+        radioButtons(
+          inputId   = ns("select_variable"),
+          label     = NULL,
+          choices   = list("No variables available" = ""),
+          selected  = NULL
+        )
+      ),
+      circle = FALSE, status = "primary", size = "xs",
+      icon = icon("gear"), width = "300px",
+      tooltip = tooltipOptions(title = "Select the variable"),
+      inputId = ns("mplot_variable_selector")
+    )
+  )
 }
 
 mplot_tabUI <- function(id) {
@@ -52,12 +74,15 @@ mplot_tabUI <- function(id) {
           column(6,matrix_profile_plot_max_points_slider(id)),
           column(4,textOutput(ns("fourierLensOutput")))
         ),
-        column(3)
-      ),
+        fluidRow(
+          column(4, mplot_variable_selector(id)),
+          column(8)
+          )
+        ),
       fluidRow(
         column(8)
       )
-    )
+  )
 }
 
 #--- SERVER ---#
@@ -109,30 +134,60 @@ tsB_data_plot <- function(id){
 
 # Función del módulo
 mplot_compute <- function(id, input, output, session, data, input2){
-    ns <- NS(id)
-    observeEvent(
-      list(data(), input2$wlen, input$maxPoints),
-    {
-      req(data(), input2$wlen, input$maxPoints)
-      total_points <- length(data())
-      log_print(paste0(
-        " [ MPlot Compute ] data ", total_points, "\n", 
-        " [ MPlot Compute ] wlen ", input2$wlen, "\n",
-        " [ MPlot Compute ] maxPoints ", input$maxPoints, "\n"
-      ))
-      if(total_points > 0){
-        sim_matrix <- similarity_matrix(data, input2$wlen)
-        log_print("Similarity matrix initialized")     
-        if ( length(sim_matrix$DM_AB$distances) > 0 ) {
-          flens <- fourierLens(sim_matrix)
-          log_print("Fourier lens computed")
-          output$fourierLensOutput <- renderText({
-            paste0("Proposed lengths:", flens)
-          })
-        }
-      }
+  ns <- NS(id)
+  observeEvent(
+    list(data(), input2$wlen, input$maxPoints),
+  {
+    req(data(), input2$wlen, input$maxPoints)
+    total_points <- length(data())
+    log_print(paste0(
+      " [ MPlot Compute ] data ", total_points, "\n", 
+      " [ MPlot Compute ] wlen ", input2$wlen, "\n",
+      " [ MPlot Compute ] maxPoints ", input$maxPoints, "\n"
+    ))
+    if(total_points > 0 && ( ! is.null(input[[ns("select_variable")]]))){
+      selected_variable <- input[[ns("select_variable")]]
+      sim_matrix <- similarity_matrix(data()[selected_variable], input2$wlen)
+      log_print("Similarity matrix initialized")     
+      tryCatch({
+        log_print(paste0("SM data_b: ", length(sim_matrix$data_b)))
+        ## Añadir los parámetros faltantes como sliders
+        sim_matrix$compute(
+          mp_method           = 'stump',
+          dm_method           = 'stump',
+          print_flag          = TRUE,
+          debug               = TRUE,
+          time_flag           = TRUE,
+          allow_experimental  = TRUE,
+          ensure_symetric     = FALSE,
+          ### Poner selector a esto para que se pueda variar en el dygraph
+          c_min               = 0, 
+          c_max               = total_points,
+          r_min               = 0,
+          r_max               = total_points,
+          ################################################################
+          max_points          = input$maxPoints,
+          subsequence_len     = input2$wlen,
+          provide_len         = FALSE,
+          downsample_flag     = TRUE,
+          min_lag             = 8, #Añadir selector
+          print_depth         = 1,
+          threads             = 1, # Añadir selector en caso de scamp
+          gpus                = {} # Añadir selector en caso de scamp que dependa de las gpus realmente disponibles
+        )
+        ## 
+        log_print("Similarity matrix computed")
+      }, error = function(e){
+        log_print(paste0("Error computing similarity matrix: ", e$message))
+      })
+
+      flens <- fourierLens(sim_matrix)
+      log_print("Fourier lens computed")
+      output$fourierLensOutput <- renderText({
+        paste0("Proposed lengths:", flens)
+      })
     }
-  )
+  })
 }
 
 # Función del módulo
@@ -142,6 +197,17 @@ mplot_tabServer <- function(id, tsdf, input2) {
     function(input, output, session){
       debug_plot_flag(id, input, output, session)
       mplot_compute(id, input, output, session, tsdf, input2)
+      observeEvent(tsdf(), {
+        data <- tsdf()
+        if (!is.null(data)) {
+          ns <- NS(id)
+          updateRadioButtons(
+            session, 
+            ns("select_variable"),
+            choices = colnames(data),
+            selected = colnames(data)[1])
+          }
+        })
     }
   )
   

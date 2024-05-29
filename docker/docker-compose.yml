@@ -71,6 +71,9 @@ services:
          - ../dvats:/home/${USER_NAME}/dvats
          - conda-env:/usr/local/share/miniconda3/envs/env
          - miniconda:/home/user/local/share/miniconda3 
+         # arreglar bien el error: /home/macu/work/nbs/mplot: No such file or directory
+         #- ../nbs/mplot/:/home/${USER_NAME}/work/nbs/mplot
+         ####
       deploy:
         resources:
           #limits:

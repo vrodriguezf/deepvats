@@ -68,9 +68,12 @@ services:
           # TODO (28/03/2023): I don't know why it is not working without this
           - ENV_VARS=WANDB_ENTITY,WANDB_API_KEY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES
       volumes:
-         - ../r_shiny_app:/home/${USER_NAME}/app 
+         - ../r_shiny_app:/home/${USER_NAME}/work/app 
          - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ 
          - ../dvats:/home/${USER_NAME}/dvats
+         - ../nbs_pipeline:/home/${USER_NAME}/work/nbs_pipeline
+         - ../dvats:/home/${USER_NAME}/work/nbs_pipeline/dvats
+         #- ../nbs_pipeline/utils_nbs/config.ipynb:/home/${USER_NAME}/python/dvats/config.ipynb
          - conda-env:/usr/local/share/miniconda3/envs/env
          - miniconda:/home/user/local/share/miniconda3 
       deploy:

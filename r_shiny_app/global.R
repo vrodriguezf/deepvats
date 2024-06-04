@@ -19,6 +19,8 @@ library(stringr)
 #options(rgl.useNULL = TRUE)
 #library(rgl)
 library(plotly)
+library(shinyFiles)
+library(yaml)
 ##################QUITAR CUANDO YA TIRE
 library(reactlog)
 library(feather)

@@ -1098,18 +1098,17 @@ shinyServer(function(input, output, session) {
         encoder_name <- basename(input$encoder)
         get_ts_plot_name(dataset_name, encoder_name)
     })
-    
-    #---------------------GRAFICA 3D----------------------------------------------------
+
 
     embedding_3d <- reactive({
-      # Obtener la proyección de embedding en tres dimensiones
+
       prj <- req(projections())
       print("------------------------------")
       str(embedding_ids)
       print("------------------------------")
-      # Suponiendo que las coordenadas de la proyección en tres dimensiones están en las primeras tres columnas
-      prj_3d <- prj[, 1:3]  # Seleccionar las primeras tres columnas
-      colnames(prj_3d) <- c("xcoord", "ycoord", "zcoord")  # Asignar nombres a las columnas
+
+      prj_3d <- prj[, 1:3]  
+      colnames(prj_3d) <- c("xcoord", "ycoord", "zcoord")
       prj_3d
     })
 
@@ -1117,7 +1116,6 @@ shinyServer(function(input, output, session) {
         
         prj_3d <- embedding_3d()
         
-        # Crear un gráfico 3D con Plotly
         plot <- plot_ly(
           data = prj_3d,
           x = ~xcoord, y = ~ycoord, z = ~zcoord,
@@ -1127,11 +1125,126 @@ shinyServer(function(input, output, session) {
         )
       })
 
-    # Inicializar el valor del botón toggle_graph
     observe({
       if (is.null(input$toggle_graph)) {
         updateNumericInput(session, "toggle_graph", value = 0)
       }
     })
+    
+    shinyFileChoose(input, "file", roots = c(wd = "~"))
+    
+    observeEvent(input$load_dataset, {
+      showModal(modalDialog(
+        title = "Upload Dataset",
+        shinyFilesButton("file", "Select a file", title = "Please select a file:", multiple = FALSE),
+        textOutput("file_path_text"),
+        tags$hr(),
+        h4("Configuration"),
+        numericInput("cols_input", "Cols:", value = 5, min = 1),
+        numericInput("freq_input", "Freq:", value = 10, min = 1),
+        numericInput("n_epoch_input", "n_epoch:", value = 100, min = 1),
+        numericInput("ws1_input", "ws1:", value = 10, min = 1),
+        tags$hr(),
+        footer = tagList(
+          actionButton("load_file", "Load"),
+          modalButton("Cancel")
+        )
+      ))
+    })
+    
+    observe({
+      req(input$file)
+      output$file_path_text <- renderText({
+        parseFilePaths(roots = c(wd = "~"), input$file)$datapath
+      })
+    })
+    
+    observeEvent(input$load_file, {
+      filepath <- isolate(parseFilePaths(roots = c(wd = "~"), input$file)$datapath)
+      if (length(filepath) > 0) {
+        showModal(modalDialog(
+          title = "Loading...",
+          tagList(
+            div(style = "display: flex; align-items: center; flex-direction: column; height: 300px;",
+                addSpinner(div(style = "margin-bottom: 200px;", textOutput("progress_text")), spin = "circle",  color = "#007bff"),
+                div(style = "width: 80%; margin-top: 60px;", progressBar(id = "progress_bar", value = 0))
+            )
+          ),
+          footer = NULL,
+          size = "l" 
+        ))
+        mod_file_base(filepath)
+        mod_file_02encodermvp(filepath)
+        updateProgressBar(session, "progress_bar", value = 33, total = 100, status = "info")
+        ejecucion_notebooks()
+        
+      }
+      removeModal()
+    })
+    
+    
+    ejecucion_notebooks <- function() {
+      print("-------------Inicio------------------------")
+      ruta_a_primer_nb <- "~/work/nbs_pipeline/01_dataset_artifact.ipynb"
+      print("Se ha inicializado Primer notebook")
+      system(paste("jupyter nbconvert --execute --to notebook --inplace", ruta_a_primer_nb))
+      
+      print("El primer notebook ha finalizado")
+      updateProgressBar(session, "progress_bar", value = 66, total = 100, status = "info")
+      
+      ruta_a_segundo_nb <- "~/work/nbs_pipeline/02c_encoder_MVP-sliding_window_view.ipynb"
+      print("Se ha inicializado Segundo notebook")
+      system(paste("jupyter nbconvert --execute --to notebook --inplace", ruta_a_segundo_nb))
+      
+      print("El segundo notebook ha finalizado.\n")
+      updateProgressBar(session, "progress_bar", value = 100, total = 100, status = "info")
+      
+      print("Ambos notebooks han finalizado completamente.\n")
+      
+    }
+    
+    mod_file_base <- function(filepath){
+      yaml_content <- readLines("~/work/nbs_pipeline/config/base.yaml")
+      
+      file_extension <- tools::file_ext(filepath)
+      
+      filename <- basename(filepath)
+      filename <- tools::file_path_sans_ext(filename)
+      
+      new_fname <- paste("fname: &fname \"", filename, "\"", sep = "")
+      yaml_content <- gsub("fname: &fname \".*\"", new_fname, yaml_content)
+      
+      new_ftype <- paste("ftype: &ftype \'.", file_extension, "\'", sep = "")
+      yaml_content <- gsub("ftype: &ftype \'.*\'", new_ftype, yaml_content)
+      
+      new_cols <- paste("cols: &cols [", input$cols_input, "]", sep = "")
+      new_freq <- paste("freq: &freq '", input$freq_input, "h'", sep = "")
+      
+      yaml_content <- gsub("cols: &cols \\[.*\\]", new_cols, yaml_content)
+      yaml_content <- gsub("freq: &freq '.*'", new_freq, yaml_content)
+      
+      writeLines(yaml_content, "~/work/nbs_pipeline/base.yaml")
+      
+      print("Se han anadido las modificaciones al fichero base", sep = "\n")
+      print(yaml_content, sep = "\n")
+    }
+    
+    mod_file_02encodermvp <- function(filepath){
+      
+      yaml_content <- readLines("~/work/nbs_pipeline/config/02c-encoder_mvp-sliding_window_view.yaml")
+      
+      new_n_epoch <- paste("    n_epoch:", input$n_epoch_input)
+      new_ws1 <- paste("      ws1:", input$ws1_input)
+      
+      yaml_content <- gsub("    n_epoch: .*", new_n_epoch, yaml_content)
+      yaml_content <- gsub("      ws1: .*", new_ws1, yaml_content)
+      
+      writeLines(yaml_content,"~/work/nbs_pipeline/config/02c-encoder_mvp-sliding_window_view.yaml")
+      
+      print(yaml_content, sep = "\n")
+      
+      print("Se han anadido las modificaciones a ficheros de configuracion")
+    }
+    
     
 })

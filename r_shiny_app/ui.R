@@ -122,8 +122,18 @@ shinyUI(fluidPage(
               column(3)
             ),
             fluidRow(
-              plotlyOutput("embedding_plot_3d")  # Agregamos la salida del gráfico en 3D
-            )
+              column(12,
+                     actionButton("toggle_graph", "Toggle Graph"),  # Botón para alternar entre los gráficos
+                     conditionalPanel(
+                       condition = "input.toggle_graph % 2 == 0",  # Condición para mostrar el primer gráfico
+                       uiOutput("projections_plot_ui")  # Interfaz para el primer gráfico
+                     ),
+                     conditionalPanel(
+                       condition = "input.toggle_graph % 2 != 0",  # Condición para mostrar el segundo gráfico
+                       plotlyOutput("embedding_plot_3d")  # Segundo gráfico
+                     )
+              ) # Agregamos la salida del gráfico en 3D
+            ) 
           ),
           fluidRow(h3("Original data")),
           fluidRow(

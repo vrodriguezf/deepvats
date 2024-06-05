@@ -718,11 +718,21 @@ shinyServer(function(input, output, session) {
     
   })
   
+  # Reactive to store selected points
+  selected_points <- reactive({
+    event_data("plotly_selected", source = "projections_plot")
+  })
+  
+  # Handle plotly brush event
   embedding_ids <- reactive({
     print("--> embedding idx")
     on.exit(print("embedding idx -->"))
-    bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
-    bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
+    bp <- selected_points()
+    if (is.null(bp)) {
+      return(integer(0))
+    } else {
+      bp$pointNumber + 1  # Adjusting for 0-based index
+    }
   })
   
   window_list <- reactive({
@@ -761,90 +771,59 @@ shinyServer(function(input, output, session) {
     reduced_window_list
   })
   
-  # Generate timeseries data for dygraph dygraph
+  # Reactive expression to generate ts_plot
   ts_plot <- reactive({
     print("--> ts_plot | Before req 1")
     on.exit({print("ts_plot -->"); flush.console()})
     
     req(tsdf(), ts_variables, input$wlen != 0, input$stride)
     
-    ts_plt = ts_plot_base()   
+    ts_plt <- ts_plot_base()   
     
     print("ts_plot | bp")
     #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)
     
     #if (!is.data.frame(bp)) {bp = bp_}
     print("ts_plot | embedings idxs ")
-    embedding_idxs = embedding_ids()
+    embedding_idxs <- embedding_ids()
     # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
     print("ts_plot | Before if")
-    if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
-      reduced_window_list = req(window_list())
+    if ((length(embedding_idxs) != 0) & isTRUE(input$plot_windows)) {
+      reduced_window_list <- req(window_list())
       print(paste0("ts_plot | reduced_window_list[1] = ", reduced_window_list[1]))
-      start_indices = min(sapply(reduced_window_list, function(x) x[1]))
-      end_indices = max(sapply(reduced_window_list, function(x) x[2]))
+      start_indices <- min(sapply(reduced_window_list, function(x) x[1]))
+      end_indices <- max(sapply(reduced_window_list, function(x) x[2]))
       
-      view_size = end_indices-start_indices+1
-      max_size = 10000
+      view_size <- end_indices - start_indices + 1
+      max_size <- 10000
       
-      start_date = isolate(tsdf())$timeindex[start_indices]
-      end_date = isolate(tsdf())$timeindex[end_indices]
+      start_date <- isolate(tsdf())$timeindex[start_indices]
+      end_date <- isolate(tsdf())$timeindex[end_indices]
       
-      print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
+      print(paste0("ts_plot | reduced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
       
       if (view_size > max_size) {
-        end_date = isolate(tsdf())$timeindex[start_indices + max_size - 1]
+        end_date <- isolate(tsdf())$timeindex[start_indices + max_size - 1]
         #range_color = "#FF0000" # Red
       } 
       
-      range_color = "#CCEBD6" # Original
+      range_color <- "#CCEBD6" # Original
       
-      
-      # # Plot the windows
-      count = 0
-      for(ts_idxs in reduced_window_list) {
-        count = count + 1
-        start_event_date = isolate(tsdf())$timeindex[head(ts_idxs, 1)]
-        end_event_date = isolate(tsdf())$timeindex[tail(ts_idxs, 1)]
+      # Plot the windows
+      count <- 0
+      for (ts_idxs in reduced_window_list) {
+        count <- count + 1
+        start_event_date <- isolate(tsdf())$timeindex[head(ts_idxs, 1)]
+        end_event_date <- isolate(tsdf())$timeindex[tail(ts_idxs, 1)]
         ts_plt <- ts_plt %>% dyShading(
           from = start_event_date,
           to = end_event_date,
           color = range_color
         ) 
         ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
-        #%>% dyEvent(
-        #    start_event_date, 
-        #    label = paste0("SW-", count), 
-        #    labelLoc="bottom" ,
-        #    strokePattern = "solid",
-        #    color = range_color 
-        #    ) %>% dyEvent(
-        #    end_event_date, 
-        #    label = paste0("SW-",paste0("SW-", count), 
-        #    labelLoc="bottom",
-        #    strokePattern = "solid"),
-        #    color = range_color
-        #    )
-        
       }   
       
       ts_plt <- ts_plt
-      # NOTE: This code block allows you to plot shadyng at once. 
-      #       The traditional method has to plot the dygraph n times 
-      #       (n being the number of rectangles to plot). With the adjacent
-      #       code it is possible to plot the dygraph only once. Currently
-      #       it does not work well because there are inconsistencies in the
-      #       timezones of the time series and shiny (there is a two-hour shift[the current plot method works well]),
-      #       which does not allow this method to be used correctly. If that
-      #       were fixed in the future everything would work fine.
-      # num_rects <- length(reduced_window_list)
-      # rects_ini <- vector(mode = "list", length = num_rects)
-      # rects_fin <- vector(mode = "list", length = num_rects)
-      # for(i in 1:num_rects) {
-      #     rects_ini[[i]] <- head(reduced_window_list[[i]],1)
-      #     rects_fin[[i]] <- tail(reduced_window_list[[i]],1)
-      # }
-      # ts_plt <- vec_dyShading(ts_plt,rects_ini, rects_fin,"red", rownames(tsdf()))
     }
     
     ts_plt
@@ -971,75 +950,63 @@ shinyServer(function(input, output, session) {
     ts_ar_config() %>% enframe()
   })
   
-  
-  
-  
+  ranges <- reactiveValues(x = NULL, y = NULL)
   
   # Generate projections plot
-  output$projections_plot <- renderPlot({
+  output$projections_plot <- renderPlotly({
     req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
     print("--> Projections_plot")
     prjs_ <- req(projections())
     print("projections_plot | Prepare column highlights")
+    
     # Prepare the column highlight to color data
     if (!is.null(input$ts_plot_dygraph_click)) {
-      selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
-      projections_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
-      prjs_$highlight = projections_idxs
+      selected_ts_idx <- which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
+      projections_idxs <- tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
+      prjs_$highlight <- projections_idxs
     } else {
-      prjs_$highlight = FALSE
+      prjs_$highlight <- FALSE
     }
+    
     # Prepare the column highlight to color data. If input$generate_cluster has not been clicked
     # the column cluster will not exist in the dataframe, so we create with the value FALSE
     if(!("cluster" %in% names(prjs_)))
-      prjs_$cluster = FALSE
+      prjs_$cluster <- FALSE
+    
     print("projections_plot | GoGo Plot!")
     plt <- ggplot(data = prjs_) + 
       aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
       scale_colour_manual(name = "clusters", values = req(update_palette())) +
-      geom_point(shape = 21,alpha = config_style$point_alpha, size = config_style$point_size) + 
+      geom_point(shape = 21, alpha = config_style$point_alpha, size = config_style$point_size) + 
       scale_shape(solid = FALSE) +
-      #geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha) + 
       guides() + 
-      scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA"))+
-      coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE)+
+      scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA")) +
+      coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE) +
       theme_void() + 
       theme(legend.position = "none")
     
-    if (input$show_lines){
-      #plt <- plt + geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
-      plt <- plt + geom_path(linewidth=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
+    if (input$show_lines) {
+      plt <- plt + geom_path(linewidth = config_style$path_line_size, colour = "#2F3B65", alpha = config_style$path_alpha)
     }
     
     observeEvent(input$savePlot, {
       plt <- plt + theme(plot.background = element_rect(fill = "white"))
       ggsave(filename = prjs_plot_name(), plot = plt, path = "../data/plots/")
     })
-    #observeEvent(c(input$dataset, input$encoder, clustering_options$selected), {   
-    #req(input$dataset, input$encoder)
-    #print("!-- CUDA?: ", torch$cuda$is_available())
-    #prjs_ <- req(projections())
-    #filename <- prjs_plot_name()
-    #print(paste("saving embedding plot to ",filename))
-    #ggsave(filename = filename, plot = plt, path="../data/plots/") 
-    #print("Embeding plot saved")
-    #})
     
-    plt
+    # Convert ggplot to plotly
+    ggplotly(plt, source = "projections_plot") %>%
+      config(scrollZoom = TRUE) %>%
+      event_register("plotly_selected")
   })
   
-  
-  # Render projections plot
-  output$projections_plot_ui <- renderUI(
-    {
-      plotOutput(
-        "projections_plot", 
-        click = "projections_click",
-        brush = "projections_brush",
-        height = input$embedding_plot_height
-      ) %>% withSpinner()
-    }
-  )
+  # Render projections plot UI
+  output$projections_plot_ui <- renderUI({
+    plotlyOutput(
+      "projections_plot", 
+      height = input$embedding_plot_height
+    ) %>% withSpinner()
+  })
         
     # Render information about the selected point in the time series graph
     output$point <- renderText({
@@ -1112,6 +1079,8 @@ shinyServer(function(input, output, session) {
       prj_3d
     })
 
+    selected_point <- reactiveVal(NULL)
+    
       output$embedding_plot_3d <- renderPlotly({
         
         prj_3d <- embedding_3d()
@@ -1121,9 +1090,10 @@ shinyServer(function(input, output, session) {
           x = ~xcoord, y = ~ycoord, z = ~zcoord,
           type = "scatter3d",
           mode = "lines+markers",
-          marker = list(color = "black", size = 5)# Definir color de los puntos
+          marker = list(color = "black", size = 5)
         )
       })
+      
 
     observe({
       if (is.null(input$toggle_graph)) {

@@ -257,7 +257,7 @@ mplot_compute <- function(
 
 # Función del módulo
 mplot_tabServer <- function(
-  id, tsdf, mplot_compute_allow, input_caller, output_caller, session_caller
+  id, tsdf, mplot_compute_allow, input_caller, output_caller, session_caller, start_computation
 ) {
   moduleServer(
     id, 

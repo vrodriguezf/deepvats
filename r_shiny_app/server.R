@@ -1605,15 +1605,42 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
     )
     
     
+    mplot_start_computation <- reactiveVal(FALSE)
 
-    mplot_tabServer(
-        "mplot_tab1", 
-        tsdf                = tsdf, 
-        mplot_compute_allow = mplot_compute_allow,
-        input_caller        = input,
-        output_caller       = output,
-        session_caller      = session
-    )
+    observeEvent(input$tabs, {
+      if (input$tabs == "MPlot") {
+            mplot_start_computation(TRUE)
+            log_print(
+                paste0(
+                    "mplot_start_computation |", 
+                    mplot_start_computation(),
+                     " | ", 
+                    input$tabs
+                )
+            )
+            mplot_tabServer(
+                "mplot_tab1", 
+                tsdf                = tsdf, 
+                mplot_compute_allow = mplot_compute_allow,
+                input_caller        = input,
+                output_caller       = output,
+                session_caller      = session,
+                start_computation   = mplot_start_computation
+            )   
+      } else {
+            mplot_start_computation(FALSE)
+            log_print(
+                paste0(
+                    "mplot_start_computation |", 
+                    mplot_start_computation(),
+                     " | ", 
+                    input$tabs
+                )
+            )
+      }
+    })
+
+    
     load_datasetServer("load_dataset1")
 
 })

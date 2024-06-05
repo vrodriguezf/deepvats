@@ -35,6 +35,15 @@ shinyUI(fluidPage(
       selectizeInput("encoder", label = "Encoder", choices = NULL),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
+      actionBttn(
+        inputId = "get_tsdf", 
+        label = "Activate/Deactivate DF loading", 
+        style = "bordered", 
+        color = "primary", 
+        size = "sm", 
+        block = TRUE  
+      ),      
+      br(),
       sliderInput("wlen", "Select window size", min = 0, max = 0, value =0 , step = 1),
       sliderInput("stride", "Select stride", min = 0, max = 0, value = 0, step = 1),
       # sliderInput("points_emb", "Select range of points to plot in the projections", 

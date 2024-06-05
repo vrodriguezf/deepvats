@@ -20,12 +20,12 @@ matrix_profile_plot_max_points_slider <- function(id){
     step  = 1000
   )
 }
-similarity_matrix <- function(data, wlen) {
+similarity_matrix <- function(tsa, wlen) {
   sim_matrix <- mplots$MatrixProfilePlot(
     DM_AB           = mplots$DistanceMatrix(),
     MP_AB           = mplots$MatrixProfile(),
-    data            = data(),
-    data_b          = data(),
+    data            = tsa,
+    data_b          = tsa,
     subsequence_len = wlen,
     self_join       = FALSE
   )
@@ -140,7 +140,8 @@ mplot_compute <- function(
   session, 
   data, 
   input_caller_2,
-  mplot_compute_allow
+  mplot_compute_allow,
+  mplot_compute_allow_inside
 ){
   ns <- NS(id)
 
@@ -165,28 +166,38 @@ mplot_compute <- function(
       input_caller_2[[ variableInputId ]],
       mplot_compute_allow() == TRUE
     )
-    total_points <- length(data())
+    
 
     
 
     log_print(paste0(" [ MPlot Compute ]", "\n",
-      " [ MPlot Compute ] data ", total_points, "\n", 
       " [ MPlot Compute ] wlen ", input_caller_2$wlen, "\n",
       " [ MPlot Compute ] maxPoints ", input$maxPoints, "\n",
       " [ MPlot Compute ] inputId ", variableInputId, "\n",
       " [ MPlot Compute ] MPlot Compute Allow ", mplot_compute_allow(), "\n"
     ))
     
-    if(total_points > 0 && ( ! is.null(input_caller_2[[ variableInputId ]]))){
-
+    if(! is.null(input_caller_2[[ variableInputId ]])){
+      
       selected_variable <- input_caller_2[[ variableInputId ]]
+      
+      log_print(paste0(" [ MPlot Compute ] Selected variable: ", selected_variable, "\n"))
 
-      variable_data <- data()$selected_variable
+      #variable_data <- data()$selected_variable
+      
+      variable_data <- data()[[selected_variable]]
+      
+      total_points <- length(variable_data)
+      
+      req(total_points > 0)
 
       log_print(
         paste0(
           "[ MPlot Compute ] ", "\n", 
-          "[ MPlot Compute ] Selected ", selected_variable, "~", length(variable_data), "\n"
+          "[ MPlot Compute ] Data ~ ", dim(data()), "\n",
+          "[ MPlot Compute ] total_points ", total_points, "\n",
+          #"[ MPlot Compute ] Data ", data(), "\n",
+          "[ MPlot Compute ] Selected data[ ", selected_variable, " ] ~ ", length(variable_data), "\n"
         )
       )     
 
@@ -195,7 +206,7 @@ mplot_compute <- function(
       log_print("Similarity matrix initialized")     
       
       tryCatch({
-        log_print(paste0("SM data_b: ", length(sim_matrix$data_b)))
+        log_print(paste0("SM data_b: ", dim(sim_matrix$data_b)))
         ## Añadir los parámetros faltantes como sliders
         sim_matrix$compute(
           mp_method           = 'stump',
@@ -255,7 +266,7 @@ mplot_tabServer <- function(
 
       debug_plot_flag(id, input, output, session)
       
-      ts_variables <- reactiveValues(selected = NULL)
+      mp_ts_variables <- reactiveValues(selected = NULL)
       
       variableInputId <- ns("mplot_variable") 
 
@@ -269,12 +280,12 @@ mplot_tabServer <- function(
           log_print(paste0(" [ MPlot_tabServer ]", "\n", 
           " [ MPlot_tab Server ] inputID ", variableInputId, "\n"))
 
-          ts_variables$selected = names(data)[names(data) != "timeindex"]
+          mp_ts_variables$selected = names(data)[names(data) != "timeindex"]
           updateSelectInput(
             session   = session_caller, 
             inputId   = variableInputId,
-            choices   = ts_variables$selected,
-            selected  = ts_variables$selected[1]
+            choices   = mp_ts_variables$selected,
+            selected  = mp_ts_variables$selected[1]
           )
         }
       })
@@ -306,7 +317,7 @@ mplot_tabServer <- function(
         }
       })
 
-      mplot_compute(id, input, output, session, tsdf, input_caller, mplot_compute_allow)
+      mplot_compute(id, input, output, session, tsdf, input_caller, mplot_compute_allow, mplot_compute_allow_inside)
     }
   )
 }

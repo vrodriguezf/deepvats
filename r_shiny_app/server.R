@@ -202,7 +202,7 @@ shinyServer(function(input, output, session) {
         log_print("--> observeEvent tsdf | update select variables", debug_level = debug_level, debug_group = 'main')
         on.exit({log_print("--> observeEvent tsdf | update select variables -->", debug_level = debug_level, debug_group = 'main'); flush.console()})
         
-        ts_variables$selected = names(isolate(tsdf()))[names(tsdf()) != "timeindex"]
+        ts_variables$selected = names(isolate(tsdf()))[names(isolate(tsdf())) != "timeindex"]
         
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         
@@ -247,7 +247,7 @@ shinyServer(function(input, output, session) {
     # Observe the events related to zoom the projections graph
     observeEvent(input$zoom_btn, {
         send_log("Zoom btn_start", session)
-        log_print("--> observeEvent zoom_btn", , debug_level = debug_level, debug_group = 'generic')
+        log_print("--> observeEvent zoom_btn", debug_level = debug_level, debug_group = 'generic')
         on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn)), debug_level = debug_level, debug_group = 'generic'))
         
         brush <- input$projections_brush
@@ -882,12 +882,24 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
         return(unlist(result))
     }
 
+    allow_tsdf <- reactiveVal(TRUE)
+
+    observeEvent ( input$get_tsdf ,{
+        log_print(paste0("get_tsdf changed to: ", input$get_tsdf))
+        allow_tsdf( !allow_tsdf() )
+        log_print(paste0("allow_tsdf changed to: ", allow_tsdf()))
+    })
+
+
     # Load and filter TimeSeries object from wandb
     tsdf <- reactive(
         {
             req(input$encoder, ts_ar())
+            log_print(paste0("--> Reactive tsdf"))
+            req(allow_tsdf() == TRUE)
+            log_print("--> Reactive tsdf | allow_tsdf ")
             ts_ar = ts_ar()
-            log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar))
+            log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar()))
             flush.console()
             t_init <- Sys.time()
             # Get the full path
@@ -959,8 +971,9 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
             
                 flush.console()
                 df
+                #On exit está imprimiendo cosas raras
+                log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds | df ~ ", dim(df)));flush.console()
             })
-            on.exit({log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds"));flush.console()})
             df
         })
     
@@ -1077,7 +1090,7 @@ tcl_1 = Sys.time()
         log_print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_ts_plot_0 <- Sys.time()
         tsdf_ <- isolate(tsdf()) %>% select(isolate(ts_variables$selected), - "timeindex")
-        tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
+        tsdf_xts <- xts(tsdf_, order.by = isolate(tsdf())$timeindex)
         t_ts_plot_1 <- Sys.time()
         log_print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_1-t_ts_plot_0)) 
         temp_log <<- log_add(
@@ -1161,7 +1174,7 @@ tcl_1 = Sys.time()
         t_tsp_0 = Sys.time()
         on.exit({log_print("ts_plot -->"); flush.console()})
 
-        req(tsdf(), ts_variables, input$wlen != 0, input$stride)
+        req(isolate(tsdf()), ts_variables, input$wlen != 0, input$stride)
 
         ts_plt = ts_plot_base()   
 
@@ -1374,7 +1387,12 @@ output$windows_text <- renderUI({
        
     # Generate projections plot
     output$projections_plot <- renderPlot({
-        req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
+        req( 
+            isolate(tsdf()), # dataset
+            input$encoder,
+            input$wlen != 0, 
+            input$stride != 0
+        )
         log_print("--> Projections_plot")
 t_pp_0 = Sys.time()
         prjs_ <- req(projections())
@@ -1476,12 +1494,12 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
     output$ts_plot_dygraph <- renderDygraph(
         {
             req (
-                input$dataset, 
+                isolate(tsdf()), 
                 input$encoder,
                 input$wlen != 0, 
                 input$stride != 0
             )
-            log_print("ts_plot dygraph")
+            log_print("**** ts_plot dygraph ****")
             tspd_0 = Sys.time()
             ts_plot <- req(ts_plot())
             tspd_1 = Sys.time()

@@ -268,62 +268,62 @@ mplot_tabServer <- function(
         if (input_caller$tabs == "mplot_tab1") {
           mplot_compute_allow(TRUE)
         
-        debug_plot_flag(id, input, output, session)
+          debug_plot_flag(id, input, output, session)
       
-        mp_ts_variables <- reactiveValues(selected = NULL)
+          mp_ts_variables <- reactiveValues(selected = NULL)
       
-        variableInputId <- ns("mplot_variable") 
+          variableInputId <- ns("mplot_variable") 
 
-        observeEvent(tsdf(), {  
+          observeEvent(tsdf(), {  
 
-          freezeReactiveValue(input, variableInputId)
+            freezeReactiveValue(input, variableInputId)
         
-          data <- isolate(tsdf())
+            data <- isolate(tsdf())
         
-          if (!is.null(data)) {
-            log_print(paste0(" [ MPlot_tabServer ]", "\n", 
-            " [ MPlot_tab Server ] inputID ", variableInputId, "\n"))
+            if (!is.null(data)) {
+              log_print(paste0(" [ MPlot_tabServer ]", "\n", 
+              " [ MPlot_tab Server ] inputID ", variableInputId, "\n"))
 
-            mp_ts_variables$selected = names(data)[names(data) != "timeindex"]
-            updateSelectInput(
-              session   = session_caller, 
-              inputId   = variableInputId,
-              choices   = mp_ts_variables$selected,
-             selected  = mp_ts_variables$selected[1]
-            )
-          }
-        })
+              mp_ts_variables$selected = names(data)[names(data) != "timeindex"]
+              updateSelectInput(
+                session   = session_caller, 
+                inputId   = variableInputId,
+                choices   = mp_ts_variables$selected,
+               selected  = mp_ts_variables$selected[1]
+              )
+            }
+          })
       
-        ## Checking the input level of the selected variable
-        observeEvent( input_caller [[ variableInputId ]], {
-          mplot_compute_allow(TRUE)
-          log_print(paste0("[ MPlot_tab Server ]", "\n",
-            "[ MPlot_tab Server ] Variable changed: ", input_caller[[ variableInputId ]], "\n"
-            ))
-        })
-        }
-      
-
-        mplot_compute_allow_inside <- reactiveVal(TRUE)
-
-        observeEvent( input_caller [[ ns("mplot_compute_flag") ]] , {
-          log_print(
-            paste0(
-              "mplot_compute_flag changed to: ", 
-              input_caller [[ ns("mplot_compute_flag") ]]
-            )
-          )
-          if (input_caller [[ ns("mplot_compute_flag") ]] ){
+          ## Checking the input level of the selected variable
+          observeEvent( input_caller [[ variableInputId ]], {
             mplot_compute_allow(TRUE)
-            mplot_compute_allow_inside(TRUE)
-            log_print(paste0("mplot_compute_allow changed to: ", mplot_compute_allow()))
-          } else {
-            mplot_compute_allow(FALSE)
-            mplot_compute_allow_inside(FALSE)
-          }
-        })
+            log_print(paste0("[ MPlot_tab Server ]", "\n",
+              "[ MPlot_tab Server ] Variable changed: ", input_caller[[ variableInputId ]], "\n"
+              ))
+          })
+          
+    
+          mplot_compute_allow_inside <- reactiveVal(TRUE)
 
-        mplot_compute(id, input, output, session, tsdf, input_caller, mplot_compute_allow, mplot_compute_allow_inside)
+          observeEvent( input_caller [[ ns("mplot_compute_flag") ]] , {
+            log_print(
+              paste0(
+                "mplot_compute_flag changed to: ", 
+                input_caller [[ ns("mplot_compute_flag") ]]
+              )
+            )
+            if (input_caller [[ ns("mplot_compute_flag") ]] ){
+              mplot_compute_allow(TRUE)
+              mplot_compute_allow_inside(TRUE)
+              log_print(paste0("mplot_compute_allow changed to: ", mplot_compute_allow()))
+            } else {
+              mplot_compute_allow(FALSE)
+              mplot_compute_allow_inside(FALSE)
+            }
+          })
+
+          mplot_compute(id, input, output, session, tsdf, input_caller, mplot_compute_allow, mplot_compute_allow_inside)
+        }
       })
     }
   )

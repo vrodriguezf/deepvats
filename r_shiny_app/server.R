@@ -1388,7 +1388,7 @@ output$windows_text <- renderUI({
     # Generate projections plot
     output$projections_plot <- renderPlot({
         req( 
-            isolate(tsdf()), # dataset
+            input$dataset,
             input$encoder,
             input$wlen != 0, 
             input$stride != 0

@@ -1494,7 +1494,7 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
     output$ts_plot_dygraph <- renderDygraph(
         {
             req (
-                isolate(tsdf()), 
+                tsdf(), 
                 input$encoder,
                 input$wlen != 0, 
                 input$stride != 0

@@ -1081,20 +1081,57 @@ shinyServer(function(input, output, session) {
 
     selected_point <- reactiveVal(NULL)
     
-      output$embedding_plot_3d <- renderPlotly({
+    points_in_radius <- reactiveVal(NULL)
+    
+    output$embedding_plot_3d <- renderPlotly({
+      prj_3d <- embedding_3d()
+      
+      # Define colores iniciales
+      initial_colors <- rep("black", nrow(prj_3d))
+      
+      plot <- plot_ly(
+        data = prj_3d,
+        x = ~xcoord, y = ~ycoord, z = ~zcoord,
+        type = "scatter3d",
+        mode = "markers",
+        marker = list(color = initial_colors, size = 5),
+        line = list(color = "blue"),
+        showlegend = FALSE
+      )
+      
+      plot %>%
+        event_register("plotly_click")
+    })
+    
+    observeEvent(event_data("plotly_click"), {
+      click_data <- event_data("plotly_click")
+      if (!is.null(click_data)) {
+        point_idx <- click_data$pointNumber + 1
+        selected_point(point_idx)
         
         prj_3d <- embedding_3d()
+        selected_coords <- prj_3d[point_idx, ]
         
-        plot <- plot_ly(
-          data = prj_3d,
-          x = ~xcoord, y = ~ycoord, z = ~zcoord,
-          type = "scatter3d",
-          mode = "lines+markers",
-          marker = list(color = "black", size = 5)
-        )
-      })
-      
-
+        # Calcula la distancia euclidiana
+        distances <- sqrt((prj_3d$xcoord - selected_coords$xcoord)^2 + 
+                            (prj_3d$ycoord - selected_coords$ycoord)^2 + 
+                            (prj_3d$zcoord - selected_coords$zcoord)^2)
+        
+        # Define el radio
+        radius <- 0.5  # ajusta este valor según sea necesario
+        radius_idxs <- which(distances <= radius)
+        points_in_radius(radius_idxs)
+        
+        # Actualiza los colores de los puntos
+        new_colors <- rep("black", nrow(prj_3d))
+        new_colors[radius_idxs] <- "blue"
+        new_colors[point_idx] <- "red"
+        
+        plotlyProxy("embedding_plot_3d", session) %>%
+          plotlyProxyInvoke("restyle", list(marker = list(color = new_colors, size = 5)), list(0))
+      }
+    })
+    
     observe({
       if (is.null(input$toggle_graph)) {
         updateNumericInput(session, "toggle_graph", value = 0)

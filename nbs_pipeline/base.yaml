@@ -13,15 +13,15 @@ user_preferences:
   # Whether to use or not wandb for experiment tracking
   use_wandb: &use_wandb true
   wdb:
-    user: &wdb_user angel-gutierrez
-    project_name: &wdb_project ream
-    version: &wdb_version 'latest' #'6'
+    user: &wdb_user ${WANDB_ENTITY} #Sustituir por usuario
+    project_name: &wdb_project ${WANDB_PROJECT} #Sustituir por proyecto
+    version: &wdb_version 'latest' 
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode: &wdb_mode 'online'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder: &path '~/data/'
-    fname: &fname "toy"
+    fname: &fname "Semantic_Segmentation_TiltABP"
     ftype: &ftype '.csv'
     cols: &cols [5]
     freq: &freq '10h'

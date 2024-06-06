@@ -13,6 +13,9 @@ Depends:
     zoo,
     reticulate,
     xts
+    plotly
+    shinyFiles
+    yaml
 Remotes: 
     r-lib/later,
     apache/arrow/r

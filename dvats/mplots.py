@@ -447,8 +447,11 @@ def find_dominant_window_sizes_list(
         print( "    Looking for - at most - the best", nsizes, "window sizes")
         print( "    Offset", offset, "max size:", offset*len(X))
         
+    X = np.array(X)
+    
     fourier = np.absolute(np.fft.fft(X))
-    freqs = np.fft.fftfreq(X.shape[0], 1)
+    #freqs = np.fft.fftfreq(X.shape[0], 1)
+    freqs = np.fft.fftfreq(len(X), 1)
 
     coefs = []
     window_sizes = []
@@ -467,7 +470,8 @@ def find_dominant_window_sizes_list(
     # Find and return all valid window sizes
     valid_window_sizes = [
         int(window_size / 2) for window_size in sorted_window_sizes
-        if 20 <= window_size < int(X.shape[0] * offset)
+        #if 20 <= window_size < int(X.shape[0] * offset)
+        if 20 <= window_size < int(len(X) * offset)
     ]
 
     # If no valid window sizes are found, return the first from sorted list
@@ -2067,7 +2071,10 @@ def compute(
     allow_experimental : bool                      = False
 ) -> List [ float ]:
     self.method = method
-
+    # Ensure no list for R variable
+    self.data = np.array(self.data)
+    if not ( self.data_b is None ): self.data_b = np.array(self.data_b)
+    
     if self.subsequence_len is None:
         if provide_len or self.data_b is None:
             self.provide_lens(nlens = nlens, print_flag = print_flag)
@@ -2441,6 +2448,12 @@ class MatrixProfilePlot:
         threads             : int               = 4,
         gpus                : List[ int ]       = []
     ) -> Tuple [ List [ List [ float ] ], Optional [ float ] ]:
+        
+        ###
+        self.data = None if self.data is None else np.array(self.data)
+        self.data_b = None if self.data_b is None else np.array(self.data_b)
+        ###
+
         t = None
         if time_flag:
             t = ut.Time ( function = ut.funcname() )
@@ -2532,6 +2545,7 @@ class MatrixProfilePlot:
         ## Ensure parameters
         if print_flag and print_depth > 0:
             print("MPlot | Compute | --> Ensure parameters ")
+        
         self.MP_AB = MatrixProfile(
             data            = self.data, 
             data_b          = self.data_b,
@@ -2543,10 +2557,15 @@ class MatrixProfilePlot:
         if print_flag and print_depth > 0:
             print("MPlot | Compute | --> provide_len | data ~ ", self.data.shape )
         
+        if print_flag and print_depth > 0:
+            print("MPlot | Compute | --> provide_len | data ~ ", self.MP_AB.data.shape )
+
         if provide_len or self.data_b is None:
-            if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | IF ")
+            if print_flag and print_depth > 0: 
+                print("MPlot | Compute | --> provide_len | IF ")
             if self.dominant_lens is None:
-                if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | IF | No dominant lens")
+                if print_flag and print_depth > 0: 
+                    print("MPlot | Compute | --> provide_len | IF | No dominant lens")
                 if self.MP_AB.dominant_lens is None:
                     if print_flag: 
                         print("MPlot | Compute | --> provide_len | IF | No dominant lens | provide_lens")

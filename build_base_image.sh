@@ -1,3 +1,4 @@
+#!/bin/bash
 # Inicializa un array vacío
 args=()
 
@@ -14,7 +15,7 @@ while IFS='=' read -r key value _; do
     fi
 done < docker/.env
 
-echo "Args:" "${args[@]}"
+#echo "Args:" "${args[@]}"
 
 
 # Ejecuta docker build con los argumentos

@@ -193,13 +193,15 @@ mplot_compute <- function(
 
       log_print(
         paste0(
-          "[ MPlot Compute ] ", "\n", 
-          "[ MPlot Compute ] Data ~ ", dim(data()), "\n",
-          "[ MPlot Compute ] total_points ", total_points, "\n",
-          #"[ MPlot Compute ] Data ", data(), "\n",
-          "[ MPlot Compute ] Selected data[ ", selected_variable, " ] ~ ", length(variable_data), "\n"
+          "[ MPlot Compute 0] ", "\n", 
+          "[ MPlot Compute 0] Data ~ ", dim(data()), "\n",
+          "[ MPlot Compute 0] total_points ", total_points, "\n",
+          #"[ MPlot Compute 0] Data ", data(), "\n",
+          "[ MPlot Compute 0] Selected data[ ", selected_variable, " ] ~ ", length(variable_data), "\n",
+          "[ MPlot Compute 0] wlen ", input_caller_2$wlen, "\n"
         )
       )     
+
 
       sim_matrix <- similarity_matrix(variable_data, input_caller_2$wlen)
       
@@ -308,8 +310,8 @@ mplot_tabServer <- function(
           )
         )
         if (input_caller [[ ns("mplot_compute_flag") ]] ){
-          mplot_compute_allow(TRUE)
-          mplot_compute_allow_inside(TRUE)
+          mplot_compute_allow(start_computation())
+          mplot_compute_allow_inside(start_computation())
           log_print(paste0("mplot_compute_allow changed to: ", mplot_compute_allow()))
         } else {
           mplot_compute_allow(FALSE)

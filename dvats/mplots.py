@@ -442,16 +442,20 @@ def find_dominant_window_sizes_list(
     ) -> List [ int ]:
 
     if print_flag and print_depth > 0:
-        print( "-----> Find dominant_window_sizes_list -----" )
+        print( "-----> Find_dominant_window_sizes_list -----" )
         print( "    X ~ ",  len(X) )
         print( "    Looking for - at most - the best", nsizes, "window sizes")
         print( "    Offset", offset, "max size:", offset*len(X))
+        print( "Find_dominant_window_sizes_list | --> Freqs computed")
         
     X = np.array(X)
     
-    fourier = np.absolute(np.fft.fft(X))
-    #freqs = np.fft.fftfreq(X.shape[0], 1)
-    freqs = np.fft.fftfreq(len(X), 1)
+    fourier = np.absolute(np.fft.fft(X))   
+    freqs = np.fft.fftfreq(X.shape[0], 1)
+    
+    if print_flag and print_depth > 0: 
+        print( "Find_dominant_window_sizes_list | Freqs computed -->")
+        print( "Find_dominant_window_sizes_list | --> Coefs and window_sizes")
 
     coefs = []
     window_sizes = []
@@ -463,9 +467,20 @@ def find_dominant_window_sizes_list(
 
     coefs = np.array(coefs)
     window_sizes = np.asarray(window_sizes, dtype=np.int64)
+    
+    if print_flag and print_depth > 0: 
+        print( "Find_dominant_window_sizes_list | Coefs and window_sizes -->")
+        print( "Find_dominant_window_sizes_list | --> Find and return valid window_sizes")
 
     idx = np.argsort(coefs)[::-1]
+    
+    if print_flag and print_depth > 0: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 0 ...", idx)
+        
     sorted_window_sizes = window_sizes[idx]
+    
+    if print_flag and print_depth > 0: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 1 ...")
 
     # Find and return all valid window sizes
     valid_window_sizes = [
@@ -473,12 +488,20 @@ def find_dominant_window_sizes_list(
         #if 20 <= window_size < int(X.shape[0] * offset)
         if 20 <= window_size < int(len(X) * offset)
     ]
+    
+    if print_flag and print_depth > 0: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2 ...")
 
     # If no valid window sizes are found, return the first from sorted list
     if not valid_window_sizes:
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2a ...", nsizes)
         sizes = [sorted_window_sizes[0] // 2][:nsizes]
     else:
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ...", nsizes)
         sizes = valid_window_sizes[:nsizes]
+        
+    if print_flag and print_depth > 0: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes -->")
     
     if print_flag and print_depth > 0:
         print("    Sizes:", sizes)
@@ -2516,8 +2539,10 @@ class MatrixProfilePlot:
                     show_plots   = show_plots,
                     print_depth  = print_depth-1
                 )
-                if print_flag: 
-                    print(f"[ MPlot | Compute ] | Downsample TA ~ {len(self.data_paa)} ---> ")
+            else: 
+                self.data_paa = data
+            if print_flag: 
+                print(f"[ MPlot | Compute ] | Downsample TA ~ {len(self.data_paa)} ---> ")
             
             if len(data_b) > max_points: 
                 if print_flag:
@@ -2532,8 +2557,10 @@ class MatrixProfilePlot:
                     show_plots   = show_plots,
                     print_depth  = print_depth-1
                 )
-                if print_flag: 
-                    print(f"[ MPlot | Compute ] | Downsample TB_paa ~ {len(self.data_b_paa)} ---> ")
+            else: 
+                self.data_b_paa = data_b
+            if print_flag: 
+                print(f"[ MPlot | Compute ] | Downsample TB_paa ~ {len(self.data_b_paa)} ---> ")
             if print_flag: print( "[ MPlot | Compute ] |Downsample -->")
         else:
             if print_flag: 
@@ -2555,20 +2582,19 @@ class MatrixProfilePlot:
         
         ## Ensure parameters
         if print_flag and print_depth > 0:
+            print("MPlot | Compute | --> provide_len ")
             print("MPlot | Compute | --> provide_len | data ~ ", self.data.shape )
-        
-        if print_flag and print_depth > 0:
-            print("MPlot | Compute | --> provide_len | data ~ ", self.MP_AB.data.shape )
+            print("MPlot | Compute | --> provide_len | data.MP_AB ~ ", self.MP_AB.data.shape )
 
         if provide_len or self.data_b is None:
             if print_flag and print_depth > 0: 
-                print("MPlot | Compute | --> provide_len | IF ")
+                print("MPlot | Compute | --> provide_len ... 1 ... ")
             if self.dominant_lens is None:
                 if print_flag and print_depth > 0: 
-                    print("MPlot | Compute | --> provide_len | IF | No dominant lens")
+                    print("MPlot | Compute | --> provide_len ... 1.1 ... | No dominant lens")
                 if self.MP_AB.dominant_lens is None:
                     if print_flag: 
-                        print("MPlot | Compute | --> provide_len | IF | No dominant lens | provide_lens")
+                        print("MPlot | Compute | --> provide_len ... 1.2 ... | No dominant lens | provide_lens")
                         print("Before: data ~", len(self.MP_AB.data))
                     self.MP_AB.provide_lens(
                         nlens = nlens, 
@@ -2579,15 +2605,18 @@ class MatrixProfilePlot:
                 self.dominant_lens = self.MP_AB.dominant_lens
             
             if print_flag and print_depth > 0:  
-                print(f"MPlot | Compute | --> provide_len | IF | Setup sequence len to dominant_lens[0]={ self.dominant_lens[0]} | TB_paa ~ {len(self.data_b_paa)}")
+                print("MPlot | Compute | --> provide_len ... 2 ...")
+                print(f"MPlot | Compute | provide_len ... 2 ... | Setup sequence len to dominant_lens[0]={ self.dominant_lens[0]}")
             self.subsequence_len = self.dominant_lens[0]
         elif not provide_len:
             if print_flag and print_depth > 0: 
-                print(f"MPlot | Compute | --> provide_len | Elif provide_len | TB_paa {len(self.data_b_paa)}")
+                print("MPlot | Compute | --> provide_len ... 3 ...")
             self.subsequence_len = subsequence_len
 
         else:
-            if print_flag and print_depth > 0: print("MPlot | Compute | --> provide_len | Else")
+            if print_flag and print_depth > 0: 
+                print("MPlot | Compute | --> provide_len ... 3 ...")
+                print("MPlot | Compute | --> provide_len ... 3 ... | Data_b_paa ~ ", self.data_b_paa.shape)
             self.subsequence_len = len(self.data_b_paa)
         
         if print_flag: 

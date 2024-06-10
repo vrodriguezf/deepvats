@@ -50,10 +50,9 @@ tsai_data = reticulate::import("tsai.data.all")
 wandb = reticulate::import("wandb")
 pd = reticulate::import("pandas")
 hdbscan = reticulate::import("hdbscan")
+np = reticulate::import("numpy")
 dvats = reticulate::import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
 mplots = reticulate::import_from_path("dvats.mplots", path=paste0(Sys.getenv("HOME")))
-
-
 
 print("--> py_config ")
 print(reticulate::py_config())

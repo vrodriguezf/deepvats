@@ -29,8 +29,23 @@ similarity_matrix <- function(tsa, wlen) {
     subsequence_len = as.integer(wlen),
     self_join       = FALSE
   )
-  return(sim_matrix)
+  return ( sim_matrix )
 }
+
+matrix_profile <- function(data, MP_AB) {
+  index <- data$timeindex[1:dim(MP_AB$distances)[1]]
+  distances <- do.call(rbind, MP_AB$distances)
+  mp_xts <- xts( distances, order.by = index)
+  return ( mp_xts )
+}
+
+mplot <- function(data, wlen, DM_AB) {
+  index <- data$timeindex
+  dm_xts <- xts( DM_AB$distances, order.by = index )
+  return ( dm_xts )
+}
+
+
 
 fourierLens <- function(sim_matrix) {
   if ( is.null(sim_matrix$dominant_lens)){
@@ -53,6 +68,7 @@ mplot_variable_selector <- function(id){
 }
 
 
+
 mplot_tabUI <- function(id) {
   ns <- NS(id)
   tabPanel(
@@ -60,9 +76,9 @@ mplot_tabUI <- function(id) {
       fluidRow(
         h3("MPlot | Similarity Matrix Plot"),
         fluidRow(
-          column(4,matrix_profile_plot_switch(id)),
+          column(6,matrix_profile_plot_switch(id)),
           column(6,matrix_profile_plot_max_points_slider(id)),
-          column(4,textOutput(ns("fourierLensOutput")))
+          column(6,textOutput(ns("fourierLensOutput")))
         ),
         fluidRow(
           column(4, mplot_variable_selector(id)),
@@ -73,9 +89,17 @@ mplot_tabUI <- function(id) {
             color = "primary", 
             size = "sm", 
             block = TRUE)
-          ),
-          column(8)
           )
+        ),
+          fluidRow(
+            column(8, dygraphOutput(ns("matrix_profile_plot"), height = "100") %>% withSpinner()),
+            column(8, uiOutput(ns("mplot_plot"), height = "300") %>% withSpinner())
+          ),
+          fluidRow(
+            column(8, dygraphOutput(ns("tsA_plot"), height = "100") %>% withSpinner()),
+            column(8, dygraphOutput(ns("tsB_plot"), height = "100") %>% withSpinner())
+          )
+          
         ),
       fluidRow(
         column(8)
@@ -100,33 +124,37 @@ debug_plot_flag <- function(id, input, output, session){
 
 
 mplot_dygraph <- function(id, data){
-    #TODO: aquí hay que meter el dygraph de mplot
     ns <- NS(id)
-    fluidRow(
-        column(12,
-            #dygraphOutput(ns("dygraph"))
-        )
+    dygraph(data) %>% dyOptions(
+        stepPlot = TRUE,
+        title = "MPlot"
     )
 }
 
 
-tsA_data_plot <- function(id){
+matrix_profile_dygraph <- function(id, data){
+    ns <- NS(id)
+    dygraph(data) %>% dyOptions(
+        stepPlot = TRUE,
+        title = "Matrix Profile Plot"
+    )
+}
+
+tsA_data_plot <- function(id, data){
   #TODO: usando como "plantilla" ts_plot_dygraph aquí hay que pintar la parte visible de tsA marcando como "ventana" la correspondiente del MPlot (COLUMNA)
   ns <- NS(id)
-  fluidRow(
-    column(12,
-      #dygraphOutput(ns("tsA_plot_dygraph")) %>% withSpinner(),
-    )
+  dygraphOutput(data) %>% dyOptions(
+    stepPlot = TRUE,
+    title = "Time Series A"
   )
 }
 
-tsB_data_plot <- function(id){
+tsB_data_plot <- function(id, data){
   #TODO: usando como "plantilla" ts_plot_dygraph aquí hay que pintar la parte visible de tsA marcando como "ventana" la correspondiente del MPlot (FILA)
   ns <- NS(id)
-  fluidRow(
-    column(12,
-      #dygraphOutput(ns("tsA_plot_dygraph")) %>% withSpinner(),
-    )
+  dygraphOutput(sim_matrix$data) %>% dyOptions(
+    stepPlot = TRUE,
+    title = "Time Series B"
   )
 }
 
@@ -204,7 +232,7 @@ mplot_compute <- function(
 
 
       sim_matrix <- similarity_matrix(variable_data, input_caller_2$wlen)
-      
+            
       log_print("Similarity matrix initialized")     
       
       tryCatch({
@@ -235,6 +263,7 @@ mplot_compute <- function(
         )
         ## 
         log_print("Similarity matrix computed")
+        #log_print(paste0("Similarity matrix: ", sim_matrix$DM_AB$data))
       }, error = function(e){
         log_print(paste0("Error computing similarity matrix: ", e$message))
       })
@@ -251,6 +280,114 @@ mplot_compute <- function(
       output$fourierLensOutput <- renderText({
         paste0("Proposed lengths:", paste(flens, collapse = ", "))
       })
+
+      output$matrix_profile_plot <- renderDygraph({
+        matrix_profile_dygraph(id, matrix_profile(data(), sim_matrix$MP_AB))
+      })
+
+      output$mplot_plot <- renderUI({
+         plotOutput(
+                "mplot_plot", 
+                click = "mplot_click",
+                height = "600px"
+            ) %>% withSpinner()
+      })
+
+      output$projections_plot <- renderPlot({
+        req(sim_matrix$MP_AB$distances)
+        distances_matrix <- sim_matrix$MP_AB$distances
+        inices1 <- data()$timeindex[1:dim(distances_matrix)[1]]
+        indices2 <- data()$timeindex[1:dim(distances_matrix)[2]]
+
+        dist_df <- melt(distances_matrix)
+        dist_df$Var1 <- indices1
+        dist_df$Var2 <- indices2
+        ggplot(dist_df, aes(x = Var1, y = Var2, fill = value)) +
+        geom_tile() +
+        scale_fill_gradient(low = "white", high = "blue") +
+        labs(x = "Index", y = "Index", fill = "Distance") +
+        theme_minimal()
+      })
+
+    ts_base <- function(selected_data, min_date, max_date, axis){
+        log_print("--> ts_plot_base")
+        t_ts_plot_0 <- Sys.time()
+        index <- data()$timeindex
+
+        if(is.numeric(index)) {
+          log_print("****** !!!!!!!!!! Index was numeric. We need dates. The first date is 1/1/1970 !!!!!!!!!!!*****")
+          index <- as.POSIXct(index, origin = "1970-01-01")
+        }
+
+        if (is.numeric(min_date)) { min_date   <- as.POSIXct(min_date, origin = "1970-01-01") }
+        if (is.numeric(max_date)) { max_date   <- as.POSIXct(max_date, origin = "1970-01-01") }
+    
+
+        #index <- data$timeindex[1:dim(MP_AB$distances)[axis]] #1 A, 2 B
+        ts_xts <- xts(selected_data, order.by = index)
+        t_ts_plot_1 <- Sys.time()
+        log_print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_1-t_ts_plot_0)) 
+        
+        
+        
+        log_print(paste("Type of index:", class(index)))
+        log_print(paste("Type of min:", class(min_date), " | ",  min_date))
+        log_print(paste("Type of max:", class(max_date), " | ", max_date))
+        log_print(paste("Selected data dimensions:", dim(ts_xts)))
+        log_print(paste("Index dimensions:", length(index)))
+        
+        ts_plt = dygraph(
+            ts_xts,
+            width="100%", height = "400px"
+        ) %>% 
+        dyRangeSelector(c(min_date, max_date)) %>% 
+        dyHighlight(hideOnMouseOut = TRUE) %>%
+        dyOptions(labelsUTC = FALSE  ) %>%
+        dyCrosshair(direction = "vertical")%>%
+        dyLegend(show = "follow", hideOnMouseOut = TRUE) %>%
+        dyUnzoom() %>%
+        dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>%
+        dyCSS(
+            textConnection(
+                ".dygraph-legend > span { display: none; }
+                .dygraph-legend > span.highlight { display: inline; }"
+            )
+        ) 
+
+    }
+
+
+
+    tsA_plot_ <- reactive({
+        log_print("--> tsA_plot | Before req 1")
+        t_tsp_0 = Sys.time()
+        on.exit({log_print("ts_plot -->"); flush.console()})
+
+        req(isolate(data()))
+        min_date <- data()$timeindex[2]
+        #log_print(paste0("timeindex", data()$timeindex))
+        log_print(paste0("min_date", min_date))
+        idmax <- min(input$maxPoints, length(variable_data)-1)
+        max_date <- data()$timeindex[idmax]
+        ts_plt = ts_base(variable_data, min_date, total_points, max_date)   
+        ts_plt <- ts_plt %>% dyRangeSelector(c(min_date, max_date))
+         
+        t_tsp_1 = Sys.time()
+        log_print(paste0("ts plot | Execution time: ", t_tsp_1 - t_tsp_0))
+        ts_plt
+    })
+      
+    output$tsA_plot <- renderDygraph(
+        {
+            log_print("**** tsA_plot dygraph ****")
+            tspd_0 = Sys.time()
+            tsA_plot_ <- req(tsA_plot_())
+            tspd_1 = Sys.time()
+            log_print(paste0("TSA_plot time: ", tspd_1 - tspd_0, " seconds"))
+            tsA_plot_
+        }   
+    )
+
     }
   })
 }
@@ -320,6 +457,10 @@ mplot_tabServer <- function(
       })
 
       mplot_compute(id, input, output, session, tsdf, input_caller, mplot_compute_allow, mplot_compute_allow_inside)
+
+      
+
+
     }
   )
 }

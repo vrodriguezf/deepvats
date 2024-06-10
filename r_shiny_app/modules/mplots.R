@@ -92,12 +92,10 @@ mplot_tabUI <- function(id) {
           )
         ),
           fluidRow(
-            column(8, dygraphOutput(ns("matrix_profile_plot"), height = "100") %>% withSpinner()),
-            column(8, uiOutput(ns("mplot_plot"), height = "300") %>% withSpinner())
-          ),
-          fluidRow(
-            column(8, dygraphOutput(ns("tsA_plot"), height = "100") %>% withSpinner()),
-            column(8, dygraphOutput(ns("tsB_plot"), height = "100") %>% withSpinner())
+            column(8, tags$h3("Matrix Profile"), dygraphOutput(ns("matrix_profile_plot"), height = "100") %>% withSpinner()),
+            column(8, tags$h3("MPlot"), uiOutput(ns("mplot_plot"), height = "300") %>% withSpinner()),
+            column(8,tags$h3("TA (horizontal axis)"), dygraphOutput(ns("tsA_plot"), height = "100") %>% withSpinner()),
+            column(8, tags$h3("TB (vertical axis)"), dygraphOutput(ns("tsB_plot"), height = "100") %>% withSpinner())
           )
           
         ),

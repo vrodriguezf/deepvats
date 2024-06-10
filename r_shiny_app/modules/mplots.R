@@ -358,7 +358,7 @@ mplot_compute <- function(
 
 
 
-    tsA_plot_ <- reactive({
+    tsA_plot_ <- reactive({#Aqui minDate y maxDate deberían ser el minimo y el maximo cogidos para el eje x de la matriz
         log_print("--> tsA_plot | Before req 1")
         t_tsp_0 = Sys.time()
         on.exit({log_print("ts_plot -->"); flush.console()})
@@ -385,6 +385,36 @@ mplot_compute <- function(
             tspd_1 = Sys.time()
             log_print(paste0("TSA_plot time: ", tspd_1 - tspd_0, " seconds"))
             tsA_plot_
+        }   
+    )
+
+    tsB_plot_ <- reactive({#Aqui minDate y maxDate deberían ser el minimo y el maximo cogidos para el eje y de la matriz
+        log_print("--> tsB_plot | Before req 1")
+        t_tsp_0 = Sys.time()
+        on.exit({log_print("tsB_plot -->"); flush.console()})
+
+        req(isolate(data()))
+        min_date <- data()$timeindex[2]
+        #log_print(paste0("timeindex", data()$timeindex))
+        log_print(paste0("min_date", min_date))
+        idmax <- min(input$maxPoints, length(variable_data)-1)
+        max_date <- data()$timeindex[idmax]
+        ts_plt = ts_base(variable_data, min_date, total_points, max_date)   
+        ts_plt <- ts_plt %>% dyRangeSelector(c(min_date, max_date))
+         
+        t_tsp_1 = Sys.time()
+        log_print(paste0("tsB plot | Execution time: ", t_tsp_1 - t_tsp_0))
+        ts_plt
+    })
+      
+    output$tsB_plot <- renderDygraph(
+        {
+            log_print("**** tsB_plot dygraph ****")
+            tspd_0 = Sys.time()
+            tsB_plot_ <- req(tsB_plot_())
+            tspd_1 = Sys.time()
+            log_print(paste0("TSB_plot time: ", tspd_1 - tspd_0, " seconds"))
+            tsB_plot_
         }   
     )
 

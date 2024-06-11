@@ -21,6 +21,8 @@ matrix_profile_plot_max_points_slider <- function(id){
   )
 }
 similarity_matrix <- function(tsa, wlen) {
+  log_print(paste0("[ Similarity matrix | wlen ] ", wlen))
+  log_print(paste0("[ Similarity matrix | tsa ~ ] ", length(tsa)))
   sim_matrix <- mplots$MatrixProfilePlot(
     DM_AB           = mplots$DistanceMatrix(),
     MP_AB           = mplots$MatrixProfile(),
@@ -29,6 +31,10 @@ similarity_matrix <- function(tsa, wlen) {
     subsequence_len = as.integer(wlen),
     self_join       = FALSE
   )
+
+  log_print(paste0("[ Similarity matrix | data ~ ] ", length(sim_matrix$data)))
+  log_print(paste0("[ Similarity matrix | data_b ~ ] ", length(sim_matrix$data_b)))
+
   return ( sim_matrix )
 }
 
@@ -234,17 +240,20 @@ mplot_compute <- function(
       log_print("Similarity matrix initialized")     
       
       tryCatch({
-        log_print(paste0("SM data: ", dim(sim_matrix$data)))
-        log_print(paste0("SM data_b: ", dim(sim_matrix$data_b)))
+        wlen <- input_caller_2$wlen
         log_print(paste0("SM total_points: ", total_points))
-        log_print(paste0("SM max_points: ", input$max_points))
-        log_print(paste0("SM wlen: ", input_caller_2$wlen))
-        log_print(paste0("[ MPlot Compute 0] Selected data[ ", selected_variable, " ] ~ ", length(variable_data), "\n"))
+        log_print(paste0("SM wlen: ", wlen))
+        #log_print(paste0("SM data: ", length(sim_matrix$data)))
+        #log_print(paste0("SM data_b: ", length(sim_matrix$data_b)))
+        #log_print(paste0("SM total_points: ", total_points))
+        #log_print(paste0("SM max_points: ", input_caller_2$max_points)) -- menos este, comprobado que todos bien
+        #log_print(paste0("SM wlen: ", input_caller_2$wlen))
+        #log_print(paste0("SM Selected data[ ", selected_variable, " ] ~ ", length(variable_data), "\n"))
 
         ## Añadir los parámetros faltantes como sliders
         sim_matrix$compute(
           mp_method           = 'stump',
-          dm_method           = 'scamp',
+          dm_method           = 'stump',
           print_flag          = TRUE,
           debug               = TRUE,
           time_flag           = TRUE,
@@ -256,14 +265,15 @@ mplot_compute <- function(
           r_min               = as.integer(0),
           r_max               = as.integer(total_points),
           ################################################################
-          max_points          = as.integer(input$maxPoints),
-          subsequence_len     = as.integer(input_caller_2$wlen),
+          #max_points          = as.integer(input$maxPoints),
+          max_points          = 10000, #as.integer(input_caller_2$maxPoints), ... algo pasa con max_points
+          subsequence_len     = as.integer(wlen),
           provide_len         = FALSE,
           downsample_flag     = TRUE,
           min_lag             = as.integer(8), #Añadir selector
           print_depth         = as.integer(1),
           threads             = as.integer(1), # Añadir selector en caso de scamp
-          gpus                = {} # Añadir selector en caso de scamp que dependa de las gpus realmente disponibles
+          gpus                = list() # Añadir selector en caso de scamp que dependa de las gpus realmente disponibles
         )
         ## 
         log_print("Similarity matrix computed")
@@ -286,6 +296,7 @@ mplot_compute <- function(
       })
 
       output$matrix_profile_plot <- renderDygraph({
+        req(sim_matrix$MP_AB$distances)
         matrix_profile_dygraph(id, matrix_profile(data(), sim_matrix$MP_AB))
       })
 

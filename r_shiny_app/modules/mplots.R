@@ -40,6 +40,7 @@ similarity_matrix <- function(tsa, wlen) {
 
 matrix_profile <- function(data, MP_AB) {
   index <- data$timeindex[1:dim(MP_AB$distances)[1]]
+  log_print(paste0("[ Matrix Profile | MP ~ ] ", length(MP_AB$distances)))
   distances <- do.call(rbind, MP_AB$distances)
   mp_xts <- xts( distances, order.by = index)
   return ( mp_xts )
@@ -99,7 +100,7 @@ mplot_tabUI <- function(id) {
         ),
           fluidRow(
             column(8, tags$h3("Matrix Profile"), dygraphOutput(ns("matrix_profile_plot"), height = "100") %>% withSpinner()),
-            column(8, tags$h3("MPlot"), uiOutput(ns("mplot_plot"), height = "300") %>% withSpinner()),
+            column(8, tags$h3("MPlot"), plotOutput(ns("mplot_plot"), height = "300") %>% withSpinner()),
             column(8,tags$h3("TA (horizontal axis)"), dygraphOutput(ns("tsA_plot"), height = "100") %>% withSpinner()),
             column(8, tags$h3("TB (vertical axis)"), dygraphOutput(ns("tsB_plot"), height = "100") %>% withSpinner())
           )
@@ -253,7 +254,7 @@ mplot_compute <- function(
         ## Añadir los parámetros faltantes como sliders
         sim_matrix$compute(
           mp_method           = 'stump',
-          dm_method           = 'stump',
+          dm_method           = 'scamp',
           print_flag          = TRUE,
           debug               = TRUE,
           time_flag           = TRUE,
@@ -433,6 +434,27 @@ mplot_compute <- function(
         }   
     )
 
+    output$mplot_plot <- renderPlot({
+        req(sim_matrix$DM_AB$distances)
+        distances_matrix <- sim_matrix$DM_AB$distances
+        indices1 <- data()$timeindex[1:dim(distances_matrix)[1]]
+        indices2 <- data()$timeindex[1:dim(distances_matrix)[2]]
+
+        log_print(paste0("[ MPlot plot DM ~ ] ", length(distances_matrix)))
+        
+        
+        dist_df <- expand.grid(Var1 = indices1, Var2 = indices2)
+        dist_df$value <- as.vector(distances_matrix)
+
+        ggplot(dist_df, aes(x = Var1, y = Var2, fill = value)) +
+          geom_tile() +
+          scale_fill_gradient(low = "white", high = "blue") +
+          labs(x = "Index", y = "Index", fill = "Distance") +
+          theme_minimal() +
+          coord_fixed()  # This ensures that the heatmap cells are square
+        })
+
+
     }
   })
 }
@@ -504,8 +526,6 @@ mplot_tabServer <- function(
       mplot_compute(id, input, output, session, tsdf, input_caller, mplot_compute_allow, mplot_compute_allow_inside)
 
       
-
-
     }
   )
 }

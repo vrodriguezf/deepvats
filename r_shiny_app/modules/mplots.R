@@ -254,7 +254,7 @@ mplot_compute <- function(
         ## Añadir los parámetros faltantes como sliders
         sim_matrix$compute(
           mp_method           = 'stump',
-          dm_method           = 'scamp',
+          dm_method           = 'stump',
           print_flag          = TRUE,
           debug               = TRUE,
           time_flag           = TRUE,

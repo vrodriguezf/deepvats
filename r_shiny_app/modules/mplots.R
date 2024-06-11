@@ -234,7 +234,13 @@ mplot_compute <- function(
       log_print("Similarity matrix initialized")     
       
       tryCatch({
+        log_print(paste0("SM data: ", dim(sim_matrix$data)))
         log_print(paste0("SM data_b: ", dim(sim_matrix$data_b)))
+        log_print(paste0("SM total_points: ", total_points))
+        log_print(paste0("SM max_points: ", input$max_points))
+        log_print(paste0("SM wlen: ", input_caller_2$wlen))
+        log_print(paste0("[ MPlot Compute 0] Selected data[ ", selected_variable, " ] ~ ", length(variable_data), "\n"))
+
         ## Añadir los parámetros faltantes como sliders
         sim_matrix$compute(
           mp_method           = 'stump',

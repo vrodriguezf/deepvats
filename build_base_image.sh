@@ -6,8 +6,8 @@ args=()
 IFS='='
 while IFS='=' read -r key value _; do
     value="${value%$'\r'}"
-    echo "key: $key"
-    echo "value: $value"
+    #echo "key: $key"
+    #echo "value: $value"
     if [[ $key != \#* && $key != '' ]]; then  # Excluye comentarios y líneas vacías
         args+=(--build-arg "$key=$value")  # Agrega --build-arg y la variable como un elemento
     else

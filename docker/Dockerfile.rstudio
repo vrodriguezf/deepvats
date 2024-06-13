@@ -39,6 +39,14 @@ RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
 
+#Ñapa Revisar por qué no se instalan desde DESCRIPTION
+RUN R -e "install.packages('plotly', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('shinyFiles')"
+RUN R -e "install.packages('yaml', repos='http://cran.rstudio.com/')"
+
+
+
+
 WORKDIR $HOME
 
 # Initialize R-Stusio Server

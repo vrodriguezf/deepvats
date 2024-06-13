@@ -70,7 +70,6 @@ services:
          - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ 
          - ../dvats:/home/${USER_NAME}/dvats
          - ../nbs_pipeline:/home/${USER_NAME}/work/nbs_pipeline
-         - ../dvats:/home/${USER_NAME}/work/nbs_pipeline/dvats
          - conda-env:/usr/local/share/miniconda3/envs/env
          - miniconda:/home/user/local/share/miniconda3 
       deploy:

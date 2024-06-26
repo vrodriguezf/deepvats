@@ -61,3 +61,77 @@ log_script <- HTML("
         }
       }); 
     ")
+
+rotate_script <- HTML("
+  #TB {
+    transform: rotate(-90deg);
+    transform-origin: left top 0;
+    position: absolute;
+    left: -300px; /* Ajusta este valor para posicionar la gráfica rotada */
+    top: 50px; /* Ajusta este valor para posicionar la gráfica rotada */
+  }
+")
+
+tsb_style <- "transform: rotate(-90deg); transform-origin: left top 0; position: absolute; left: -300px; top: 50px;"
+
+# Define a function to rotate any plot output
+rotate_plot <- function(id, degree = -90, left = "-300px", top = "50px") {
+  tags$head(
+    tags$style(HTML(sprintf("
+      #%s {
+        transform: rotate(%ddeg);
+        transform-origin: left top 0;
+        position: absolute;
+        left: %s;
+        top: %s;
+      }
+    ", id, degree, left, top)))
+  )
+}
+
+
+rotate_plot_style <- "
+  .rotated-container {
+    position: relative;
+    width:  100%;
+    height: 100%;
+  }
+  .rotated {
+    transform:        rotate(-90deg);
+    transform-origin: left top;
+    position:         absolute;
+    width:            100%;
+    height:           100%;
+    top:              0;
+    left:             0;
+    
+  }
+  .grid-container {
+    display: grid;
+    grid-template-areas: 
+      'header'
+      'tb mplot'
+      'tb mplot';
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: 1fr 4fr;
+    gap: 10px;
+    width: 100%;
+    height: 100%; 
+  }
+  .grid-header {
+    grid-area: header;
+    width: 100%;
+  }
+  .grid-tb {
+    grid-area: tb;
+    position:relative;
+  }
+  .grid-ta {
+    grid-area: ta;
+    width: 100%;
+  }
+  .grid-mplot {
+    grid-area: mplot;
+    width: 100%;
+  }
+"

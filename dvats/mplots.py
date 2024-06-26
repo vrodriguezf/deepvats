@@ -207,7 +207,7 @@ def show_sequence(
     ])
     display(styled_df)
 
-# %% ../nbs/mplots.ipynb 21
+# %% ../nbs/mplots.ipynb 22
 def plot_with_dots(
     time_series             : List [ float ]    = None,
     xlabel                  : str               = 'Index (time)',
@@ -234,7 +234,7 @@ def plot_with_dots(
 
 
 
-# %% ../nbs/mplots.ipynb 24
+# %% ../nbs/mplots.ipynb 25
 def show_subsequence(
         data         : List [ float ], 
         i            : int  = 0, 
@@ -249,7 +249,7 @@ def show_subsequence(
                 hide_columns    = hide_columns, 
         )
 
-# %% ../nbs/mplots.ipynb 26
+# %% ../nbs/mplots.ipynb 27
 def plot_subsequence(
     TA              : List [ float ]    = None,
     sequence_i      : int               = 0,
@@ -261,7 +261,8 @@ def plot_subsequence(
     sequence_flag   : bool              = True,
     hide_rows       : bool              = True,
     hide_columns    : bool              = False,
-    print_flag      : bool              = False
+    print_flag      : bool              = False,
+    save_plot       : bool              = False
 ) -> None:
 
     n = len(TA)
@@ -280,8 +281,8 @@ def plot_subsequence(
         label='Subsequence' if i == 0 else ""
       )
     axs.legend()
-    axs.set_title('Subsequence_' + str(i) +"_"+str(subsequence_len))
-
+    #axs.set_title('Subsequence_' + str(i) +"_"+str(subsequence_len))
+    axs.set_title('Subsequence_' + str(i) +"_"+str(subsequence_len), fontsize=20)
     if dots:
       plt.scatter(x_coords, TA, color=dots_color)
       if label:
@@ -290,10 +291,11 @@ def plot_subsequence(
         for x, y in zip(subsequence_x, subsequence_y):
             axs.text(x, y+0.3, f'{y:.2f}', color=dots_color, fontsize=8, ha='center', va='bottom')  # Añade el valor sobre el punto
     plt.tight_layout()
+    plt.savefig('subsequence_'+str(i) + "_"+str(subsequence_len)+'.png')
     plt.show()
     if sequence_flag : show_sequence([TA[sequence_i:sequence_i + subsequence_len]], hide_rows, hide_columns)
 
-# %% ../nbs/mplots.ipynb 29
+# %% ../nbs/mplots.ipynb 30
 class GD_Mat:
     def __init__(self, id,  name, data_path = '~/data'):
         self.id                 = id #GD id
@@ -333,7 +335,7 @@ class GD_Mat:
         str +=f"\nnum_mats: {self.num_mats}"
         return str
 
-# %% ../nbs/mplots.ipynb 30
+# %% ../nbs/mplots.ipynb 31
 @dataclass
 class MatlabMatrix: 
     #File name
@@ -432,7 +434,7 @@ class MatlabMatrix:
             self.data = np.concatenate((start, out0, stop))
             return self.data
 
-# %% ../nbs/mplots.ipynb 39
+# %% ../nbs/mplots.ipynb 40
 def find_dominant_window_sizes_list(
         X           : List [ float ], 
         nsizes      : int               = 1,
@@ -509,7 +511,7 @@ def find_dominant_window_sizes_list(
     
     return sizes
 
-# %% ../nbs/mplots.ipynb 45
+# %% ../nbs/mplots.ipynb 46
 def plot_subsequences_aux(
     ax              : plt.Axes, 
     x_coords        : List[ int ],  
@@ -585,7 +587,7 @@ def plot_subsequences(
     buttons = widgets.HBox([prev_button, next_button])
     display(buttons)
 
-# %% ../nbs/mplots.ipynb 46
+# %% ../nbs/mplots.ipynb 47
 def plot_dataFrame(title, df, vars = [], interval = 10000):
     if len(vars) > 0:
         num_vars = len(df.columns)
@@ -623,7 +625,7 @@ def plot_dataFrame(title, df, vars = [], interval = 10000):
         plt.show()
     else: raise ValueError("No variable proposed for plotting")
 
-# %% ../nbs/mplots.ipynb 47
+# %% ../nbs/mplots.ipynb 48
 def plot_dataFrame_compareSubsequences(
     title, df, var, subsequence_len, seq1_init, seq2_init, 
     title_fontsize = '30',
@@ -650,7 +652,7 @@ def plot_dataFrame_compareSubsequences(
     plt.show()
     
 
-# %% ../nbs/mplots.ipynb 49
+# %% ../nbs/mplots.ipynb 50
 def df_plot_colored_variables(df):
     # Show time series plot
     fig, ax = plt.subplots(1, figsize=(15,5), )
@@ -663,7 +665,7 @@ def df_plot_colored_variables(df):
     plt.legend()
     display(plt.show())
 
-# %% ../nbs/mplots.ipynb 50
+# %% ../nbs/mplots.ipynb 51
 def plot_df_with_intervals_and_colors(title, df, interval=10000):
     num_variables = len(df.columns)
     num_intervals = len(df) // interval + 1  # Calcula el número necesario de intervalos/subplots
@@ -694,7 +696,7 @@ def plot_df_with_intervals_and_colors(title, df, interval=10000):
     plt.tight_layout()
     plt.show()
 
-# %% ../nbs/mplots.ipynb 52
+# %% ../nbs/mplots.ipynb 53
 def make_symmetric_(
         mat : List [ float ]
     ) -> None:
@@ -713,7 +715,7 @@ def check_symmetric(
     return sym
 
 
-# %% ../nbs/mplots.ipynb 55
+# %% ../nbs/mplots.ipynb 56
 def moving_mean(a, w):
   result = np.zeros((len(a) - w + 1,))
   p = a[0]
@@ -853,7 +855,7 @@ def distance_matrix(a,b,w, minlag = None):
 
     return out
 
-# %% ../nbs/mplots.ipynb 57
+# %% ../nbs/mplots.ipynb 58
 @dataclass
 class DistanceProfile:
     """ Vector of distances between each subsequence in TA and a reference sequence TB"""
@@ -1034,11 +1036,11 @@ class DistanceProfile:
         plt.tight_layout()
         plt.show()
 
-# %% ../nbs/mplots.ipynb 64
+# %% ../nbs/mplots.ipynb 65
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.pipeline import Pipeline
 
-# %% ../nbs/mplots.ipynb 65
+# %% ../nbs/mplots.ipynb 66
 class Interpolator(BaseEstimator, TransformerMixin):
     def __init__(
         self              : 'Interpolator', 
@@ -1101,7 +1103,7 @@ class Interpolator(BaseEstimator, TransformerMixin):
             
         return res
 
-# %% ../nbs/mplots.ipynb 66
+# %% ../nbs/mplots.ipynb 67
 class PAATransformer(BaseEstimator, TransformerMixin):
     def __init__(
         self, 
@@ -1147,7 +1149,7 @@ class PAATransformer(BaseEstimator, TransformerMixin):
         return result
 
 
-# %% ../nbs/mplots.ipynb 71
+# %% ../nbs/mplots.ipynb 72
 @dataclass
 class DistanceMatrix: 
     """ Similarity matrix """
@@ -1498,7 +1500,7 @@ class DistanceMatrix:
         self.shape = self.distances.shape
         return self.distances    
 
-# %% ../nbs/mplots.ipynb 75
+# %% ../nbs/mplots.ipynb 76
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -1524,7 +1526,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 76
+# %% ../nbs/mplots.ipynb 77
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -1563,7 +1565,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 78
+# %% ../nbs/mplots.ipynb 79
 @dataclass
 class MatrixProfile:
     """ Class for better usability of Matrix Profile inside deepVATS"""
@@ -1858,7 +1860,7 @@ class MatrixProfile:
     def __str__(self):
         return f"MP: {self.distances}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
-# %% ../nbs/mplots.ipynb 81
+# %% ../nbs/mplots.ipynb 82
 def matrix_profile(
     data            : List [ float ], 
     subsequence_len : Optional [ int ]              = None, 
@@ -2076,7 +2078,7 @@ def matrix_profile(
             print("matrix profile -->")
     return mp, index, index_left, index_right, duration
 
-# %% ../nbs/mplots.ipynb 82
+# %% ../nbs/mplots.ipynb 83
 def compute(
     self            : MatrixProfile,
     method          : str                           = 'naive', 
@@ -2124,7 +2126,7 @@ def compute(
     return self.distances
 MatrixProfile.compute = compute
 
-# %% ../nbs/mplots.ipynb 92
+# %% ../nbs/mplots.ipynb 93
 @dataclass
 class MatrixProfiles:
     matrix_profiles : List[ MatrixProfile ] = field( default_factory=list )
@@ -2265,7 +2267,7 @@ class MatrixProfiles:
         plt.show()
 
 
-# %% ../nbs/mplots.ipynb 110
+# %% ../nbs/mplots.ipynb 111
 def ensure_valid_limits(
     total_len       : int,
     subsequence_len : int, # divisor
@@ -2382,7 +2384,7 @@ def restore_index(
 
 
 
-# %% ../nbs/mplots.ipynb 112
+# %% ../nbs/mplots.ipynb 113
 def threshold_interval(
     data            : List [ List [ float ] ],
     threshold_min   : float,
@@ -2409,7 +2411,7 @@ def threshold_interval(
             result = result <= threshold_max
     return result
 
-# %% ../nbs/mplots.ipynb 114
+# %% ../nbs/mplots.ipynb 115
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -2670,7 +2672,10 @@ class MatrixProfilePlot:
             allow_experimental  = allow_experimental
         )
         if print_flag and print_depth > 0:  
-            print("MPlot | Compute | --> Compute DM | Allow experimental: ", allow_experimental)
+            print(
+                "MPlot | Compute | --> Compute DM | Allow experimental: ", 
+                allow_experimental
+            )
         
         self.DM_AB.compute(
             method              = dm_method,
@@ -2682,6 +2687,9 @@ class MatrixProfilePlot:
             print_depth         = print_depth-1,
             debug               = debug
         )
+        
+        if print_flag and print_depth > 0: 
+            print("MPlot | Compute | Compute DM -->")
             
     def plot_check_limits(
         self,
@@ -3172,7 +3180,7 @@ class MatrixProfilePlot:
         return plt
         """
 
-# %% ../nbs/mplots.ipynb 119
+# %% ../nbs/mplots.ipynb 120
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -3480,7 +3488,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-# %% ../nbs/mplots.ipynb 123
+# %% ../nbs/mplots.ipynb 124
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

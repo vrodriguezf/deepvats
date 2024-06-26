@@ -17,7 +17,7 @@ shinyUI(fluidPage(
   ################################################
   ################## JScript Logs ################
   ################################################
-  tags$head(tags$script(log_script)),
+  tags$head(tags$script(log_script), tags$style(HTML(rotate_plot_style))),
   
   #theme = shinythemes::shinytheme("cerulean"),
   # Application title

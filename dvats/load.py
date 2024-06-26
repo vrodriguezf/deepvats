@@ -178,6 +178,7 @@ def infer_or_inject_freq(df, injected_freq='1s', start_date=None, **kwargs):
 
 # %% ../nbs/load.ipynb 21
 import requests
+import zipfile
 from pathlib import Path
 
 def get_confirm_token(response):

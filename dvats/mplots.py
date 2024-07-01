@@ -963,11 +963,10 @@ class DistanceProfile:
             case 'stumpy.mass':
                 if print_flag and print_depth > 0: print("--> Using stumpy.mass")
                 if (self.self_join):
-                    Q = self.data.astype(np.float64)
-                    #Q = self.data_b[self.data_b_i:self.data_b_i+m].astype(np.float64)
+                    Q = self.data[self.data_b_i:self.data_b_i+m].astype(np.float64)
                     if print_flag and print_depth > 0: print("Q ~ ", Q.shape)
                 else:
-                    Q = self.data_b.astype(np.float64)
+                    Q = self.data_b[self.data_b_i:self.data_b_i+m].astype(np.float64)
                     if print_flag and print_depth > 0: print("Q ~ ", Q.shape)
                 if (d.__name__ == 'z_normalized_euclidean_distance'):
                     if print_flag and print_depth > 0: print("Normalized")
@@ -1509,8 +1508,11 @@ class DistanceMatrix:
         ############################
         # Following the stumpy convention
         if  not ( min_lag is None ):
-            for row in range(len(self.distances)):
-                for col in range(max(row-min_lag,0),min(row+min_lag+1, self.distances.shape[0])):
+            for row in range(self.distances.shape[0]):
+                col_min = max(row-min_lag,0)
+                col_max = min(row+min_lag+1, self.distances.shape[1])
+                #if (print_flag): print("rc0c1=(",row,",",col_min,",",col_max,")")
+                for col in range(col_min,col_max):
                     self.distances[row][col] = np.inf
                         
         if time_flag: 

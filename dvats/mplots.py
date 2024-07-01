@@ -208,40 +208,50 @@ def show_sequence(
     display(styled_df)
 
 # %% ../nbs/mplots.ipynb 22
+from typing import List, Tuple
+import matplotlib.pyplot as plt
+
+
 def plot_with_dots(
-    time_series             : List [ float ]    = None,
-    xlabel                  : str               = 'Index (time)',
-    ylabel                  : str               = 'Value',
-    title                   : str               = 'Time series',
-    sequence_flag           : bool              = True,
-    show_sequence_before    : bool              = True, 
-    hide_rows               : bool              = True,
-    hide_columns            : bool              = False,
-    show_title              : bool              = True,
-    fontsize                : int               = 10,
-    save_plot               : bool              = False,
-    dots                    : bool              = True,
-    figsize                 : Tuple [ int, int] = (10,6)
+    time_series             : List[float]    = None,
+    xlabel                  : str            = 'Index (time)',
+    ylabel                  : str            = 'Value',
+    title                   : str            = 'Time series',
+    sequence_flag           : bool           = True,
+    show_sequence_before    : bool           = True, 
+    hide_rows               : bool           = True,
+    hide_columns            : bool           = False,
+    show_title              : bool           = True,
+    fontsize                : int            = 10,
+    save_plot               : bool           = False,
+    dots                    : bool           = True,
+    figsize                 : Tuple[int, int]= (10, 6)
   ) -> None:
     if sequence_flag and show_sequence_before: 
         show_sequence([time_series], hide_rows, hide_columns)
     n = len(time_series)
     x_coords = range(n)
     
+    plt.figure(figsize=figsize)  # Crear la figura con el tamaño especificado
+    
     if dots: 
-        plt.plot(x_coords, time_series, figsize = figsize)
+        plt.plot(x_coords, time_series)
         plt.scatter(x_coords, time_series, color='red')
     else:
-        plt.plot(x_coords, time_series, linestyle='-', figsize = figsize)
+        plt.plot(x_coords, time_series, linestyle='-')
         
     if show_title: 
-        plt.title(title, fontsize = fontsize)
+        plt.title(title, fontsize=fontsize)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    if (save_plot): plt.savefig(title+'.png')
+    if save_plot:
+        plt.savefig(title + '.png')
     plt.show()
-    if sequence_flag and not show_sequence_before: show_sequence([time_series], hide_rows, hide_columns)
+    
+    if sequence_flag and not show_sequence_before:
+        show_sequence([time_series], hide_rows, hide_columns)
     return None
+
 
 # %% ../nbs/mplots.ipynb 25
 def show_subsequence(

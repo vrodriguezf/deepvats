@@ -1723,8 +1723,8 @@ class MatrixProfile:
         y_step  = (y_stop-y_start)/4
         ax1.set_yticks(np.arange(y_start, y_stop, y_step))
         ax3.set_yticks(np.arange(y_start, y_stop, y_step))
-        x_start = np.min(self.data)
-        x_stop  = np.max(self.data)
+        x_start = 0
+        x_stop  = len(self.data)
         x_step  = (x_stop-x_start)/4
         ax2.set_xticks(np.arange(x_start, x_stop, x_step))
         ax4.set_xticks(np.arange(x_start, x_stop, x_step))

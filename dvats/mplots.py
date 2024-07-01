@@ -220,7 +220,8 @@ def plot_with_dots(
     show_title              : bool              = True,
     fontsize                : int               = 10,
     save_plot               : bool              = False,
-    dots                    : bool              = True
+    dots                    : bool              = True,
+    figsize                 : Tuple [ int, int] = (10,6)
   ) -> None:
     if sequence_flag and show_sequence_before: 
         show_sequence([time_series], hide_rows, hide_columns)
@@ -228,10 +229,10 @@ def plot_with_dots(
     x_coords = range(n)
     
     if dots: 
-        plt.plot(x_coords, time_series)
+        plt.plot(x_coords, time_series, figsize = figsize)
         plt.scatter(x_coords, time_series, color='red')
     else:
-        plt.plot(x_coords, time_series, linestyle='-')
+        plt.plot(x_coords, time_series, linestyle='-', figsize = figsize)
         
     if show_title: 
         plt.title(title, fontsize = fontsize)
@@ -1741,8 +1742,8 @@ class MatrixProfile:
                 x_max = len(self.data) - self.subsequence_len + 1
             else:
                 half_window = int( self.max_points//2 )
-                x_min = selected_index - half_window
-                x_max = selected_index + half_window
+                x_min = max(selected_index - half_window, x_start)
+                x_max = min(selected_index + half_window, x_stop)
                 if print_flag: print(f"Plot Interactive | Window [{x_min}, {x_max}]")
 
             ax1.clear()

@@ -2373,7 +2373,7 @@ def ensure_valid_limits(
         max_position_adjusted = (k_max + 2) * subsequence_len
 
     min_position_adjusted = max(0, min_position_adjusted)
-    max_position_adjusted = min(max_position_adjusted, total_len)
+    max_position_adjusted = min(max_position_adjusted, total_len+min_position_adjusted)
     if print_flag and print_depth > 0:
         print(f"Ensure valid limits | Original [{min_position}, {max_position}]")
         print(f"Final [{min_position_adjusted}, {max_position_adjusted}]")
@@ -2778,8 +2778,11 @@ class MatrixProfilePlot:
         r_min : float, 
         r_max : float, 
         c_min : float, 
-        c_max : float
+        c_max : float,
+        print_flag: bool,
     ) -> Tuple[ float, float, float, float ]:
+        if print_flag: print("Plot check limits | Original range: r(",r_min,",",r_max,") c(", c_min, ",", c_max,")") 
+            
         if r_min is None:
             r_min = self.r_min
         else:
@@ -2796,21 +2799,25 @@ class MatrixProfilePlot:
                 r_max = self.DM_AB.distances.shape[0]+r_min
                 warnings.warn(f"Adjusted x_max to {r_max} as it was bigger than the number of rows (n_b-m+1)", UserWarning)
         
+        if print_flag: print("Plot check limits | CRange0: r(",r_min,",",r_max,") c(", c_min, ",", c_max,")") 
         if c_min is None:
             c_min = self.c_min
         else:
             if (c_min < self.c_min):
                 c_min = self.c_min
                 warnings.warn(f"Adjusted to {c_min} as no previous values have been computed yet", UserWarning)
+        if print_flag: print("Plot check limits | CRange1: r(",r_min,",",r_max,") c(", c_min, ",", c_max,")") 
         if c_max is None: 
             c_max = self.c_max
         else:
             if (c_max > self.c_max):
                 c_max = self.c_max
                 warnings.warn(f"Adjusted to {c_max} as no longer values have been computed yet", UserWarning)
-            if (c_max > self.DM_AB.distances.shape[1]+r_max):
-                c_max = self.DM_AB.distances.shape[1]+r_max
+            if (c_max > self.DM_AB.distances.shape[1]+c_max):
+                c_max = self.DM_AB.distances.shape[1]+c_max
                 warnings.warn(f"Adjusted y_max to {c_max} as it was bigger than the number of columns (n_a-m+1)", UserWarning)
+        if print_flag: print("Plot check limits | CRange2: r(",r_min,",",r_max,") c(", c_min, ",", c_max,")") 
+        if print_flag: print("Plot check limits | Final range: r(",r_min,",",r_max,") c(", c_min, ",", c_max,")") 
         return (r_min, r_max, c_min, c_max)
 
 
@@ -2819,7 +2826,8 @@ class MatrixProfilePlot:
         r_min, r_max, 
         c_min, c_max, 
         figsize,
-        plot_mp_flag
+        plot_mp_flag,
+        print_flag = False
     ):
         
         # Ensure computed
@@ -2827,7 +2835,7 @@ class MatrixProfilePlot:
             raise ValueError(f"The Matrix Profile has not been computed yet")
         if (self.DM_AB.method is None):
             raise ValueError(f"The Distances Matrix/Similarity Matrix has not been computed yet")
-        r_min, r_max, c_min, c_max = self.plot_check_limits(r_min, r_max, c_min, c_max)
+        r_min, r_max, c_min, c_max = self.plot_check_limits(r_min, r_max, c_min, c_max, print_flag)
 
         # Setup complete figure distribution
         fig = plt.figure(figsize=figsize)
@@ -3064,17 +3072,24 @@ class MatrixProfilePlot:
             r_min, r_max, 
             c_min, c_max, 
             figsize,
-            plot_mp_flag
+            plot_mp_flag,
+            print_flag
         )             
         r_start = r_min - self.r_min
         r_end   = r_max - self.r_min
         c_start = c_min - self.c_min
         c_end   = c_max - self.c_min
-
+        
         n_r = self.plot_row_range(r_min, r_max)
         n_c = self.plot_column_range(c_min, c_max)
 
-
+        if print_flag and print_depth > 0:
+            print("r_start", r_start)
+            print("r_end", r_end)
+            print("c_start", c_start)
+            print("c_end", c_end)
+            print("nr", n_r)
+            print("nc", n_c)
         
         if debug_flag:
             print("--> Plotting MP")

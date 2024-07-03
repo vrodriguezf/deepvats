@@ -225,7 +225,9 @@ def plot_with_dots(
     fontsize                : int            = 10,
     save_plot               : bool           = False,
     dots                    : bool           = True,
-    figsize                 : Tuple[int, int]= (10, 6)
+    figsize                 : Tuple[int, int]= (10, 6),
+    plot_path               : str            = "./",
+    plot_name               : str            = ""
   ) -> None:
     if sequence_flag and show_sequence_before: 
         show_sequence([time_series], hide_rows, hide_columns)
@@ -245,9 +247,12 @@ def plot_with_dots(
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     if save_plot:
-        plt.savefig(title + '.png')
+        plot_path = os.path.expanduser(plot_path)
+        if plot_name == "":
+            plot_name = title
+        plot_path = os.path.join(plot_path, plot_name + ".png")
+        plt.savefig(plot_path)
     plt.show()
-    
     if sequence_flag and not show_sequence_before:
         show_sequence([time_series], hide_rows, hide_columns)
     return None
@@ -281,7 +286,9 @@ def plot_subsequence(
     hide_rows       : bool              = True,
     hide_columns    : bool              = False,
     print_flag      : bool              = False,
-    save_plot       : bool              = False
+    save_plot       : bool              = False,
+    plot_path       : str               = "./",
+    plot_name       : str               = ""
 ) -> None:
 
     n = len(TA)
@@ -310,7 +317,12 @@ def plot_subsequence(
         for x, y in zip(subsequence_x, subsequence_y):
             axs.text(x, y+0.3, f'{y:.2f}', color=dots_color, fontsize=8, ha='center', va='bottom')  # Añade el valor sobre el punto
     plt.tight_layout()
-    plt.savefig('subsequence_'+str(i) + "_"+str(subsequence_len)+'.png')
+    if save_plot:
+        plot_path = os.path.expanduser(plot_path)
+        if (plot_name == ""):
+            plot_name = 'subsequence_'+str(i) + "_"+str(subsequence_len)
+        plot_path = os.path.join(plot_path, plot_name + '.png')
+        plt.savefig(plot_path)
     plt.show()
     if sequence_flag : show_sequence([TA[sequence_i:sequence_i + subsequence_len]], hide_rows, hide_columns)
 
@@ -2795,9 +2807,9 @@ class MatrixProfilePlot:
             if (r_max > self.r_max):
                 r_max = self.r_max
                 warnings.warn(f"Adjusted x_max  to {r_max} as no longer values have been computed yet", UserWarning)
-            if (r_max > self.DM_AB.distances.shape[0]+r_min):
-                r_max = self.DM_AB.distances.shape[0]+r_min
-                warnings.warn(f"Adjusted x_max to {r_max} as it was bigger than the number of rows (n_b-m+1)", UserWarning)
+            if (r_max > self.DM_AB.shape[0]+r_min):
+                r_max = self.DM_AB.shape[0]+r_min
+                warnings.warn(f"Adjusted x_max to {r_max} as it was bigger than the number of rows | {r_max} > {self.DM_AB.shape[0]} + {r_min}", UserWarning)
         
         if print_flag: print("Plot check limits | CRange0: r(",r_min,",",r_max,") c(", c_min, ",", c_max,")") 
         if c_min is None:

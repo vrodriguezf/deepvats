@@ -1,5 +1,3 @@
-source("./lib/ui/ui.R")
-
 #--- UI ---#
 matrix_profile_plot_switch <- function(id){
   ns <- NS(id)
@@ -80,61 +78,37 @@ mplot_variable_selector <- function(id){
 
 mplot_tabUI <- function(id) {
   ns <- NS(id)
-  useShinyjs()
   tabPanel(
-    "MPlot",
-    div (
-      class = "grid-container",      
-      div (
-        class = "grid-header",
+      "MPlot",
+      fluidRow(
         h3("MPlot | Similarity Matrix Plot"),
-        div(
-          style = "display: flex; gap: 10px;",
-          matrix_profile_plot_switch(id),
-          matrix_profile_plot_max_points_slider(id),
-          textOutput(ns("fourierLensOutput"))
+        fluidRow(
+          column(6,matrix_profile_plot_switch(id)),
+          column(6,matrix_profile_plot_max_points_slider(id)),
+          column(6,textOutput(ns("fourierLensOutput")))
         ),
-        div(
-          style = "display: flex; gap: 10px;",
-          mplot_variable_selector(id),
-          actionBttn(
+        fluidRow(
+          column(4, mplot_variable_selector(id)),
+          column(4, actionBttn(
             inputId = ns("mplot_compute_flag"), 
             label = "Activate/Deactivate Compute MPlot", 
             style = "bordered", 
             color = "primary", 
             size = "sm", 
-            block = TRUE
+            block = TRUE)
           )
         ),
-        div(
-          style = "display: flex; gap: 10px; width: 100%",
-          tags$h3("Matrix Profile"), 
-          dygraphOutput(ns("matrix_profile_plot"), height = "100", width = "600") %>% withSpinner()
-        )
-      ),
-      div (
-        class = "grid-tb",
-        div (
-          class = "rotated-container",
-          tags$h3("TB (vertical axis)"),   
-          dygraphOutput(ns("tsB_plot"), height = "100", width = "600") %>% withSpinner(),
-          class = "rotated"
-        )
-      ),
-
-      div (
-        class = "grid-mplot",
-        tags$h3("MPlot"), 
-        plotOutput(ns("mplot_plot"), height = "100", width = "600") %>% withSpinner()
-      ),
-      
-      div(
-        class = "grid-ta",
-        tags$h3("TA (horizontal axis)"), 
-        dygraphOutput(ns("tsA_plot"), height = "100", width = "600") %>% withSpinner()
-      ),
-      
-    )
+          fluidRow(
+            column(8, tags$h3("Matrix Profile"), dygraphOutput(ns("matrix_profile_plot"), height = "100") %>% withSpinner()),
+            column(8, tags$h3("MPlot"), plotOutput(ns("mplot_plot"), height = "300") %>% withSpinner()),
+            column(8,tags$h3("TA (horizontal axis)"), dygraphOutput(ns("tsA_plot"), height = "100") %>% withSpinner()),
+            column(8, tags$h3("TB (vertical axis)"), dygraphOutput(ns("tsB_plot"), height = "100") %>% withSpinner())
+          )
+          
+        ),
+      fluidRow(
+        column(8)
+      )
   )
 }
 
@@ -555,4 +529,3 @@ mplot_tabServer <- function(
     }
   )
 }
-

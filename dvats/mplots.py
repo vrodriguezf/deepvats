@@ -1210,6 +1210,11 @@ class DistanceMatrix:
     computation_time: float                     = 0.0
     dominant_lens   : List[ int ]               = None
     shape           : Tuple[ int, int ]         = (0,0)
+    # Fixing exclusion zone in zoomed MPlot
+    r_min           : int                       = None 
+    r_max           : int                       = None 
+    c_min           : int                       = None
+    c_max           : int                       = None
 
     def provide_lens(
         self        : 'DistanceMatrix',
@@ -1520,12 +1525,26 @@ class DistanceMatrix:
         ############################
         # Following the stumpy convention
         if  not ( min_lag is None ):
-            for row in range(self.distances.shape[0]):
-                col_min = max(row-min_lag,0)
-                col_max = min(row+min_lag+1, self.distances.shape[1])
-                #if (print_flag): print("rc0c1=(",row,",",col_min,",",col_max,")")
-                for col in range(col_min,col_max):
-                    self.distances[row][col] = np.inf
+            if (
+                self.c_min is None
+                and self.c_max is None 
+                and self.r_min is None 
+                and self.r_max is None 
+            ):
+                for row in range(self.distances.shape[0]):
+                    col_min = max(row-min_lag,0)
+                    col_max = min(row+min_lag+1, self.distances.shape[1])
+                    #if (print_flag): print("rc0c1=(",row,",",col_min,",",col_max,")")
+                    for col in range(col_min,col_max):
+                        self.distances[row][col] = np.inf
+            else:
+                for row in range(self.distances.shape[0]):
+                    if (row-self.r_min > 0):
+                        col_min = max(row-self.r_min-min_lag,0)
+                        col_max = min(row-self.r_min+min_lag+1, self.distances.shape[1])
+                        for col in range(col_min,col_max):
+                            self.distances[row][col] = np.inf
+                
                         
         if time_flag: 
             timer.end()
@@ -2770,6 +2789,11 @@ class MatrixProfilePlot:
                 "MPlot | Compute | --> Compute DM | Allow experimental: ", 
                 allow_experimental
             )
+        
+        self.DM_AB.r_min = self.r_min
+        self.DM_AB.r_max = self.r_max
+        self.DM_AB.c_min = self.c_min 
+        self.DM_AB.c_max = self.c_max
         
         self.DM_AB.compute(
             method              = dm_method,

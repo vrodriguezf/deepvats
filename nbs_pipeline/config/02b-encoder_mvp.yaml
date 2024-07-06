@@ -50,7 +50,7 @@ configuration:
 
       # PulsusParadoxus SP02
       ws1: 1
-      ws2: &wlen 100
+      ws2: &wlen 27
       # probability of masking in MVP
       r: 0.710
       valid_size: 0.2

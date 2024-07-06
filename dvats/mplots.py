@@ -278,7 +278,8 @@ def plot_subsequence(
     TA              : List [ float ]    = None,
     sequence_i      : int               = 0,
     subsequence_len : int               = 1,
-    color           : str               = 'green',
+    sequence_color    : str             = 'blue',
+    subsequence_color : str             = 'green',
     dots            : bool              = True,
     dots_color      : str               = 'red',
     label           : bool              = False,
@@ -299,11 +300,11 @@ def plot_subsequence(
     fig, axs = plt.subplots(1, 1, figsize=(12, fig_height_in), sharex=True)
 
 
-    axs.plot(x_coords, TA, label='TA')
+    axs.plot(x_coords, TA, label='TA', color = sequence_color)
     i = sequence_i
     axs.plot(
         x_coords[i:i+subsequence_len], TA[i:i+subsequence_len],
-        color=color,
+        color=subsequence_color,
         label='Subsequence' if i == 0 else ""
       )
     axs.legend()

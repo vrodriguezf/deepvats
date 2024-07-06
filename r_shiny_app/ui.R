@@ -44,6 +44,14 @@ shinyUI(fluidPage(
         block = TRUE  
       ),      
       br(),
+      actionBttn(
+        inputId = "restore_wlen_stride",
+        label = "Restore window size and stride",
+        style = "bordered",
+        color = "primary",
+        siz   = "sm",
+        block = TRUE
+      ),
       sliderInput("wlen", "Select window size", min = 0, max = 0, value =0 , step = 1),
       sliderInput("stride", "Select stride", min = 0, max = 0, value = 0, step = 1),
       # sliderInput("points_emb", "Select range of points to plot in the projections", 

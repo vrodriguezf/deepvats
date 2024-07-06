@@ -85,13 +85,13 @@ shinyServer(function(input, output, session) {
     # })
     
     observeEvent(
-        input$encoder, 
+        input$encoder,
         {
             log_print(
                 mssg = "--> observeEvent input_encoder", 
                 file_flag = TRUE, 
-                file_path = log_path(), 
-                log_header = log_header(), 
+                file_path = log_path(),
+                log_header =log_header(),
                 debug_level, 'main'
             )
             
@@ -147,6 +147,48 @@ shinyServer(function(input, output, session) {
         }
     )
 
+
+
+    observeEvent(input$restore_wlen_stride, {
+        enc_ar = isolate(enc_ar())
+         log_print(paste0("observeEvent restore wlen stride | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ), debug_level = debug_level, debug_group = 'generic')
+            
+            wmin <- enc_ar$metadata$mvp_ws[1]
+            wmax <- enc_ar$metadata$mvp_ws[2]
+            wlen <- enc_ar$metadata$w
+            
+            log_print(
+                paste0(
+                    "observeEvent restore wlen stride | update wlen | Update slider input (", 
+                    wmin, ", ", wmax, " ) -> ", wlen 
+                ), debug_level = debug_level, debug_group = 'generic')
+            
+            updateSliderInput(session = session, inputId = "wlen",
+                min = wmin,
+                max = wmax,
+                value = wlen
+            )
+            
+            updateSliderInput(
+                session = session, inputId = "stride", 
+                min = 1, max = input$wlen, 
+                value = enc_ar_stride()
+            )
+            
+            on.exit({
+                log_print(
+                    paste0(
+                        "observeEvent restore wlen stride ",
+                        input$wlen,
+                        " | stride ",
+                        input$stride,
+                        " -->"
+                        ), 
+                FALSE, log_path(), log_header(), debug_level, 'generic'
+            ); flush.console()
+            })
+    })
+
     # Obtener el valor de stride
     enc_ar_stride = reactive({
         log_print("--> reactive enc_ar_stride", debug_level = debug_level, debug_group = 'generic')
@@ -155,6 +197,10 @@ shinyServer(function(input, output, session) {
         stride
     })
         
+
+    
+
+
     observeEvent(input$wlen, {
         req(input$wlen)
         log_print(mssg = paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen), debug_level = debug_level, debug_group = 'generic')
@@ -887,6 +933,7 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
     observeEvent ( input$get_tsdf ,{
         log_print(paste0("get_tsdf changed to: ", input$get_tsdf))
         allow_tsdf( !allow_tsdf() )
+        tsdf <- tsdf()
         log_print(paste0("allow_tsdf changed to: ", allow_tsdf()))
     })
 
@@ -1073,13 +1120,13 @@ tcl_1 = Sys.time()
     
 
     start_date <- reactive({
-        isolate(tsdf()$timeindex[1])
+        tsdf()$timeindex[1]
     })
 
     end_date <- reactive({
         end_date_id = 100000
-        end_date_id = min(end_date_id, nrow(isolate(tsdf())))
-        isolate(tsdf())$timeindex[end_date_id]
+        end_date_id = min(end_date_id, nrow(tsdf()))
+        tsdf()$timeindex[end_date_id]
     })
 
     ts_plot_base <- reactive({
@@ -1089,8 +1136,8 @@ tcl_1 = Sys.time()
         end_date = isolate(end_date())
         log_print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_ts_plot_0 <- Sys.time()
-        tsdf_ <- isolate(tsdf()) %>% select(isolate(ts_variables$selected), - "timeindex")
-        tsdf_xts <- xts(tsdf_, order.by = isolate(tsdf())$timeindex)
+        tsdf_ <- tsdf() %>% select(isolate(ts_variables$selected), - "timeindex")
+        tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
         t_ts_plot_1 <- Sys.time()
         log_print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_1-t_ts_plot_0)) 
         temp_log <<- log_add(
@@ -1152,15 +1199,15 @@ tcl_1 = Sys.time()
         reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
         # Populate the first element of the list with the idx of the first window.
         reduced_window_list[[1]] = c(
-            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
-            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[2]]]
+            tsdf()$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
+            tsdf()$timeindex[unlist_window_indices[idx_window_limits[2]]]
         ) 
         # Populate the rest of the list
         if (length(idx_window_limits) > 2) {
             for (i in 2:(length(idx_window_limits)-1)){
             reduced_window_list[[i]]<- c(
-                isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-                isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+                tsdf()$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
+                tsdf()$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
                 )
             }
             }
@@ -1174,7 +1221,7 @@ tcl_1 = Sys.time()
         t_tsp_0 = Sys.time()
         on.exit({log_print("ts_plot -->"); flush.console()})
 
-        req(isolate(tsdf()), ts_variables, input$wlen != 0, input$stride)
+        req(tsdf(), ts_variables, input$wlen != 0, input$stride)
 
         ts_plt = ts_plot_base()   
 
@@ -1195,13 +1242,13 @@ tcl_1 = Sys.time()
             view_size = end_indices-start_indices+1
             max_size = 10000
 
-            start_date = isolate(tsdf())$timeindex[start_indices]
-            end_date = isolate(tsdf())$timeindex[end_indices]
+            start_date = tsdf()$timeindex[start_indices]
+            end_date = tsdf()$timeindex[end_indices]
 
             log_print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
             
             if (view_size > max_size) {
-                end_date = isolate(tsdf())$timeindex[start_indices + max_size - 1]
+                end_date = tsdf()$timeindex[start_indices + max_size - 1]
                 #range_color = "#FF0000" # Red
             } 
             
@@ -1212,8 +1259,8 @@ tcl_1 = Sys.time()
             count = 0
             for(ts_idxs in reduced_window_list) {
                 count = count + 1
-                start_event_date = isolate(tsdf())$timeindex[head(ts_idxs, 1)]
-                end_event_date = isolate(tsdf())$timeindex[tail(ts_idxs, 1)]
+                start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
+                end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
                 ts_plt <- ts_plt %>% dyShading(
                     from = start_event_date,
                     to = end_event_date,
@@ -1275,8 +1322,8 @@ tcl_1 = Sys.time()
         # Convertir a fechas POSIXct
         reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
             data.frame(
-                start = as.POSIXct(isolate(tsdf())$timeindex[x[1]], origin = "1970-01-01"),
-                end = as.POSIXct(isolate(tsdf())$timeindex[x[2]], origin = "1970-01-01")
+                start = as.POSIXct(tsdf()$timeindex[x[1]], origin = "1970-01-01"),
+                end = as.POSIXct(tsdf()$timeindex[x[2]], origin = "1970-01-01")
             )
         }))
 
@@ -1284,8 +1331,8 @@ tcl_1 = Sys.time()
         first_date = min(reduced_window_df$start)
         last_date = max(reduced_window_df$end)
     
-        left = as.POSIXct(isolate(tsdf())$timeindex[1],  origin = "1970-01-01")
-        right = as.POSIXct(isolate(tsdf())$timeindex[nrow(isolate(tsdf()))], origin = "1970-01-01")
+        left = as.POSIXct(tsdf()$timeindex[1],  origin = "1970-01-01")
+        right = as.POSIXct(tsdf()$timeindex[nrow(tsdf())], origin = "1970-01-01")
 
         # Configuración del gráfico base
         par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
@@ -1345,8 +1392,8 @@ output$windows_text <- renderUI({
     # Crear un conjunto de etiquetas de texto con información de las ventanas
     window_info <- lapply(1:length(reduced_window_list), function(i) {
         window <- reduced_window_list[[i]]
-        start <- format(as.POSIXct(isolate(tsdf())$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
-        end <- format(as.POSIXct(isolate(tsdf())$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+        start <- format(as.POSIXct(tsdf()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+        end <- format(as.POSIXct(tsdf()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
         color <- ifelse(i %% 2 == 0, "green", "blue")
         HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
     })

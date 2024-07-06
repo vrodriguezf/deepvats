@@ -3,7 +3,8 @@
 # %% auto 0
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
-           'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'funcname', 'update_patch']
+           'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'funcname', 'update_patch',
+           'styled_print']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -243,3 +244,11 @@ def update_patch(self, obj):
     clear_output(wait=True)
     self.display(obj)
     print("... Enabling Vs Code execution ...")
+
+# %% ../nbs/utils.ipynb 58
+from IPython.display import display, HTML
+
+# %% ../nbs/utils.ipynb 59
+def styled_print(text, color='black', size='16px', weight='normal'):
+    html_text = f"<span style='color: {color}; font-size: {size}; font-weight: {weight};'>{text}</span>"
+    display(HTML(html_text))

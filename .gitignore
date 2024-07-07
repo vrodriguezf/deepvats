@@ -170,3 +170,5 @@ checklink/cookies.txt
 /docker/.env 
 /docker_test/
 /docker/tmp_configComits.sh
+quarto-linux-amd64.deb
+nbs_pipeline/logs_orelm.txt

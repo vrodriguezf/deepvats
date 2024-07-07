@@ -20,10 +20,10 @@ user_preferences:
     mode: &wdb_mode 'online'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
-    folder: &path '~/data/'
-    fname: &fname 'synthetic_trends(II).csv' #'exoplanets' #"Insect_one_million"
+    folder: &path '~/data/synthetic_data/'
+    fname: &fname 'synthetic_trends(II)' #'exoplanets' #"Insect_one_million"
     ftype: &ftype '.csv'
-    cols: &cols [0]
+    cols: &cols [13]
     freq: &freq '1h'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
@@ -48,7 +48,7 @@ data:
     # CSV file config ({} if this setting is not required)
     #csv_config: {}
     #For files with no header
-    csv_config: {'header': null}
+    csv_config: {'header': 0}
     # Frequency offset used to set the date index (null to omit it) [Example pd.offsets.MonthEnd(0)]
     date_offset: null
     # Default date format (only for .tsf files)

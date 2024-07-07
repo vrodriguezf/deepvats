@@ -24,7 +24,7 @@ user_preferences:
     fname: &fname 'synthetic_trends(II)' #'exoplanets' #"Insect_one_million"
     ftype: &ftype '.csv'
     cols: &cols [14]
-    freq: &freq '1h'
+    freq: &freq '1m'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
     alias: &alias 'S3'

@@ -23,7 +23,7 @@ user_preferences:
     folder: &path '~/data/synthetic_data/'
     fname: &fname 'synthetic_trends(II)' #'exoplanets' #"Insect_one_million"
     ftype: &ftype '.csv'
-    cols: &cols [13]
+    cols: &cols [14]
     freq: &freq '1h'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically

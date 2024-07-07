@@ -37,8 +37,11 @@ configuration:
       #ws2: 75 #21600 #30 (15*60=900 = 1hora intervalos 4 secs)
       #ws1: 15 #TitlABP
       #ws2: 30 #TitlABP
-      ws1: 15 #Solar_4_seconds
-      ws2: &wlen 30 #Solar_4_seconds
+      #ws1: 15 #Solar_4_seconds
+      #ws2: &wlen 100 #Solar_4_seconds
+      #Pulsus Paradoxus
+      ws1: 15
+      ws2: 100
       #ws1: 7 #sunspot
       #ws2: &wlen 365 #sunspot
       #ws1: 10 #toy

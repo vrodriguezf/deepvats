@@ -49,7 +49,7 @@ configuration:
       #ws2: &wlen 190
 
       # PulsusParadoxus SP02
-      ws1: 15
+      ws1: 1
       ws2: &wlen 100
       # probability of masking in MVP
       r: 0.710
@@ -60,9 +60,7 @@ configuration:
         use_single_batch: false
     sliding_windows:
       # n datapoints the window is moved ahead along the sequence in the sliding window
-      #stride: 15 #15 #1 min en 1 min #1
-      stride: 900 #sunspot
-      #stride: 1 #toy
+      stride: 9
       # This will set the percentage of items that go to val 
       # window size for the sliding window (taxi=48, steamflow=640)
       #w

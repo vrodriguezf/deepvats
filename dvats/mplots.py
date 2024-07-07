@@ -1298,6 +1298,7 @@ class DistanceMatrix:
         print_depth         : int           = 1,
         debug               : bool          = False
     ) -> Tuple [ List [ List [ float ] ], Optional [ ut.Time ] ] :
+        if print_flag: print(f"DistanceMatrix | Distance: {d.__name__}")
         t = None
 
         complete                    = ( self.data_b is None )
@@ -2588,7 +2589,7 @@ class MatrixProfilePlot:
         threads             : int               = 4,
         gpus                : List[ int ]       = []
     ) -> Tuple [ List [ List [ float ] ], Optional [ float ] ]:
-        
+        if print_flag: print(f"MatrixProfilePlot | Distance: {d.__name__}")
         ###
         self.data = None if self.data is None else np.array(self.data)
         self.data_b = None if self.data_b is None else np.array(self.data_b)
@@ -2798,6 +2799,7 @@ class MatrixProfilePlot:
         
         self.DM_AB.compute(
             method              = dm_method,
+            d                   = d,
             print_flag          = print_flag,
             time_flag           = time_flag, 
             allow_experimental  = allow_experimental,

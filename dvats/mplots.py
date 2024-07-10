@@ -943,6 +943,8 @@ class DistanceProfile:
         nlens           : Optional [ int ]  = 1,
         print_depth     : int               = 1
     ) -> Tuple[ List [ float ], ut.Time ]:
+        if print_flag and print_depth > 0:
+            print(f"Distance Profile | distance: {d.__name__}")
         """ Compute the Distance Profile """    
         t = None
         if time_flag:
@@ -999,10 +1001,12 @@ class DistanceProfile:
                 self.distances = np.zeros(expected_size)
                 if print_flag and print_depth > 0: print(f"--> Computing distances TA ~ {n_a} TB ~ {len(self.data_b)}")
                 vector_b_t1 = self.data_b_i+m
-                if (self.data_b_i == 0) : vector_b_t1 = vector_b_t1+1
+                #if (self.data_b_i == 0) : vector_b_t1 = vector_b_t1+1
                 vector_b = self.data_b[self.data_b_i:vector_b_t1]
-                print(vector_b_t1)
-                print(self.data_b_i)
+                
+                #print(vector_b_t1)
+                #print(self.data_b_i)
+                
                 for i in range(expected_size):
                     vector_a = self.data[i:i+m]
                     if print_flag and print_depth > 0: 

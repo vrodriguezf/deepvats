@@ -27,7 +27,10 @@ configuration:
         enc_prefix: !join [ *wdb_user, '/', *wdb_project, '/', *alg]
       # If none, the validation set used to train enc is used
       valid: null
+      dr: none
     umap:
       n_neighbors: 15
       min_dist: 0.1
       random_state: 1234
+      metric: none
+      cpu_flag: false

@@ -12,6 +12,10 @@
 FROM misantamaria/dvats-rstudio:rocker-ml4.2
 SHELL [ "/bin/bash", "--login", "-c" ]
 
+
+
+COPY ./docker/DESCRIPTION /tmp/
+
 ## Add Rstudio Server user
 ARG USER=user
 ARG UID=1000
@@ -41,6 +45,10 @@ RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
 
 WORKDIR $HOME
 
+RUN R -e "devtools::install_deps('/tmp', dependencies = TRUE)"
+
 # Initialize R-Stusio Server
 ENTRYPOINT [ "/usr/local/bin/entrypoint-rstudio.sh" ]
+
+
 

@@ -1,3 +1,7 @@
+Package: vdvats
+Version: 0.1.0
+Title: DeepVATS
+Description: Deep Learning Visual Analytics Tools
 Depends:
     R (>= 3.6.0),
     shiny,

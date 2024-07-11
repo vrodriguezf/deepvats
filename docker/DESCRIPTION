@@ -12,10 +12,12 @@ Depends:
     fasttime,
     zoo,
     reticulate,
-    xts
-    plotly
-    shinyFiles
-    yaml
+    xts,
+    plotly,
+    shinyFiles,
+    yaml,
+    xts,
+    semantic.dashboard
 Remotes: 
     r-lib/later,
     apache/arrow/r

@@ -7,12 +7,18 @@ pip install -e /home/$USER/work
 
 echo $WANDB_ENTITY $USER $WANDB_PROJECT
 
+### Ensuring to activate the correct conda
+source /usr/local/share/miniconda3/etc/profile.d/conda.sh
+conda activate /usr/local/share/miniconda3/envs/env
+#Check
+conda list | grep wandb
+###
+
 #!/bin/bash
 
 ############################
 # Extra pre-commit options #
 ############################
-/usr/local/bin/delete_entity_project.sh ${HOME}
 
 ########## Fix base.yaml for ensuring correct user & project directly ########## [TODO: Remove this section for directly using .env option]
 line_found=$(grep "^[[:space:]]*user: &wdb_user" /home/$USER/work/nbs_pipeline/config/base.yaml)
@@ -56,3 +62,5 @@ if ! grep -Fxq "./path/to/check_yml_changes.sh" $HOME/work/.git/hooks/pre-commit
     fi
 
 exec "$@"
+
+

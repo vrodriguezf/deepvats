@@ -531,7 +531,8 @@ def find_dominant_window_sizes_list(
         print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2a ...", nsizes)
         sizes = [sorted_window_sizes[0] // 2][:nsizes]
     else:
-        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ...", nsizes)
+        if print_flag and print_depth > 0:
+            print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ...", nsizes)
         sizes = valid_window_sizes[:nsizes]
         
     if print_flag and print_depth > 0: 

@@ -13,17 +13,17 @@ user_preferences:
   # Whether to use or not wandb for experiment tracking
   use_wandb: &use_wandb true
   wdb:
-    user: &wdb_user ${WANDB_ENTITY} #Sustituir por usuario
-    project_name: &wdb_project ${WANDB_PROJECT} #Sustituir por proyecto
+    user: &wdb_user mi-santamaria
+    project_name: &wdb_project deepvats
     version: &wdb_version 'latest' 
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode: &wdb_mode 'online'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder: &path '~/data/'
-    fname: &fname "Semantic_Segmentation_TiltABP"
+    fname: &fname "Insect_one_million"
     ftype: &ftype '.csv'
-    cols: &cols [5]
+    cols: &cols [1]
     freq: &freq '10h'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically

@@ -1183,14 +1183,14 @@ shinyServer(function(input, output, session) {
         mod_file_base(filepath)
         mod_file_02encodermvp(filepath)
         updateProgressBar(session, "progress_bar", value = 33, total = 100, status = "info")
-        ejecucion_notebooks()
+        execution_notebooks()
         
       }
       removeModal()
     })
     
     
-    ejecucion_notebooks <- function() {
+    execution_notebooks <- function() {
       print("-------------Inicio------------------------")
       ruta_a_primer_nb <- "~/work/nbs_pipeline/01_dataset_artifact.ipynb"
       print("Se ha inicializado Primer notebook")

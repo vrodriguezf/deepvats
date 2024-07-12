@@ -61,6 +61,7 @@ pd = reticulate::import("pandas")
 hdbscan = reticulate::import("hdbscan")
 dvats = reticulate::import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
 
+ploomber = reticulate::import("ploomber_engine")
 
 print("--> py_config ")
 print(reticulate::py_config())

@@ -26,7 +26,7 @@ def mstamp(seq, sub_len, return_dimension=False):
 
     Returns
     -------
-    matrix_profile : numpy matrix, shape (n_dim, sub_num)
+    matrix_profile : numpy matrix, shape (n_dim, tea)
         matrix profile
     profile_index : numpy matrix, shape (n_dim, sub_num)
         matrix profile index

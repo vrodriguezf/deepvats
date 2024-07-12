@@ -88,7 +88,7 @@ def mstamp(seq, sub_len, return_dimension=False):
               .format('#' * int(cur_prog * 50),
                       cur_prog * 100, time_left), end="")
         for j in range(n_dim):
-            que = seq[j, i:i + sub_len]
+            que = seq[j, i:i + sub_len] ### sería modificarlo para coger aquí en cada dimensión la ventana que ya viene dada por el MVP
             if i == 0:
                 (dist_profile[j, :], last_product[j, :],
                  que_sum[j], que_sq_sum[j], que_sig[j]) = \

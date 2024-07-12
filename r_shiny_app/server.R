@@ -1189,19 +1189,91 @@ shinyServer(function(input, output, session) {
       removeModal()
     })
     
+    get_parameters <- function(nb_id) {
+      switch(nb_id,
+        "1" = {
+          filename <- "01_dataset_artifact"
+          parameters <- list(
+            print_flag = FALSE,
+            show_plots = FALSE,
+            reset_kernel = FALSE,
+            pre_configured_case = FALSE,
+            case_id = NULL,
+            frequency_factor = 1,
+            frequency_factor_change_alias = TRUE,
+            cuda_device = torch::cuda_current_device()
+          )
+        },
+        "2" = {
+          filename <- "02c_encoder_MVP-sliding_window_view"
+          parameters <- list(
+            print_flag = FALSE,
+            check_memory_usage = FALSE,
+            time_flag = FALSE,
+            window_size_percentage = NULL,
+            show_plots = FALSE,
+            reset_kernel = FALSE,
+            pre_configured_case = FALSE,
+            case_id = NULL,
+            frequency_factor = 1,
+            frequency_factor_change_alias = TRUE,
+            cuda_device = torch::cuda_current_device()
+          )
+        },
+        {
+          print("Invalid configuration")
+          filename <- ""
+          parameters <- list()
+        }
+      )
+      return(list(filename, parameters))
+    }
+
+    get_input_output <- function(nb_id) {
+      params <- get_parameters(nb_id)
+      filename <- params[[1]]
+      parameters <- params[[2]]
+      print(filename)
+      print(parameters)  
+      
+      inbpath <- path.expand("~/work/nbs_pipeline")
+      onbpath <- path.expand("~/work/nbs_pipeline/output")
+      extension <- ".ipynb"
+      reportname <- paste0(filename, "-output")
+      inputnb <- file.path(inbpath, paste0(filename, extension))
+      outputnb <- file.path(onbpath, paste0(reportname, extension))
+      print(paste("Executing", inputnb, "into", outputnb))
+      return(list(inputnb, outputnb, parameters))
+    }
     
     execution_notebooks <- function() {
-      print("-------------Inicio------------------------")
-      ruta_a_primer_nb <- "~/work/nbs_pipeline/01_dataset_artifact.ipynb"
-      print("Se ha inicializado Primer notebook")
-      system(paste("jupyter nbconvert --execute --to notebook --inplace", ruta_a_primer_nb))
+      print("------------- START ------------------------")
+      nb_path_1 <- "~/work/nbs_pipeline/01_dataset_artifact.ipynb"
+      print("--> 1st Jupyter Notebook: start")
+
+      result <- get_input_output(1)
+      input_nb <- result[[1]]
+      output_nb <- result[[2]]
+      parameters <- result[[3]]
+
+      _ <- ploomber::execute_notebook(
+        input_path = input_nb,
+        output_path = output_nb,
+        log_output = FALSE,
+        progress_bar = TRUE,
+        parameters = parameters,
+        remove_tagged_cells = c('skip', 'hide')
+      )
+
+
+      #system(paste("jupyter nbconvert --execute --to notebook --inplace", nb_path_1))
       
-      print("El primer notebook ha finalizado")
+      print("First notebook: end -->")
       updateProgressBar(session, "progress_bar", value = 66, total = 100, status = "info")
       
-      ruta_a_segundo_nb <- "~/work/nbs_pipeline/02c_encoder_MVP-sliding_window_view.ipynb"
+      nb_path_2 <- "~/work/nbs_pipeline/02c_encoder_MVP-sliding_window_view.ipynb"
       print("Se ha inicializado Segundo notebook")
-      system(paste("jupyter nbconvert --execute --to notebook --inplace", ruta_a_segundo_nb))
+      system(paste("jupyter nbconvert --execute --to notebook --inplace", nb_path_2))
       
       print("El segundo notebook ha finalizado.\n")
       updateProgressBar(session, "progress_bar", value = 100, total = 100, status = "info")

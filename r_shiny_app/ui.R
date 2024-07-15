@@ -64,7 +64,7 @@ shinyUI(fluidPage(
       sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2000, value = 1234),
       ################
       radioButtons("cpu_flag", "Use: ", c("GPU", "CPU"), selected = "GPU", inline = T),
-      radioButtons("dr_method", "Projection method:", c("UMAP", "TSNE", "PCA"), selected="UMAP", inline=T),
+      radioButtons("dr_method", "Projection method:", c("UMAP", "TSNE", "PCA", "PCA_UMAP"), selected="PCA_UMAP", inline=T),
       br(),
       radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
                    choices = c("No clusters" = "no_clusters",

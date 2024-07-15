@@ -18,20 +18,21 @@ log_add <- function(
   mssg, 
   time
 ) {
+  print(paste0("Log add | ", function_, " | ", mssg))
   if (is.null(time)) {print("Time is empty! Check it out")}
   timestamp = format(as.POSIXct(Sys.time(), origin = "1970-01-01"), "%Y-%m-%d %H:%M:%OS3")
   new_mssg = data.frame(
     timestamp           = timestamp,
     function_           = function_,
-    cpu_flag            = cpu_flag,
-    dr_method           = dr_method,
-    clustering_options  = clustering_options,
+    cpu_flag            = ifelse(is.null(cpu_flag), FALSE, cpu_flag),
+    dr_method           = ifelse(is.null(dr_method), "Undefined", dr_method), 
+    clustering_options  = ifelse(is.null(clustering_options), "Undefined", clustering_options),
     zoom                = ifelse(is.null(zoom), FALSE, zoom),
     time                = ifelse(is.null(time), 0, time),
     mssg                = ifelse(is.null(mssg), "", mssg),
-    stringsAsFactors    = FALSE  # Evitar factores
+    stringsAsFactors    = FALSE 
   )
-  print(paste0("Log add | ", function_))
+  print(paste0("Log add | ", function_, " | ", new_mssg))
   new_mssg = rbind(log_mssg, new_mssg)
   return(new_mssg) 
 }

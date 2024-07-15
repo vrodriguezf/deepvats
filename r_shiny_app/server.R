@@ -434,12 +434,13 @@ shinyServer(function(input, output, session) {
     temp_log <- data.frame(
         timestamp           = character(),
         function_           = character(),
-        cpu_flag            = character(),
+        cpu_flag            = logical(),
         dr_method           = character(),
         clustering_options  = character(),
         zoom                = logical(),
         time                = numeric(),
-        mssg                = character()
+        mssg                = character(),
+        stringsAsFactors    = FALSE
     )
 
 
@@ -827,7 +828,14 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
             PCA = dvats$get_PCA_prjs(
                 X = embs, 
                 cpu = TRUE, 
-                random_state=as.integer(input$prj_random_state)
+                random_state=as.integer(input$prj_random_state),
+                n_components = 2
+            ),
+            PCA_UMAP = dvats$get_PCA_UMAP_prjs(
+                input_data  = embs, 
+                cpu         = TRUE, 
+                pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
+                umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
             )
         )
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
@@ -871,6 +879,12 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
                 X = embs, 
                 cpu=FALSE, 
                 random_state=as.integer(input$prj_random_state)
+            ),
+            PCA_UMAP = dvats$get_PCA_UMAP_prjs(
+                input_data  = embs, 
+                cpu         = cpu_flag, 
+                pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
+                umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
             )
         )
       res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency

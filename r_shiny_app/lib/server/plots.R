@@ -59,3 +59,53 @@ set_ts_plot_name <- function(input, clustering_options, prjs_cluster) ({
     encoder_name <- basename(input$encoder)
     get_ts_plot_name(dataset_name, encoder_name)
 })
+
+js_plot_with_id <- "
+function(g) {
+    var labels = g.getLabels();
+    var ticks = g.xAxisTicks();
+    var newLabels = ticks.map(function(tick, index) {
+        var date = new Date(tick.v);
+        var hours = date.getHours().toString().padStart(2, '0');
+        var minutes = date.getMinutes().toString().padStart(2, '0');
+        var seconds = date.getSeconds().toString().padStart(2, '0');
+        return (index + 1) + '-' + hours + ':' + minutes + ':' + seconds;
+    });
+    g.updateOptions({
+        axes: {
+            x: {
+                axisLabelFormatter: function(x) {
+                    var date = new Date(x);
+                    var hours = date.getHours().toString().padStart(2, '0');
+                    var minutes = date.getMinutes().toString().padStart(2, '0');
+                    var seconds = date.getSeconds().toString().padStart(2, '0');
+                    return hours + ':' + minutes + ':' + seconds;
+                },
+                valueFormatter: function(x) {
+                    var date = new Date(x);
+                    var hours = date.getHours().toString().padStart(2, '0');
+                    var minutes = date.getMinutes().toString().padStart(2, '0');
+                    var seconds = date.getSeconds().toString().padStart(2, '0');
+                    return hours + ':' + minutes + ':' + seconds;
+                }
+            }
+        },
+        labelsKMB: true
+    });
+    g.setAnnotations(newLabels.map(function(label, index) {
+        return {
+            series: 'series',
+            x: ticks[index].v,
+            shortText: label.split('-')[0],
+            text: label
+        };
+    }));
+}
+"
+
+
+format_time_with_index <- function(x, granularity) {
+    time_str <- strftime(x, format="%H:%M:%S")
+    index <- seq_along(x)
+    paste0(index, "-", time_str)
+}

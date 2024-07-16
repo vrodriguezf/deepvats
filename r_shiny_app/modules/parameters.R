@@ -18,6 +18,7 @@ select_datasetServer <- function(
 ){
     observeEvent(input$dataset, {
         mplot_compute_allow(FALSE)
+        shinyjs::disable("get_tsdf")
         #req(encs_l)
         log_print("--> observeEvent input_dataset | update encoder list")
         log_print(input$dataset)
@@ -33,6 +34,7 @@ select_datasetServer <- function(
         )
         ### TODO: Ver cómo poner bien esta ñapa para que no se actualizen los gráficos antes que el stride
         updateSliderInput(session, "stride", value = 0)
+        shinyjs::enable("get_tsdf")
         ################
         on.exit(
             {log_print("observeEvent input_dataset | update encoder list -->"); flush.console()}

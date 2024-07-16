@@ -245,10 +245,11 @@ shinyServer(function(input, output, session) {
     
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
+        req(allow_tsdf() == TRUE)
         log_print("--> observeEvent tsdf | update select variables", debug_level = debug_level, debug_group = 'main')
         on.exit({log_print("--> observeEvent tsdf | update select variables -->", debug_level = debug_level, debug_group = 'main'); flush.console()})
         
-        ts_variables$selected = names(isolate(tsdf()))[names(isolate(tsdf())) != "timeindex"]
+        ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
         
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         
@@ -350,7 +351,7 @@ shinyServer(function(input, output, session) {
     observeEvent(input$selectall,{
         send_log("Select all variables_start", session)
         req(tsdf)
-        ts_variables$selected <- names(isolate(tsdf()))
+        ts_variables$selected <- names(tsdf())
         if(input$selectall %%2 == 0){
             updateCheckboxGroupInput(session = session, 
                                      inputId = "select_variables",
@@ -1563,6 +1564,8 @@ log_print("Selected ts time points" , TRUE, log_path(), log_header())
             log_print("**** ts_plot dygraph ****")
             tspd_0 = Sys.time()
             ts_plot <- req(ts_plot())
+            #ts_plot %>% dyAxis("x", axisLabelFormatter = format_time_with_index) %>% JS(js_plot_with_id)
+            ts_plot %>% dyCallbacks(drawCallback = JS(js_plot_with_id))
             tspd_1 = Sys.time()
             log_print(
                 paste0(

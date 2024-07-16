@@ -28,6 +28,8 @@ library(xts)
 #library(profvis)
 #reactlog::reactlog_enable()
 library(semantic.dashboard)
+library(htmlwidgets)
+
 
 
 #options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")

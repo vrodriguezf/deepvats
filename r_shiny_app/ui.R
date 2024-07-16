@@ -3,7 +3,6 @@ source("./modules/information.R")
 source("./modules/mplots.R")
 source("./modules/embeddings.R")
 source("./modules/parameters.R")
-source("./modules/_module_test.R")
 #
 # This is the user-interface definition of a Shiny web application. You can
 # run the application by clicking 'Run App' above.

@@ -448,14 +448,13 @@ def downsample(
     verbose      : int  = 1,
     show_plots   : bool = False,
 ) -> Tuple [ List [ float ], float ]:    
-    if verbose > 1: print(f"Before | Pos ({min_position}, {max_position})")
+    if verbose > 1: print(f"[ Downsample ] Before | Pos ({min_position}, {max_position})")
     min_position = min_position if min_position > 0 else 0
     max_position = max_position if ( max_position > -1 and max_position < len(data) ) else len(data)
-    if verbose > 1: print(f"After Pos ({min_position}, {max_position})")
+    if verbose > 1: print(f"[ Downsample ] After Pos ({min_position}, {max_position})")
     n_timestamps = max_position - min_position
     paa_factor = np.maximum(1, n_timestamps // max_points)
     if verbose > 0:
-        print(f"------------------------> Downsample")
         print(f"Downsample | N timestamps {n_timestamps}")
         print(f"Downsample | PAA factor: {paa_factor}")
     potential_segments = np.floor(n_timestamps / paa_factor).astype(int)
@@ -468,7 +467,7 @@ def downsample(
             potential_segments+=1
 
     n_segments = potential_segments
-    if verbose > 0: print("Downsample | N segments:", n_segments)
+    if verbose > 0: print(f"Downsample | N segments: {n_segments}")
 
     #| export
     paa_pipeline = Pipeline([

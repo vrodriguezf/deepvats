@@ -2478,8 +2478,8 @@ class MatrixProfilePlot:
             print("MPlot | Compute | --> Ensure parameters ")
         
         self.MP_AB = MatrixProfile(
-            data            = self.data, 
-            data_b          = self.data_b,
+            data            = self.data_paa, 
+            data_b          = self.data_b_paa,
             subsequence_len = self.subsequence_len,
             self_join       = self.self_join,
         )
@@ -2487,8 +2487,6 @@ class MatrixProfilePlot:
         ## Ensure parameters
         if verbose > 0:
             print("MPlot | Compute | --> provide_len ")
-            print("MPlot | Compute | --> provide_len | data ~ ", self.data.shape )
-            print("MPlot | Compute | --> provide_len | data.MP_AB ~ ", self.MP_AB.data.shape )
 
         if provide_len or self.data_b is None:
             if verbose > 1: 
@@ -2838,7 +2836,7 @@ class MatrixProfilePlot:
             dm_filter(self.DM_AB.distances[r_start:r_end, c_start:c_end], th_min, th_max, include_min, include_max, gray_color),
             aspect = 'equal', 
             origin = 'lower', 
-            cmap   = 'hot' if gray_color else 'gray',
+            cmap   = 'hot' if not gray_color else 'gray',
             interpolation = 'none',
             extent = ( 
                 0, 
@@ -2852,7 +2850,7 @@ class MatrixProfilePlot:
             heatmap, 
             ax = self.dm_plot, 
             orientation='vertical', 
-            label='Distance' if gray_color else 'Boolean values (0 = False, 1 = True)'
+            label='Distance' if not gray_color else 'Boolean values (0 = False, 1 = True)'
         )
         return heatmap
 

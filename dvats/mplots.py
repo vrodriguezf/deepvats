@@ -6,8 +6,8 @@ __all__ = ['octave', 'eamonn_drive_mplots', 'configure_octave', 'euclidean_dista
            'find_dominant_window_sizes_list', 'plot_subsequences_aux', 'plot_subsequences', 'plot_dataFrame',
            'plot_dataFrame_compareSubsequences', 'df_plot_colored_variables', 'plot_df_with_intervals_and_colors',
            'make_symmetric_', 'check_symmetric', 'moving_mean', 'sum_of_squared_differences', 'get_precomputes',
-           'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'PAATransformer', 'DistanceMatrix',
-           'plot_motif', 'plot_motif_separated', 'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles',
+           'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'DistanceMatrix', 'plot_motif',
+           'plot_motif_separated', 'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles',
            'ensure_valid_limits', 'zoom_index', 'restore_index', 'threshold_interval', 'MatrixProfilePlot',
            'MatrixProfilePlotCached']
 
@@ -1011,54 +1011,7 @@ class DistanceProfile:
         plt.tight_layout()
         plt.show()
 
-# %% ../nbs/mplots.ipynb 65
-class PAATransformer(BaseEstimator, TransformerMixin):
-    def __init__(
-        self, 
-        n_segments, 
-        plot_aggregated : bool = False, 
-        print_flag      : bool = False
-    ):
-        self.n_segments = n_segments
-        self.plot_aggregated = plot_aggregated
-        self.print_flag = print_flag
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        n_samples, n_features = X.shape
-        if n_features < self.n_segments:
-            raise ValueError("El número de segmentos no puede ser mayor que el número total de puntos.")
-
-        segment_size = n_features // ( self.n_segments + 1)
-        remainder = n_features % ( self.n_segments + 1)
-
-        # Crear un array para los resultados
-        result = np.zeros((n_samples, self.n_segments + 1))
-
-        # Procesar cada segmento
-        for i in range(self.n_segments+1):
-            start = i * segment_size + min(i, remainder)
-            end = start + segment_size + (1 if i < remainder else 0)
-            result[:, i] = np.mean(X[:, start:end], axis=1)
-
-        if self.plot_aggregated:
-            for dim in range (X.ndim-1):
-                if self.print_flag:
-                    print("Plos res | Dim", dim)
-                plot_with_dots(
-                    result[dim], 
-                    sequence_flag = False, 
-                    title = f'Aggregated data | dim {dim}',
-                    fontsize = 20,
-                    save_plot = True
-                )
-
-        return result
-
-
-# %% ../nbs/mplots.ipynb 70
+# %% ../nbs/mplots.ipynb 66
 @dataclass
 class DistanceMatrix: 
     """ Similarity matrix """
@@ -1432,7 +1385,7 @@ class DistanceMatrix:
         self.shape = self.distances.shape
         return self.distances    
 
-# %% ../nbs/mplots.ipynb 74
+# %% ../nbs/mplots.ipynb 70
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -1458,7 +1411,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 75
+# %% ../nbs/mplots.ipynb 71
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -1497,7 +1450,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 78
+# %% ../nbs/mplots.ipynb 74
 @dataclass
 class MatrixProfile:
     """ Class for better usability of Matrix Profile inside deepVATS"""
@@ -1608,12 +1561,14 @@ class MatrixProfile:
     def plot_interactive(
         self        : 'MatrixProfile', 
         figsize     : Tuple [ int, int ]  = (10, 4), 
-        print_flag  : bool                = False
+        verbose     : int                 = 0
     ):
-        
-        self.current_index_pos_plot
+
+        if verbose > 1: 
+            print(f"Current index: {self.current_index_pos_plot}")
+            print("--> Ordering distances")
+            
         self.distances_ordered = np.argsort(self.distances)
-    
 
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(
             4, 1, 
@@ -1622,17 +1577,21 @@ class MatrixProfile:
         y_start = np.min(self.distances)
         y_stop  = np.max(self.distances)
         y_step  = (y_stop-y_start)/4
+        if verbose > 1: 
+            print(f"--> Setup Y index\ny_start: {y_start} | y_stop {y_stop} | y_step {y_step}")
         ax1.set_yticks(np.arange(y_start, y_stop, y_step))
         ax3.set_yticks(np.arange(y_start, y_stop, y_step))
         x_start = 0
-        x_stop  = len(self.data)
+        x_stop  = len(self.distances)
         x_step  = (x_stop-x_start)/4
+        if verbose > 1: 
+            print(f"--> Setup X index\nx_start: {x_start} | y_stop {x_stop} | x_step {x_step}")
         ax2.set_xticks(np.arange(x_start, x_stop, x_step))
         ax4.set_xticks(np.arange(x_start, x_stop, x_step))
         
         def update(pos : int = 0, add : int = 0):
-            nonlocal print_flag 
-            if print_flag: print("Before: Pos", pos, "Add", add)
+            nonlocal verbose
+            if verbose > 0: print("Before: Pos", pos, "Add", add)
             
             self.current_index_pos_plot = pos+add
             
@@ -1643,7 +1602,7 @@ class MatrixProfile:
             
             selected_index = self.distances_ordered[self.current_index_pos_plot]
             
-            if print_flag: 
+            if verbose > 0: 
                 print("Plot Interactive | After: Pos", self.current_index_pos_plot, "Selected index", selected_index)
                 print("Plot Interactive | Distances: ", self.distances)
             
@@ -1655,7 +1614,7 @@ class MatrixProfile:
                 half_window = int( self.max_points//2 )
                 x_min = max(selected_index - half_window, x_start)
                 x_max = min(selected_index + half_window, x_stop)
-                if print_flag: print(f"Plot Interactive | Window [{x_min}, {x_max}]")
+                if verbose > 0: print(f"Plot Interactive | Window [{x_min}, {x_max}]")
 
             ax1.clear()
             ax1.plot( self.distances, label='Matrix Profile' )
@@ -1746,10 +1705,10 @@ class MatrixProfile:
         mp_sorted = np.argsort( self.distances )
         return mp_sorted[pos]
         
-    def get_motif_idx(self : 'MatrixProfile', print_flag : bool = False): 
+    def get_motif_idx(self : 'MatrixProfile', verbose : int = 0): 
         motif_idx = self.get_ordered_idx(0)
         self.motif_idx = motif_idx
-        if print_flag: print("motif id", motif_idx, "index ~ ", len(self.index))
+        if verbose > 0: print("motif id", motif_idx, "index ~ ", len(self.index))
         self.motif_nearest_neighbor_idx = self.index[motif_idx]
         
         if ( self.method == 'stump' or self.method == 'gpu_stump'):
@@ -1759,18 +1718,18 @@ class MatrixProfile:
     
     def get_anomaly_idx(
             self : 'MatrixProfile', 
-            print_flag : bool = False 
+            verbose : int = 0
         ): 
         discord_idx = self.get_ordered_idx(-1)
         self.discord_idx = discord_idx
         self.discord_nearest_neighbor_idx = self.index[discord_idx]
-        if print_flag: 
+        if verbose > 0: 
             print("motif id", discord_idx, "index ~ ", len(self.index))
             print("Nearest ", self.index[discord_idx])
         if ( self.method == 'stump' or self.method == 'gpu_stump'):
             self.discord_nearest_neighbor_idx_left = self.index_left[discord_idx]
             self.discord_nearest_neighbor_idx_right = self.index_right[discord_idx]
-            if print_flag: 
+            if verbose > 0: 
                 print("Nearest left ", self.index_left[discord_idx])
                 print("Nearest right ", self.index_right[discord_idx])
             
@@ -1840,7 +1799,7 @@ class MatrixProfile:
     def __str__(self):
         return f"MP: {self.distances}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
-# %% ../nbs/mplots.ipynb 80
+# %% ../nbs/mplots.ipynb 76
 def matrix_profile(
     data            : List [ float ], 
     subsequence_len : Optional [ int ]              = None, 
@@ -1907,22 +1866,22 @@ def matrix_profile(
     max_points_b = max_points if max_points_b is None else max_points_b
 
     if downsample_flag_a:
-        self.data, paa_factor = ut.downsample(
+        data, paa_factor = ut.downsample(
             data       = data, 
             max_points = max_points_a, 
             verbose    = verbose-1
         )
         if verbose > 1: 
-            print(f"Data downsampled | data~{len(self.data)} | factor {paa_factor}")
+            print(f"Data downsampled | data~{len(data)} | factor {paa_factor}")
     
     if downsample_flag_b:
-        self.data_b, paa_factor = ut.downsample(
+        data_b, paa_factor = ut.downsample(
             data       = data_b, 
             max_points = max_points_b, 
             verbose    = verbose-1
         )
         if verbose > 1: 
-            print(f"Data downsampled | data~{len(self.data)} | factor {paa_factor}")
+            print(f"Data downsampled | data~{len(data_b)} | factor {paa_factor}")
     
     #-- Select the method
     match method:
@@ -2013,7 +1972,7 @@ def matrix_profile(
                     threads = threads,
                     gpus = gpus
                 )
-                if print_flag and print_depth > 0: print("data_b provided => Executing abjoin -->")
+                if verbose > 0: print("data_b provided => Executing abjoin -->")
                 
         case "scamp_naive":
             if verbose > 0: 
@@ -2081,14 +2040,14 @@ def matrix_profile(
     if time_flag: 
         timer.end()
         duration = timer.duration() 
-    if print_flag and print_depth > 0: 
+    if verbose > 0: 
         if time_flag: 
             print(f"matrix profile {duration} seconds -->")
         else: 
             print("matrix profile -->")
     return mp, index, index_left, index_right, duration
 
-# %% ../nbs/mplots.ipynb 81
+# %% ../nbs/mplots.ipynb 77
 def compute(
     self            : MatrixProfile,
     method          : str                           = 'naive', 
@@ -2146,7 +2105,7 @@ def compute(
     return self.distances
 MatrixProfile.compute = compute
 
-# %% ../nbs/mplots.ipynb 93
+# %% ../nbs/mplots.ipynb 89
 @dataclass
 class MatrixProfiles:
     matrix_profiles : List[ MatrixProfile ] = field( default_factory=list )
@@ -2286,7 +2245,7 @@ class MatrixProfiles:
         plt.show()
 
 
-# %% ../nbs/mplots.ipynb 111
+# %% ../nbs/mplots.ipynb 107
 def ensure_valid_limits(
     total_len       : int,
     subsequence_len : int, # divisor
@@ -2330,7 +2289,7 @@ def restore_index(
 
 
 
-# %% ../nbs/mplots.ipynb 113
+# %% ../nbs/mplots.ipynb 109
 def threshold_interval(
     data            : List [ List [ float ] ],
     threshold_min   : float,
@@ -2357,7 +2316,7 @@ def threshold_interval(
             result = result <= threshold_max
     return result
 
-# %% ../nbs/mplots.ipynb 115
+# %% ../nbs/mplots.ipynb 111
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -3143,7 +3102,7 @@ class MatrixProfilePlot:
         return plt
         """
 
-# %% ../nbs/mplots.ipynb 120
+# %% ../nbs/mplots.ipynb 116
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -3451,7 +3410,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-# %% ../nbs/mplots.ipynb 124
+# %% ../nbs/mplots.ipynb 120
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

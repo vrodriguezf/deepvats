@@ -339,11 +339,11 @@ from sklearn.pipeline import Pipeline
 # %% ../nbs/utils.ipynb 69
 @dataclass
 class Interpolator(BaseEstimator, TransformerMixin):
-    method            : str  ='linear', 
-    n_segments        : int  = 1, 
-    plot_original_data: bool = False,
-    plot_interpolated : bool = False,
-    verbose           : int  = 0,
+    method            : str  ='linear'
+    n_segments        : int  = 1
+    plot_original_data: bool = False
+    plot_interpolated : bool = False
+    verbose           : int  = 0
     
     def fit(self, X, y=None):
         return self

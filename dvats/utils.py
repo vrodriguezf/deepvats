@@ -4,7 +4,7 @@
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
            'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'funcname', 'update_patch',
-           'styled_print']
+           'styled_print', 'downsample']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -252,3 +252,74 @@ from IPython.display import display, HTML
 def styled_print(text, color='black', size='16px', weight='normal'):
     html_text = f"<span style='color: {color}; font-size: {size}; font-weight: {weight};'>{text}</span>"
     display(HTML(html_text))
+
+# %% ../nbs/utils.ipynb 61
+## -- Classes & types
+from dataclasses import dataclass, field
+from typing import List, Optional, Tuple, Callable
+
+# %% ../nbs/utils.ipynb 62
+from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.pipeline import Pipeline
+
+# %% ../nbs/utils.ipynb 63
+def downsample(
+    data  : List [ float ] = None,
+    min_position : int  = 0,
+    max_position : int  = -1, 
+    max_points   : int  = 10000,
+    verbose      : int  = 1,
+    show_plots   : bool = False,
+) -> Tuple [ List [ float ], float ]:    
+    if verbose > 1: print(f"Before | Pos ({min_position}, {max_position})")
+    min_position = min_position if min_position > 0 else 0
+    max_position = max_position if ( max_position > -1 and max_position < len(data) ) else len(data)
+    if verbose > 1: print(f"After Pos ({min_position}, {max_position})")
+    n_timestamps = max_position - min_position
+    paa_factor = np.maximum(1, n_timestamps // max_points)
+    if verbose > 0:
+        print(f"------------------------> Downsample")
+        print(f"Downsample | N timestamps {n_timestamps}")
+        print(f"Downsample | PAA factor: {paa_factor}")
+    potential_segments = np.floor(n_timestamps / paa_factor).astype(int)
+    if verbose > 1: 
+        print(f"Potential segments: {potential_segments}")
+    while (
+                n_timestamps % potential_segments != 0 
+            and potential_segments < n_timestamps
+        ):
+            potential_segments+=1
+
+    n_segments = potential_segments
+    if verbose > 0:
+        print("Downsample | N segments:", n_segments)
+        print("Downsample | Final w:", n_timestamps // ( n_segments))
+        print("Downsample | Reminder:", n_timestamps % n_segments)
+
+    #| export
+    paa_pipeline = Pipeline([
+        (
+            # Step for interpolating NaNs in the original data
+            'interpolator', 
+            Interpolator(
+                method             = 'polynomial', 
+                n_segments         = n_segments, 
+                plot_original_data = show_plots,
+                plot_interpolated  = show_plots
+            )
+        ),
+        (
+            # Step for applying Peicewise Aggregated Approximation
+            'paa', PAATransformer(
+                n_segments      = n_segments, 
+                plot_aggregated = show_plots
+            )
+        )
+    ])
+
+    ts_paa = paa_pipeline.fit_transform(data[min_position:max_position])[0]
+    if verbose > 0: 
+        print(f"Downsample | ts_paa~{len(ts_paa)}")
+        print(f"Downsample ------------------------>")
+    return ts_paa, paa_factor
+

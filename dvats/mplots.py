@@ -8,8 +8,8 @@ __all__ = ['octave', 'eamonn_drive_mplots', 'configure_octave', 'euclidean_dista
            'plot_df_with_intervals_and_colors', 'make_symmetric_', 'check_symmetric', 'moving_mean',
            'sum_of_squared_differences', 'get_precomputes', 'convert_non_finite_to_zero', 'distance_matrix',
            'DistanceProfile', 'Interpolator', 'PAATransformer', 'DistanceMatrix', 'plot_motif', 'plot_motif_separated',
-           'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles', 'ensure_valid_limits', 'downsample',
-           'zoom_index', 'restore_index', 'threshold_interval', 'MatrixProfilePlot', 'MatrixProfilePlotCached']
+           'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles', 'ensure_valid_limits', 'zoom_index',
+           'restore_index', 'threshold_interval', 'MatrixProfilePlot', 'MatrixProfilePlotCached']
 
 # %% ../nbs/mplots.ipynb 4
 ## -- Deepvats
@@ -1989,12 +1989,13 @@ def matrix_profile(
     d               : Callable                      = z_normalized_euclidean_distance,
     threads         : int                           = 4, # For scamp abjoin
     gpus            : int                           = [], # For scamp abjoin
-    print_flag      : bool                          = False, 
+    verbose         : bool                          = 0, 
     debug           : bool                          = True, 
     time_flag       : bool                          = True,
     plot_flag       : bool                          = False,    
-    print_depth     : int                           = 1,
-    allow_experimental : bool                      = False
+    allow_experimental : bool                       = False,
+    downsample_flag : bool                          = False,
+    max_points      : int                           = 10000
 ) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
     """ 
     This function 
@@ -2018,7 +2019,7 @@ def matrix_profile(
     - Optional: execution time
     """
     
-    if print_flag: print("--> matrix profile")
+    if verbose > 0: print("--> matrix profile")
     #Execution time
     duration = 0.0
     # Matrix Profile (distances)
@@ -2039,7 +2040,7 @@ def matrix_profile(
         case 'stump':
             #-- use stumpy.gpu_stump
             normalize = (d.__name__ == 'z_normalized_euclidean_distance')
-            if print_flag and print_depth > 0: 
+            if verbose > 0: 
                 print("--> Stump (CPU)")
                 print("MP | Compute | Using stumpy.stump | normalize?", normalize)
             if not (min_lag is None):
@@ -2067,7 +2068,7 @@ def matrix_profile(
             mp = mp[:,0]
         
         case 'stump_gpu': # You are suposed to use this or scamp
-            if print_flag: print("--> Stump (GPU)")
+            if verbose > 0: print("--> Stump (GPU)")
             #-- Matrix profile
             normalize = (d.__name__ == 'z_normalized_euclidean_distance')
             T_A = data.astype(np.float64)
@@ -2100,21 +2101,21 @@ def matrix_profile(
             mp = mp[:,0]
             
         case 'scamp': # You should use GPU in Large TS
-            if print_flag and print_depth > 0:
+            if verbose > 0:
                 print("[ Matrix Profile | Compute | matrix_profile ] --> scamp")
             if  not ( min_lag is None):
                 warnings.warn("SCAMP does not have exclusion zone parameter. | Seems to be m/4 by default | See https://github.com/zpzim/SCAMP/blob/b55f1baf31b03ffb824c22336919cecfbf40ea92/src/core/tile.cpp#L12.")
                 
-            if print_flag and print_depth > 0: print("--> Scamp")
+            if verbose > 0: print("--> Scamp")
             if debug: 
-                if print_flag and print_depth > 0: print("Check gpu use")
+                if verbose > 0: print("Check gpu use")
                 has_gpu_support = scamp.gpu_supported()
-                if print_flag and print_depth > 0: print(has_gpu_support)
+                if verbose > 0: print(has_gpu_support)
             #-- Matrix profile & index. Nothing more to save
             if (data_b is None):
                 mp, index = scamp.selfjoin(data, subsequence_len)
             else: 
-                if print_flag and print_depth > 0: print("--> data_b provided => Executing abjoin")
+                if verbose > 0: print("--> data_b provided => Executing abjoin")
                 warnings.warn("Sometimes this execution returns a 0 array. Please take care of that.")
                 mp, index = scamp.abjoin(
                     a = data,
@@ -2126,7 +2127,7 @@ def matrix_profile(
                 if print_flag and print_depth > 0: print("data_b provided => Executing abjoin -->")
                 
         case "scamp_naive":
-            if print_flag and print_depth > 0: 
+            if verbose > 0: 
                 print("--> Scamp Naive")
             
             DM_AB = DistanceMatrix(
@@ -2155,7 +2156,7 @@ def matrix_profile(
             mp = np.min(dm_non_zeros, axis = 0)
             
         case _: #default naive
-            if print_flag and print_depth > 0: print("--> Invalid method. Using naive approach [default]")
+            if verbose > 0: print("--> Invalid method. Using naive approach [default]")
             n_a     = len(data)
             m       = subsequence_len
             if ( data_b is None or self_join ): 
@@ -2206,13 +2207,12 @@ def compute(
     d               : Callable                      = z_normalized_euclidean_distance,
     threads         : int                           = 4,  # For scamp abjoin
     gpus            : List[ int ]                   = [], # For scamp abjoin
-    print_flag      : bool                          = False, 
+    verbose         : int                           = 0,
     plot_flag       : bool                          = False,
     debug           : bool                          = True, 
     time_flag       : bool                          = True,
     provide_len     : bool                          = True,
     nlens           : Optional [ int ]              = 1,
-    print_depth     : int                           = 1,
     allow_experimental : bool                      = False
 ) -> List [ float ]:
     self.method = method
@@ -2235,12 +2235,11 @@ def compute(
         d                   = d, 
         threads             = threads, 
         gpus                = gpus, 
-        print_flag          = print_flag, 
+        verbose             = verbose,
         debug               = debug, 
         plot_flag           = plot_flag,
         time_flag           = time_flag, 
         min_lag             = min_lag,
-        print_depth         = print_depth,
         allow_experimental  = allow_experimental
     )
     return self.distances
@@ -2286,10 +2285,9 @@ class MatrixProfiles:
             d               = d,
             threads         = threads,
             gpus            = gpus,
-            print_flag      = print_flag, 
+            verbose         = print_depth-1, 
             debug           = debug,
-            time_flag       = time_flag,
-            print_depth     = print_depth-1
+            time_flag       = time_flag
         )
         
         mp.method = method
@@ -2417,85 +2415,6 @@ def ensure_valid_limits(
     
     return min_position_adjusted, max_position_adjusted
      
-
-def downsample(
-    data  : List [ float ] = None,
-    min_position : int  = 0,
-    max_position : int  = -1, 
-    max_points   : int  = 10000,
-    verbose      : int  = 1,
-    show_plots   : bool = False,
-) -> Tuple [ List [ float ], float ]:    
-    if verbose > 1: print(f"Before | Pos ({min_position}, {max_position})")
-    min_position = min_position if min_position > 0 else 0
-    max_position = max_position if ( max_position > -1 and max_position < len(data) ) else len(data)
-    if verbose > 1: print(f"After Pos ({min_position}, {max_position})")
-    n_timestamps = max_position - min_position
-    paa_factor = np.maximum(1, n_timestamps // max_points)
-    if verbose > 0:
-        print(f"------------------------> Downsample")
-        print(f"Downsample | N timestamps {n_timestamps}")
-        print(f"Downsample | PAA factor: {paa_factor}")
-    potential_segments = np.floor(n_timestamps / paa_factor).astype(int)
-    if verbose > 1: 
-        print(f"Potential segments: {potential_segments}")
-    while (
-                n_timestamps % potential_segments != 0 
-            and potential_segments < n_timestamps
-        ):
-            potential_segments+=1
-
-    n_segments = potential_segments
-    if verbose > 0:
-        print("Downsample | N segments:", n_segments)
-        print("Downsample | Final w:", n_timestamps // ( n_segments))
-        print("Downsample | Reminder:", n_timestamps % n_segments)
-
-    #| export
-    paa_pipeline = Pipeline([
-        (
-            # Step for interpolating NaNs in the original data
-            'interpolator', 
-            Interpolator(
-                method             = 'polynomial', 
-                n_segments         = n_segments, 
-                plot_original_data = show_plots,
-                plot_interpolated  = show_plots
-            )
-        ),
-        (
-            # Step for applying Peicewise Aggregated Approximation
-            'paa', PAATransformer(
-                n_segments      = n_segments, 
-                plot_aggregated = show_plots
-            )
-        )
-    ])
-
-    ts_paa = paa_pipeline.fit_transform(data[min_position:max_position])[0]
-    if verbose > 0: 
-        print(f"Downsample | ts_paa~{len(ts_paa)}")
-        print(f"Downsample ------------------------>")
-    return ts_paa, paa_factor
-
-
-"""
-def zoom_index(id, n_timestamps, minv, maxv):
-    a = (maxv-minv)/n_timestamps
-    b = - a * minv
-    return int(np.ceil(a * id + b))
-
-def restore_index(
-    id, 
-    minv, 
-    maxv,
-    n_timestamps
-):
-    a = (maxv - minv) / n_timestamps
-    b = -a * minv
-    return int((id - b)/a)
-"""
-
 def zoom_index(id, ts_len, ts_paa_len):
     a = ts_paa_len / ts_len
     return int(min(ts_paa_len, np.ceil(a * id)))
@@ -2658,7 +2577,7 @@ class MatrixProfilePlot:
                 if print_flag: 
                     print(f"[ MPlot | Compute ] | ---> Downsample TA to {self.r_min} : {self.r_max}")
                 
-                self.data_paa, self.data_paa_factor = downsample(
+                self.data_paa, self.data_paa_factor = ut.downsample(
                     data         = data,
                     min_position = self.c_min,
                     max_position = self.c_max,
@@ -2675,7 +2594,7 @@ class MatrixProfilePlot:
                 if print_flag:
                     print("[ MPlot | Compute ] |  --> Downsample TB ")
 
-                self.data_b_paa, self.data_b_paa_factor = downsample(
+                self.data_b_paa, self.data_b_paa_factor = ut.downsample(
                     data         = data_b,
                     min_position = self.r_min,
                     max_position = self.r_max,
@@ -2785,11 +2704,10 @@ class MatrixProfilePlot:
             method              = mp_method,
             d                   = d,
             time_flag           = time_flag,
-            print_flag          = print_flag,
+            verbose             = print_depth-1,
             provide_len         = provide_len,
             nlens               = nlens,
             min_lag             = min_lag,
-            print_depth         = print_depth-1,
             threads             = threads,
             gpus                = gpus,
             allow_experimental  = allow_experimental
@@ -3393,21 +3311,21 @@ class MatrixProfilePlotCached:
                     provide_len = provide_len,
                     nlens       = nlens,
                     ensure_symetric=ensure_symetric,
-                    print_depth=print_depth-1
+                    verbose     = print_depth-1
                 )
             
             else:
                 if print_flag: print("Compute with GPU")
                 DM_AB.compute(
-                    method      = 'scamp', 
-                    mwidth      = self.matrix_dim, 
-                    mheight     = self.matrix_dim,
-                    gpus        = gpus, 
-                    pearson     = pearson,
-                    provide_len = provide_len,
-                    nlens       = nlens,
-                    ensure_symetric=ensure_symetric,
-                    print_depth=print_depth-1
+                    method         = 'scamp', 
+                    mwidth         = self.matrix_dim, 
+                    mheight        = self.matrix_dim,
+                    gpus           = gpus, 
+                    pearson        = pearson,
+                    provide_len    = provide_len,
+                    nlens          = nlens,
+                    ensure_symetric= ensure_symetric,
+                    verbose        = print_depth-1
                 )
             
             matrix = DM_AB.distances

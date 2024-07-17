@@ -2,14 +2,14 @@
 
 # %% auto 0
 __all__ = ['octave', 'eamonn_drive_mplots', 'configure_octave', 'euclidean_distance', 'z_normalize',
-           'z_normalized_euclidean_distance', 'show_sequence', 'plot_with_dots', 'show_subsequence', 'plot_subsequence',
-           'GD_Mat', 'MatlabMatrix', 'find_dominant_window_sizes_list', 'plot_subsequences_aux', 'plot_subsequences',
-           'plot_dataFrame', 'plot_dataFrame_compareSubsequences', 'df_plot_colored_variables',
-           'plot_df_with_intervals_and_colors', 'make_symmetric_', 'check_symmetric', 'moving_mean',
-           'sum_of_squared_differences', 'get_precomputes', 'convert_non_finite_to_zero', 'distance_matrix',
-           'DistanceProfile', 'Interpolator', 'PAATransformer', 'DistanceMatrix', 'plot_motif', 'plot_motif_separated',
-           'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles', 'ensure_valid_limits', 'zoom_index',
-           'restore_index', 'threshold_interval', 'MatrixProfilePlot', 'MatrixProfilePlotCached']
+           'z_normalized_euclidean_distance', 'show_subsequence', 'plot_subsequence', 'GD_Mat', 'MatlabMatrix',
+           'find_dominant_window_sizes_list', 'plot_subsequences_aux', 'plot_subsequences', 'plot_dataFrame',
+           'plot_dataFrame_compareSubsequences', 'df_plot_colored_variables', 'plot_df_with_intervals_and_colors',
+           'make_symmetric_', 'check_symmetric', 'moving_mean', 'sum_of_squared_differences', 'get_precomputes',
+           'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'PAATransformer', 'DistanceMatrix',
+           'plot_motif', 'plot_motif_separated', 'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles',
+           'ensure_valid_limits', 'zoom_index', 'restore_index', 'threshold_interval', 'MatrixProfilePlot',
+           'MatrixProfilePlotCached']
 
 # %% ../nbs/mplots.ipynb 4
 ## -- Deepvats
@@ -181,81 +181,10 @@ def z_normalized_euclidean_distance(
     return res, t, ts
 
 # %% ../nbs/mplots.ipynb 20
-def show_sequence(
-    data         : List[ List [ float ] ] = None, 
-    hide_rows    : bool = False, 
-    hide_columns : bool = True
-):
-    """
-    Show the sequence in a nice format similar to stumpy tutorials
-    """
-    df          = pd.DataFrame(data)
-    styled_df   = df.style
-    if hide_rows: 
-        styled_df = styled_df.hide(axis='index')
-    if hide_columns: 
-        styled_df = styled_df.hide(axis='columns')
-    styled_df = styled_df.set_table_styles([
-        {'selector': '',
-         'props': [('border', '2px solid black'),
-                   ('text-align', 'center'),
-                   ('font-family', 'Arial'),
-                   ('border-collapse', 'collapse')]},
-        {'selector': 'td',
-         'props': [('border', '1px solid black'),
-                   ('padding', '5px')]}
-    ])
-    display(styled_df)
+from .utils import show_sequence
 
 # %% ../nbs/mplots.ipynb 22
-from typing import List, Tuple
-import matplotlib.pyplot as plt
-
-
-def plot_with_dots(
-    time_series             : List[float]    = None,
-    xlabel                  : str            = 'Index (time)',
-    ylabel                  : str            = 'Value',
-    title                   : str            = 'Time series',
-    sequence_flag           : bool           = True,
-    show_sequence_before    : bool           = True, 
-    hide_rows               : bool           = True,
-    hide_columns            : bool           = False,
-    show_title              : bool           = True,
-    fontsize                : int            = 10,
-    save_plot               : bool           = False,
-    dots                    : bool           = True,
-    figsize                 : Tuple[int, int]= (10, 6),
-    plot_path               : str            = "./",
-    plot_name               : str            = ""
-  ) -> None:
-    if sequence_flag and show_sequence_before: 
-        show_sequence([time_series], hide_rows, hide_columns)
-    n = len(time_series)
-    x_coords = range(n)
-    
-    plt.figure(figsize=figsize)  # Crear la figura con el tamaño especificado
-    
-    if dots: 
-        plt.plot(x_coords, time_series)
-        plt.scatter(x_coords, time_series, color='red')
-    else:
-        plt.plot(x_coords, time_series, linestyle='-')
-        
-    if show_title: 
-        plt.title(title, fontsize=fontsize)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    if save_plot:
-        plot_path = os.path.expanduser(plot_path)
-        if plot_name == "":
-            plot_name = title
-        plot_path = os.path.join(plot_path, plot_name + ".png")
-        plt.savefig(plot_path)
-    plt.show()
-    if sequence_flag and not show_sequence_before:
-        show_sequence([time_series], hide_rows, hide_columns)
-    return None
+from .utils import plot_with_dots
 
 
 # %% ../nbs/mplots.ipynb 25
@@ -1083,73 +1012,6 @@ class DistanceProfile:
         plt.show()
 
 # %% ../nbs/mplots.ipynb 65
-from sklearn.base import TransformerMixin, BaseEstimator
-from sklearn.pipeline import Pipeline
-
-# %% ../nbs/mplots.ipynb 66
-class Interpolator(BaseEstimator, TransformerMixin):
-    def __init__(
-        self              : 'Interpolator', 
-        method            : str  ='linear', 
-        n_segments        : int  = 1, 
-        plot_original_data: bool = False,
-        plot_interpolated : bool = False,
-        print_flag        : bool = False,
-        
-    ):
-        self.method             = method
-        self.n_segments         = n_segments
-        self.plot_interpolated  = plot_interpolated
-        self.plot_original_data = plot_original_data
-        self.print_flag         = print_flag
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-    
-                
-        if X.ndim == 1:
-            X = X.reshape(1, -1)
-
-        if self.plot_original_data:
-            if self.print_flag: print("Interpolator | Plot original data")
-            for dim in range (X.ndim-1):
-                if self.print_flag: print(f"Interpolator | Plot original data dimension {dim}")
-                plot_with_dots(
-                    X[dim], 
-                    sequence_flag = False, 
-                    title = f'Original data | dim {dim}'
-                )
-                
-        n_samples, n_features = X.shape
-        if n_features % self.n_segments != 0:
-            raise ValueError(
-                f"El número de segmentos {self.n_segments} debe dividir el número de características {n_features} | Reminder: {n_features // self.n_segments}"
-            )
-
-        segment_size = n_features // self.n_segments
-        interpolated_result = np.full_like(X, np.nan)
-
-        for i in np.arange(self.n_segments):
-            start = i * segment_size
-            end = start + segment_size
-            segment_mean = np.nanmean(X[:, start:end], axis=1)
-            for j in np.arange(n_samples):
-                nan_mask = np.isnan(X[j, start:end])
-                interpolated_result[j, start:end][nan_mask] = segment_mean[j]
-        res = np.where(np.isnan(X), interpolated_result, X)
-        if self.plot_interpolated:
-            for dim in range (X.ndim-1):
-                plot_with_dots(
-                    res[dim], 
-                    sequence_flag = False, 
-                    title = f'Interpolated data | dim {dim}'
-                )
-            
-        return res
-
-# %% ../nbs/mplots.ipynb 67
 class PAATransformer(BaseEstimator, TransformerMixin):
     def __init__(
         self, 
@@ -1196,7 +1058,7 @@ class PAATransformer(BaseEstimator, TransformerMixin):
         return result
 
 
-# %% ../nbs/mplots.ipynb 72
+# %% ../nbs/mplots.ipynb 70
 @dataclass
 class DistanceMatrix: 
     """ Similarity matrix """
@@ -1570,7 +1432,7 @@ class DistanceMatrix:
         self.shape = self.distances.shape
         return self.distances    
 
-# %% ../nbs/mplots.ipynb 76
+# %% ../nbs/mplots.ipynb 74
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -1596,7 +1458,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 77
+# %% ../nbs/mplots.ipynb 75
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -1635,7 +1497,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 80
+# %% ../nbs/mplots.ipynb 78
 @dataclass
 class MatrixProfile:
     """ Class for better usability of Matrix Profile inside deepVATS"""
@@ -1978,7 +1840,7 @@ class MatrixProfile:
     def __str__(self):
         return f"MP: {self.distances}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
-# %% ../nbs/mplots.ipynb 82
+# %% ../nbs/mplots.ipynb 80
 def matrix_profile(
     data            : List [ float ], 
     subsequence_len : Optional [ int ]              = None, 
@@ -2046,7 +1908,7 @@ def matrix_profile(
 
     if downsample_flag_a:
         self.data, paa_factor = ut.downsample(
-            data       = self.data, 
+            data       = data, 
             max_points = max_points_a, 
             verbose    = verbose-1
         )
@@ -2055,7 +1917,7 @@ def matrix_profile(
     
     if downsample_flag_b:
         self.data_b, paa_factor = ut.downsample(
-            data       = self.data_b, 
+            data       = data_b, 
             max_points = max_points_b, 
             verbose    = verbose-1
         )
@@ -2226,7 +2088,7 @@ def matrix_profile(
             print("matrix profile -->")
     return mp, index, index_left, index_right, duration
 
-# %% ../nbs/mplots.ipynb 83
+# %% ../nbs/mplots.ipynb 81
 def compute(
     self            : MatrixProfile,
     method          : str                           = 'naive', 
@@ -2240,7 +2102,13 @@ def compute(
     time_flag       : bool                          = True,
     provide_len     : bool                          = True,
     nlens           : Optional [ int ]              = 1,
-    allow_experimental : bool                      = False
+    allow_experimental : bool                       = False,
+    downsample_flag : bool                          = False,
+    max_points      : int                           = 10000,
+    downsample_flag_a: bool                         = None,
+    downsample_flag_b: bool                         = None,
+    max_points_a     : int                          = None,
+    max_points_b     : int                          = None
 ) -> List [ float ]:
     self.method = method
     # Ensure no list for R variable
@@ -2267,12 +2135,18 @@ def compute(
         plot_flag           = plot_flag,
         time_flag           = time_flag, 
         min_lag             = min_lag,
-        allow_experimental  = allow_experimental
+        allow_experimental  = allow_experimental,
+        downsample_flag     = downsample_flag,
+        downsample_flag_a   = downsample_flag_a,
+        downsample_flag_b   = downsample_flag_b,
+        max_points          = max_points,
+        max_points_a        = max_points_a,
+        max_points_b        = max_points_b
     )
     return self.distances
 MatrixProfile.compute = compute
 
-# %% ../nbs/mplots.ipynb 95
+# %% ../nbs/mplots.ipynb 93
 @dataclass
 class MatrixProfiles:
     matrix_profiles : List[ MatrixProfile ] = field( default_factory=list )
@@ -2412,7 +2286,7 @@ class MatrixProfiles:
         plt.show()
 
 
-# %% ../nbs/mplots.ipynb 113
+# %% ../nbs/mplots.ipynb 111
 def ensure_valid_limits(
     total_len       : int,
     subsequence_len : int, # divisor
@@ -2456,7 +2330,7 @@ def restore_index(
 
 
 
-# %% ../nbs/mplots.ipynb 115
+# %% ../nbs/mplots.ipynb 113
 def threshold_interval(
     data            : List [ List [ float ] ],
     threshold_min   : float,
@@ -2483,7 +2357,7 @@ def threshold_interval(
             result = result <= threshold_max
     return result
 
-# %% ../nbs/mplots.ipynb 117
+# %% ../nbs/mplots.ipynb 115
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -3269,7 +3143,7 @@ class MatrixProfilePlot:
         return plt
         """
 
-# %% ../nbs/mplots.ipynb 122
+# %% ../nbs/mplots.ipynb 120
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -3577,7 +3451,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-# %% ../nbs/mplots.ipynb 126
+# %% ../nbs/mplots.ipynb 124
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

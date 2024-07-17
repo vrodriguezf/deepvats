@@ -4,7 +4,7 @@
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
            'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'funcname', 'update_patch',
-           'styled_print', 'downsample']
+           'styled_print', 'show_sequence', 'plot_with_dots', 'Interpolator', 'PAATransformer', 'downsample']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -253,16 +253,193 @@ def styled_print(text, color='black', size='16px', weight='normal'):
     html_text = f"<span style='color: {color}; font-size: {size}; font-weight: {weight};'>{text}</span>"
     display(HTML(html_text))
 
-# %% ../nbs/utils.ipynb 61
+# %% ../nbs/utils.ipynb 62
+def show_sequence(
+    data         : List[ List [ float ] ] = None, 
+    hide_rows    : bool = False, 
+    hide_columns : bool = True
+):
+    """
+    Show the sequence in a nice format similar to stumpy tutorials
+    """
+    df          = pd.DataFrame(data)
+    styled_df   = df.style
+    if hide_rows: 
+        styled_df = styled_df.hide(axis='index')
+    if hide_columns: 
+        styled_df = styled_df.hide(axis='columns')
+    styled_df = styled_df.set_table_styles([
+        {'selector': '',
+         'props': [('border', '2px solid black'),
+                   ('text-align', 'center'),
+                   ('font-family', 'Arial'),
+                   ('border-collapse', 'collapse')]},
+        {'selector': 'td',
+         'props': [('border', '1px solid black'),
+                   ('padding', '5px')]}
+    ])
+    display(styled_df)
+
+# %% ../nbs/utils.ipynb 63
+def plot_with_dots(
+    time_series             : List[float]    = None,
+    xlabel                  : str            = 'Index (time)',
+    ylabel                  : str            = 'Value',
+    title                   : str            = 'Time series',
+    sequence_flag           : bool           = True,
+    show_sequence_before    : bool           = True, 
+    hide_rows               : bool           = True,
+    hide_columns            : bool           = False,
+    show_title              : bool           = True,
+    fontsize                : int            = 10,
+    save_plot               : bool           = False,
+    dots                    : bool           = True,
+    figsize                 : Tuple[int, int]= (10, 6),
+    plot_path               : str            = "./",
+    plot_name               : str            = ""
+  ) -> None:
+    if sequence_flag and show_sequence_before: 
+        show_sequence([time_series], hide_rows, hide_columns)
+    n = len(time_series)
+    x_coords = range(n)
+    
+    plt.figure(figsize=figsize)  # Crear la figura con el tamaño especificado
+    
+    if dots: 
+        plt.plot(x_coords, time_series)
+        plt.scatter(x_coords, time_series, color='red')
+    else:
+        plt.plot(x_coords, time_series, linestyle='-')
+        
+    if show_title: 
+        plt.title(title, fontsize=fontsize)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    if save_plot:
+        plot_path = os.path.expanduser(plot_path)
+        if plot_name == "":
+            plot_name = title
+        plot_path = os.path.join(plot_path, plot_name + ".png")
+        plt.savefig(plot_path)
+    plt.show()
+    if sequence_flag and not show_sequence_before:
+        show_sequence([time_series], hide_rows, hide_columns)
+    return None
+
+
+# %% ../nbs/utils.ipynb 67
 ## -- Classes & types
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple, Callable
 
-# %% ../nbs/utils.ipynb 62
+# %% ../nbs/utils.ipynb 68
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.pipeline import Pipeline
 
-# %% ../nbs/utils.ipynb 63
+# %% ../nbs/utils.ipynb 69
+@dataclass
+class Interpolator(BaseEstimator, TransformerMixin):
+    method            : str  ='linear', 
+    n_segments        : int  = 1, 
+    plot_original_data: bool = False,
+    plot_interpolated : bool = False,
+    verbose           : int  = 0,
+    
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+                
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
+        
+        if self.plot_original_data:
+            if self.print_flag: print("Interpolator | Plot original data")
+            for dim in range (X.ndim-1):
+                if self.print_flag: print(f"Interpolator | Plot original data dimension {dim}")
+                plot_with_dots(
+                    X[dim], 
+                    sequence_flag = False, 
+                    title = f'Original data | dim {dim}'
+                )
+                
+        n_samples, n_features = X.shape
+        if n_features % self.n_segments != 0 or n_features == self.n_segments:
+            raise ValueError(
+                f"The number of segments {self.n_segments} must divide (and be different of) the number of features {n_features} | Reminder: {n_features // self.n_segments}"
+            )
+
+        segment_size = n_features // self.n_segments
+        interpolated_result = np.full_like(X, np.nan)
+
+        if self.verbose > 0: print(f"NFeatures: {n_features} | NSegments: {self.n_segments} | segment_size: {segment_size} | interpolated result ~ {interpolated_result.shape}")
+        
+        for i in np.arange(self.n_segments):
+            start = i * segment_size 
+            end = start + segment_size
+            segment_mean = np.nanmean(X[:, start:end], axis=1)
+            for j in np.arange(n_samples):
+                nan_mask = np.isnan(X[j, start:end])
+                interpolated_result[j, start:end][nan_mask] = segment_mean[j]
+        res = np.where(np.isnan(X), interpolated_result, X)
+        if self.plot_interpolated:
+            for dim in range (X.ndim-1):
+                plot_with_dots(
+                    res[dim], 
+                    sequence_flag = False, 
+                    title = f'Interpolated data | dim {dim}'
+                )
+            
+        return res
+
+# %% ../nbs/utils.ipynb 71
+@dataclass
+class PAATransformer(BaseEstimator, TransformerMixin):
+    n_segments       : int  = 1
+    plot_aggregated  : bool = True
+    verbose          : int  = 0
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        n_samples, n_features = X.shape
+        if n_features <= self.n_segments:
+            raise ValueError(f"The number of segments ({self.n_segments}) must be lower than the number of points ({n_features})")
+
+        segment_size = n_features // ( self.n_segments + 1)
+        remainder = n_features % ( self.n_segments + 1)
+
+        if self.verbose > 0: 
+            print(f"NFeatures: {n_features} | NSegments: {self.n_segments} | Segment size: {segment_size} | Reminder: {remainder}")
+
+        # Crear un array para los resultados
+        result = np.zeros((n_samples, self.n_segments + 1))
+
+        if self.verbose > 1: print(f"Result ~ {result.shape}")
+
+        # Procesar cada segmento
+        for i in range(self.n_segments+1):
+            start = i * segment_size + min(i, remainder)
+            end = start + segment_size + (1 if i < remainder else 0)
+            result[:, i] = np.mean(X[:, start:end], axis=1)
+
+        if self.plot_aggregated:
+            for dim in range (X.ndim-1):
+                if self.verbose > 1:
+                    print("Plos res | Dim", dim)
+                plot_with_dots(
+                    result[dim], 
+                    sequence_flag = False, 
+                    title = f'Aggregated data | dim {dim}',
+                    fontsize = 20,
+                    save_plot = True
+                )
+
+        return result
+
+
+# %% ../nbs/utils.ipynb 73
 def downsample(
     data  : List [ float ] = None,
     min_position : int  = 0,
@@ -291,10 +468,7 @@ def downsample(
             potential_segments+=1
 
     n_segments = potential_segments
-    if verbose > 0:
-        print("Downsample | N segments:", n_segments)
-        print("Downsample | Final w:", n_timestamps // ( n_segments))
-        print("Downsample | Reminder:", n_timestamps % n_segments)
+    if verbose > 0: print("Downsample | N segments:", n_segments)
 
     #| export
     paa_pipeline = Pipeline([

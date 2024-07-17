@@ -2251,8 +2251,7 @@ def ensure_valid_limits(
     subsequence_len : int, # divisor
     min_position    : int, # range[0] -> to change to multiple of subsequence_len
     max_position    : int, # range[1] -> to change to multiple of subsequence_len
-    print_flag      : bool = False, # Debugging flag
-    print_depth     : int  = 1
+    verbose         : int = 0
 ) -> Tuple [ int, int ]:
     """
     Looks for the smallest [a,b] such that a and b are multiples of subsequence_len and {min_position, max_position} is subset of [a,b]
@@ -2269,7 +2268,7 @@ def ensure_valid_limits(
 
     min_position_adjusted = max(0, min_position_adjusted)
     max_position_adjusted = min(max_position_adjusted, total_len+min_position_adjusted)
-    if print_flag and print_depth > 0:
+    if verbose > 0:
         print(f"Ensure valid limits | Original [{min_position}, {max_position}]")
         print(f"Final [{min_position_adjusted}, {max_position_adjusted}]")
     
@@ -2356,7 +2355,7 @@ class MatrixProfilePlot:
         dm_method           : str               = 'naive',
         mp_method           : str               = 'naive',
         min_lag             : int               = None,
-        print_flag          : bool              = False,
+        verbose             : int               = 0,
         d                   : Callable          = z_normalized_euclidean_distance,
         debug               : bool              = False, 
         time_flag           : bool              = True, 
@@ -2374,14 +2373,14 @@ class MatrixProfilePlot:
         show_plots          : bool              = False,
         downsample_flag     : bool              = True,
         include_padding     : bool              = True,
-        print_depth         : int               = 1,
         threads             : int               = 4,
         gpus                : List[ int ]       = []
     ) -> Tuple [ List [ List [ float ] ], Optional [ float ] ]:
-        if print_flag: print(f"MatrixProfilePlot | Distance: {d.__name__}")
+        if verbose > 0: print(f"MatrixProfilePlot | Distance: {d.__name__}")
         ###
         self.data = None if self.data is None else np.array(self.data)
         self.data_b = None if self.data_b is None else np.array(self.data_b)
+        self.subsequence_len = subsequence_len if self.subsequence_len is None else subsequence_len
         ###
 
         t = None
@@ -2401,13 +2400,13 @@ class MatrixProfilePlot:
             or  c_max is None
 
         ):
-            if print_flag and print_depth > 0: print("MatrixProfilePlot | Compute | No range provided")
+            if verbose > 1: print("MatrixProfilePlot | Compute | No range provided")
             self.c_min = 0
             self.c_max = n_a
             self.r_min = 0
             self.r_max = n_b
         else:
-            if print_flag and print_depth > 0: print("MatrixProfilePlot | Compute | Range provided")
+            if verbose > 1: print("MatrixProfilePlot | Compute | Range provided")
             self.r_min  = max(0, r_min)
             self.r_max  = min(r_max, n_b)
             self.c_min  = max(0, c_min)
@@ -2417,10 +2416,10 @@ class MatrixProfilePlot:
                 c_padd  = self.c_max + self.subsequence_len - 1
                 self.r_max = min(n_b, r_padd)
                 self.c_max = min(n_a, c_padd)
-                print(f"Xpadd {r_padd}, YPadd {c_padd}, A ~ {n_a}, B ~ {n_b}"
-            )
+                if verbose > 1:
+                    print(f"Xpadd {r_padd}, YPadd {c_padd}, A ~ {n_a}, B ~ {n_b}")
                 
-        if print_flag and print_depth > 0:
+        if verbose > 0:
             print(f"MatrixProfilePlot | Compute | Range [{self.r_min}:{self.r_max}, {self.c_min}:{self.c_max}]")
 
         data = self.data[self.r_min:self.r_max]
@@ -2432,9 +2431,9 @@ class MatrixProfilePlot:
 
         ## Addapt time serie ('zoom', PAA)
         if downsample_flag : 
-            if print_flag: print( "[ MPlot | Compute ] | -->  Downsample ")
+            if verbose > 0: print( "[ MPlot | Compute ] | -->  Downsample ")
             if len(data) > max_points:
-                if print_flag: 
+                if verbose > 1: 
                     print(f"[ MPlot | Compute ] | ---> Downsample TA to {self.r_min} : {self.r_max}")
                 
                 self.data_paa, self.data_paa_factor = ut.downsample(
@@ -2442,16 +2441,16 @@ class MatrixProfilePlot:
                     min_position = self.c_min,
                     max_position = self.c_max,
                     max_points   = max_points,
-                    verbose      = print_depth-1,
+                    verbose      = verbose-1,
                     show_plots   = show_plots,
                 )
             else: 
                 self.data_paa = data
-            if print_flag: 
+            if verbose > 0: 
                 print(f"[ MPlot | Compute ] | Downsample TA ~ {len(self.data_paa)} ---> ")
             
             if len(data_b) > max_points: 
-                if print_flag:
+                if verbose > 0:
                     print("[ MPlot | Compute ] |  --> Downsample TB ")
 
                 self.data_b_paa, self.data_b_paa_factor = ut.downsample(
@@ -2459,23 +2458,23 @@ class MatrixProfilePlot:
                     min_position = self.r_min,
                     max_position = self.r_max,
                     max_points   = max_points,
-                    verbose      = print_depth-1,
+                    verbose      = verbose-1,
                     show_plots   = show_plots,
                 )
             else: 
                 self.data_b_paa = data_b
-            if print_flag: 
+            if verbose > 0: 
                 print(f"[ MPlot | Compute ] | Downsample TB_paa ~ {len(self.data_b_paa)} ---> ")
-            if print_flag: print( "[ MPlot | Compute ] |Downsample -->")
+                print( "[ MPlot | Compute ] |Downsample -->")
         else:
-            if print_flag: 
+            if verbose > 0: 
                 print("MPlot | Compute | Do not downsample => use original time series")
             self.data_paa   = data
             self.data_b_paa = data_b
             
         
         ## Ensure parameters
-        if print_flag and print_depth > 0:
+        if verbose > 0:
             print("MPlot | Compute | --> Ensure parameters ")
         
         self.MP_AB = MatrixProfile(
@@ -2486,19 +2485,19 @@ class MatrixProfilePlot:
         )
         
         ## Ensure parameters
-        if print_flag and print_depth > 0:
+        if verbose > 0:
             print("MPlot | Compute | --> provide_len ")
             print("MPlot | Compute | --> provide_len | data ~ ", self.data.shape )
             print("MPlot | Compute | --> provide_len | data.MP_AB ~ ", self.MP_AB.data.shape )
 
         if provide_len or self.data_b is None:
-            if print_flag and print_depth > 0: 
+            if verbose > 1: 
                 print("MPlot | Compute | --> provide_len ... 1 ... ")
             if self.dominant_lens is None:
-                if print_flag and print_depth > 0: 
+                if verbose > 1: 
                     print("MPlot | Compute | --> provide_len ... 1.1 ... | No dominant lens")
                 if self.MP_AB.dominant_lens is None:
-                    if print_flag: 
+                    if verbose > 1: 
                         print("MPlot | Compute | --> provide_len ... 1.2 ... | No dominant lens | provide_lens")
                         print("Before: data ~", len(self.MP_AB.data))
                     self.MP_AB.provide_lens(
@@ -2508,34 +2507,34 @@ class MatrixProfilePlot:
                     )
                 self.dominant_lens = self.MP_AB.dominant_lens
             
-            if print_flag and print_depth > 0:  
+            if verbose > 1:  
                 print("MPlot | Compute | --> provide_len ... 2 ...")
                 print(f"MPlot | Compute | provide_len ... 2 ... | Setup sequence len to dominant_lens[0]={ self.dominant_lens[0]}")
             self.subsequence_len = self.dominant_lens[0]
         elif not provide_len:
-            if print_flag and print_depth > 0: 
+            if verbose > 1: 
                 print("MPlot | Compute | --> provide_len ... 3 ...")
             self.subsequence_len = subsequence_len
 
         else:
-            if print_flag and print_depth > 0: 
+            if verbose > 1: 
                 print("MPlot | Compute | --> provide_len ... 3 ...")
                 print("MPlot | Compute | --> provide_len ... 3 ... | Data_b_paa ~ ", self.data_b_paa.shape)
             self.subsequence_len = len(self.data_b_paa)
         
-        if print_flag: 
+        if verbose > 0: 
             print(f"[ MPlot | Compute ] | Ensure Parameters TB_paa ~ {len(self.data_b_paa)} ---> ")
 
         ## Ensure valid limits (so the compared subsequences are the same than with the global matrix)
         n_a_paa = len(self.data_paa)
         n_b_paa = len(self.data_b_paa)
-        self.r_min, self.r_max = ensure_valid_limits(n_b_paa, self.subsequence_len, self.r_min, self.r_max, print_flag)
-        self.c_min, self.c_max = ensure_valid_limits(n_a_paa, self.subsequence_len, self.c_min, self.c_max, print_flag)
+        self.r_min, self.r_max = ensure_valid_limits(n_b_paa, self.subsequence_len, self.r_min, self.r_max, verbose = verbose-1 )
+        self.c_min, self.c_max = ensure_valid_limits(n_a_paa, self.subsequence_len, self.c_min, self.c_max, verbose = verbose-1 )
         
-        if print_flag and print_depth > 0: print(f"MatrixProfilePlot | Compute | Final Range [{self.r_min}:{self.r_max}, {self.c_min}:{self.c_max}]")
+        if verbose > 0: print(f"MatrixProfilePlot | Compute | Final Range [{self.r_min}:{self.r_max}, {self.c_min}:{self.c_max}]")
         
         ## Instantiate self.DM_AB & MP_AB
-        if print_flag and print_depth > 0: 
+        if verbose > 0: 
             print(f"MPlot | Compute | --> Instantiate DM & MP | TA ~ {len(self.data_paa)} | TB ~ {len(self.data_b_paa)}")
 
         self.DM_AB = DistanceMatrix(
@@ -2547,7 +2546,7 @@ class MatrixProfilePlot:
         
         self.MP_AB.subsequence_len = self.subsequence_len
 
-        if print_flag and print_depth > 0:
+        if verbose > 0:
             print("MPlot | Compute | ... Checking inicializations ...")
             print(f"MP_AB self_join {self.MP_AB.self_join}")
             print(f"DM_AB self_join {self.DM_AB.self_join}")
@@ -2559,12 +2558,12 @@ class MatrixProfilePlot:
             print("MPlot | Compute | ... Checking inicializations ...")
 
         ## Compute       
-        if print_flag and print_depth > 0:  print("MPlot | Compute | --> Compute MP")
+        if verbose > 0:  print("MPlot | Compute | --> Compute MP")
         self.MP_AB.compute(
             method              = mp_method,
             d                   = d,
             time_flag           = time_flag,
-            verbose             = print_depth-1,
+            verbose             = verbose-1,
             provide_len         = provide_len,
             nlens               = nlens,
             min_lag             = min_lag,
@@ -2572,7 +2571,7 @@ class MatrixProfilePlot:
             gpus                = gpus,
             allow_experimental  = allow_experimental
         )
-        if print_flag and print_depth > 0:  
+        if verbose > 0:  
             print(
                 "MPlot | Compute | --> Compute DM | Allow experimental: ", 
                 allow_experimental
@@ -2586,17 +2585,16 @@ class MatrixProfilePlot:
         self.DM_AB.compute(
             method              = dm_method,
             d                   = d,
-            print_flag          = print_flag,
+            print_flag          = verbose > 1,
             time_flag           = time_flag, 
             allow_experimental  = allow_experimental,
             ensure_symetric     = ensure_symetric,
             min_lag             = min_lag,
-            print_depth         = print_depth-1,
+            print_depth         = verbose-1,
             debug               = debug
         )
         
-        if print_flag and print_depth > 0: 
-            print("MPlot | Compute | Compute DM -->")
+        if verbose > 0: print("MPlot | Compute | Compute DM -->")
             
     def plot_check_limits(
         self,

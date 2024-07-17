@@ -2423,17 +2423,22 @@ def downsample(
     min_position : int  = 0,
     max_position : int  = -1, 
     max_points   : int  = 10000,
-    print_flag   : bool = False,
+    verbose      : int  = 1,
     show_plots   : bool = False,
-    print_depth  : int  = 1
-):    
+) -> Tuple [ List [ float ], float ]:    
+    if verbose > 1: print(f"Before | Pos ({min_position}, {max_position})")
+    min_position = min_position if min_position > 0 else 0
+    max_position = max_position if ( max_position > -1 and max_position < len(data) ) else len(data)
+    if verbose > 1: print(f"After Pos ({min_position}, {max_position})")
     n_timestamps = max_position - min_position
     paa_factor = np.maximum(1, n_timestamps // max_points)
-    if print_flag and print_depth > 0:
+    if verbose > 0:
         print(f"------------------------> Downsample")
-        print("Downsample | N timestamps", n_timestamps)
-        print("Downsample | PAA factor:", paa_factor)
-    potential_segments = np.floor(n_timestamps // paa_factor).astype(int)
+        print(f"Downsample | N timestamps {n_timestamps}")
+        print(f"Downsample | PAA factor: {paa_factor}")
+    potential_segments = np.floor(n_timestamps / paa_factor).astype(int)
+    if verbose > 1: 
+        print(f"Potential segments: {potential_segments}")
     while (
                 n_timestamps % potential_segments != 0 
             and potential_segments < n_timestamps
@@ -2441,7 +2446,7 @@ def downsample(
             potential_segments+=1
 
     n_segments = potential_segments
-    if print_flag and print_depth > 0:
+    if verbose > 0:
         print("Downsample | N segments:", n_segments)
         print("Downsample | Final w:", n_timestamps // ( n_segments))
         print("Downsample | Reminder:", n_timestamps % n_segments)
@@ -2468,10 +2473,11 @@ def downsample(
     ])
 
     ts_paa = paa_pipeline.fit_transform(data[min_position:max_position])[0]
-    if print_flag and print_depth > 0: 
+    if verbose > 0: 
         print(f"Downsample | ts_paa~{len(ts_paa)}")
         print(f"Downsample ------------------------>")
     return ts_paa, paa_factor
+
 
 """
 def zoom_index(id, n_timestamps, minv, maxv):
@@ -2657,9 +2663,8 @@ class MatrixProfilePlot:
                     min_position = self.c_min,
                     max_position = self.c_max,
                     max_points   = max_points,
-                    print_flag   = print_flag,
+                    verbose      = print_depth-1,
                     show_plots   = show_plots,
-                    print_depth  = print_depth-1
                 )
             else: 
                 self.data_paa = data
@@ -2675,9 +2680,8 @@ class MatrixProfilePlot:
                     min_position = self.r_min,
                     max_position = self.r_max,
                     max_points   = max_points,
-                    print_flag   = print_flag,
+                    verbose      = print_depth-1,
                     show_plots   = show_plots,
-                    print_depth  = print_depth-1
                 )
             else: 
                 self.data_b_paa = data_b

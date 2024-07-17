@@ -20,14 +20,14 @@ user_preferences:
     mode: &wdb_mode 'online'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
-    folder: &path '~/data/synthetic_data/'
-    fname: &fname 'synthetic_trends(II)' #'exoplanets' #"Insect_one_million"
+    folder: &path '~/data/'
+    fname: &fname 'Insect_one_million' #'exoplanets' #"Insect_one_million"
     ftype: &ftype '.csv'
-    cols: &cols [14]
-    freq: &freq '1m'
+    cols: &cols [0]
+    freq: &freq '10L'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    alias: &alias 'S3'
+    alias: &alias 'Insect_one_million'
     algorithm: &alg 'mvp'
   directories:
     # Folder to store temporary files

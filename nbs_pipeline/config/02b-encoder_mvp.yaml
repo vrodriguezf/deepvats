@@ -32,7 +32,7 @@ configuration:
       sync: false
     mvp:
       ws1: 25
-      ws2: &wlen 50
+      ws2: &wlen 150
       # probability of masking in MVP
       r: 0.710
       valid_size: 0.2

@@ -267,7 +267,7 @@ mplot_compute <- function(
           r_max               = as.integer(total_points),
           ################################################################
           #max_points          = as.integer(input$maxPoints),
-          max_points          = 10000, #as.integer(input_caller_2$maxPoints), ... algo pasa con max_points
+          max_points          = as.integer(10000), #as.integer(input_caller_2$maxPoints), ... algo pasa con max_points
           subsequence_len     = as.integer(wlen),
           provide_len         = FALSE,
           downsample_flag     = TRUE,
@@ -440,7 +440,7 @@ mplot_compute <- function(
         indices1 <- data()$timeindex[1:dim(distances_matrix)[1]]
         indices2 <- data()$timeindex[1:dim(distances_matrix)[2]]
 
-        log_print(paste0("[ MPlot plot DM ~ ] ", length(distances_matrix)))
+        log_print(paste0("[ MPlot plot DM ~ ] ", sim_matrix$DM_AB$shape))
         
         
         dist_df <- expand.grid(Var1 = indices1, Var2 = indices2)

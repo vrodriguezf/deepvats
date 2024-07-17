@@ -1995,7 +1995,11 @@ def matrix_profile(
     plot_flag       : bool                          = False,    
     allow_experimental : bool                       = False,
     downsample_flag : bool                          = False,
-    max_points      : int                           = 10000
+    max_points      : int                           = 10000,
+    downsample_flag_a: bool                         = None,
+    downsample_flag_b: bool                         = None,
+    max_points_a     : int                          = None,
+    max_points_b     : int                          = None
 ) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
     """ 
     This function 
@@ -2035,6 +2039,29 @@ def matrix_profile(
         timer = ut.Time()
         timer.start()
 
+    downsample_flag_a = downsample_flag if downsample_flag_a is None else downsample_flag_a
+    downsample_flag_b = downsample_flag if downsample_flag_b is None else downsample_flag_b
+    max_points_a = max_points if max_points_a is None else max_points_a
+    max_points_b = max_points if max_points_b is None else max_points_b
+
+    if downsample_flag_a:
+        self.data, paa_factor = ut.downsample(
+            data       = self.data, 
+            max_points = max_points_a, 
+            verbose    = verbose-1
+        )
+        if verbose > 1: 
+            print(f"Data downsampled | data~{len(self.data)} | factor {paa_factor}")
+    
+    if downsample_flag_b:
+        self.data_b, paa_factor = ut.downsample(
+            data       = self.data_b, 
+            max_points = max_points_b, 
+            verbose    = verbose-1
+        )
+        if verbose > 1: 
+            print(f"Data downsampled | data~{len(self.data)} | factor {paa_factor}")
+    
     #-- Select the method
     match method:
         case 'stump':

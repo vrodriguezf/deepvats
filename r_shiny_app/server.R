@@ -1138,26 +1138,32 @@ shinyServer(function(input, output, session) {
       }
     })
     
-    shinyFileChoose(input, "file", roots = c(wd = "~"))
+    dataset_path <- reactiveVal(NULL)
+    dataset_preview <- reactiveVal(NULL)
     
-    observeEvent(input$load_dataset, {
-      showModal(modalDialog(
+    volumes <- c(wd = "~")
+    shinyFileChoose(input, "file", roots = volumes)
+    
+    createUploadModal <- function() {
+        modalDialog(
         title = "Upload Dataset",
-        shinyFilesButton("file", "Select a file", title = "Please select a file:", multiple = FALSE),
+        shinyFilesButton("file", "Select file", title = "Please select a file:", multiple = FALSE),
         textOutput("file_path_text"),
         tags$hr(),
         h4("Configuration"),
-        numericInput("cols_input", "Cols:", value = 5, min = 1),
-        numericInput("freq_input", "Freq:", value = 10, min = 1),
-        numericInput("n_epoch_input", "n_epoch:", value = 100, min = 1),
-        numericInput("ws1_input", "ws1:", value = 10, min = 1),
+        numericInput("cols_input", "Calls:", value = 5, min = 1),
+        numericInput("freq_input", "Frequency:", value = 10, min = 1),
+        numericInput("n_epoch_input", "Epochs:", value = 100, min = 1),
+        numericInput("ws1_input", "Window:", value = 10, min = 1),
         tags$hr(),
         footer = tagList(
+          actionButton("show_graphic", "Show Graphic"),
           actionButton("load_file", "Load"),
           modalButton("Cancel")
         )
-      ))
-    })
+      )
+    }
+    
     
     observe({
       req(input$file)
@@ -1185,23 +1191,31 @@ shinyServer(function(input, output, session) {
         updateProgressBar(session, "progress_bar", value = 33, total = 100, status = "info")
         ejecucion_notebooks()
         
+        encs_l <- actualizar_encs_l(encs_l)
+        embs()
+        
       }
       removeModal()
     })
+    
     
     
     ejecucion_notebooks <- function() {
       print("-------------Inicio------------------------")
       ruta_a_primer_nb <- "~/work/nbs_pipeline/01_dataset_artifact.ipynb"
       print("Se ha inicializado Primer notebook")
-      system(paste("jupyter nbconvert --execute --to notebook --inplace", ruta_a_primer_nb))
+      system(paste("jupyter nbconvert --execute --to notebook --inplace",
+                   "--TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide",
+                   ruta_a_primer_nb))
       
       print("El primer notebook ha finalizado")
       updateProgressBar(session, "progress_bar", value = 66, total = 100, status = "info")
       
       ruta_a_segundo_nb <- "~/work/nbs_pipeline/02c_encoder_MVP-sliding_window_view.ipynb"
       print("Se ha inicializado Segundo notebook")
-      system(paste("jupyter nbconvert --execute --to notebook --inplace", ruta_a_segundo_nb))
+      system(paste("jupyter nbconvert --execute --to notebook --inplace",
+                   "--TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide",
+                   ruta_a_segundo_nb))
       
       print("El segundo notebook ha finalizado.\n")
       updateProgressBar(session, "progress_bar", value = 100, total = 100, status = "info")
@@ -1230,7 +1244,7 @@ shinyServer(function(input, output, session) {
       yaml_content <- gsub("cols: &cols \\[.*\\]", new_cols, yaml_content)
       yaml_content <- gsub("freq: &freq '.*'", new_freq, yaml_content)
       
-      writeLines(yaml_content, "~/work/nbs_pipeline/base.yaml")
+      writeLines(yaml_content, "~/work/nbs_pipeline/config/base.yaml")
       
       print("Se han anadido las modificaciones al fichero base", sep = "\n")
       print(yaml_content, sep = "\n")
@@ -1253,5 +1267,126 @@ shinyServer(function(input, output, session) {
       print("Se han anadido las modificaciones a ficheros de configuracion")
     }
     
+    #-------------------------------------------------------------------------------------------------
+    
+    best_nsizes_sequence_lengths <- function(){
+      
+      print("-----Calculo de ventana-----")
+      
+      # Cargar el script de Python
+      source_python("~/work/nbs_pipeline/mplots.py")
+      print("------source -------")
+      # Llamar a la función de Python
+      print(tsdf())
+      df <- subset(tsdf(), select = T1)
+      print(df)
+      print("----------------funcion ejecutada---------------")
+      resultado <- find_dominant_window_sizes_list(df)
+      print(resultado)
+      return(resultado)
+    }
+    
+    actualizar_encs_l <- function(encs_l) {
+      print(encs_l)
+      api <- wandb$Api()
+      
+      print("Querying encoders")
+      encs_l <- dvats$get_wandb_artifacts(project_path = glue(WANDB_ENTITY, "/", WANDB_PROJECT), 
+                                          type = "learner", 
+                                          last_version=F) %>% 
+        discard(~ is_empty(.$aliases) | is_empty(.$metadata$train_artifact))
+      encs_l <- encs_l %>% set_names(encs_l %>% map(~ glue(WANDB_ENTITY, "/", WANDB_PROJECT, "/", .$name)))
+      
+      # Actualizar encs_l con los nuevos artefactos
+      print("El nuevo artefacto")
+      print("------------------------------------")
+      print(encs_l)
+      return(encs_l)
+    }
+    #-------------------------------------------------------------------------------------------------
+    
+    observeEvent(input$show_graphic, {
+      file_info <- parseFilePaths(volumes, input$file)
+      if (nrow(file_info) > 0) {
+        dataset_preview(file_info$datapath)
+      }
+    })
+    
+    dataset <- reactive({
+      req(dataset_preview())
+      data <- read.csv(dataset_preview())
+      start_date =isolate(start_date())
+      
+      date_col <- which(str_detect(tolower(colnames(data)), "date|time|fecha"))
+      
+      if (length(date_col) == 0) {
+        # No se encontró ninguna columna de fechas, se agrega una columna de fechas
+        data$fecha <- seq.POSIXt(from = as.POSIXct("2023-01-01 00:00:00"), by = "min", length.out = nrow(data))
+        date_col <- which(colnames(data) == "fecha")
+      } else {
+        # Se encontró una columna de fechas, asegurarse de que está en formato POSIXct
+        for (col in date_col) {
+          if (!inherits(data[[col]], "POSIXct")) {
+            # Intentar convertir el contenido a POSIXct
+            data[[col]] <- tryCatch(
+              as.POSIXct(data[[col]], format="%Y-%m-%d %H:%M:%S"),
+              error = function(e) {
+                # Si falla, usar el origen para conversiones numéricas
+                as.POSIXct(data[[col]], origin="1970-01-01")
+              }
+            )
+          }
+        }
+      }
+      
+      list(data = data, date_col = date_col)
+    })
+    
+    output$data_preview_plot <- renderDygraph({
+      data <- dataset()
+      print("-----data load------")
+      print(data)
+      
+      data_info <- dataset()
+      data <- data_info$data
+      date_col <- data_info$date_col
+      #print(data)
+      #print(date_col)
+      # Transformar los datos en un formato de serie temporal
+      ts_data <- xts(data[ , -date_col], order.by = data[[date_col]])
+      print("-----grafico------")
+      
+      # Generar la gráfica con dygraphs
+      dygraph(ts_data) %>%
+        dyAxis("x", label = "Fecha") %>%
+        dyAxis("y", label = "Valores")
+    })
+    
+    
+    observeEvent(input$show_graphic,{
+      showModal(modalDialog(
+        title = "Graphic",
+        #plotOutput("umap_plot"),
+        dygraphOutput("data_preview_plot"),
+        #plotOutput("ts_plot_dygraph"),
+        footer =
+          tagList(
+            actionButton("back_to_upload", "Back to Upload"),
+            modalButton("Close")
+          ),
+        size = "l"
+        
+      ))
+    })
+    
+    observeEvent(input$load_dataset, {
+      showModal(createUploadModal())
+    })
+    
+    observeEvent(input$back_to_upload, {
+      removeModal()
+      showModal(createUploadModal())
+    })
+
     
 })

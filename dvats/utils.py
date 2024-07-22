@@ -4,7 +4,8 @@
 __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
            'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'funcname', 'update_patch',
-           'styled_print', 'show_sequence', 'plot_with_dots', 'Interpolator', 'PAATransformer', 'downsample']
+           'styled_print', 'show_sequence', 'plot_with_dots', 'Interpolator', 'PAATransformer', 'DownsampleError',
+           'DivisorsError', 'divisors', 'downsample_propose_crop_', 'downsample']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -354,9 +355,9 @@ class Interpolator(BaseEstimator, TransformerMixin):
             X = X.reshape(1, -1)
         
         if self.plot_original_data:
-            if self.print_flag: print("Interpolator | Plot original data")
+            if self.verbose > 0: print("Interpolator | Plot original data")
             for dim in range (X.ndim-1):
-                if self.print_flag: print(f"Interpolator | Plot original data dimension {dim}")
+                if self.verbose > 1: print(f"Interpolator | Plot original data dimension {dim}")
                 plot_with_dots(
                     X[dim], 
                     sequence_flag = False, 
@@ -440,47 +441,166 @@ class PAATransformer(BaseEstimator, TransformerMixin):
 
 
 # %% ../nbs/utils.ipynb 73
+# Errors definitions
+class DownsampleError(Exception):
+    """Exception raised for errors in the downsample process."""
+    def __init__(self, message="Invalid number of min/max points for the proposed time series. You must allow cropping and check the final length"):
+        self.message = message
+        super().__init__(self.message)
+class DivisorsError(Exception):
+    def __init__(self, message = "Invalid parameters"):
+        self.message = message
+        super().__init__(self.message)
+
+# %% ../nbs/utils.ipynb 74
+def divisors(
+    N : int, 
+    min_val:int, 
+    max_val:int, 
+    verbose = 0
+) -> List [ int ] : 
+    print("Verbose: ", verbose)
+    if verbose > 0: 
+        print(f"Looking for the divisors of {N} between {min_val} and {max_val}")
+    if (N < 0 or min_val < 0):
+        mssg = f"N, min_val, max_val {N}, {min_val}, {max_val} must be a positive integer (>0)"
+        raise DivisorsError(mssg)
+    elif ( min_val > max_val):
+        mssg = f"min_val > max_val ({min_val} > {max_val}). Please take a look"
+        raise DivisorsError(mssg)
+    arr = np.arange(min_val,max_val+1)
+    arr = arr[ N % arr == 0]
+    if verbose > 0: print(f"Found {len(arr)} divisors of {N} between {min_val} and {max_val}")
+    return arr
+
+def downsample_propose_crop_(
+    N            : int, 
+    min_points   : int, 
+    max_points   : int, 
+    verbose      : int  = 0,
+    allow_crop   : bool = True,
+    nearest_val  : bool = False,
+    potential_val: int = 1
+) -> int:
+    if verbose > 0: 
+        print(f"Verbose: {verbose}")
+        print(f"Downsample Propose Crop | Prev N: {N}")
+    all_divisors = divisors(
+        N       = N, 
+        min_val = min_points, 
+        max_val = max_points,
+        verbose = verbose-1
+    )
+    val = 0
+    if len(all_divisors == 0):
+        if ( not nearest_val or potential_val < 1):
+            raise ValueError("No valid divisors found for the given N within the min and max points range.")
+        else:
+            if ( nearest_val and potential_val > 0):
+                val = min(all_divisors, key=lambda x: abs(x - potential_val))
+            elif (divisors_flag):
+                val = divisors(
+                    N       = N, 
+                    min_val = min_points, 
+                    max_val = max_points, 
+                    verbose = verbose-1
+                )[-1]
+    if (allow_crop):
+        while (val < min_points): 
+            N = N-1
+            all_divisors = divisors(
+                N       = N, 
+                min_val = min_points, 
+                max_val = max_points, 
+                verbose = verbose-1
+            )
+            if len(all_divisors) > 0:
+                if ( nearest_val and potential_val > 0):
+                    val = min(all_divisors, key=lambda x: abs(x - potential_val))
+                else:
+                    val = divisors(
+                        N          = N, 
+                        min_val    = min_points, 
+                        max_val    = max_points, 
+                        verbose    = verbose-1,
+                    )[-1]
+    else: 
+        raise DownsampleError()
+        return -1
+    if verbose > 0: print(f"Downsample Propose Crop | Post N: {N} | Largest Divisor: {val}")
+    return (val, N)
+
+# %% ../nbs/utils.ipynb 76
 def downsample(
     data  : List [ float ] = None,
     min_position : int  = 0,
     max_position : int  = -1, 
+    min_points   : int  = 1,
     max_points   : int  = 10000,
     verbose      : int  = 1,
     show_plots   : bool = False,
-) -> Tuple [ List [ float ], float ]:    
-    if verbose > 1: print(f"[ Downsample ] Before | Pos ({min_position}, {max_position})")
+    allow_crop   : bool = True
+) -> Tuple [ List [ float ], float ]:  
+    if max_points >= data.shape[0]: return data, 1
+    if verbose > 1: print(f"[ Downsample | Position ] Before | Pos ({min_position}, {max_position})")
     min_position = min_position if min_position > 0 else 0
-    max_position = max_position if ( max_position > -1 and max_position < len(data) ) else len(data)
-    if verbose > 1: print(f"[ Downsample ] After Pos ({min_position}, {max_position})")
-    n_timestamps = max_position - min_position
-    paa_factor = np.maximum(1, n_timestamps // max_points)
-    if verbose > 0:
-        print(f"Downsample | N timestamps {n_timestamps}")
-        print(f"Downsample | PAA factor: {paa_factor}")
-        print(f"Downsample | Max points: {max_points}")
-    potential_segments = np.floor(n_timestamps / paa_factor).astype(int)
-    aux = potential_segments
-    if verbose > 1: 
-        print(f"Potential segments: {potential_segments}")
-    while (
-                n_timestamps % aux != 0 
-            and aux < n_timestamps
-            and aux < max_points-1
-        ):
-            aux+=1
+    max_position = max_position if ( max_position > -1 and max_position < data.shape[0]) else data.shape[0]
+    if verbose > 1: print(f"[ Downsample | Position ] After | Pos ({min_position}, {max_position})")
     
-    if n_timestamps % aux != 0:
-        if verbose > 1: 
-            print(f"Trying from up to down as {aux} does not divide {n_timestamps}")
-        aux = potential_segments-1
-        while(
-                n_timestamps % aux != 0
-            and aux > 1
-        ):
-            aux -= 1
-    n_segments = aux
-    if verbose > 0: print(f"Downsample | N segments: {n_segments}")
+    n_timestamps = max_position - min_position
+    paa_factor   = np.maximum(1, n_timestamps // max_points)
 
+    min_points   = max(1,min(min_points, data.shape[0]))
+    max_points   = min(data.shape[0], min(max_points, max_position-min_position))
+
+    if verbose > 1:
+        print(f"[ Downsample | downsample_propose_crop ] Max points: {max_points}")
+        print(f"[ Downsample | downsample_propose_crop ] Min points: {min_points}")
+    
+    
+    min_points   = min(min_points, max_points)
+    
+    if verbose > 1:
+        print(f"[ Downsample | downsample_propose_crop ] N timestamps {n_timestamps}")
+        print(f"[ Downsample | downsample_propose_crop ] PAA factor: {paa_factor}")
+        
+        print(f"[ Downsample | downsample_propose_crop ] allow_crop: {allow_crop}")
+
+    potential_segments = np.floor(n_timestamps / paa_factor).astype(int)
+    
+    N = max_position-min_position
+    
+    if verbose > 1:
+        print(f"[ Downsample | downsample_propose_crop ] N: {N}")
+        print(f"[ Downsample | downsample_propose_crop ] potential_segments: {potential_segments}")
+        
+    n_segments, N = downsample_propose_crop_(
+        N             = N, 
+        min_points    = min_points,
+        max_points    = max_points,
+        verbose       = verbose-1,
+        allow_crop    = allow_crop,
+        nearest_val   = allow_crop, # If allow_crop, try to get as near of potential_segment as possible
+        potential_val = potential_segments # The most desired one 
+    ) 
+
+    if allow_crop: 
+        if verbose > 1: print(f"[ Downsample | downsample_propose_crop ] Allow crop => change n_timestamp | Before {n_timestamps}")
+        max_position = min_position + N
+        if verbose > 1: print(f"[ Downsample | downsample_propose_crop ] Allow crop => change n_timestamp | After {n_timestamps}")
+    
+    data = data[min_position:max_position]
+    n_timestamps = data.shape[0]
+
+    if verbose > 0: 
+        print(f"[ Downsample | downsample_propose_crop --> ] | N segments: {n_segments} | Data ~ {data.shape}")
+        print(f"[ Downsample | downsample_propose_crop --> ] | N = {N} | n_timestamps = {n_timestamps} | min_position {min_position} | max_position {max_position}")
+
+    if n_timestamps < max_points: 
+        if verbose > 0: 
+            print(f"[ Downsample ] n_timestamps {n_timestamps} < max_points {max_points}")
+        return data, 1
+        
     #| export
     paa_pipeline = Pipeline([
         (

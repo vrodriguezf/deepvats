@@ -1816,9 +1816,12 @@ def matrix_profile(
     plot_flag       : bool                          = False,    
     allow_experimental : bool                       = False,
     downsample_flag : bool                          = False,
+    min_points      : int                           = 1,
     max_points      : int                           = 10000,
     downsample_flag_a: bool                         = None,
     downsample_flag_b: bool                         = None,
+    min_points_a     : int                          = None,
+    min_points_b     : int                          = None,
     max_points_a     : int                          = None,
     max_points_b     : int                          = None
 ) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
@@ -1864,10 +1867,13 @@ def matrix_profile(
     downsample_flag_b = downsample_flag if downsample_flag_b is None else downsample_flag_b
     max_points_a = max_points if max_points_a is None else max_points_a
     max_points_b = max_points if max_points_b is None else max_points_b
+    min_points_a = min_points if min_points_a is None else min_points_a
+    min_points_b = min_points if min_points_b is None else min_points_b
 
     if downsample_flag_a:
         data, paa_factor = ut.downsample(
             data       = data, 
+            min_points = min_points_a,
             max_points = max_points_a, 
             verbose    = verbose-1
         )
@@ -1877,6 +1883,7 @@ def matrix_profile(
     if downsample_flag_b:
         data_b, paa_factor = ut.downsample(
             data       = data_b, 
+            min_points = min_points_b,
             max_points = max_points_b, 
             verbose    = verbose-1
         )
@@ -2067,18 +2074,23 @@ def compute(
     downsample_flag_a: bool                         = None,
     downsample_flag_b: bool                         = None,
     max_points_a     : int                          = None,
-    max_points_b     : int                          = None
+    max_points_b     : int                          = None,
+    min_points       : int                          = 1,
+    min_points_a     : int                          = None,
+    min_points_b     : int                          = None,
 ) -> List [ float ]:
     self.method = method
     # Ensure no list for R variable
     self.data = np.array(self.data)
     if not ( self.data_b is None ): self.data_b = np.array(self.data_b)
     
-    if self.subsequence_len is None:
+    if self.subsequence_len is None or self.subsequence_len < 3:
         if provide_len or self.data_b is None:
-            self.provide_lens(nlens = nlens, print_flag = print_flag)
+            self.provide_lens(nlens = nlens, print_flag = (verbose > 1))
         else:
             self.subsequence_len = len(self.data_b)
+    
+    if verbose > 0: print(f"[ Matrix Profile ] Compute | subsequence_len: {self.subsequence_len}")
 
     self.distances, self.index, self.index_left, self.index_right, self.computation_time = matrix_profile ( 
         data                = self.data, 
@@ -2100,7 +2112,10 @@ def compute(
         downsample_flag_b   = downsample_flag_b,
         max_points          = max_points,
         max_points_a        = max_points_a,
-        max_points_b        = max_points_b
+        max_points_b        = max_points_b,
+        min_points          = min_points,
+        min_points_a        = min_points_a,
+        min_points_b        = min_points_b
     )
     return self.distances
 MatrixProfile.compute = compute
@@ -2304,12 +2319,12 @@ def threshold_interval(
         result = np.where(result >= threshold_min, result, np.inf)
     
     if include_max:
-        if gray_color:
+        if not gray_color:
             result = np.where(result < threshold_max, result, np.inf)
         else:
             result = result < threshold_max
     else:
-        if gray_color:
+        if not gray_color:
             result = np.where(result <= threshold_max, result, np.inf)
         else:
             result = result <= threshold_max
@@ -2369,18 +2384,31 @@ class MatrixProfilePlot:
         r_max               : int               = None,
         c_min               : int               = None,
         c_max               : int               = None,
+        min_points          : int               = 1,
         max_points          : int               = 10000,
         show_plots          : bool              = False,
         downsample_flag     : bool              = True,
         include_padding     : bool              = True,
         threads             : int               = 4,
-        gpus                : List[ int ]       = []
+        gpus                : List[ int ]       = [],
+        min_points_a        : int               = None,
+        min_points_b        : int               = None,
+        max_points_a        : int               = None,
+        max_points_b        : int               = None,
+        downsample_flag_a   : int               = None,
+        downsample_flag_b   : int               = None
     ) -> Tuple [ List [ List [ float ] ], Optional [ float ] ]:
         if verbose > 0: print(f"MatrixProfilePlot | Distance: {d.__name__}")
         ###
         self.data = None if self.data is None else np.array(self.data)
         self.data_b = None if self.data_b is None else np.array(self.data_b)
         self.subsequence_len = subsequence_len if self.subsequence_len is None else subsequence_len
+        downsample_flag_a = downsample_flag if downsample_flag_a is None else downsample_flag_a
+        downsample_flag_b = downsample_flag if downsample_flag_b is None else downsample_flag_b
+        max_points_a = max_points if max_points_a is None else max_points_a
+        max_points_b = max_points if max_points_b is None else max_points_b
+        min_points_a = min_points if min_points_a is None else min_points_a
+        min_points_b = min_points if min_points_b is None else min_points_b
         ###
 
         t = None
@@ -2430,8 +2458,8 @@ class MatrixProfilePlot:
             data_b = self.data[self.c_min:self.c_max]
 
         ## Addapt time serie ('zoom', PAA)
-        if downsample_flag : 
-            if verbose > 0: print( "[ MPlot | Compute ] | -->  Downsample ")
+        if downsample_flag_a : 
+            if verbose > 0: print( "[ MPlot | Compute ] | -->  Downsample TA")
             if len(data) > max_points:
                 if verbose > 1: 
                     print(f"[ MPlot | Compute ] | ---> Downsample TA to {self.r_min} : {self.r_max}")
@@ -2440,7 +2468,8 @@ class MatrixProfilePlot:
                     data         = data,
                     min_position = self.c_min,
                     max_position = self.c_max,
-                    max_points   = max_points,
+                    min_points   = min_points_a,
+                    max_points   = max_points_b,
                     verbose      = verbose-1,
                     show_plots   = show_plots,
                 )
@@ -2448,7 +2477,11 @@ class MatrixProfilePlot:
                 self.data_paa = data
             if verbose > 0: 
                 print(f"[ MPlot | Compute ] | Downsample TA ~ {len(self.data_paa)} ---> ")
-            
+        else:
+            if verbose > 0: print("MPlot | Compute | Do not downsample => use original TA time series")
+            self.data_paa   = data
+        if downsample_flag_b: 
+            if verbose > 0: print( "[ MPlot | Compute ] | -->  Downsample TB")
             if len(data_b) > max_points: 
                 if verbose > 0:
                     print("[ MPlot | Compute ] |  --> Downsample TB ")
@@ -2457,7 +2490,8 @@ class MatrixProfilePlot:
                     data         = data_b,
                     min_position = self.r_min,
                     max_position = self.r_max,
-                    max_points   = max_points,
+                    min_points   = min_points_b,
+                    max_points   = max_points_b,
                     verbose      = verbose-1,
                     show_plots   = show_plots,
                 )
@@ -2467,9 +2501,7 @@ class MatrixProfilePlot:
                 print(f"[ MPlot | Compute ] | Downsample TB_paa ~ {len(self.data_b_paa)} ---> ")
                 print( "[ MPlot | Compute ] |Downsample -->")
         else:
-            if verbose > 0: 
-                print("MPlot | Compute | Do not downsample => use original time series")
-            self.data_paa   = data
+            if verbose > 0: print("MPlot | Compute | Do not downsample => use original TB time series")
             self.data_b_paa = data_b
             
         

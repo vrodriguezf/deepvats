@@ -457,16 +457,28 @@ def downsample(
     if verbose > 0:
         print(f"Downsample | N timestamps {n_timestamps}")
         print(f"Downsample | PAA factor: {paa_factor}")
+        print(f"Downsample | Max points: {max_points}")
     potential_segments = np.floor(n_timestamps / paa_factor).astype(int)
+    aux = potential_segments
     if verbose > 1: 
         print(f"Potential segments: {potential_segments}")
     while (
-                n_timestamps % potential_segments != 0 
-            and potential_segments < n_timestamps
+                n_timestamps % aux != 0 
+            and aux < n_timestamps
+            and aux < max_points-1
         ):
-            potential_segments+=1
-
-    n_segments = potential_segments
+            aux+=1
+    
+    if n_timestamps % aux != 0:
+        if verbose > 1: 
+            print(f"Trying from up to down as {aux} does not divide {n_timestamps}")
+        aux = potential_segments-1
+        while(
+                n_timestamps % aux != 0
+            and aux > 1
+        ):
+            aux -= 1
+    n_segments = aux
     if verbose > 0: print(f"Downsample | N segments: {n_segments}")
 
     #| export

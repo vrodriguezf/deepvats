@@ -250,7 +250,7 @@ shinyServer(function(input, output, session) {
         on.exit({log_print("--> observeEvent tsdf | update select variables -->", debug_level = debug_level, debug_group = 'main'); flush.console()})
         
         ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
-        
+        e
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         
         updateCheckboxGroupInput(

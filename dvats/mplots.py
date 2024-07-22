@@ -2838,10 +2838,10 @@ class MatrixProfilePlot:
         if print_flag and print_depth > 0:
             print(f"MPlot | Plot DM | DM_AB[{r_min}:{r_max}, {c_min}:{c_max}] ~ {self.DM_AB.distances[r_start:r_end][c_start:c_end].shape}")
         
+        info = f"({r_start}:{r_max}, {c_start}:{c_end}) | th({th_min}, {th_max}) | include({include_min}, {include_max} | subsequence_len = {self.subsequence_len} | TA_paa_factor = {self.data_paa_factor} (Horizontal) | TB_paa_factor = {self.data_b_paa_factor} (Vertical)"
+        mssg = "Boolean"+info if gray_color else info
         
-        op1= f"Boolean MPlot ({r_start}:{r_max}, {c_start}:{c_end}) | th({th_min}, {th_max}) | include({include_min}, {include_max})"
-        op2= f"MPlot ({r_start}:{r_max}, {c_start}:{c_end}) | th({th_min}, {th_max}) | include({include_min}, {include_max})"
-        self.dm_plot.set_title(op2 if gray_color else op1)
+        self.dm_plot.set_title(mssg)
         """
         if self.plot_as_matlab:
             heatmap = self.dm_plot.imshow(

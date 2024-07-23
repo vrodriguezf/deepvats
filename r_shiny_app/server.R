@@ -1299,7 +1299,7 @@ shinyServer(function(input, output, session) {
       nb_path_2 <- "~/work/nbs_pipeline/02c_encoder_MVP-sliding_window_view.ipynb"
       print("--> 2st Jupyter Notebook: start")
       #system(paste("jupyter nbconvert --execute --to notebook --inplace","--TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide",nb_path_2))
-      result <- get_input_output(3)
+      result <- get_input_output(2)
       #print(result)
       input_nb <- result$inputnb
       output_nb <- result$outputnb

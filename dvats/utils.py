@@ -142,18 +142,18 @@ import pyarrow.feather as ft
 import pickle
 
 # %% ../nbs/utils.ipynb 42
-def exec_with_feather(function, path = None, print_flag = False, *args, **kwargs):
+def exec_with_feather(function, path = None, verbose = 0, *args, **kwargs):
     result = None
-    if not (path is none):
-        if print_flag: print("--> Exec with feather | reading input from ", path)
+    if not (path is None):
+        if verbose > 0: print("--> Exec with feather | reading input from ", path)
         input = ft.read_feather(path)
-        if print_flag: print("--> Exec with feather | Apply function ", path)
+        if verbose > 0: print("--> Exec with feather | Apply function ", path)
         result = function(input, *args, **kwargs)
-        if print_flag: print("Exec with feather --> ", path)
+        if verbose > 0: print("Exec with feather --> ", path)
     return result
 
 # %% ../nbs/utils.ipynb 43
-def py_function(module_name, function_name, print_flag = False):
+def py_function(module_name, function_name, verbose = 0):
     try:
         function = getattr(__import__('__main__'), function_name)
     except:
@@ -164,30 +164,30 @@ def py_function(module_name, function_name, print_flag = False):
 
 # %% ../nbs/utils.ipynb 46
 import time
-def exec_with_feather_k_output(function_name, module_name = "main", path = None, k_output = 0, print_flag = False, time_flag = False, *args, **kwargs):
+def exec_with_feather_k_output(function_name, module_name = "main", path = None, k_output = 0, verbose = 0, time_flag = False, *args, **kwargs):
     result = None
-    function = py_function(module_name, function_name, print_flag)
+    function = py_function(module_name, function_name,verbose)
     if time_flag: t_start = time.time()
     if not (path is None):
-        if print_flag: print("--> Exec with feather | reading input from ", path)
+        if verbose > 0: print("--> Exec with feather | reading input from ", path)
         input = ft.read_feather(path)
-        if print_flag: print("--> Exec with feather | Apply function ", path)
+        if verbose > 0: print("--> Exec with feather | Apply function ", path)
         result = function(input, *args, **kwargs)[k_output]
     if time_flag:
         t_end = time.time()
         print("Exec with feather | time: ", t_end-t_start)
-    if print_flag: print("Exec with feather --> ", path)
+    if verbose > 0: print("Exec with feather --> ", path)
     return result
 
 # %% ../nbs/utils.ipynb 48
-def exec_with_and_feather_k_output(function_name, module_name = "main", path_input = None, path_output = None, k_output = 0, print_flag = False, time_flag = False, *args, **kwargs):
+def exec_with_and_feather_k_output(function_name, module_name = "main", path_input = None, path_output = None, k_output = 0, verbose = 0, time_flag = False, *args, **kwargs):
     result = None
-    function = py_function(module_name, function_name, print_flag)
+    function = py_function(module_name, function_name, verbose-1)
     if time_flag: t_start = time.time()
     if not (path_input is None):
-        if print_flag: print("--> Exec with feather | reading input from ", path_input)
+        if verbose > 0: print("--> Exec with feather | reading input from ", path_input)
         input = ft.read_feather(path_input)
-        if print_flag: 
+        if verbose > 0: 
             print("--> Exec with feather | Apply function ", function_name, "input type: ", type(input))
         
         result = function(input, *args, **kwargs)[k_output]
@@ -195,7 +195,7 @@ def exec_with_and_feather_k_output(function_name, module_name = "main", path_inp
     if time_flag:
         t_end = time.time()
         print("Exec with feather | time: ", t_end-t_start)
-    if print_flag: print("Exec with feather --> ", path_output)
+    if verbose > 0: print("Exec with feather --> ", path_output)
     return path_output
 
 # %% ../nbs/utils.ipynb 50
@@ -210,15 +210,15 @@ class Time:
     time_total  : float =  0.0
     function    : str   =  ''
 
-    def start(self, print_flag = False): 
-        if print_flag: print("--> Start: ", self.function)
+    def start(self, verbose = 0): 
+        if verbose > 0: print("--> Start: ", self.function)
         self.time_start = time.time()
         return self.time_start
 
-    def end(self, print_flag = False):
+    def end(self, verbose= 0):
         self.time_end = time.time()
         self.time_total = self.duration()
-        if print_flag: print("End: ", self.function, "-->")
+        if verbose > 0: print("End: ", self.function, "-->")
         return self.time_end
         
     def duration(self):

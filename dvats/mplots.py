@@ -107,7 +107,6 @@ def euclidean_distance (
         A tuple containing the distance and an object of Time if time_flag is True, or None otherwise.
     """
     t = None 
-    #if verbose > 0: print("--> Ensuring the vectors are numpy arrays")
     vector_a = np.array(vector_a)
     vector_b = np.array(vector_b)
     if verbose > 0: 
@@ -131,14 +130,14 @@ def z_normalize(
     t = None
     if time_flag:
         t = ut.Time(function=ut.funcname())
-        t.start(verbose = verbose - 1)
+        t.start(verbose - 1)
     
     mean    = np.mean(sequence)
     std     = np.std(sequence)
     res     = (sequence - mean) / std
     
     if time_flag: 
-        t.end(verbose = verbose - 1)
+        t.end(verbose - 1)
         if verbose > 0: t.show()
     return res, t
 
@@ -158,7 +157,7 @@ def z_normalized_euclidean_distance(
 
     if time_flag:
         t = ut.Time( function = ut.funcname() )
-        t.start(verbose)
+        t.start(verbose-1)
     
     #-- Normalize
     vector_a, ts[0] = z_normalize(vector_a, time_flag = inside_times)
@@ -168,7 +167,7 @@ def z_normalized_euclidean_distance(
     res, ts[2] = euclidean_distance(vector_a, vector_b, time_flag = inside_times)
     
     if time_flag:
-        t.end(verbose)
+        t.end(verbose - 1)
         if verbose > 0: t.show()
     if verbose > 0: 
         print("zn-va", vector_a)
@@ -213,7 +212,8 @@ def plot_subsequence(
     hide_columns    : bool              = False,
     save_plot       : bool              = False,
     plot_path       : str               = "./",
-    plot_name       : str               = ""
+    plot_name       : str               = "",
+    verbose         : int               = 0
 ) -> None:
 
     n = len(TA)
@@ -273,16 +273,16 @@ class GD_Mat:
         self.mats = self.mats_df = [None]*self.num_mats
     
     def unzip_mat(self, all_one, case = '', verbose = 0): 
-        str = load.unzip_mat(all_one, self.zip_path, self.data_path, case, verbose-1)
+        str = load.unzip_mat(all_one, self.zip_path, self.data_path, case, verbose)
         self.get_mat_files()
         return str
         
-    def mat2csv(self, case_id, verbose = 1):
+    def mat2csv(self, case_id, verbose = 0):
         if verbose > 0: print("--> mat2csv", case_id)
         case = self.mats_files[case_id]
         case_path = os.path.join(self.data_path, case)
         print("Mat2csv case", case_path)
-        self.mats_df[case_id] = load.mat2csv(case_path, self.data_path, verbose)
+        self.mats_df[case_id] = load.mat2csv(case_path, self.data_path, verbose -1)
         if verbose > 0: print("mat2csv", case_id, "-->")
         
     def __str__(self): 
@@ -312,7 +312,7 @@ class MatlabMatrix:
         numcol      : int, 
         force_smooth: bool  = False,
         path        : str   = ".",
-        verbose      : int   = 0
+        verbose     : int   = 0
     ) -> List [ float ] : 
         """ Reads the file and load the column numcol of the matrix as time series data. """
         
@@ -350,7 +350,7 @@ class MatlabMatrix:
                 warnings.warn("Window len must be odd! Adding 1 to your length.")
                 self.smoothing_window_len += 1
             
-            if print_depth > 0: print("---> About to get out0")
+            if verbose > 0: print("---> About to get out0")
             
             out0 = np.convolve(
                 self.data, 
@@ -380,7 +380,7 @@ class MatlabMatrix:
         
             stop = (np.cumsum(self.data[:-self.smoothing_window_len:-1])[::2] / r)[::-1]
     
-            if verbose > 0: 
+            if verbose > 0 :
                 print("stop", stop)
         
             # Step 4: Combine the start, middle, and end parts together
@@ -395,7 +395,7 @@ def find_dominant_window_sizes_list(
         verbose     : int               = 0
     ) -> List [ int ]:
 
-    if print_depth > 0:
+    if verbose > 0:
         print( "-----> Find_dominant_window_sizes_list -----" )
         print( "    X ~ ",  len(X) )
         print( "    Looking for - at most - the best", nsizes, "window sizes")
@@ -407,7 +407,7 @@ def find_dominant_window_sizes_list(
     fourier = np.absolute(np.fft.fft(X))   
     freqs = np.fft.fftfreq(X.shape[0], 1)
     
-    if print_depth > 0: 
+    if verbose > 0: 
         print( "Find_dominant_window_sizes_list | Freqs computed -->")
         print( "Find_dominant_window_sizes_list | --> Coefs and window_sizes")
 
@@ -422,18 +422,18 @@ def find_dominant_window_sizes_list(
     coefs = np.array(coefs)
     window_sizes = np.asarray(window_sizes, dtype=np.int64)
     
-    if print_depth > 0: 
+    if verbose > 0: 
         print( "Find_dominant_window_sizes_list | Coefs and window_sizes -->")
         print( "Find_dominant_window_sizes_list | --> Find and return valid window_sizes")
 
     idx = np.argsort(coefs)[::-1]
     
-    if print_depth > 0: 
+    if verbose > 0: 
         print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 0 ...", idx)
         
     sorted_window_sizes = window_sizes[idx]
     
-    if print_depth > 0: 
+    if verbose > 0: 
         print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 1 ...")
 
     # Find and return all valid window sizes
@@ -443,7 +443,7 @@ def find_dominant_window_sizes_list(
         if 20 <= window_size < int(len(X) * offset)
     ]
     
-    if print_depth > 0: 
+    if verbose > 0: 
         print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2 ...")
 
     # If no valid window sizes are found, return the first from sorted list
@@ -454,10 +454,10 @@ def find_dominant_window_sizes_list(
         print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ...", nsizes)
         sizes = valid_window_sizes[:nsizes]
         
-    if print_depth > 0: 
+    if verbose > 0: 
         print( "Find_dominant_window_sizes_list | Find and return valid window_sizes -->")
     
-    if print_depth > 0:
+    if verbose > 0:
         print("    Sizes:", sizes)
         print( "----- Find dominant_window_sizes_list ----->" )
     
@@ -471,7 +471,7 @@ def plot_subsequences_aux(
     subsequence_len : int, 
     i               : int   = 0, 
     distance        : float = 0, 
-    verbose         : int   = 1
+    verbose         : int   = 0
 ) -> None:
     ax.clear()
     ax.plot(x_coords, TA, label='TA')
@@ -488,9 +488,8 @@ def plot_subsequences(
     reference_i         : int,
     subsequence_len     : int, 
     distances           : List [ float ], 
-    print_flag          : bool              = False,
     fig_size            : Tuple[int, int]   = (12, 10),
-    print_depth         : int               = 1
+    verbose             : int               = 0
 ) -> None:
     n = len(TA)
     x_coords = range(n)
@@ -501,20 +500,20 @@ def plot_subsequences(
     )
 
     # Plot the ax0 always on top
-    if print_depth > 0: print("--> Plotting ax0")
+    if verbose > 0: print("--> Plotting ax0")
     ax0.plot(x_coords, TA, label='Time Series')
-    if print_depth > 0: print("adding TB ", subsequence_len, len(TB))
+    if verbose > 0: print("adding TB ", subsequence_len, len(TB))
     ax0.plot(x_coords[reference_i:reference_i+subsequence_len], TB, color='darkgray', label='TB_reference')
-    if print_depth > 0: print("TB added")
+    if verbose > 0: print("TB added")
     ax0.legend()
     ax0.set_title('Pairwise differences')
-    if print_depth > 0: print("Plotting ax0 done -->")
+    if verbose > 0: print("Plotting ax0 done -->")
     # Function to handle button click to go to the next plot
     def on_next_clicked(b):
         nonlocal current_index
         if current_index < len(distances) - 1:
             current_index += 1
-            plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], print_flag, print_depth = print_depth -1)
+            plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], verbose = verbose -1)
             plt.tight_layout()
             plt.draw()
 
@@ -523,12 +522,12 @@ def plot_subsequences(
         nonlocal current_index
         if current_index > 0:
             current_index -= 1
-            plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], print_flag, print_depth = print_depth-1)
+            plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], verbose = verbose - 1)
             plt.tight_layout()
             plt.draw()
 
     # Initialize the first subsequence plot
-    plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], print_flag, print_depth=print_depth-1)
+    plot_subsequences_aux(axN, x_coords, TA, subsequence_len, current_index, distances[current_index], verbose = verbose - 1)
 
     # Create and display prev/next buttons
     prev_button = widgets.Button(description='Previous')
@@ -830,11 +829,10 @@ class DistanceProfile:
         self        : 'DistanceProfile',
         nlens       : int               = 1,
         offset      : float             = 0.05,
-        print_flag  : bool              = False,
-        print_depth : int               = 1
+        verbose     : int               = 0
     ) -> List [ int ]:
         if nlens == 1:
-            if print_depth > 0: print(f"Computing {nlens} dominant lens")
+            if verbose > 0: print(f"Computing {nlens} dominant lens")
             self.subsequence_len = find_dominant_window_sizes(self.data, offset = offset)
             self.dominant_lens = [self.subsequence_len]
         else:
@@ -843,8 +841,7 @@ class DistanceProfile:
                 self.data,
                 nsizes      = nlens,
                 offset      = offset,
-                print_flag  = print_flag,
-                print_depth = print_depth
+                verbose     = verbose-1
             )
             self.subsequence_len = self.dominant_lens[0]
     
@@ -854,35 +851,34 @@ class DistanceProfile:
         d               : Callable          = euclidean_distance,
         method          : str               = 'naive',
         fig_size        : tuple             = (12, 10),
-        print_flag      : bool              = False,
         plot_flag       : bool              = True,
         time_flag       : bool              = False,
         ensure_symetric : bool              = False,
         provide_len     : bool              = True,
         nlens           : Optional [ int ]  = 1,
-        print_depth     : int               = 1
+        verbose         : int               = 0
     ) -> Tuple[ List [ float ], ut.Time ]:
-        if print_depth > 0:
+        if verbose > 0:
             print(f"Distance Profile | distance: {d.__name__}")
         """ Compute the Distance Profile """    
         t = None
         if time_flag:
             t = ut.Time(function=ut.funcname())
-            t.start(print_depth > 0)
+            t.start(verbose > 0)
         
 
         if self.subsequence_len is None:
             if provide_len or self.data_b is None:
-                self.provide_lens(nlens = nlens, print_flag = print_flag, print_depth = print_depth-1)
+                self.provide_lens(nlens = nlens, verbose = verbose-1)
             else:
                 self.subsequence_len = len(self.data_b)
         
         if (self.self_join): 
-            if print_flag : print("--> Self join", "TB_i", self.data_b_i, "TA", self.data)
+            if verbose : print("--> Self join", "TB_i", self.data_b_i, "TA", self.data)
             self.data_b = self.data[self.data_b_i:self.data_b_i+self.subsequence_len]
-            if print_flag : print("--> Self join", "TB_i", self.data_b_i, "TB~", len(self.data_b)), "TA~", len(self.data)
+            if verbose : print("--> Self join", "TB_i", self.data_b_i, "TB~", len(self.data_b)), "TA~", len(self.data)
 
-        #if verbose > 0:
+        #if verbose > 0
             #print("TA: ", self.data)
             #print("TB: ", self.data_b)
         
@@ -891,19 +887,19 @@ class DistanceProfile:
         m = self.subsequence_len
         expected_size = n_a - m + 1
 
-        if print_depth > 0: print("Expected_size", expected_size)
+        if verbose > 0: print("Expected_size", expected_size)
         self.method = method
         match self.method:
             case 'stumpy.mass':
-                if print_depth > 0: print("--> Using stumpy.mass")
+                if verbose > 0: print("--> Using stumpy.mass")
                 if (self.self_join):
                     Q = self.data[self.data_b_i:self.data_b_i+m].astype(np.float64)
-                    if print_depth > 0: print("Q ~ ", Q.shape)
+                    if verbose > 0: print("Q ~ ", Q.shape)
                 else:
                     Q = self.data_b[self.data_b_i:self.data_b_i+m].astype(np.float64)
-                    if print_depth > 0: print("Q ~ ", Q.shape)
+                    if verbose > 0: print("Q ~ ", Q.shape)
                 if (d.__name__ == 'z_normalized_euclidean_distance'):
-                    if print_depth > 0: print("Normalized")
+                    if verbose > 0: print("Normalized")
                     self.distances = stump.core.mass(
                         Q = Q,
                         T = self.data.astype(np.float64)
@@ -915,10 +911,10 @@ class DistanceProfile:
                         normalize = False
                     )
             case _:
-                if print_depth > 0: print("--> Using naive made distance profile [ default | Not recommended ]")
+                if verbose > 0: print("--> Using naive made distance profile [ default | Not recommended ]")
                 
                 self.distances = np.zeros(expected_size)
-                if print_depth > 0: print(f"--> Computing distances TA ~ {n_a} TB ~ {len(self.data_b)}")
+                if verbose > 0: print(f"--> Computing distances TA ~ {n_a} TB ~ {len(self.data_b)}")
                 vector_b_t1 = self.data_b_i+m
                 #if (self.data_b_i == 0) : vector_b_t1 = vector_b_t1+1
                 vector_b = self.data_b[self.data_b_i:vector_b_t1]
@@ -928,15 +924,14 @@ class DistanceProfile:
                 
                 for i in range(expected_size):
                     vector_a = self.data[i:i+m]
-                    if print_depth > 0: 
+                    if verbose > 0: 
                         print(f"[DP] Computing distance {i} \nTA: {vector_a.shape},\nTB ~ {vector_b.shape}")
                     #    print(f"[DP] Computing distance {i} \nTA: {self.data},\nTB: {self.data_b[self.data_b_i:self.data_b_i+m]}")
                     self.distances[i] = d (
                         vector_a    = vector_a,
                         vector_b    = vector_b,
-                        print_flag  = print_flag,
-                        time_flag   = time_flag,
-                        print_depth = print_depth-1
+                        verbose     = verbose-1,
+                        time_flag   = time_flag
                     )[0] #Returns (distance, time)
             
         
@@ -954,7 +949,7 @@ class DistanceProfile:
                 fig_size = fig_size
             )
         if time_flag: 
-            t.end(print_flag)
+            t.end(verbose-1)
             t.show()
             self.computation_time = t.time_total
         
@@ -965,9 +960,8 @@ class DistanceProfile:
     def plot_subsequence_compared(
         self,
         sequence_i  : int = 0,
-        print_flag  : bool = False,
         fig_width   : int = 12,
-        print_depth : int = 1
+        verbose     : int = 0
     ) -> None:
         if (self.data_b is None or self.self_join) :
             if verbose > 0: print("--> TB = TA")
@@ -976,22 +970,22 @@ class DistanceProfile:
         m = self.subsequence_len
         expected_size = n - m + 1
         x_coords = range(n)
-        if print_depth > 0:
+        if verbose > 0:
             print("expected size", expected_size)
             print("--> Getting height")
         fig_height_in = 0.59 *2 + 2
         fig, axs = plt.subplots(2, 1, figsize=(fig_width, fig_height_in), sharex=True)
-        if print_depth > 0: print("--> TB")
+        if verbose > 0: print("--> TB")
         TB_sub = self.data_b[self.data_b_i: m]
-        if print_depth > 0: print("TA", self.data, len(self.data))
-        if print_depth > 0: print("TB", self.data_b, len(self.data_b), " subsequence ", self.data_b_i, m, TB_sub)
+        if verbose > 0: print("TA", self.data, len(self.data))
+        if verbose > 0: print("TB", self.data_b, len(self.data_b), " subsequence ", self.data_b_i, m, TB_sub)
         axs[0].plot(x_coords, self.data_b, label='Time Series')
-        if print_flag : print("m", m, "TB_i", self.data_b_i, "TB_i+m", self.data_b_i+m)
+        if verbose > 0 : print("m", m, "TB_i", self.data_b_i, "TB_i+m", self.data_b_i+m)
         axs[0].plot(x_coords[self.data_b_i:self.data_b_i+m], TB_sub, color='darkgray', label='TB_reference')
         axs[0].legend()
         axs[0].set_title('Pairwise differences')
 
-        if print_depth > 0: print("--> TA")
+        if verbose > 0: print("--> TA")
         axs[1].plot(x_coords, self.data, label='TA')
         i = sequence_i
         axs[1].plot(x_coords[i:i+m], self.data[i:i+m], color='green', label='Subsequence' if i == 0 else "")
@@ -1030,8 +1024,7 @@ class DistanceMatrix:
         self        : 'DistanceMatrix',
         nlens       : int               = 1,
         offset      : float             = 0.05,
-        print_flag  : bool              = False,
-        print_depth : int               = 1
+        verbose     : int               = 0
     ) -> List [ int ]:
         if nlens == 1:
             self.subsequence_len = find_dominant_window_sizes(self.data, offset = offset)
@@ -1041,7 +1034,7 @@ class DistanceMatrix:
                 self.data,
                 nsizes      = nlens,
                 offset      = offset,
-                print_flag  = print_flag
+                verbose     = verbose -1
             )
             self.subsequence_len = self.dominant_lens[0]
 
@@ -1055,8 +1048,7 @@ class DistanceMatrix:
         numcol              : int  = 0,
         force_smooth        : bool = False,
         set_a_or_b          : bool = True,
-        print_flag          : bool = False,
-        print_depth         : int = 1
+        verbose             : int = 0
     ) ->  List [ float ] :
         if matrix is None:
             matrix = MatlabMatrix(
@@ -1066,14 +1058,14 @@ class DistanceMatrix:
                 path = path
             )
         matrix_data = matrix.load(
-            numcol, print_flag, force_smooth, path
+            numcol, force_smooth, path
         )
 
         if (set_a_or_b):   
-            if print_depth > 0: print("Copy A")
+            if verbose > 0: print("Copy A")
             self.data = deepcopy(matrix_data)
         else: 
-            if print_depth > 0: print("Copy B")
+            if verbose > 0: print("Copy B")
             self.data_b = deepcopy(matrix_data)
 
         return matrix_data
@@ -1094,7 +1086,6 @@ class DistanceMatrix:
         calibration         : int           = 0,
         piecewise           : bool          = False,
         patch_size          : int           = 5000, #Size of patches to compute (the final matrix, similar to mheight, mwidht)
-        print_flag          : bool          = False,
         plot_flag           : bool          = False,
         time_flag           : bool          = True,
         allow_experimental  : bool          = True, # Allows the use of experimental code when specified in the used libraries
@@ -1104,8 +1095,7 @@ class DistanceMatrix:
         nlens               : int           = 1,    # How many lengths to get from Fourier's transform
         gpus                : List [ int ]  = None, # Gpus to use
         pearson             : bool          = True,    # Wether to apply or not pearson correlation. Needed by scamp,
-        print_depth         : int           = 1,
-        debug               : bool          = False
+        verbose             : int           = 0
     ) -> Tuple [ List [ List [ float ] ], Optional [ ut.Time ] ] :
         if verbose > 0: print(f"DistanceMatrix | Distance: {d.__name__}")
         t = None
@@ -1115,33 +1105,33 @@ class DistanceMatrix:
                 
         if self.subsequence_len is None:
             if provide_len or self.data_b is None:
-                self.provide_lens(nlens = nlens, print_flag = print_flag, print_depth = print_depth-1)
+                self.provide_lens(nlens = nlens, verbose = verbose - 1)
             else:
                 self.subsequence_len = len(self.data_b)
         
         columns = n - self.subsequence_len + 1
         
         if (self.self_join): 
-            if print_depth > 0: print("[ DistanceMatrix | Compute ]  --> Self_join")
+            if verbose > 0: print("[ DistanceMatrix | Compute ]  --> Self_join")
             rows = columns
             reference_seq = self.data
             
         else: #AB-join
-            if print_depth > 0: print("[ DistanceMatrix | Compute ] | --> AB-join")
+            if verbose > 0: print("[ DistanceMatrix | Compute ] | --> AB-join")
             reference_seq = self.data_b
             rows = len(reference_seq) - self.subsequence_len + 1
-        if print_depth > 0:
+        if verbose > 0:
             print(f"[ DistanceMatrix | Compute ] | reference_seq ~ {len(reference_seq)} | subsequence_len ~ {self.subsequence_len} | rows {rows} | columns {columns}")
         sys.stdout.flush()    
 
         self.distances = np.empty((rows, columns))
 
-        if print_depth > 0: 
+        if verbose > 0: 
             print(f"[ DistanceMatrix | Compute ] | Rows: {rows} Columns: {columns} | distances ~ {self.distances.shape}")
             
         if time_flag: 
             timer = ut.Time()
-            timer.start(print_flag = print_depth > 0)
+            timer.start(verbose = verbose > 0)
 
         DP_AB : DistanceProfile = None
         
@@ -1149,7 +1139,7 @@ class DistanceMatrix:
         match method:
             case 'stump':
                 self.method = 'stump'
-                if print_depth > 0: print("--> Stump")
+                if verbose > 0: print("--> Stump")
                 if self.data_b is None: 
                     data_b = deepcopy(self.data)
                 else: 
@@ -1166,7 +1156,7 @@ class DistanceMatrix:
                     nonlocal DP_AB
 
                     if parallel:
-                        if print_depth > 0: print(f"Creating {i} ~ DP_AB")
+                        if verbose > 0: print(f"Creating {i} ~ DP_AB")
                         DP_AB_ = DistanceProfile(
                             data            = deepcopy(self.data),
                             data_b          = deepcopy(data_b),
@@ -1181,37 +1171,36 @@ class DistanceMatrix:
                         DP_AB_.data_b_i = i
 
                     DP_AB_.compute(
-                        print_flag  = print_flag,
+                        verbose = verbose -1,
                         plot_flag   = plot_flag,
                         d           = d,
-                        method      ='stumpy.mass',
-                        print_depth = print_depth-1
+                        method      ='stumpy.mass'
                     )
 
-                    if print_flag  and print_depth > 0:
+                    if verbose > 0:
                         print(f"DP {i} = {DP_AB_.distances}")
                         print(f"DP {i} ~ {DP_AB_.distances.shape}")
                     
                     return DP_AB_.distances
                 
                 if (parallel):
-                    if print_depth > 0: print("Parallel")
+                    if verbose > 0: print("Parallel")
                     with ThreadPoolExecutor(max_workers=threads) as executor:
                         distances = list(executor.map(compute_distance_i, range(rows)))
                     self.distances = np.array(distances)
                 else:
                     for i in range(rows):
-                        if print_depth > 0: print(f"[ DistanceMatrix ] | Compute row {i} / {rows} stump | {self.distances.shape}")
+                        if verbose > 0: print(f"[ DistanceMatrix ] | Compute row {i} / {rows} stump | {self.distances.shape}")
                         self.distances[i] = compute_distance_i(i)
                         
             case 'scamp':
                 
                 self.method = 'scamp'
-                if print_depth > 0: 
+                if verbose > 0: 
                     print(f"[ Distance Matrix | Compute ] --> Scamp | {self.distances.shape}")
                 if allow_experimental:
                     if complete:
-                        if print_depth > 0: 
+                        if verbose > 0: 
                             print("Complete and allow experimental")
                         if mheight is None: 
                             mheight = n - self.subsequence_len + 1
@@ -1224,11 +1213,11 @@ class DistanceMatrix:
                             gpus    = gpus,
                             mheight = mheight,
                             mwidth  = mwidth,
-                            verbose = print_flag,
+                            verbose = verbose - 1,
                             pearson = pearson
                         )
                     else:
-                        if print_depth > 0: 
+                        if verbose > 0: 
                             print("AB-Join and allow experimental")
                         if mheight is None: 
                             mheight = n - self.subsequence_len + 1
@@ -1243,7 +1232,7 @@ class DistanceMatrix:
                             mwidth  = mwidth
                         )
                 else:
-                    if print_depth > 0: print("Not allowing experimental")
+                    if verbose > 0: print("Not allowing experimental")
                     self.distances = distance_matrix(
                             self.data, #a_data
                             reference_seq,  #b_data
@@ -1251,7 +1240,7 @@ class DistanceMatrix:
                             min_lag
                         )
                 
-                if print_depth > 0: print(f"[ Distance Matrix | Compute ] Scamp --> | {self.distances.shape}")
+                if verbose > 0: print(f"[ Distance Matrix | Compute ] Scamp --> | {self.distances.shape}")
             case 'octave-mpx':
                 self.method = 'octave-mpx'
                 self.distances = octave.SimMat(
@@ -1301,7 +1290,7 @@ class DistanceMatrix:
                 )
             case _: #default naive
                 self.method = 'naive'
-                if print_depth > 0: print("--> Invalid method. Using naive [default]")
+                if verbose > 0: print("--> Invalid method. Using naive [default]")
                 if ( self.self_join ) : self.data_b = deepcopy(self.data)
 
                 DP_AB = DistanceProfile(
@@ -1315,18 +1304,17 @@ class DistanceMatrix:
                     DP_AB.data_b   = deepcopy(self.data_b)
                     DP_AB.data_b_i = i
 
-                    if print_depth > 0: 
+                    if verbose > 0: 
                         print( f"[ DistanceMatrix ] | Compute row {i}" )
                         print( f"TA{DP_AB.data}" )
                         print( f"TB{DP_AB.data_b}" ) 
                         print( f"len{DP_AB.subsequence_len}" )
                     
                     DP_AB.compute (
-                        print_flag = print_flag,
+                        verbose    = verbose-1,
                         plot_flag  = plot_flag,
                         d          = d,
                         method     = 'naive',
-                        print_depth = print_depth-1
                     )
 
                     self.distances[i] = DP_AB.distances
@@ -1345,7 +1333,6 @@ class DistanceMatrix:
                 for row in range(self.distances.shape[0]):
                     col_min = max(row-min_lag,0)
                     col_max = min(row+min_lag+1, self.distances.shape[1])
-                    #if (print_flag): print("rc0c1=(",row,",",col_min,",",col_max,")")
                     for col in range(col_min,col_max):
                         self.distances[row][col] = np.inf
             else:
@@ -1363,7 +1350,7 @@ class DistanceMatrix:
         
         if time_flag: 
             print(f"matrix profile {self.computation_time} seconds -->")
-        elif print_depth > 0: 
+        elif verbose > 0: 
             print("matrix profile -->")
         #TODO: En mplot_explorer se asegura de que la matriz sea simétrica respecto a la diagonal
         # y tiene sentido, cuando es cuadrada, pero.... siendo así... 
@@ -1490,9 +1477,9 @@ class MatrixProfile:
         figsize     : Tuple [int, int]  = (10,8),
         plot_dots   : bool              = False,
         plot_ts     : bool              = True,
-        print_flag  : bool              = False,
         ts_title    : str               = 'Time Series',
-        mp_title    : str               = 'Matrix Profile'
+        mp_title    : str               = 'Matrix Profile',
+        verbose     : int               = 0
     ):
         n           = len(self.data)
         x_coords    = range(n)
@@ -1763,26 +1750,26 @@ class MatrixProfile:
         self        : 'DistanceProfile',
         nlens       : int               = 1,
         offset      : float             = 0.05,
-        print_flag  : bool              = False
+        verbose     : int               = 0
     ) -> List [ int ]:
         if nlens == 1:
-            if verbose > 0: 
+            if verbose > 0:
                 print("DistanceProfile | provide_lens | nlens == 1 | --> find dominant window sizes")
             self.subsequence_len = find_dominant_window_sizes(self.data, offset = offset)
             if verbose > 0: 
                 print("DistanceProfile | provide_lens | nlens == 1 | --> instantiate dominant lens")
             self.dominant_lens = [self.subsequence_len]
         else:
-            if verbose > 0: 
+            if verbose > 0:
                 print(f"DistanceProfile | provide_lens | nlens == {nlens} | --> find dominant window sizes")
                 print(f"DistanceProfile | provide_lens | nlens == {nlens} | --> find dominant window sizes data ~", len(self.data))
             self.dominant_lens = find_dominant_window_sizes_list(
                 self.data,
                 nsizes      = nlens,
                 offset      = offset,
-                print_flag  = print_flag
+                verbose = verbose -1
             )
-            if verbose > 0: 
+            if verbose > 0 :
                 print(f"DistanceProfile | provide_lens | nlens == {nlens} | --> instantiate dominant lens")
             self.subsequence_len = self.dominant_lens[0]
     
@@ -1823,7 +1810,7 @@ def matrix_profile(
     - data_b: a 1D-array representing a second time series' values. If none, data is used for self-join
     - min_lag: used for excluding the nearest neighbors in the MP for avoiding trivial matches
     - method: wether to use stump or scamp algorithm
-    - verbose > 0: for printing or not messages
+    - verbose > 0 for printing or not messages
     - debug: for adding some comprobations on GPUs usability
     - time_flag: for getting or not the execution time for the implementation analysis
     - Threads: number of threads for scamp multithread execution
@@ -1985,17 +1972,16 @@ def matrix_profile(
             DM_AB.compute(
                 method = 'scamp',
                 d = d,        
-                print_flag = print_flag, 
+                verbose = verbose-1, 
                 threads = threads,
                 gpus = gpus, 
                 debug = debug, 
-                print_depth=print_depth,
                 min_lag = min_lag,
                 allow_experimental=allow_experimental
             )
             dm_non_zeros = np.where(DM_AB.distances == np.nan, np.inf, DM_AB.distances)
             dm_non_zeros = np.where(dm_non_zeros == 0, np.inf, dm_non_zeros)
-            if print_depth > 0 and debug:
+            if verbose > 0 and debug:
                 print(dm_non_zeros)
             
             mp = np.min(dm_non_zeros, axis = 0)
@@ -2012,7 +1998,7 @@ def matrix_profile(
             rows    = n_b-m+1
             columns = n_a-m+1
 
-            if print_depth > 0:
+            if verbose > 0:
                 print("TA ~ ", n_a)
                 print("TB ~ ", n_b)
                 print("m =", m)
@@ -2031,7 +2017,7 @@ def matrix_profile(
                     self_join       = self_join, 
                     subsequence_len = subsequence_len
                 )
-                DP_AB.compute(print_flag = print_flag, plot_flag = plot_flag, d = d, min_lag = min_lag)
+                DP_AB.compute(verbose = verbose -1, plot_flag = plot_flag, d = d, min_lag = min_lag)
                 mp[i] = np.nanmin(DP_AB.distances)
             
     if time_flag: 
@@ -2076,7 +2062,7 @@ def compute(
     
     if self.subsequence_len is None or self.subsequence_len < 3:
         if provide_len or self.data_b is None:
-            self.provide_lens(nlens = nlens, print_flag = (verbose > 1))
+            self.provide_lens(nlens = nlens, verbose = (verbose > 1))
         else:
             self.subsequence_len = len(self.data_b)
     
@@ -2130,10 +2116,9 @@ class MatrixProfiles:
         d           : Callable  = z_normalized_euclidean_distance,
         threads     : int       = 4,
         gpus        : List[int] = field( default_factory=list ),
-        print_flag  : bool      = False, 
         debug       : bool      = False, 
         time_flag   : bool      = True,
-        print_depth : int       = 1
+        verbose     : int       = 0
     ) -> MatrixProfile:
         """ 
         Computes the Matrix Profile for data & data_b arrays using subsequence_len length.
@@ -2150,17 +2135,17 @@ class MatrixProfiles:
             d               = d,
             threads         = threads,
             gpus            = gpus,
-            verbose         = print_depth-1, 
+            verbose         = verbose - 1, 
             debug           = debug,
             time_flag       = time_flag
         )
         
         mp.method = method
-        if print_depth > 0: print(f"Before Mps.len: {len(self.matrix_profiles)}")
+        if verbose > 0: print(f"Before Mps.len: {len(self.matrix_profiles)}")
         self.matrix_profiles.append(mp)
-        if print_depth > 0: print(f"After Mps.len: {len(self.matrix_profiles)}")
+        if verbose > 0: print(f"After Mps.len: {len(self.matrix_profiles)}")
         
-        if print_depth > 0: 
+        if verbose > 0: 
             print("MPs | compute -> Subsequence len outside: ", self.subsequence_len)
             print("MPs | compute -> Subsequence len inside: ", mp.subsequence_len)
             print("MPs | compute -> method outside: ", self.matrix_profiles[-1].method)
@@ -2174,7 +2159,7 @@ class MatrixProfiles:
     def plot(
             self        : 'MatrixProfiles', 
             ids         : Optional [ List [ int ] ] = None,
-            print_flag  : bool                      = False
+            verbose     : int = 0
     ):
         if ids is None: 
             if verbose > 0:
@@ -2522,7 +2507,7 @@ class MatrixProfilePlot:
                         print("Before: data ~", len(self.MP_AB.data))
                     self.MP_AB.provide_lens(
                         nlens = nlens, 
-                        print_flag = print_flag, 
+                        verbose = verbose - 1, 
                         offset = offset
                     )
                 self.dominant_lens = self.MP_AB.dominant_lens
@@ -2605,13 +2590,11 @@ class MatrixProfilePlot:
         self.DM_AB.compute(
             method              = dm_method,
             d                   = d,
-            print_flag          = verbose > 1,
             time_flag           = time_flag, 
             allow_experimental  = allow_experimental,
             ensure_symetric     = ensure_symetric,
             min_lag             = min_lag,
-            print_depth         = verbose-1,
-            debug               = debug
+            verbose             = verbose-1
         )
         
         if verbose > 0: print("MPlot | Compute | Compute DM -->")
@@ -2622,7 +2605,7 @@ class MatrixProfilePlot:
         r_max : float, 
         c_min : float, 
         c_max : float,
-        verbose > 0: bool,
+        verbose : int = 0
     ) -> Tuple[ float, float, float, float ]:
         if verbose > 0: print("Plot check limits | Original range: r(",r_min,",",r_max,") c(", c_min, ",", c_max,")") 
             
@@ -2670,7 +2653,7 @@ class MatrixProfilePlot:
         c_min, c_max, 
         figsize,
         plot_mp_flag,
-        print_flag = False
+        verbose = 0
     ):
         
         # Ensure computed
@@ -2678,7 +2661,7 @@ class MatrixProfilePlot:
             raise ValueError(f"The Matrix Profile has not been computed yet")
         if (self.DM_AB.method is None):
             raise ValueError(f"The Distances Matrix/Similarity Matrix has not been computed yet")
-        r_min, r_max, c_min, c_max = self.plot_check_limits(r_min, r_max, c_min, c_max, print_flag)
+        r_min, r_max, c_min, c_max = self.plot_check_limits(r_min, r_max, c_min, c_max, verbose-1)
 
         # Setup complete figure distribution
         fig = plt.figure(figsize=figsize)
@@ -2738,12 +2721,11 @@ class MatrixProfilePlot:
         n_r, n_c, 
         figsize,
         plot_mp_flag, 
-        print_flag,
         MPlot_title     = "MPlot", 
         MPlot_xlabel    = "TB Index", 
         MPlot_ylabel    = "TA Index",
         less_labels     = True,
-        print_depth     = 1
+        verbose         = 1
     ):
         # MPlot (Distance Profile)
         self.dm_plot.set_title(MPlot_title)
@@ -2761,7 +2743,7 @@ class MatrixProfilePlot:
             ty_stop  = n_r
             ty_step  = y_labels_count
         
-            if print_depth > 0:
+            if verbose > 0:
                 print("tx_start", tx_start, "tx_stop", tx_stop, "tx_step", tx_step)
                 print("ty_start", ty_start, "ty_stop", ty_stop, "ty_step", ty_step)
         else:    
@@ -2780,7 +2762,7 @@ class MatrixProfilePlot:
         #else:
         y_ticks = np.arange(ty_start, ty_stop, ty_step)
         
-        if print_depth > 0:
+        if verbose > 0:
             print("MPlot | Plot DM | ... No Adapt labels ...")
             print("MPlot | Plot DM | x_ticks", x_ticks)
             print("MPlot | Plot DM | y_ticks", y_ticks)
@@ -2815,8 +2797,7 @@ class MatrixProfilePlot:
         c_end       : int,
         n_r         : int, 
         n_c         : int, 
-        print_flag  : bool      = False,
-        print_depth : int       = 1,
+        verbose     : int       = 0,
         dm_filter   : Callable  = threshold_interval,
         th_min      : float     = - np.inf,
         th_max      : float     = np.inf,
@@ -2825,7 +2806,7 @@ class MatrixProfilePlot:
         gray_color  : bool      = True
     ):
         # Create the heatmap for the distance matrix
-        if print_depth > 0:
+        if verbose > 0:
             print(f"MPlot | Plot DM | DM_AB[{r_min}:{r_max}, {c_min}:{c_max}] ~ {self.DM_AB.distances[r_start:r_end][c_start:c_end].shape}")
         
         info = f"({r_start}:{r_max}, {c_start}:{c_end}) | th({th_min}, {th_max}) | include({include_min}, {include_max} | subsequence_len = {self.subsequence_len} | TA_paa_factor = {self.data_paa_factor} (Horizontal) | TB_paa_factor = {self.data_b_paa_factor} (Vertical)"
@@ -2890,7 +2871,6 @@ class MatrixProfilePlot:
         ts_name         : str               = "", 
         figsize         : Tuple[ int, int ] = (5, 5), 
         show_flag       : bool              = True,
-        print_flag      : bool              = False,
         less_labels     : bool              = False,
         r_min           : Optional [ int ]  = None,
         r_max           : Optional [ int ]  = None,
@@ -2908,7 +2888,7 @@ class MatrixProfilePlot:
         include_min     : bool              = False,
         include_max     : bool              = False,
         gray_color      : bool              = True,
-        print_depth     : int               = 1
+        verbose         : int               = 0
     ):
         
         r_min, r_max, c_min, c_max = self.plot_base(
@@ -2916,7 +2896,7 @@ class MatrixProfilePlot:
             c_min, c_max, 
             figsize,
             plot_mp_flag,
-            print_flag
+            verbose = verbose-1
         )             
         r_start = r_min - self.r_min
         r_end   = r_max - self.r_min
@@ -2926,7 +2906,7 @@ class MatrixProfilePlot:
         n_r = self.plot_row_range(r_min, r_max)
         n_c = self.plot_column_range(c_min, c_max)
 
-        if print_depth > 0:
+        if verbose > 0:
             print("r_start", r_start)
             print("r_end", r_end)
             print("c_start", c_start)
@@ -2958,11 +2938,11 @@ class MatrixProfilePlot:
             r_start = r_start, r_end = r_end,
             n_r = n_r, n_c = n_c, 
             figsize = figsize,
-            plot_mp_flag = plot_mp_flag, print_flag = print_flag,
+            plot_mp_flag = plot_mp_flag,
             MPlot_title = MPlot_title, MPlot_xlabel = MPlot_xlabel, 
             MPlot_ylabel = MPlot_ylabel,
             less_labels=less_labels,
-            print_depth = print_depth -1
+            verbose = verbose -1
 
         )
         
@@ -2977,7 +2957,7 @@ class MatrixProfilePlot:
             c_end       = c_end,
             n_r         = n_r, 
             n_c         = n_c,
-            print_flag  = print_flag, 
+            verbose = verbose -1, 
             dm_filter   = dm_filter,
             th_min      = th_min,
             th_max      = th_max,
@@ -2987,10 +2967,10 @@ class MatrixProfilePlot:
         )
         
         if (self.plot_as_matlab):
-            if print_depth > 0: print("Plotting as MATLAB")
+            if verbose > 0: print("Plotting as MATLAB")
             self.dm_plot.invert_yaxis()
         else:
-            if print_depth > 0: print("Plotting as Python")
+            if verbose > 0: print("Plotting as Python")
         
         #### Setup width
         # Get the current size of the figure
@@ -3019,8 +2999,7 @@ class MatrixProfilePlot:
         tb_name="TB",
         method='Brute Force', 
         figsize=(5, 5),
-        print_flag = False,
-        print_depth = 1
+        verbose = 0
     ):
         fig = plt.figure(figsize=figsize)
         gs = GridSpec(4, 1, height_ratios=[1, 1, 1, 6])
@@ -3083,12 +3062,12 @@ class MatrixProfilePlot:
         span1 = None
         def on_hover(event):
             nonlocal marker, span0, span1
-            nonlocal print_flag
+            nonlocal verbose
             if event.inaxes == ax2:
                 ta_index = int(event.xdata)
                 mp_row = self.DM_AB.distances[ta_index]
                 ta_distance = self.MP_AB.distances[ta_index]
-                if print_flag  and print_depth > 0 : 
+                if verbose > 0 : 
                     print("ta_distance", ta_distance)
                     print("mp_row", mp_row)
                 tb_index = np.where(
@@ -3096,10 +3075,10 @@ class MatrixProfilePlot:
                 )[0]
                 if len(tb_index) > 0:
                     tb_index = tb_index[0]
-                    if print_depth > 0: print("Ta_index", ta_index, "tb_index", tb_index)
+                    if verbose > 0: print("Ta_index", ta_index, "tb_index", tb_index)
                 
-                    #if verbose > 0: 
-                    if print_depth > 0: print("Ta_index", ta_index, "tb_index", tb_index)
+                    #if verbose > 0 
+                    if verbose > 0: print("Ta_index", ta_index, "tb_index", tb_index)
                     if 0 <= ta_index < len(self.MP_AB.distances):
                         if marker is not None: marker.remove()
                         if span0 is not None: span0.remove()
@@ -3147,15 +3126,14 @@ class MatrixProfilePlotCached:
         b_id_end    : int,
         provide_len : bool = True,
         nlens       : Optional [ int ] = 1,
-        print_flag  : bool = False,
         gpus        : List [ int ] = field(default_factory=list),
         pearson     : bool = True,
         ensure_symetric : bool = False,
-        print_depth     : int  = 1
+        verbose     : int  = 0
     ) -> List [ float ]: 
         
         
-        if print_depth > 0: 
+        if verbose > 0: 
             print("[ Get Matrix ]")
             print(" About to get data & data_b")
 
@@ -3163,7 +3141,7 @@ class MatrixProfilePlotCached:
         data_b = self.data_b[b_id_start:b_id_end]
 
 
-        if print_depth > 0: 
+        if verbose > 0: 
             print(f"    A: {a_id_start}, {a_id_end}: {data}")
             print(f"    B: {b_id_start}, {b_id_end}: {data_b}")
             
@@ -3181,7 +3159,7 @@ class MatrixProfilePlotCached:
             if len(self.data) > 1000 * self.matrix_dim and len(self.data_b) > 1000 * self.matrix_dim:
                 # Currently GPU Matrix summaries can leave some spotty output if the input size is not large enough. So only allow GPU computation when we can be sure we will fill in the whole matrix
                 # TODO Follow Zach (zpzim): Implement GPU Matrix summaries which will generate the same output as the CPU version.
-                if print_depth > 0: print("Compute without GPU")
+                if verbose > 0: print("Compute without GPU")
                 DM_AB.compute(
                     method      = 'scamp', 
                     mwidth      = self.matrix_dim, 
@@ -3189,7 +3167,7 @@ class MatrixProfilePlotCached:
                     provide_len = provide_len,
                     nlens       = nlens,
                     ensure_symetric=ensure_symetric,
-                    verbose     = print_depth-1
+                    verbose     = verbose - 1
                 )
             
             else:
@@ -3203,7 +3181,7 @@ class MatrixProfilePlotCached:
                     provide_len    = provide_len,
                     nlens          = nlens,
                     ensure_symetric= ensure_symetric,
-                    verbose        = print_depth-1
+                    verbose        = verbose - 1
                 )
             
             matrix = DM_AB.distances
@@ -3212,7 +3190,7 @@ class MatrixProfilePlotCached:
             self.cache[cache_key] = matrix
             ## Cuidado con esto. Si algún día lo metemos en MVP hay que tener cuidado
             ## Porque ya al usar MatrixProfile daba problemas por detectar el 0 como patrón
-            if print_depth > 0:
+            if verbose > 0:
                 print(f"matrix [{cache_key}] = {matrix}")
         return matrix 
 
@@ -3220,25 +3198,25 @@ class MatrixProfilePlotCached:
         id1, id2 = ids
         return int(id1), int(id2) 
     
-    def on_xlims_change(self,event_ax, print_flag = True):
+    def on_xlims_change(self,event_ax, verbose = 1):
     
-        if print_depth > 0: print("x lims changued")
-        if print_depth > 0: print("    event_ax.get_xlim()")  
+        if verbose > 0: print("x lims changued")
+        if verbose > 0: print("    event_ax.get_xlim()")  
 
         a_id_start, a_id_end = self.ids_int(event_ax.get_xlim())
 
-        if print_depth > 0: print(f"    ax3 y lim")
+        if verbose > 0: print(f"    ax3 y lim")
 
         b_id_end, b_id_start = self.ids_int(self.ax3.get_ylim())
         
-        if print_depth > 0:  print(a_id_start, a_id_end, b_id_start, b_id_end)
+        if verbose > 0:  print(a_id_start, a_id_end, b_id_start, b_id_end)
         self.redraw_matrix(a_id_start, a_id_end, b_id_start, b_id_end)
 
-    def on_ylims_change(self,event_ax, print_flag = True, print_depth = 1):
+    def on_ylims_change(self,event_ax, verbose = 1):
         st_a, ed_a = self.ids_int(self.ax2.get_xlim())
         ed_b, st_b = self.ids_int(event_ax.get_ylim())
         
-        if print_depth > 0: print(st_a, ed_a, st_b, ed_b)
+        if verbose > 0: print(st_a, ed_a, st_b, ed_b)
         
         self.redraw_matrix(st_a, ed_a, st_b, ed_b)
 
@@ -3267,9 +3245,8 @@ class MatrixProfilePlotCached:
         matrix_dim      : Optional [ int ] = None, 
         subsequence_len : Optional [ int ] = None, 
         filename        : str   = "cached_matrix_plot.png",
-        print_flag      : bool  = True,
-        ensure_symetric: bool  = False,
-        print_depth     : int   = 1
+        ensure_symetric : bool  = False,
+        verbose         : int   = 0
     ) : 
         if self.data_b is None:
             self.data_b = np.copy(self.data)
@@ -3286,17 +3263,17 @@ class MatrixProfilePlotCached:
             self.subsequence_len = find_dominant_window_sizes(self.data)
 
         if self.matrix_dim <= self.subsequence_len:
-            if print_flag  and print_depth > 0 : print(f"Selected dim {self.matrix_dim} smaller or equal than subsequence length {self.subsequence_len}, setting up to subsequence_len")
+            if verbose > 0 : print(f"Selected dim {self.matrix_dim} smaller or equal than subsequence length {self.subsequence_len}, setting up to subsequence_len")
             self.matrix_dim = self.subsequence_len
             matrix_dim = 2*self.subsequence_len
 
         if self.matrix_dim % self.subsequence_len != 0:
-            if print_flag  and print_depth > 0 : print(f"Selected dim {self.matrix_dim} not multiple of subsequence length {self.subsequence_len}, setting up to subsequence_len")
+            if verbose >  0 : print(f"Selected dim {self.matrix_dim} not multiple of subsequence length {self.subsequence_len}, setting up to subsequence_len")
             self.matrix_dim = ((self.matrix_dim + self.subsequence_len-1)//self.subsequence_len) * self.subsequence_len
             matrix_dim = self.matrix_dim
-            if print_flag  and print_depth > 0 : print(f"Final size: {self.matrix_dim}")
+            if verbose >  0 : print(f"Final size: {self.matrix_dim}")
 
-        if print_flag  and print_depth > 0 : 
+        if verbose >  0 : 
             print(f"[ Plot Matrix Interactive ] {matrix_dim} | {subsequence_len}")
         
         n_x = len(self.data) - self.subsequence_len + 1
@@ -3304,26 +3281,21 @@ class MatrixProfilePlotCached:
         
         ratio = len(self.data) / len(self.data_b)
 
-        if print_flag  and print_depth > 0 : print(f"    Ratio: {ratio}")
+        if verbose >  0 : print(f"    Ratio: {ratio}")
         matrix_dim_a = math.floor(ratio * matrix_dim)
         matrix_dim_b = self.matrix_dim
         
-        if print_flag  and print_depth > 0 : print(f"dima {matrix_dim_a}, dimb {matrix_dim_b}")
-        #matrix = self.get_matrix(
-         #   0, len (self.data),
-          #  0, len(self.data_b),
-            #print_flag = print_flag
-        #)
+        if verbose >  0 : print(f"dima {matrix_dim_a}, dimb {matrix_dim_b}")
 
         matrix = self.get_matrix(
             0, matrix_dim_a,
             0, matrix_dim_b,
-            print_flag = print_flag,
+            verbose = verbose-1,
             ensure_symetric = ensure_symetric
         )
 
 
-        if print_flag : print(matrix.dtype)
+        if verbose > 0 : print(matrix.dtype)
         
         self.fig = plt.figure(
             constrained_layout=False, 
@@ -3380,7 +3352,7 @@ class MatrixProfilePlotCached:
         self.ax3.set_ylim(ymin=0, ymax=n_y)
         self.ax3.invert_yaxis()
         self.ax3.invert_xaxis()
-        if print_flag  and print_depth > 0 :  print(f"AX2: {self.ax2.callbacks.connect}")
+        if verbose >  0 :  print(f"AX2: {self.ax2.callbacks.connect}")
 
         ### Callbacks
         def on_xlims_change(event): self.on_xlims_change(event)

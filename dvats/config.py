@@ -55,7 +55,7 @@ def recursive_attrdict(d: dict) -> AttrDict:
 def replace_includes_with_content(
     filename: str, 
     path: str = "./", 
-    print_flag: bool = False
+    verbose : int = 0
 ) -> str:
     """
     This function processes a YAML file.
@@ -63,7 +63,7 @@ def replace_includes_with_content(
     It takes a filename and a path, reads the file, and iteratively replaces any '!include' directives with the content of the included files.
     The final processed content, with all '!include' directives substituted is returned as a string.
     """
-    if (print_flag):
+    if (verbose > 0):
         print("... About to replace includes with content")
     with open(path+filename, 'r') as f:
         content = f.read()
@@ -90,20 +90,20 @@ def replace_includes_with_content(
 
 # %% ../nbs/config.ipynb 15
 def get_config(
-        print_flag: bool = False, 
+        verbose: int = 0,
         filename: str = "base"
 ) -> AttrDict:
     """
     This function 
     - Reads the content in '../config/base.yml' and 
     - Returns its content as AttrDict.
-    print_flag option can be changed to True for displaying debugging messages. 
+    verbose option can be changed to True for displaying debugging messages. 
     """
     # Build file path
     filename = filename+".yaml"
     path = "./config/"
     # Debug messages
-    if (print_flag):
+    if (verbose > 0):
         current_directory = os.getcwd()
         print("Current: " + current_directory)
         print("yml: "+ path + filename)
@@ -111,13 +111,13 @@ def get_config(
     # Add join constructor
     yaml.add_constructor('!join', join_constructor)
     
-    if (print_flag): 
+    if (verbose > 0): 
         print("Getting content"+ path + filename)
     
     # Get file content
-    full_content = replace_includes_with_content(filename, path, print_flag)
+    full_content = replace_includes_with_content(filename, path, verbose)
     
-    if (print_flag):
+    if (verbose > 0):
         print("Load content"+ path + filename)
     
     # Load content 
@@ -129,7 +129,7 @@ def get_config(
 # %% ../nbs/config.ipynb 17
 def build_enc_artifact(
     config: AttrDict, 
-    print_flag: bool = False
+    verbose : int = 0
 ) -> str:
     """
     Build enc_artifact name from config data.
@@ -140,13 +140,13 @@ def build_enc_artifact(
         enc_artifact+=":latest"
     else:
         enc_artifact=enc_artifact+":v"+version
-    if (print_flag):
+    if (verbose > 0):
         print("enc_artifact: "+enc_artifact)
     return enc_artifact
 
 
 # %% ../nbs/config.ipynb 19
-def get_project_data(print_flag: bool = False) -> [str, str, str, str]:
+def get_project_data(verbose : int = 0) -> [str, str, str, str]:
     """
     Retrieves project data including user, project name, version, and data name. 
     It accesses configuration settings, processes them, and optionally prints the project configuration. 
@@ -160,7 +160,7 @@ def get_project_data(print_flag: bool = False) -> [str, str, str, str]:
     if (version != "latest"):
         version = 'v' +version
     data        = data_name +":"+version
-    if print_flag:
+    if verbose > 0:
         dashes = '-----------'        
         print(dashes+"Project configuration"+dashes)
         print("user: " + user)
@@ -184,14 +184,14 @@ def get_train_artifact(user: str, project: str, data: str) -> str:
 ##############################
 # 01 - DATAFRAME TO ARTIFACT #
 ##############################
-def get_artifact_config_sd2a_get_auxiliar_variables(print_flag: bool) -> Tuple[str, str, str, AttrDict, bool, str]:
+def get_artifact_config_sd2a_get_auxiliar_variables(verbose : int) -> Tuple[str, str, str, AttrDict, bool, str]:
     """
     Retrieves auxiliary variables necessary for the dataset artifact configuration. 
     Gathers user, project, version, and data details, along with preferences for using wandb and the wandb artifacts path.
     Returns a tuple containing these elements.
     """
-    user, project, version, data = get_project_data(print_flag)
-    config      = get_config(print_flag)
+    user, project, version, data = get_project_data(verbose)
+    config      = get_config(verbose)
     data        = config.data
     use_wandb   = config.user_preferences.use_wandb
     wandb_path  = config.wandb.artifacts_path
@@ -216,12 +216,12 @@ def get_artifact_config_sd2a_check_errors(use_wandb: str, artifact_config: AttrD
         custom_error("Missing values constant must be setted up only if missing_values_technique is not None. Please check base.yaml")
 
 # %% ../nbs/config.ipynb 27
-def get_artifact_config_sd2a(print_flag: bool = False) -> AttrDict:
+def get_artifact_config_sd2a(verbose : int = 0) -> AttrDict:
     """
     Constructs the configuration for the dataset artifact by retrieving auxiliary variables and setting up the artifact configuration.
     Validates the configuration to ensure it meets specific criteria and returns the final artifact configuration as an AttrDict.
     """
-    user, project, version, data, use_wandb, wandb_path = get_artifact_config_sd2a_get_auxiliar_variables(print_flag)
+    user, project, version, data, use_wandb, wandb_path = get_artifact_config_sd2a_get_auxiliar_variables(verbose)
     artifact_config = AttrDict(
         artifact_name           = data.alias,
         csv_config              = data.csv_config,
@@ -250,7 +250,7 @@ def get_artifact_config_sd2a(print_flag: bool = False) -> AttrDict:
 ######################
 # 02b - ENCODER MVP  #
 ######################
-def get_artifact_config_MVP_auxiliar_variables(print_flag: bool) -> Tuple[str, str, str, str, AttrDict, str, Tuple[float, float], AttrDict]:
+def get_artifact_config_MVP_auxiliar_variables(verbose : int) -> Tuple[str, str, str, str, AttrDict, str, Tuple[float, float], AttrDict]:
     """
     Retrieves and assembles various configuration parameters and auxiliary variables for an MVP artifact. 
     Extracts user, project, version, and data details, fetches configuration settings, and constructs training artifact strings. 
@@ -258,8 +258,8 @@ def get_artifact_config_MVP_auxiliar_variables(print_flag: bool) -> Tuple[str, s
     """
 
     #Get neccesary variables
-    user, project, version, data = get_project_data(print_flag)
-    config          = get_config(print_flag, "02b-encoder_mvp")
+    user, project, version, data = get_project_data(verbose)
+    config          = get_config(verbose, "02b-encoder_mvp")
     user_preferences = config.user_preferences
     config = config.configuration
     train_artifact_ = get_train_artifact(user,project,data)    
@@ -269,15 +269,15 @@ def get_artifact_config_MVP_auxiliar_variables(print_flag: bool) -> Tuple[str, s
     return user, project, version, data, config, train_artifact_, mvp_ws, user_preferences
 
 # %% ../nbs/config.ipynb 31
-def get_artifact_config_MVP_auxiliar_variables_SWV(print_flag: bool) -> Tuple[str, str, str, str, AttrDict, str, Tuple[float, float], AttrDict]:    
+def get_artifact_config_MVP_auxiliar_variables_SWV(verbose : int) -> Tuple[str, str, str, str, AttrDict, str, Tuple[float, float], AttrDict]:    
     """
     Retrieves and assembles various configuration parameters and auxiliary variables for an MVP artifact. 
     Extracts user, project, version, and data details, fetches configuration settings, and constructs training artifact strings. 
     Returns a tuple containing these elements along with MVP (sliding window view) workspace specifications and user preferences.
     """
     #Get neccesary variables
-    user, project, version, data = get_project_data(print_flag)
-    config          = get_config(print_flag, "02c-encoder_mvp-sliding_window_view")
+    user, project, version, data = get_project_data(verbose)
+    config          = get_config(verbose, "02c-encoder_mvp-sliding_window_view")
     user_preferences = config.user_preferences
     config = config.configuration
     train_artifact_ = get_train_artifact(user,project,data)    
@@ -319,12 +319,12 @@ def get_artifact_config_MVP_check_errors(
         project = 'work-nbs'
 
 # %% ../nbs/config.ipynb 37
-def get_artifact_config_MVP(print_flag: bool = False) -> Tuple[str, str, str, str, AttrDict, str]:
+def get_artifact_config_MVP(verbose : int = 0) -> Tuple[str, str, str, str, AttrDict, str]:
     """
     Gathers and structures the MVP artifact configuration, including user, project, version, data details, and various configuration settings.
     Returns a tuple comprising user, project, version, data, the structured artifact configuration as an AttrDict, and the job type.
     """
-    user, project, version, data, config, train_artifact_, mvp_ws, user_preferences = get_artifact_config_MVP_auxiliar_variables(print_flag)
+    user, project, version, data, config, train_artifact_, mvp_ws, user_preferences = get_artifact_config_MVP_auxiliar_variables(verbose)
 
     artifact_config = AttrDict(
         alias                   = config.alias,
@@ -350,12 +350,12 @@ def get_artifact_config_MVP(print_flag: bool = False) -> Tuple[str, str, str, st
     return user, project, version, data, artifact_config, config.job_type
 
 # %% ../nbs/config.ipynb 38
-def get_artifact_config_MVP_SWV(print_flag: bool = False) -> Tuple[str, str, str, str, AttrDict, str]:
+def get_artifact_config_MVP_SWV(verbose : int = 0) -> Tuple[str, str, str, str, AttrDict, str]:
     """
     Gathers and structures the MVP_SWV artifact configuration, including user, project, version, data details, and various configuration settings.
     Returns a tuple comprising user, project, version, data, the structured artifact configuration as an AttrDict, and the job type.
     """
-    user, project, version, data, config, train_artifact_, mvp_ws, user_preferences = get_artifact_config_MVP_auxiliar_variables_SWV(print_flag)
+    user, project, version, data, config, train_artifact_, mvp_ws, user_preferences = get_artifact_config_MVP_auxiliar_variables_SWV(verbose)
 
     artifact_config = AttrDict(
         alias                   = config.alias,
@@ -385,16 +385,16 @@ def get_artifact_config_MVP_SWV(print_flag: bool = False) -> Tuple[str, str, str
 # 02a - ENCODER DCAE #
 ######################
 
-def get_artifact_config_DCAE(print_flag: bool = False) -> Tuple[AttrDict, str]:
+def get_artifact_config_DCAE(verbose : int = 0) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for the DCAE (Deep Convolutional AutoEncoder).
     It fetchs the relevant settings and assembles the artifact configuration.
     Validates the configuration to ensure correct project and entity setup and 
     returns the artifact configuration as an AttrDict along with the job type.
     """
-    user, project, version, data = get_project_data(print_flag)
-    config = get_config(print_flag, "02a-encoder_dcae")
-    if print_flag: print("Antes de leer configuration " + str(config))
+    user, project, version, data = get_project_data(verbose)
+    config = get_config(verbose, "02a-encoder_dcae")
+    if verbose > 0:print("Antes de leer configuration " + str(config))
     config = config.configuration
     
     artifact_config = AttrDict(
@@ -426,16 +426,16 @@ def get_artifact_config_DCAE(print_flag: bool = False) -> Tuple[AttrDict, str]:
 ######################
 # 03 - EMBEDDINGS    #
 ######################
-def get_artifact_config_embeddings(print_flag: bool = False) -> Tuple[AttrDict, str]:
+def get_artifact_config_embeddings(verbose : int = 0) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for embeddings by fetching relevant settings and building the encoder artifact configuration.
     Validates the project and entity settings and returns the artifact configuration as an AttrDict, along with the job type.
     """
 
-    config = get_config(print_flag, "03a-embeddings")
+    config = get_config(verbose, "03a-embeddings")
     job_type=config.job_type
     version = config.user_preferences.wdb.version
-    enc_artifact = build_enc_artifact(config, print_flag)
+    enc_artifact = build_enc_artifact(config, verbose)
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb       = config.wandb.use,
@@ -450,15 +450,15 @@ def get_artifact_config_embeddings(print_flag: bool = False) -> Tuple[AttrDict, 
     return artifact_config, job_type
 
 # %% ../nbs/config.ipynb 43
-def get_artifact_config_embeddings_SWV(print_flag: bool = False) -> Tuple[AttrDict, str]:
+def get_artifact_config_embeddings_SWV(verbose : int = 0) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for embeddings (sliding window view) by fetching relevant settings and building the encoder artifact configuration.
     Validates the project and entity settings and returns the artifact configuration as an AttrDict, along with the job type.
     """
-    config = get_config(print_flag, "03b-embeddings-sliding_window_view")
+    config = get_config(verbose, "03b-embeddings-sliding_window_view")
     job_type=config.job_type
     version = config.user_preferences.wdb.version
-    enc_artifact = build_enc_artifact(config, print_flag)
+    enc_artifact = build_enc_artifact(config, verbose)
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb       = config.wandb.use,
@@ -477,18 +477,22 @@ def get_artifact_config_embeddings_SWV(print_flag: bool = False) -> Tuple[AttrDi
 ###################################
 # 04 - DIMENSIONALITY REDUCTION   #
 ###################################
-def get_artifact_config_dimensionality_reduction(print_flag: bool = False) -> Tuple[AttrDict, str]:
+def get_artifact_config_dimensionality_reduction(verbose : int = 0) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for dimensionality reduction tasks by fetching relevant settings, including building the encoder artifact.
     Returns the artifact configuration as an AttrDict, along with the job type.
     """
 
-    config          = get_config(print_flag, "04-dimensionality_reduction")
+    config          = get_config(verbose, "04-dimensionality_reduction")
     job_type        = config.job_type
-    enc_artifact = build_enc_artifact(config, print_flag)
+    enc_artifact = build_enc_artifact(config, verbose)
     config = config.configuration
-    if (config.encoder.artifacts.dr is not None):
-        config.encoder.artifacts.dr = enc_artifact
+    try:
+        if config.encoder.artifacts.dr is not None:
+            config.encoder.artifacts.dr = enc_artifact
+    except Exception:
+        config.encoder.artifacts.dr = None
+    
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use, 
         wandb_group         = config.wandb.group,
@@ -510,17 +514,17 @@ def get_artifact_config_dimensionality_reduction(print_flag: bool = False) -> Tu
 ##################
 # 05 - XAI-LRP   #
 ##################
-def get_artifact_config_xai_lrp(print_flag: bool = False) -> Tuple[AttrDict, str]:
+def get_artifact_config_xai_lrp(verbose : int = 0) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for the XAI SHAP (Explainable Artificial Intelligence using SHAP values) analysis. 
     This includes fetching relevant settings, building the encoder artifact, and assembling the artifact configuration.
     Returns the artifact configuration as an AttrDict, along with the job type.
     """
-    config          = get_config(print_flag, "05-xai_lrp")
+    config          = get_config(verbose, "05-xai_lrp")
     job_type        = config.job_type
-    emb_artifact    = build_emb_artifact(config, print_flag)
+    emb_artifact    = build_emb_artifact(config, verbose)
     config = config.configuration
-    if print_flag: 
+    if verbose > 0:
         print("-- config --")
         show_attrdict(config)
         print("-- config --")
@@ -839,9 +843,9 @@ def show_config(id: int = 0):
 # %% ../nbs/config.ipynb 73
 def get_tested_config(
     id: int = 0,
-    print_flag=False
+    verbose = 0,
 ):
-    if print_flag: show_config(id)
+    if verbose > 0:show_config(id)
     return list(tested_configs.items())[id][1]
     
 
@@ -879,14 +883,14 @@ import pandas as pd
 def get_resampling_frequency(
     freq: str,
     frequency_factor:int = 1,
-    print_flag = False
+    verbose = 0
 ):
-    if print_flag:
+    if verbose > 0:
         print("--> Frequency factor resampling frequency")
         print("Freq factor: ", frequency_factor)
     freq_new = pd.to_timedelta(freq)
     freq_new = freq_new*frequency_factor
-    if print_flag:
+    if verbose > 0:
         print("freq_original: ", freq)
         print("freq_new: ", freq_new)
     suffix = "-"
@@ -906,7 +910,7 @@ def get_resampling_frequency(
         seconds = freq_new.seconds + freq_new.days*24*60*60 
         suffix = str(seconds)+'s'
         resampling_freq = str(seconds)+'S'
-    if print_flag:
+    if verbose > 0:
         print("suffix: ", suffix)
         print("resampling_freq: ", resampling_freq)
         print("Frequency factor resampling frequency -->")
@@ -917,20 +921,20 @@ def frequency_factor_config(
     config: AttrDict, 
     frequency_factor:int = 1,
     frequency_factor_change_alias: bool = True,
-    print_flag = False
+    verbose = 0
 ):
-    if print_flag:
+    if verbose > 0:
         print("--> Frequency factor config")
         print("Freq factor: ", frequency_factor)
         print("frequency_factor_change_alias: ", frequency_factor_change_alias)
-    suffix, config.resampling_freq = get_resampling_frequency(config.freq, frequency_factor, print_flag)
+    suffix, config.resampling_freq = get_resampling_frequency(config.freq, frequency_factor, verbose)
 
     if frequency_factor_change_alias:
         #filename = config.data_fpath.split(".tsf", 1)[0]
         config.artifact_name = config.artifact_name+"-"+suffix
         #config.data_fpath = filename+"-"+suffix+".tsf"
 
-    if print_flag:     
+    if verbose > 0:    
         print("resampling_freq: ", config.freq)
         print("name: ", config.artifact_name)
         print("path: ", config.data_fpath)    
@@ -969,13 +973,13 @@ from copy import deepcopy
 def force_artifact_config_sd2a(
     config: AttrDict,
     id:int = 0, 
-    print_flag = False,
+    verbose = 0,
     both = False,
     frequency_factor = 1, 
     frequency_factor_change_alias = True
 ):
     to_set = get_tested_config(id)
-    if print_flag: 
+    if verbose > 0:
         config_before = deepcopy(config)
         print("Selecting ", list(tested_configs.items())[id][0])
     config.artifact_name = to_set.alias
@@ -994,8 +998,8 @@ def force_artifact_config_sd2a(
     start_date= None,
     test_split= None,
     if frequency_factor > 1: 
-        frequency_factor_config(config, frequency_factor, frequency_factor_change_alias, print_flag)
-    if print_flag: 
+        frequency_factor_config(config, frequency_factor, frequency_factor_change_alias, verbose)
+    if verbose > 0:
         diff_attrdict(
             dict_original=config_before, 
             dict_modified=config, 
@@ -1016,19 +1020,19 @@ def split_artifact_string(s:string) -> tuple[string, string, string]:
 def force_artifact_config_mvp(
     config: AttrDict,
     id:int = 0, 
-    print_flag = False,
+    verbose = 0,
     both = False,
     frequency_factor = 1,
     frequency_factor_change_alias = False,
 ):
     to_set = get_tested_config(id)
-    if print_flag: 
+    if verbose > 0:
         config_before = deepcopy(config)
         
     force_artifact_config_sd2a(
         config = config, 
         id = id, 
-        print_flag = False, 
+        verbose = 0, 
         both = False, 
         frequency_factor = frequency_factor, 
         frequency_factor_change_alias = frequency_factor_change_alias
@@ -1054,7 +1058,7 @@ def force_artifact_config_mvp(
     config.mvp_ws= to_set.mvp.ws
     config.w = config.mvp_ws[1]
     
-    if print_flag: 
+    if verbose > 0:
         diff_attrdict(
             dict_original=config_before, 
             dict_modified=config, 
@@ -1065,19 +1069,19 @@ def force_artifact_config_mvp(
 def force_artifact_config_dcae(
     config: AttrDict,
     id:int = 0, 
-    print_flag = False,
+    verbose = 0,
     both = False,
     frequency_factor = 1,
     frequency_factor_change_alias = False,
 ):
     to_set = get_tested_config(id)
-    if print_flag: 
+    if verbose > 0:
         config_before = deepcopy(config)
         
     force_artifact_config_sd2a(
         config = config, 
         id = id, 
-        print_flag = False, 
+        verbose = 0, 
         both = False, 
         frequency_factor = frequency_factor, 
         frequency_factor_change_alias = frequency_factor_change_alias
@@ -1101,7 +1105,7 @@ def force_artifact_config_dcae(
     config.top_k = to_set.dcae.top_k
     config.pool_szs = to_set.dcae.pool_szs
     
-    if print_flag: 
+    if verbose > 0:
         diff_attrdict(
             dict_original=config_before, 
             dict_modified=config, 

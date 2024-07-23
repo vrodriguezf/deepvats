@@ -166,3 +166,5 @@ checklink/cookies.txt
 /docker_test/
 /docker/tmp_configComits.sh
 .Trash-1004
+.installing
+quarto-linux-amd64.deb

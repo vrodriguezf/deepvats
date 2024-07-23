@@ -250,7 +250,7 @@ shinyServer(function(input, output, session) {
         on.exit({log_print("--> observeEvent tsdf | update select variables -->", debug_level = debug_level, debug_group = 'main'); flush.console()})
         
         ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
-        e
+        
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         
         updateCheckboxGroupInput(
@@ -386,7 +386,7 @@ shinyServer(function(input, output, session) {
             module_name   = "tsai.data.preparation",
             path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
             k_output = as.integer(0),
-            print_flag = TRUE,
+            verbose = as.integer(1),
             time_flag = TRUE,
             #tsdf(), #%>%select(-"timeindex"),
             fcst_history = input$wlen
@@ -703,12 +703,11 @@ shinyServer(function(input, output, session) {
 log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
     result = dvats$get_enc_embs_set_stride_set_batch_size(
         X = X(),
-        print_flag = TRUE,
+        verbose = as.integer(1),
         enc_learn = enc_l,
         stride =  input$stride,  
         batch_size = bs, 
         cpu = cpu_flag, 
-        print_flag = FALSE, 
         time_flag = TRUE, 
         chunk_size = chunk_size,
         check_memory_usage = TRUE
@@ -732,7 +731,7 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
             mssg                = "Get encoder embeddings"
         )
         X <- NULL
-        gc(verbose=TRUE)
+        gc(verbose=as.integer(1))
         on.exit({log_print("reactive embs | get embeddings -->"); flush.console()})
         result
     })
@@ -816,7 +815,7 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = TRUE, 
-                print_flag  = TRUE,
+                verbose  = as.integer(1),
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
                 random_state= as.integer(input$prj_random_state)
@@ -866,7 +865,7 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = cpu_flag, 
-                print_flag  = TRUE,
+                verbose     = as.integer(1),
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
                 random_state= as.integer(input$prj_random_state)

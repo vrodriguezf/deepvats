@@ -57,7 +57,7 @@ mplot <- function(data, wlen, DM_AB) {
 fourierLens <- function(sim_matrix) {
   if ( is.null(sim_matrix$dominant_lens)){
     #Poner slider si se quiere o fijar un valor con sentido
-    sim_matrix$MP_AB$provide_lens(nlens = as.integer(5), print_flag = TRUE)
+    sim_matrix$MP_AB$provide_lens(nlens = as.integer(5), verbose = as.integer(1))
     sim_matrix$dominant_lens = sim_matrix$MP_AB$dominant_lens
   }
   return(sim_matrix$dominant_lens)
@@ -255,7 +255,7 @@ mplot_compute <- function(
         sim_matrix$compute(
           mp_method           = 'stump',
           dm_method           = 'scamp',
-          print_flag          = TRUE,
+          verbose             = as.integer(1),
           debug               = TRUE,
           time_flag           = TRUE,
           allow_experimental  = TRUE,
@@ -272,7 +272,6 @@ mplot_compute <- function(
           provide_len         = FALSE,
           downsample_flag     = TRUE,
           min_lag             = as.integer(8), #Añadir selector
-          print_depth         = as.integer(1),
           threads             = as.integer(1), # Añadir selector en caso de scamp
           gpus                = list() # Añadir selector en caso de scamp que dependa de las gpus realmente disponibles
         )

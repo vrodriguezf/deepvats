@@ -49,12 +49,12 @@ from numba.core.errors import NumbaPerformanceWarning
 def get_UMAP_prjs(
     input_data, 
     cpu=True, 
-    print_flag = False, 
+    verbose = 0, 
     check_memory_usage = True,
     **kwargs
 ):
     "Compute the projections of `input_data` using UMAP, with a configuration contained in `**kwargs`."
-    if print_flag: 
+    if verbose > 0: 
         print("--> get_UMAP_prjs")
         print("kwargs: ", kwargs)
         sys.stdout.flush()
@@ -79,7 +79,7 @@ def get_UMAP_prjs(
             kwargs['random_state'] = np.uint64(kwargs['random_state'])
         reducer = cuml.UMAP(**kwargs)
     
-    if print_flag: 
+    if verbose > 0:
         print("------- reducer --------")
         print(reducer)
         print(reducer.get_params())
@@ -89,7 +89,7 @@ def get_UMAP_prjs(
     projections = reducer.fit_transform(input_data)
     
     if check_memory_usage: gpu_memory_status()
-    if print_flag: 
+    if verbose > 0:
         checksum = hashlib.md5(projections.tobytes()).hexdigest()
         print("prjs checksum ", checksum)
         print("get_UMAP_prjs -->")
@@ -147,7 +147,7 @@ def get_PCA_UMAP_prjs(
     prjs = get_UMAP_prjs(
         input_data = prjs, 
         cpu        = cpu, 
-        print_flag = verbose > 0,
+        verbose = verbose -1,
         **umap_kwargs
     )
 
@@ -157,7 +157,7 @@ def get_PCA_UMAP_prjs(
 
 # %% ../nbs/dr.ipynb 23
 from sklearn.metrics import silhouette_score
-def cluster_score(prjs, clusters_labels, print_flag):
+def cluster_score(prjs, clusters_labels, verbose):
     score = silhouette_score(prjs, clusters_labels)
-    if print_flag: print("Silhouette_score:", score)
+    if verbose > 0:print("Silhouette_score:", score)
     return score

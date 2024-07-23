@@ -134,7 +134,7 @@ def get_enc_embs(X, enc_learn, module=None, cpu=False, average_seq_dim=True, to_
 # %% ../nbs/encoder.ipynb 13
 def get_enc_embs_set_stride_set_batch_size(
     X, enc_learn, stride, batch_size, module=None, cpu=False, average_seq_dim=True, to_numpy=True, 
-    print_flag = False, time_flag=False, chunk_size = 0, check_memory_usage = False
+    verbose = 0, time_flag=False, chunk_size = 0, check_memory_usage = False
 ):
     """
         Get the embeddings of X from an encoder, passed in `enc_learn as a fastai
@@ -147,7 +147,7 @@ def get_enc_embs_set_stride_set_batch_size(
     """
     if time_flag:
         t_start = time.time()
-    if print_flag:
+    if verbose > 0:
         print("--> get_enc_embs_set_stride_set_batch_size")
     if check_memory_usage: gpu_memory_status()
         #print("get_enc_embs_set_stride_set_batch_size | Check versions")
@@ -160,14 +160,14 @@ def get_enc_embs_set_stride_set_batch_size(
     X = X[::stride]
     enc_learn.dls.bs = batch_size 
     
-    if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Check CUDA | X ~ ", X.shape[0])
+    if verbose > 0: print("get_enc_embs_set_stride_set_batch_size | Check CUDA | X ~ ", X.shape[0])
     if cpu:
-        if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Get enc embs CPU")
+        if verbose > 0: print("get_enc_embs_set_stride_set_batch_size | Get enc embs CPU")
         enc_learn.dls.cpu()
         enc_learn.cpu()
     else:
         if torch.cuda.is_available():
-            if (print_flag): 
+            if verbose > 0: 
                 print("get_enc_embs_set_stride_set_batch_size | CUDA device id:", torch.cuda.current_device())
                 print("get_enc_embs_set_stride_set_batch_size | CUDA device name: ", torch.cuda.get_device_name(torch.cuda.current_device()))
                 print("get_enc_embs_set_stride_set_batch_size | Ensure empty cache & move 2 GPU")
@@ -175,18 +175,18 @@ def get_enc_embs_set_stride_set_batch_size(
             enc_learn.dls.cuda()
             enc_learn.cuda()
         else:
-            if (print_flag): print("get_enc_embs_set_stride_set_batch_size | No cuda available. Set CPU = true")
+            if verbose > 0: print("get_enc_embs_set_stride_set_batch_size | No cuda available. Set CPU = true")
             cpu = True
     
     if enc_learn.dls.bs is None or enc_learn.dls.bs == 0: enc_learn.dls.bs = 64
 
-    if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Set dataset from X (enc_learn does not contain dls)")
+    if verbose > 0: print("get_enc_embs_set_stride_set_batch_size | Set dataset from X (enc_learn does not contain dls)")
     aux_dl = enc_learn.dls.valid.new_dl(X=X)
     aux_dl.bs = enc_learn.dls.bs if enc_learn.dls.bs>0 else 64
-    if (print_flag): print("get_enc_embs_set_stride_set_batch_size | Get module")
+    if verbose > 0: print("get_enc_embs_set_stride_set_batch_size | Get module")
     module = nested_attr(enc_learn.model,ENCODER_EMBS_MODULE_NAME[type(enc_learn.model)]) if module is None else module
     
-    if (print_flag): 
+    if verbose > 0: 
         #print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | module ", module)
         print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl len", len(aux_dl))
         print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl.batch_len ", len(next(iter(aux_dl))))
@@ -215,9 +215,9 @@ def get_enc_embs_set_stride_set_batch_size(
     else:
         embs = []
         total_chunks=max(1,round(len(X)/chunk_size))
-        if print_flag: print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl len | " + str(len(X)) + " chunk size: " + str(chunk_size) + " => " + str(total_chunks) + " chunks")
+        if verbose > 0: print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl len | " + str(len(X)) + " chunk size: " + str(chunk_size) + " => " + str(total_chunks) + " chunks")
         for i in range(0, total_chunks):
-            if print_flag: 
+            if verbose > 0: 
                 print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | Chunk [ " + str(i) + "/"+str(total_chunks)+"] => " + str(round(i*100/total_chunks)) + "%")
                 sys.stdout.flush()
             chunk = [batch for (n, batch) in enumerate(aux_dl) if (chunk_size*i <= n  and chunk_size*(i+1) > n) ]
@@ -234,19 +234,19 @@ def get_enc_embs_set_stride_set_batch_size(
             chunk_embs = [emb.cpu() for emb in chunk_embs]
             embs.extend(chunk_embs)
             torch.cuda.empty_cache()
-        if print_flag: 
+        if verbose > 0: 
             print("get_enc_embs_set_stride_set_batch_size | Get acts and grads | 100%")
             sys.stdout.flush()
     
-    if print_flag: print("get_enc_embs_set_stride_set_batch_size | concat embeddings")
+    if verbose > 0: print("get_enc_embs_set_stride_set_batch_size | concat embeddings")
     
     embs = to_concat(embs)
     
-    if print_flag: print("get_enc_embs_set_stride_set_batch_size | Reduce")
+    if verbose > 0: print("get_enc_embs_set_stride_set_batch_size | Reduce")
     
     if embs.ndim == 3 and average_seq_dim: embs = embs.mean(axis=2)
     
-    if print_flag: print("get_enc_embs_set_stride_set_batch_size | Convert to numpy")
+    if verbose > 0: print("get_enc_embs_set_stride_set_batch_size | Convert to numpy")
     
     if to_numpy: 
         if cpu or chunk_size > 0:
@@ -256,11 +256,11 @@ def get_enc_embs_set_stride_set_batch_size(
             torch.cuda.empty_cache()
     if time_flag:
         t = time.time()-t_start
-        if print_flag:
+        if verbose > 0:
             print("get_enc_embs_set_stride_set_batch_size " + str(t) + " seconds -->")
         else:
             print("get_enc_embs_set_stride_set_batch_size " + str(t) + " seconds")
     if check_memory_usage: gpu_memory_status()
-    if print_flag: 
+    if verbose > 0: 
         print("get_enc_embs_set_stride_set_batch_size -->")
     return embs

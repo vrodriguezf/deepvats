@@ -86,7 +86,7 @@ if octave:
     octave.graphics_toolkit('fltk')
     octave.set(0, 'defaultfigurevisible', 'on');
 else:
-    print("Octave is not ready. Please check the configuration | ", octave)
+    print("Octave is not ready. Please check the configuration")
 
 # %% ../nbs/mplots.ipynb 12
 def euclidean_distance (

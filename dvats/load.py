@@ -216,11 +216,11 @@ def zip_contents(zip_path):
         return zip_file.namelist()
 
 
-def unzip_mat(all_one, zip_path, extract_path, case = '', print_flag = True):
-    if print_flag: print("--> Unzip_mat", all_one, zip_path, extract_path, case, print_flag)
+def unzip_mat(all_one, zip_path, extract_path, case = '', verbose = 0):
+    if verbose > 0: print("--> Unzip_mat", all_one, zip_path, extract_path, case, verbose)
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         mat_files = [file for file in zip_ref.namelist() if file.endswith('.mat') and not file.startswith('__MACOSX/')]
-        if print_flag: print(mat_files)
+        if verbose > 0: print(mat_files)
         if all_one == "all":
             # Extract
             for file in mat_files:
@@ -242,14 +242,14 @@ def unzip_mat(all_one, zip_path, extract_path, case = '', print_flag = True):
                     return "None "+case+".mat found."
         else:
             return "First parameter must be 'all' or 'one'."
-        if print_flag: print("unzip_path -->")
+        if verbose > 0: print("unzip_path -->")
 
 
 # %% ../nbs/load.ipynb 25
 import scipy.io
 import pandas as pd
 
-def mat2csv(mat_file_path, csv_file_folder = '~/data/', print_flag=False):
+def mat2csv(mat_file_path, csv_file_folder = '~/data/', verbose = 0):
     # Carga el archivo .mat, omitiendo las variables meta de MATLAB
     mat = scipy.io.loadmat(mat_file_path, squeeze_me=True, struct_as_record=False)
     
@@ -274,7 +274,7 @@ def mat2csv(mat_file_path, csv_file_folder = '~/data/', print_flag=False):
         
         # Guarda el DataFrame como un archivo .csv
         data_df.to_csv(csv_file_path, index=False)
-        if print_flag:
+        if verbose > 0:
             print(data_df.shape)
             display(data_df.head(5))
             print(f"Matlab matrix '{variable_name}' converted to CSV in: {csv_file_path}")

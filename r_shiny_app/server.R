@@ -1277,7 +1277,7 @@ shinyServer(function(input, output, session) {
        
       
       result <- get_input_output(1)
-      print(result)
+      #print(result)
       input_nb <- result$inputnb
       output_nb <- result$outputnb
       parameters <- result$parameters
@@ -1291,19 +1291,28 @@ shinyServer(function(input, output, session) {
         remove_tagged_cells = c('skip', 'hide')
       )
 
-      system(paste("jupyter nbconvert --execute --to notebook --inplace",
-                   "--TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide",
-                   nb_path_1))
+      #system(paste("jupyter nbconvert --execute --to notebook --inplace","--TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide",nb_path_1))
       
       print("First notebook: end -->")
       updateProgressBar(session, "progress_bar", value = 66, total = 100, status = "info")
       
       nb_path_2 <- "~/work/nbs_pipeline/02c_encoder_MVP-sliding_window_view.ipynb"
       print("--> 2st Jupyter Notebook: start")
-      system(paste("jupyter nbconvert --execute --to notebook --inplace",
-                   "--TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide",
-                   nb_path_2))
-      
+      #system(paste("jupyter nbconvert --execute --to notebook --inplace","--TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide",nb_path_2))
+      result <- get_input_output(3)
+      #print(result)
+      input_nb <- result$inputnb
+      output_nb <- result$outputnb
+      parameters <- result$parameters
+      print("Execute notebook")
+      res <- ploomber$execute_notebook(
+        input_path = input_nb,
+        output_path = output_nb,
+        log_output = FALSE,
+        progress_bar = TRUE,
+        parameters = parameters,
+        remove_tagged_cells = c('skip', 'hide')
+      )
       print("Second notebook: end -->")
       updateProgressBar(session, "progress_bar", value = 100, total = 100, status = "info")
       

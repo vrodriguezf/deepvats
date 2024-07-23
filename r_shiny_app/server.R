@@ -1151,7 +1151,7 @@ shinyServer(function(input, output, session) {
         textOutput("file_path_text"),
         tags$hr(),
         h4("Configuration"),
-        numericInput("cols_input", "Calls:", value = 5, min = 1),
+        numericInput("cols_input", "Calls:", value = 5, min = 0),
         numericInput("freq_input", "Frequency:", value = 10, min = 1),
         numericInput("n_epoch_input", "Epochs:", value = 100, min = 1),
         numericInput("ws1_input", "Window:", value = 10, min = 1),
@@ -1197,32 +1197,120 @@ shinyServer(function(input, output, session) {
       }
       removeModal()
     })
+
+    #---------------------------------------------Execution notebook-------------------------------------------------------
     
+    get_parameters <- function(nb_id) {
+      print("Just before switch")
+      print("... a little check")
+      cuda_device = torch$cuda$current_device()
+      print("a little check...")
+      switch(nb_id,
+             "1" = {
+               filename <- "01_dataset_artifact"
+               parameters <- list(
+                 print_flag = TRUE,
+                 show_plots = FALSE,
+                 reset_kernel = FALSE,
+                 pre_configured_case = FALSE,
+                 case_id = NULL,
+                 frequency_factor = as.integer(1),
+                 frequency_factor_change_alias = TRUE,
+                 cuda_device = torch$cuda$current_device(),
+                 check_parameters = TRUE
+               )
+             },
+             "2" = {
+               filename <- "02c_encoder_MVP-sliding_window_view"
+               parameters <- list(
+                 print_flag = FALSE,
+                 check_memory_usage = FALSE,
+                 time_flag = FALSE,
+                 window_size_percentage = NULL,
+                 show_plots = FALSE,
+                 reset_kernel = FALSE,
+                 pre_configured_case = FALSE,
+
+
+                 case_id = NULL,
+                 frequency_factor = as.integer(1),
+                 frequency_factor_change_alias = TRUE,
+                 cuda_device = torch$cuda$current_device()
+               )
+             },
+             {
+               print("Invalid configuration")
+               filename <- ""
+               parameters <- list()
+             }
+      )
+      print("Just after switch")
+      return(list(filename = filename, parameters = parameters))
+    }
+
+    get_input_output <- function(nb_id) {
+      print("About to get parameters")
+      params <- get_parameters(nb_id)
+      filename <- params$filename
+      parameters <- params$parameters
+      
+      print(filename)
+      print(parameters)
+      
+      inbpath <- path.expand("~/work/nbs_pipeline")
+      onbpath <- path.expand("~/work/nbs_pipeline/output")
+      extension <- ".ipynb"
+      reportname <- paste0(filename, "-output")
+      inputnb <- file.path(inbpath, paste0(filename, extension))
+      outputnb <- file.path(onbpath, paste0(reportname, extension))
+      
+      print(paste("Executing", inputnb, "into", outputnb))
+      
+      return(list(inputnb = inputnb, outputnb = outputnb, parameters = parameters))
+    }
     
     
     ejecucion_notebooks <- function() {
-      print("-------------Inicio------------------------")
-      ruta_a_primer_nb <- "~/work/nbs_pipeline/01_dataset_artifact.ipynb"
-      print("Se ha inicializado Primer notebook")
+      print("------------- START ------------------------")
+      nb_path_1 <- "~/work/nbs_pipeline/01_dataset_artifact.ipynb"
+      print("--> 1st Jupyter Notebook: start")
+       
+      
+      result <- get_input_output(1)
+      print(result)
+      input_nb <- result$inputnb
+      output_nb <- result$outputnb
+      parameters <- result$parameters
+      print("Execute notebook")
+      res <- ploomber$execute_notebook(
+        input_path = input_nb,
+        output_path = output_nb,
+        log_output = FALSE,
+        progress_bar = TRUE,
+        parameters = parameters,
+        remove_tagged_cells = c('skip', 'hide')
+      )
+
       system(paste("jupyter nbconvert --execute --to notebook --inplace",
                    "--TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide",
-                   ruta_a_primer_nb))
+                   nb_path_1))
       
-      print("El primer notebook ha finalizado")
+      print("First notebook: end -->")
       updateProgressBar(session, "progress_bar", value = 66, total = 100, status = "info")
       
-      ruta_a_segundo_nb <- "~/work/nbs_pipeline/02c_encoder_MVP-sliding_window_view.ipynb"
-      print("Se ha inicializado Segundo notebook")
+      nb_path_2 <- "~/work/nbs_pipeline/02c_encoder_MVP-sliding_window_view.ipynb"
+      print("--> 2st Jupyter Notebook: start")
       system(paste("jupyter nbconvert --execute --to notebook --inplace",
                    "--TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide",
-                   ruta_a_segundo_nb))
+                   nb_path_2))
       
-      print("El segundo notebook ha finalizado.\n")
+      print("Second notebook: end -->")
       updateProgressBar(session, "progress_bar", value = 100, total = 100, status = "info")
       
-      print("Ambos notebooks han finalizado completamente.\n")
+      print("All notebooks: end -->")
       
     }
+     
     
     mod_file_base <- function(filepath){
       yaml_content <- readLines("~/work/nbs_pipeline/config/base.yaml")
@@ -1345,9 +1433,10 @@ shinyServer(function(input, output, session) {
     output$data_preview_plot <- renderDygraph({
       data <- dataset()
       print("-----data load------")
-      print(data)
+      #print(data)
       
       data_info <- dataset()
+      print(data_info)
       data <- data_info$data
       date_col <- data_info$date_col
       #print(data)

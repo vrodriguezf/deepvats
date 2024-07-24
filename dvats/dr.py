@@ -157,7 +157,7 @@ def get_PCA_UMAP_prjs(
 
 # %% ../nbs/dr.ipynb 23
 from sklearn.metrics import silhouette_score
-def cluster_score(prjs, clusters_labels, verbose):
+def cluster_score(prjs, clusters_labels, verbose = 0):
     score = silhouette_score(prjs, clusters_labels)
     if verbose > 0:print("Silhouette_score:", score)
     return score

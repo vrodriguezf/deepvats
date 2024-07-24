@@ -7,7 +7,7 @@ __all__ = ['octave', 'eamonn_drive_mplots', 'configure_octave', 'euclidean_dista
            'plot_dataFrame_compareSubsequences', 'df_plot_colored_variables', 'plot_df_with_intervals_and_colors',
            'make_symmetric_', 'check_symmetric', 'moving_mean', 'sum_of_squared_differences', 'get_precomputes',
            'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'DistanceMatrix', 'plot_motif',
-           'plot_motif_separated', 'MatrixProfile', 'matrix_profile', 'compute', 'MatrixProfiles',
+           'plot_motif_separated', 'MatrixProfile', 'downsample', 'matrix_profile', 'compute', 'MatrixProfiles',
            'ensure_valid_limits', 'zoom_index', 'restore_index', 'threshold_interval', 'MatrixProfilePlot',
            'MatrixProfilePlotCached']
 
@@ -1434,6 +1434,8 @@ class MatrixProfile:
     #---- Main information of the matrix profile ----#
     data        : List [ float ] = None
     data_b      : List [ float ] = None
+    data_paa_factor  : int       = 1
+    data_b_paa_factor: int       = 1
     self_join   : bool           = True
     distances   : List[ float ]  =  field(default_factory=list)
 
@@ -1777,46 +1779,63 @@ class MatrixProfile:
         return f"MP: {self.distances}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
 # %% ../nbs/mplots.ipynb 76
-def matrix_profile(
-    data            : List [ float ], 
-    subsequence_len : Optional [ int ]              = None, 
-    data_b          : Optional [ List [ float ] ]   = None,
-    min_lag         : Optional [ int ]              = None,
-    self_join       : bool                          = True,
-    method          : str                           = 'naive', 
-    d               : Callable                      = z_normalized_euclidean_distance,
-    threads         : int                           = 4, # For scamp abjoin
-    gpus            : int                           = [], # For scamp abjoin
-    verbose         : bool                          = 0, 
-    debug           : bool                          = True, 
-    time_flag       : bool                          = True,
-    plot_flag       : bool                          = False,    
-    allow_experimental : bool                       = False,
-    downsample_flag : bool                          = False,
-    min_points      : int                           = 1,
-    max_points      : int                           = 10000,
+def downsample(
+    self             : MatrixProfile,
+    downsample_flag  : bool                         = False,
+    min_points       : int                          = 1,
+    max_points       : int                          = 10000,
     downsample_flag_a: bool                         = None,
     downsample_flag_b: bool                         = None,
     min_points_a     : int                          = None,
     min_points_b     : int                          = None,
     max_points_a     : int                          = None,
-    max_points_b     : int                          = None
+    max_points_b     : int                          = None,
+    verbose          : int                          = 0
+):
+    downsample_flag_a = downsample_flag if downsample_flag_a is None else downsample_flag_a
+    downsample_flag_b = downsample_flag if downsample_flag_b is None else downsample_flag_b
+    max_points_a      = max_points if max_points_a is None else max_points_a
+    max_points_b      = max_points if max_points_b is None else max_points_b
+    min_points_a      = min_points if min_points_a is None else min_points_a
+    min_points_b      = min_points if min_points_b is None else min_points_b
+
+    if downsample_flag_a:
+        self.data, self.data_paa_factor = ut.downsample(
+            data       = self.data, 
+            min_points = min_points_a,
+            max_points = max_points_a, 
+            verbose    = verbose-1
+        )
+        if verbose > 1: 
+            print(f"Data downsampled | data~{len(self.data)} | factor {self.data_paa_factor}")
+    
+    if downsample_flag_b:
+        self.data_b, self.data_b_paa_factor = ut.downsample(
+            data       = self.data_b, 
+            min_points = min_points_b,
+            max_points = max_points_b, 
+            verbose    = verbose-1
+        )
+        if verbose > 1: 
+            print(f"Data downsampled | data~{len(self.data_b)} | factor {self.data_b_paa_factor}")
+    
+MatrixProfile.downsample = downsample
+
+def matrix_profile(
+    self            : MatrixProfile, 
+    method          : str                           = 'naive', 
+    d               : Callable                      = z_normalized_euclidean_distance,
+    threads         : int                           = 4,  # For scamp abjoin
+    gpus            : int                           = [], # For scamp abjoin
+    verbose         : bool                          = 0, 
+    debug           : bool                          = True, 
+    time_flag       : bool                          = True,
+    plot_flag       : bool                          = False,    
+    min_lag         : int                           = 4,
+    allow_experimental : bool                       = False,
 ) -> Tuple [ List [ float ], List [ float ], List [ float], List[ float], Optional [ ut.Time ]]:
     """ 
-    This function 
-    Receives
-    - data: a 1D-array representing a time series values (expected to be long)
-    - subsequence_len: Matrix Profile subsequences length
-    - data_b: a 1D-array representing a second time series' values. If none, data is used for self-join
-    - min_lag: used for excluding the nearest neighbors in the MP for avoiding trivial matches
-    - method: wether to use stump or scamp algorithm
-    - verbose > 0 for printing or not messages
-    - debug: for adding some comprobations on GPUs usability
-    - time_flag: for getting or not the execution time for the implementation analysis
-    - Threads: number of threads for scamp multithread execution
-    - GPUs: id of the GPUs to be used for scamp execution
-
-    and returns 
+    This function computes
     - mp: matrix profile
     - index: patterns indices
     - index_left: nearest neighbors in the past
@@ -1839,33 +1858,6 @@ def matrix_profile(
     if time_flag: 
         timer = ut.Time()
         timer.start()
-
-    downsample_flag_a = downsample_flag if downsample_flag_a is None else downsample_flag_a
-    downsample_flag_b = downsample_flag if downsample_flag_b is None else downsample_flag_b
-    max_points_a = max_points if max_points_a is None else max_points_a
-    max_points_b = max_points if max_points_b is None else max_points_b
-    min_points_a = min_points if min_points_a is None else min_points_a
-    min_points_b = min_points if min_points_b is None else min_points_b
-
-    if downsample_flag_a:
-        data, paa_factor = ut.downsample(
-            data       = data, 
-            min_points = min_points_a,
-            max_points = max_points_a, 
-            verbose    = verbose-1
-        )
-        if verbose > 1: 
-            print(f"Data downsampled | data~{len(data)} | factor {paa_factor}")
-    
-    if downsample_flag_b:
-        data_b, paa_factor = ut.downsample(
-            data       = data_b, 
-            min_points = min_points_b,
-            max_points = max_points_b, 
-            verbose    = verbose-1
-        )
-        if verbose > 1: 
-            print(f"Data downsampled | data~{len(data_b)} | factor {paa_factor}")
     
     #-- Select the method
     match method:
@@ -1887,9 +1879,9 @@ def matrix_profile(
             stump_cfg.STUMPY_EXCL_ZONE_DENOM = exclusion_zone
 
             mp = stump.stump(
-                T_A             = data.astype(np.float64), 
-                m               = subsequence_len, 
-                T_B             = data_b,
+                T_A             = self.data.astype(np.float64), 
+                m               = self.subsequence_len, 
+                T_B             = self.data_b,
                 ignore_trivial  = True,
                 normalize       = normalize
             )
@@ -1903,8 +1895,8 @@ def matrix_profile(
             if verbose > 0: print("--> Stump (GPU)")
             #-- Matrix profile
             normalize = (d.__name__ == 'z_normalized_euclidean_distance')
-            T_A = data.astype(np.float64)
-            T_B = data_b
+            T_A = self.data.astype(np.float64)
+            T_B = self.data_b
             if not T_B is None : 
                 print("TB provided", T_B)
                 T_B = T_B.astype(np.float64)
@@ -1921,7 +1913,7 @@ def matrix_profile(
             
             mp = stump.gpu_stump(
                 T_A             = T_A, 
-                m               = subsequence_len, 
+                m               = self.subsequence_len, 
                 T_B             = T_B,
                 ignore_trivial  = True,
                 normalize       = normalize,
@@ -1950,11 +1942,11 @@ def matrix_profile(
                 if verbose > 0: print("--> data_b provided => Executing abjoin")
                 warnings.warn("Sometimes this execution returns a 0 array. Please take care of that.")
                 mp, index = scamp.abjoin(
-                    a = data,
-                    b = data_b,
-                    m = subsequence_len,
+                    a       = self.data,
+                    b       = self.data_b,
+                    m       = self.subsequence_len,
                     threads = threads,
-                    gpus = gpus
+                    gpus    = gpus
                 )
                 if verbose > 0: print("data_b provided => Executing abjoin -->")
                 
@@ -1963,10 +1955,10 @@ def matrix_profile(
                 print("--> Scamp Naive")
             
             DM_AB = DistanceMatrix(
-                data = data, 
-                data_b = data_b, 
-                subsequence_len = subsequence_len, 
-                self_join = self_join
+                data            = self.data, 
+                data_b          = self.data_b, 
+                subsequence_len = self.subsequence_len, 
+                self_join       = self_join
             )
             
             DM_AB.compute(
@@ -1988,13 +1980,13 @@ def matrix_profile(
             
         case _: #default naive
             if verbose > 0: print("--> Invalid method. Using naive approach [default]")
-            n_a     = len(data)
-            m       = subsequence_len
-            if ( data_b is None or self_join ): 
-                data_b = data  
+            n_a     = len(self.data)
+            m       = self.subsequence_len
+            if ( self.data_b is None or self_join ): 
+                self.data_b = self.data  
                 n_b     = n_a
             else:
-                n_b     = len(data_b)
+                n_b     = len(self.data_b)
             rows    = n_b-m+1
             columns = n_a-m+1
 
@@ -2011,11 +2003,11 @@ def matrix_profile(
             
             for i in range(rows):
                 DP_AB = DistanceProfile(
-                    data            = data, 
-                    data_b          = data_b, 
+                    data            = self.data, 
+                    data_b          = self.data_b, 
                     data_b_i        = i, 
                     self_join       = self_join, 
-                    subsequence_len = subsequence_len
+                    subsequence_len = self.subsequence_len
                 )
                 DP_AB.compute(verbose = verbose -1, plot_flag = plot_flag, d = d, min_lag = min_lag)
                 mp[i] = np.nanmin(DP_AB.distances)
@@ -2031,6 +2023,9 @@ def matrix_profile(
     return mp, index, index_left, index_right, duration
 
 # %% ../nbs/mplots.ipynb 77
+MatrixProfile.matrix_profile = matrix_profile
+
+# %% ../nbs/mplots.ipynb 78
 def compute(
     self            : MatrixProfile,
     method          : str                           = 'naive', 
@@ -2059,20 +2054,25 @@ def compute(
     # Ensure no list for R variable
     self.data = np.array(self.data)
     if not ( self.data_b is None ): self.data_b = np.array(self.data_b)
+
+    self.downsample(
+        downsample_flag, 
+        min_points, max_points, 
+        downsample_flag_a, downsample_flag_b, 
+        min_points_a, min_points_b, 
+        max_points_a, max_points_b, 
+        verbose
+    )
     
     if self.subsequence_len is None or self.subsequence_len < 3:
         if provide_len or self.data_b is None:
-            self.provide_lens(nlens = nlens, verbose = (verbose > 1))
+            self.provide_lens(nlens = nlens, verbose = verbose - 1)
         else:
             self.subsequence_len = len(self.data_b)
     
     if verbose > 0: print(f"[ Matrix Profile ] Compute | subsequence_len: {self.subsequence_len}")
 
-    self.distances, self.index, self.index_left, self.index_right, self.computation_time = matrix_profile ( 
-        data                = self.data, 
-        subsequence_len     = self.subsequence_len, 
-        data_b              = self.data_b, 
-        self_join           = self.self_join, 
+    self.distances, self.index, self.index_left, self.index_right, self.computation_time = self.matrix_profile ( 
         method              = method, 
         d                   = d, 
         threads             = threads, 
@@ -2082,21 +2082,12 @@ def compute(
         plot_flag           = plot_flag,
         time_flag           = time_flag, 
         min_lag             = min_lag,
-        allow_experimental  = allow_experimental,
-        downsample_flag     = downsample_flag,
-        downsample_flag_a   = downsample_flag_a,
-        downsample_flag_b   = downsample_flag_b,
-        max_points          = max_points,
-        max_points_a        = max_points_a,
-        max_points_b        = max_points_b,
-        min_points          = min_points,
-        min_points_a        = min_points_a,
-        min_points_b        = min_points_b
+        allow_experimental  = allow_experimental
     )
     return self.distances
 MatrixProfile.compute = compute
 
-# %% ../nbs/mplots.ipynb 89
+# %% ../nbs/mplots.ipynb 90
 @dataclass
 class MatrixProfiles:
     matrix_profiles : List[ MatrixProfile ] = field( default_factory=list )
@@ -2235,7 +2226,7 @@ class MatrixProfiles:
         plt.show()
 
 
-# %% ../nbs/mplots.ipynb 107
+# %% ../nbs/mplots.ipynb 108
 def ensure_valid_limits(
     total_len       : int,
     subsequence_len : int, # divisor
@@ -2278,7 +2269,7 @@ def restore_index(
 
 
 
-# %% ../nbs/mplots.ipynb 109
+# %% ../nbs/mplots.ipynb 110
 def threshold_interval(
     data            : List [ List [ float ] ],
     threshold_min   : float,
@@ -2305,7 +2296,7 @@ def threshold_interval(
             result = result <= threshold_max
     return result
 
-# %% ../nbs/mplots.ipynb 111
+# %% ../nbs/mplots.ipynb 112
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -3099,7 +3090,7 @@ class MatrixProfilePlot:
         return plt
         """
 
-# %% ../nbs/mplots.ipynb 116
+# %% ../nbs/mplots.ipynb 117
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -3400,7 +3391,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-# %% ../nbs/mplots.ipynb 120
+# %% ../nbs/mplots.ipynb 121
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

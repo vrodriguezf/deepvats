@@ -1872,7 +1872,7 @@ def matrix_profile(
                 # The exclusion zone is i ± int(np.ceil(m / STUMPY_EXCL_ZONE_DENOM))
                 # If everything is exact...
                 # min_lag = m/STUMPY_EXCL_ZONE_DENOM => STUMPY_EXCL_ZONE_DENOM = m/min_lag
-                exclusion_zone = subsequence_len/min_lag
+                exclusion_zone = self.subsequence_len/min_lag
             else:
                 exclusion_zone = 4 #Default
             
@@ -1905,7 +1905,7 @@ def matrix_profile(
                 # The exclusion zone is i ± int(np.ceil(m / STUMPY_EXCL_ZONE_DENOM))
                 # If everything is exact...
                 # min_lag = m/STUMPY_EXCL_ZONE_DENOM => STUMPY_EXCL_ZONE_DENOM = m/min_lag
-                exclusion_zone = subsequence_len/min_lag
+                exclusion_zone = self.subsequence_len/min_lag
             else:
                 exclusion_zone = 4 #Default
             

@@ -13,7 +13,7 @@ user_preferences:
   # Whether to use or not wandb for experiment tracking
   use_wandb: &use_wandb true
   wdb:
-    user: &wdb_user mi-santamaria
+    user: &wdb_user <>
     project_name: &wdb_project deepvats
     version: &wdb_version 'latest' 
     # 'online' if the model will be tested on future data, or 'offline' if not

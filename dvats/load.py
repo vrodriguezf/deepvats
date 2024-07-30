@@ -169,9 +169,15 @@ def infer_or_inject_freq(df, injected_freq='1s', start_date=None, **kwargs):
     """
     inferred_freq = pd.infer_freq(df.index)
     if inferred_freq == 'N':
-        timedelta = pd.to_timedelta(injected_freq)
-        df.index = pd.to_datetime(ifnone(start_date, 0), **kwargs) + timedelta*df.index
-        df.index.freq = pd.infer_freq(df.index)
+        if injected_freq.endswith('mo'):
+            months = int(injected_freq[:-2])
+            freq = f'{months}M'
+            df = df.asfreq(freq)
+            df.index.freq = pd.infer_freq(df.index)
+        else:
+            timedelta = pd.to_timedelta(injected_freq)
+            df.index = pd.to_datetime(ifnone(start_date, 0), **kwargs) + timedelta*df.index
+            df.index.freq = pd.infer_freq(df.index)
     else:
         df.index.freq = inferred_freq
     return df

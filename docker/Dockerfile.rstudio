@@ -24,13 +24,13 @@ ENV GID=$GID
 ENV HOME /home/$USER
 ENV ENV_PREFIX $HOME/env
 
-RUN addgroup --gid $GID $USER
-RUN adduser --disabled-password \
-    --gecos "Non-root user" \
-    --uid $UID \
-    --gid $GID \
-    --home $HOME \
-    $USER
+#RUN addgroup --gid $GID $USER # Avoid if local user=1000
+#RUN adduser --disabled-password \
+  #  --gecos "Non-root user" \
+  #  --uid $UID \
+  #  --gid $GID \
+  #  --home $HOME \
+  #  $USER
 
 RUN adduser $USER sudo
 RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers

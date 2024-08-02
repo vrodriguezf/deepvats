@@ -37,19 +37,34 @@ RUN apt-get update \
 ARG username=user\
     uid=1000 \
     gid=1000
-ENV USER=$username \
-    UID=$uid \
+ENV UID=$uid \
     GID=$gid 
-ENV HOME=/home/$USER
+
+
+# Definir valores por defecto para USER y HOME
+ARG final_user=root
+ARG final_home=/root
 
 #-- Passwordless sudo (TODO: mv to root section)
-RUN addgroup --gid $GID $USER  \
-    && adduser --disabled-password \
-    --gecos "Non-root user" \
-    --uid $UID \
-    --gid $GID \
-    --home $HOME $USER\
-    && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+RUN if [ "$UID" -eq 1000 ] && [ "$GID" -eq 1000 ]; then \
+        echo "UID = GID = 1000 => Don't create new user." \
+        && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers;\
+    else \
+        addgroup --gid $GID $USER \
+        && adduser --disabled-password \
+        --gecos "Non-root user" \
+        --uid $UID \
+        --gid $GID \
+        && --home $HOME $USER \
+        && echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+        && final_user = $username \
+        && final_home = /home/$username; \
+    fi
+
+ENV USER=$final_user
+ENV HOME=$final_home
+
 
 #RUN sudo chown -R $UID:$GID /usr/local/share/miniconda3/envs/env
 
@@ -104,7 +119,7 @@ RUN  source /usr/local/share/miniconda3/bin/activate env \
 
 SHELL [ "/bin/sh", "-c" ]
 RUN cd ${HOME}/work/ \
-    && git config --global --add safe.directory /home/macu/work \
+    && git config --global --add safe.directory $HOME/work \
     && git rev-parse --is-inside-work-tree || (echo "Not inside a Git repository"; exit 1) \
     && pre-commit install
 

@@ -62,8 +62,8 @@ RUN if [ "$UID" -eq 1000 ] && [ "$GID" -eq 1000 ]; then \
         && final_home = /home/$username; \
     fi
 
-ENV USER=$final_user
-ENV HOME=$final_home
+ENV USER=$final_user \
+    HOME=$final_home
 
 
 #RUN sudo chown -R $UID:$GID /usr/local/share/miniconda3/envs/env

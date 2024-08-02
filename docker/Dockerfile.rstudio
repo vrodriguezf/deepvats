@@ -13,26 +13,44 @@ FROM misantamaria/dvats-rstudio:rocker-ml4.2
 SHELL [ "/bin/bash", "--login", "-c" ]
 
 ## Add Rstudio Server user
-ARG USER=user
-ARG UID=1000
-ARG GID=1000
+ARG USER=user \
+    UID=1000 \
+    GID=1000
 
-ENV USER=$USER
-ENV UID=$UID
-ENV GID=$GID
+ENV UID=$UID \
+    GID=$GID
+
+
+# Definir valores por defecto para USER y HOME
+ARG final_user=root
+ARG final_home=/root
+
+#-- Passwordless sudo (TODO: mv to root section)
+
+RUN if [ "$UID" -eq 1000 ] && [ "$GID" -eq 1000 ]; then \
+        echo "UID = GID = 1000 => Don't create new user." \
+        && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers;\
+    else \
+        addgroup --gid $GID $USER \
+        && adduser --disabled-password \
+        --gecos "Non-root user" \
+        --uid $UID \
+        --gid $GID \
+        && --home $HOME $USER \
+        && adduser $USER sudo\
+        && echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+        && final_user = $username \
+        && final_home = /home/$username; \
+    fi
+
+ENV USER=$final_user \
+    HOME=$final_home
 
 ENV HOME /home/$USER
 ENV ENV_PREFIX $HOME/env
 
-#RUN addgroup --gid $GID $USER # Avoid if local user=1000
-#RUN adduser --disabled-password \
-  #  --gecos "Non-root user" \
-  #  --uid $UID \
-  #  --gid $GID \
-  #  --home $HOME \
-  #  $USER
 
-RUN adduser $USER sudo
+
 RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Use an entrypoint script to insure conda environment is properly activated at runtime

@@ -16,39 +16,39 @@ def memb2GB( mem : int) -> int:
     return int(round(mem/1024**3, 2))
 
 # %% ../nbs/memory.ipynb 5
-def get_decoded_memory(used_total = "used", device = None, print_flag = False):
-    if print_flag: print("Get " + used_total + " memory information")
+def get_decoded_memory(used_total = "used", device = None, verbose = 0):
+    if verbose > 0: print("Get " + used_total + " memory information")
     if device is None:
-        if print_flag: print("For all GPUs devices")
+        if verbose > 0: print("For all GPUs devices")
         mem_info = subprocess.check_output(["nvidia-smi", "--query-gpu=memory."+used_total, "--format=csv"]).decode("ascii").split("\n")[:-1][1:]
-        if print_flag: print("Memory info: ", mem_info)
+        if verbose > 0: print("Memory info: ", mem_info)
         mem_values = [int(x.split()[0]) for x in mem_info]
-        if print_flag: print("Memory values: ", mem_values)
+        if verbose > 0: print("Memory values: ", mem_values)
         return mem_values
     else:
-        if print_flag: print("For device", device)
+        if verbose > 0: print("For device", device)
         return int(subprocess.check_output(["nvidia-smi", "--query-gpu=memory."+used_total, "--format=csv,noheader,nounits", "--id=" + str(device)]).decode("ascii").split("\n")[0])
     
 def get_gpu_memory(
     device : int = 0, 
     all : bool = False, 
-    print_flag : bool = False
+    verbose: int = 0
 ):    
     if all:
-        if print_flag: print("all")
+        if verbose > 0: print("all")
         total_memory = ts.get_gpu_memory()
-        if print_flag: print("--> Get ussed memory info")
-        used_memory = get_decoded_memory("used", None, print_flag)
+        if verbose > 0: print("--> Get ussed memory info")
+        used_memory = get_decoded_memory("used", None, verbose)
         used_memory = [memMB2GB(x) for x in used_memory]
-        if print_flag: print("--> Compute array of percentages")
+        if verbose > 0: print("--> Compute array of percentages")
         percentage = [ round((x / y) * 100) for (x, y) in zip(used_memory, total_memory) ]
     else:
-        if print_flag: print("one: device ", device)
+        if verbose > 0: print("one: device ", device)
         total_memory = memMB2GB( get_decoded_memory("total", device) )
         used_memory  = memMB2GB( get_decoded_memory("used", device) )
         percentage = round((used_memory / total_memory) * 100)
 
-    if print_flag: print("Total ", total_memory, " | Used ", used_memory, " | Percentage ", percentage)
+    if verbose > 0: print("Total ", total_memory, " | Used ", used_memory, " | Percentage ", percentage)
     
     return used_memory, total_memory, percentage
 

@@ -31,26 +31,8 @@ configuration:
       # (only for multivariate ts) mask all variables at once
       sync: false
     mvp:
-      # Tuple (min_w, max_x) to train MVP with adaptable window sizes. Usually max_w = config.w
-      # Set to null to train MVP with fixed window size
-      #ws1: 15 #TitlABP
-      #ws2: 30 #TitlABP
-      #ws1: 7 #sunspot
-      #ws2: &wlen 365 #sunspot
-      #ws1: 10 #toy
-      #ws2: &wlen 30 #toy
-      #ws1: 1 #Monash-Australian_electricity_demand
-      #ws2: &wlen365 #Monash-Australian_electricity_demand
-      # Insect one million
-      #ws1: 1
-      #ws2: &wlen 187
-      # Exoplanets
-      #ws1: 1
-      #ws2: &wlen 190
-
-      # PulsusParadoxus SP02
-      ws1: 15
-      ws2: &wlen 100
+      ws1: 20
+      ws2: &wlen 720
       # probability of masking in MVP
       r: 0.710
       valid_size: 0.2
@@ -60,9 +42,7 @@ configuration:
         use_single_batch: false
     sliding_windows:
       # n datapoints the window is moved ahead along the sequence in the sliding window
-      #stride: 15 #15 #1 min en 1 min #1
-      stride: 900 #sunspot
-      #stride: 1 #toy
+      stride: 9
       # This will set the percentage of items that go to val 
       # window size for the sliding window (taxi=48, steamflow=640)
       #w

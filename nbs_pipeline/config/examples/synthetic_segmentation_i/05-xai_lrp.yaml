@@ -1,0 +1,28 @@
+include: !include "base.yaml"
+
+######################################################################
+########### NBS - PIPELINE CONFIGURATION FILE              ###########
+########### 05 - XAI - Layerwise Relevance Propagation     ###########
+######################################################################
+###### Author: Maria Inmaculada Santamaria-Valenzuela                #
+###### Date: 08-2023                                                 #
+######################################################################
+
+#################################
+# 04 - Dimensionality reduction #
+#################################
+job_type: 'layer_relevance_propagation'
+configuration:
+  wandb: 
+    use: *use_wandb
+    # Whether to use or not wandb for experiment tracking
+    group: null
+    # The entity to use for wandb,
+    entity: *wdb_user
+    # The project to use for wandb,
+    project: *wdb_project 
+  artifact: 
+    prefix: !join [ *wdb_user, '/', *wdb_project, '/embeddings-', *alg]
+    version: 'latest'
+  allow_val_change: true
+  stride: 5

@@ -12,7 +12,8 @@ Depends:
     fasttime,
     zoo,
     reticulate,
-    xts
+    xts,
+    semantic.dashboard
 Remotes: 
     r-lib/later,
     apache/arrow/r

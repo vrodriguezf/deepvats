@@ -28,10 +28,14 @@ tmp*
 tags
 
 #Macu
-nbs_pipeline/*.py
 app/shiny_logs
 ./mi-santamaria/* #No sé por qué se han copiado mis proyectos de wandb
+<<<<<<< HEAD
+nbs_pipeline/test_torch.*
+
+=======
 nbs_pipeline/test_torch.ipybn
+>>>>>>> fix-open-app-in-new-machine
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -141,6 +145,7 @@ ENV/
 .DS_Store
 .DS_Store?
 .Trashes
+.Trash-1004
 ehthumbs.db
 Thumbs.db
 .idea
@@ -165,4 +170,11 @@ checklink/cookies.txt
 /docker/.env 
 /docker_test/
 /docker/tmp_configComits.sh
-.Trash-1004
+quarto-linux-amd64.deb
+nbs_pipeline/logs_orelm.txt
+nbs_pipeline/images/
+nbs_pipeline/output/
+nbs_pipeline/calidad_aire_madrid/Anio*
+nbs_pipeline/calidad_aire_madrid_2001_2024.csv
+nbs_pipeline/horario_ensanche_vallecas.csv
+nbs_pipeline/calidad_aire_madrid

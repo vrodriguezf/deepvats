@@ -337,7 +337,7 @@ shinyServer(function(input, output, session) {
                 module_name   = "tsai.data.preparation",
                 path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
                 k_output = as.integer(0),
-                print_flag = TRUE,
+                verbose = TRUE,
                 time_flag = TRUE,
                 fcst_history = input$wlen
             )
@@ -531,12 +531,12 @@ shinyServer(function(input, output, session) {
         cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
         result = dvats$get_enc_embs_set_stride_set_batch_size(
             X = X(),
-            print_flag = TRUE,
+            verbose = TRUE,
             enc_learn = enc_l,
             stride =  input$stride,  
             batch_size = bs, 
             cpu = cpu_flag, 
-            print_flag = FALSE, 
+            verbose = FALSE, 
             time_flag = TRUE, 
             chunk_size = chunk_size,
             check_memory_usage = TRUE
@@ -569,7 +569,7 @@ shinyServer(function(input, output, session) {
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = TRUE, 
-                print_flag  = TRUE,
+                verbose  = TRUE,
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
                 random_state= as.integer(input$prj_random_state)
@@ -613,7 +613,7 @@ shinyServer(function(input, output, session) {
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = cpu_flag, 
-                print_flag  = TRUE,
+                verbose  = TRUE,
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
                 random_state= as.integer(input$prj_random_state)

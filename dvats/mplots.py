@@ -1098,6 +1098,7 @@ class DistanceMatrix:
         verbose             : int           = 0
     ) -> Tuple [ List [ List [ float ] ], Optional [ ut.Time ] ] :
         if verbose > 0: print(f"DistanceMatrix | Distance: {d.__name__}")
+        if verbose > 1: print(f"time_flag: {time_flag}")
         t = None
 
         complete                    = ( self.data_b is None )
@@ -1122,12 +1123,13 @@ class DistanceMatrix:
             rows = len(reference_seq) - self.subsequence_len + 1
         if verbose > 0:
             print(f"[ DistanceMatrix | Compute ] | reference_seq ~ {len(reference_seq)} | subsequence_len ~ {self.subsequence_len} | rows {rows} | columns {columns}")
-        sys.stdout.flush()    
+            sys.stdout.flush()    
 
         self.distances = np.empty((rows, columns))
 
         if verbose > 0: 
             print(f"[ DistanceMatrix | Compute ] | Rows: {rows} Columns: {columns} | distances ~ {self.distances.shape}")
+            sys.stdout.flush()    
             
         if time_flag: 
             timer = ut.Time()
@@ -1138,8 +1140,10 @@ class DistanceMatrix:
 
         match method:
             case 'stump':
+                if verbose > 0: 
+                    print("[ DistanceMatrix | Compute ] | --> Stump")
+                    sys.stdout.flush()    
                 self.method = 'stump'
-                if verbose > 0: print("--> Stump")
                 if self.data_b is None: 
                     data_b = deepcopy(self.data)
                 else: 
@@ -1197,16 +1201,24 @@ class DistanceMatrix:
                 
                 self.method = 'scamp'
                 if verbose > 0: 
-                    print(f"[ Distance Matrix | Compute ] --> Scamp | {self.distances.shape}")
+                    print(f"[ DistanceMatrix | Compute ] | --> {self.method} {self.distances.shape}")
+                    sys.stdout.flush()    
                 if allow_experimental:
+                    if verbose > 1: 
+                        print(f"[ DistanceMatrix | Compute ] | Scamp | Allow experimental")
+                        sys.stdout.flush()    
+                    
                     if complete:
-                        if verbose > 0: 
-                            print("Complete and allow experimental")
+                        if verbose > 1: 
+                            print(f"[ DistanceMatrix | Compute ] | Scamp | Allow experimental | Complete")
+                            sys.stdout.flush()    
                         if mheight is None: 
                             mheight = n - self.subsequence_len + 1
                         if mwidth is None:
                             mwidth =  n - self.subsequence_len + 1
-                        
+                        if verbose > 1: 
+                            print(f"[ DistanceMatrix | Compute ] | Scamp | Allow experimental | About to compute {mwidth}x{mheight}")
+                            sys.stdout.flush()    
                         self.distances = scamp.selfjoin_matrix(
                             self.data, 
                             self.subsequence_len,
@@ -1217,12 +1229,23 @@ class DistanceMatrix:
                             pearson = pearson
                         )
                     else:
-                        if verbose > 0: 
-                            print("AB-Join and allow experimental")
+                        if verbose > 1: 
+                            print(f"[ DistanceMatrix | Compute ] | Scamp | Allow experimental | AB-join")
+                            sys.stdout.flush()    
                         if mheight is None: 
                             mheight = n - self.subsequence_len + 1
+                            if verbose > 2: 
+                                print(f"[ DistanceMatrix | Compute ] | Scamp | Allow experimental | AB-join mheight | n {n} len {self.subsequence_len} height {mheight} ")
+                                sys.stdout.flush()    
                         if mwidth is None:
+                            if verbose > 2: 
+                                print(f"[ DistanceMatrix | Compute ] | Scamp | Allow experimental | AB-join mwidth | n {n} len {self.subsequence_len}")
+                                sys.stdout.flush()    
                             mwidth =  n - self.subsequence_len + 1
+
+                        if verbose > 1: 
+                            print(f"[ DistanceMatrix | Compute ] | Scamp | Allow experimental | AB-join | About to compute {mwidth}x{mheight}")
+                            sys.stdout.flush()    
                         
                         self.distances = scamp.abjoin_matrix(
                             a       = self.data, 
@@ -1232,7 +1255,9 @@ class DistanceMatrix:
                             mwidth  = mwidth
                         )
                 else:
-                    if verbose > 0: print("Not allowing experimental")
+                    if verbose > 1: 
+                        print(f"[ DistanceMatrix | Compute ] | Scamp | NOT Allow experimental | About to compute")
+                        sys.stdout.flush() 
                     self.distances = distance_matrix(
                             self.data, #a_data
                             reference_seq,  #b_data
@@ -1240,9 +1265,14 @@ class DistanceMatrix:
                             min_lag
                         )
                 
-                if verbose > 0: print(f"[ Distance Matrix | Compute ] Scamp --> | {self.distances.shape}")
+                if verbose > 0: 
+                    print(f"[ Distance Matrix | Compute ] Scamp --> | {self.distances.shape}")
+                    sys.stdout.flush() 
             case 'octave-mpx':
                 self.method = 'octave-mpx'
+                if verbose > 0: 
+                    print(f"[ DistanceMatrix | Compute ] | --> {self.method} {self.distances.shape}")
+                    sys.stdout.flush()    
                 self.distances = octave.SimMat(
                     self.data,
                     self.subsequence_len,
@@ -1252,6 +1282,9 @@ class DistanceMatrix:
                 )
             case 'octave-runsplat':
                 self.method = 'octave-runsplat'
+                if verbose > 0: 
+                    print(f"[ DistanceMatrix | Compute ] | --> {self.method} {self.distances.shape}")
+                    sys.stdout.flush()    
                 self.distances = octave.runsplat(
                     self.subsequence_len,
                     self.data, 
@@ -1264,6 +1297,9 @@ class DistanceMatrix:
                 )
             case 'octave-splat':
                 self.method = 'octave-splat'
+                if verbose > 0: 
+                    print(f"[ DistanceMatrix | Compute ] | --> {self.method} {self.distances.shape}")
+                    sys.stdout.flush()    
                 print("multiresolution before octave call", multiresolution)
                 args = {
                     'timeSeriesA': self.data, 
@@ -1281,6 +1317,9 @@ class DistanceMatrix:
                 )
             case 'octave-piecewiseSplat':
                 self.method = 'octave-piecewiseSplat'
+                if verbose > 0: 
+                    print(f"[ DistanceMatrix | Compute ] | --> {self.method} {self.distances.shape}")
+                    sys.stdout.flush()    
                 self.distances = octave.piecewiseSplat(
                     self.data,
                     self.subsequence_len, 
@@ -1290,7 +1329,9 @@ class DistanceMatrix:
                 )
             case _: #default naive
                 self.method = 'naive'
-                if verbose > 0: print("--> Invalid method. Using naive [default]")
+                if verbose > 0: 
+                    print("--> Invalid method. Using naive [default]")
+                    sys.stdout.flush()    
                 if ( self.self_join ) : self.data_b = deepcopy(self.data)
 
                 DP_AB = DistanceProfile(
@@ -1318,11 +1359,14 @@ class DistanceMatrix:
                     )
 
                     self.distances[i] = DP_AB.distances
-
+        
         ############################
         ### Apply exclusion zone ###
         ############################
         # Following the stumpy convention
+        if verbose > 0: 
+            print(f"[ DistanceMatrix | Compute ] | --> Apply exclusion zone")
+            sys.stdout.flush()    
         if  not ( min_lag is None ):
             if (
                 self.c_min is None
@@ -1343,12 +1387,16 @@ class DistanceMatrix:
                         for col in range(col_min,col_max):
                             self.distances[row][col] = np.inf
                 
-                        
+        if verbose > 0: 
+            print(f"[ DistanceMatrix | Compute ] | Apply exclusion zone -->")
+            sys.stdout.flush()    
+            
         if time_flag: 
             timer.end()
             self.computation_time = timer.duration() 
         
         if time_flag: 
+            timer.show()
             print(f"matrix profile {self.computation_time} seconds -->")
         elif verbose > 0: 
             print("matrix profile -->")
@@ -2276,24 +2324,42 @@ def threshold_interval(
     threshold_max   : float,
     include_min     : bool = False,
     include_max     : bool = False,
-    gray_color      : bool = True
+    gray_color      : bool = True,
+    verbose         : int  = 0
 ) -> List [ List [ float ] ]:
-    result = deepcopy(data)    
-    if include_min:
-        result = np.where(result > threshold_min, result, np.inf)
-    else:
-        result = np.where(result >= threshold_min, result, np.inf)
-    
-    if include_max:
-        if not gray_color:
-            result = np.where(result < threshold_max, result, np.inf)
+    if verbose > 1: print(f"[ Threshold interval ] min {threshold_min} max {threshold_max}")
+    result = np.array(deepcopy(data))
+    if threshold_min != -np.inf:
+        if include_min:
+            if verbose > 1: print("[ Threshold interval ] Include min")
+            result = np.where(result >= threshold_min, result, np.inf)
+            if (verbose > 2): print(result)
         else:
-            result = result < threshold_max
-    else:
-        if not gray_color:
-            result = np.where(result <= threshold_max, result, np.inf)
+            if verbose > 1: print("[ Threshold interval ] Exclude min")
+            result = np.where(result > threshold_min, result, np.inf)
+            if (verbose > 2): print(result)
+        if gray_color: 
+            result = result != np.inf
+    if threshold_max != np.inf or threshold_max == -np.inf:
+        if include_max:
+            if verbose > 1: print("[ Threshold interval ] Include max")
+            if not gray_color:
+                if verbose > 1: print("[ Threshold interval ] Include max | Not Gray")
+                result = np.where(result <= threshold_max, result, np.inf)
+                if (verbose > 2): print(result)
+            else:
+                if verbose > 1: print("[ Threshold interval ] Include max | Gray")
+                result = result <= threshold_max
+                if (verbose > 2): print(result)
         else:
-            result = result <= threshold_max
+            if not gray_color:
+                if verbose > 1: print("[ Threshold interval ] Exclude max | Not Gray")
+                result = np.where(result < threshold_max, result, np.inf)
+                if (verbose > 2): print(result)
+            else:
+                if verbose > 1: print("[ Threshold interval ] Exclude max | Gray")
+                result = result < threshold_max
+                if (verbose > 2): print(result)
     return result
 
 # %% ../nbs/mplots.ipynb 112
@@ -2362,9 +2428,11 @@ class MatrixProfilePlot:
         max_points_a        : int               = None,
         max_points_b        : int               = None,
         downsample_flag_a   : int               = None,
-        downsample_flag_b   : int               = None
+        downsample_flag_b   : int               = None,
+        compute_mp          : bool              = True
     ) -> Tuple [ List [ List [ float ] ], Optional [ float ] ]:
-        if verbose > 0: print(f"MatrixProfilePlot | Distance: {d.__name__}")
+        if verbose > 0: print("[ MatrixProfilePlot | Compute ]")
+        if verbose > 0: print(f"[ MatrixProfilePlot | Compute ] | Distance: {d.__name__}")
         ###
         self.data = None if self.data is None else np.array(self.data)
         self.data_b = None if self.data_b is None else np.array(self.data_b)
@@ -2376,13 +2444,24 @@ class MatrixProfilePlot:
         min_points_a = min_points if min_points_a is None else min_points_a
         min_points_b = min_points if min_points_b is None else min_points_b
         ###
-
+        if verbose > 1: 
+            print(f"[ MatrixProfilePlot | Compute ] | Downsample? TA: {downsample_flag_a} TB: {downsample_flag_b}")
+            print(f"[ MatrixProfilePlot | Compute ] | points? TA: {min_points_a} - {max_points_a}")
+            print(f"[ MatrixProfilePlot | Compute ] | points? TB: {min_points_b} - {max_points_b}")
         t = None
         if time_flag:
-            t = ut.Time ( function = ut.funcname() )
+            if verbose > 1: print(f"[ MatrixProfilePlot | Compute ] Timer")
+            fname =  ut.funcname()
+            if verbose > 1: print(f"[ MatrixProfilePlot | Compute ] | Timer for {fname}")
+            t = ut.Time ( function = fname)
+            if verbose > 1: print(f"[ MatrixProfilePlot | Compute ] | Timer Start")
             t.start()
+        if verbose > 2: print(f"[ MatrixProfilePlot | Compute ] | Setup dm method")
         self.dm_method = dm_method
+        if verbose > 2: print(f"[ MatrixProfilePlot | Compute ] | Setup mp method")
         self.mp_method = mp_method
+
+        if verbose > 1: print(f"[ MatrixProfilePlot | Compute ] DM method: {self.dm_method} MP method {self.mp_method}")
     
         n_a = len(self.data)
         n_b = n_a if self.data_b is None else len(self.data_b)
@@ -2394,13 +2473,17 @@ class MatrixProfilePlot:
             or  c_max is None
 
         ):
-            if verbose > 1: print("MatrixProfilePlot | Compute | No range provided")
+            if verbose > 1: 
+                print("MatrixProfilePlot | Compute | No range provided")
+                sys.stdout.flush()
             self.c_min = 0
             self.c_max = n_a
             self.r_min = 0
             self.r_max = n_b
         else:
-            if verbose > 1: print("MatrixProfilePlot | Compute | Range provided")
+            if verbose > 1: 
+                print("MatrixProfilePlot | Compute | Range provided")
+                sys.stdout.flush()
             self.r_min  = max(0, r_min)
             self.r_max  = min(r_max, n_b)
             self.c_min  = max(0, c_min)
@@ -2412,9 +2495,11 @@ class MatrixProfilePlot:
                 self.c_max = min(n_a, c_padd)
                 if verbose > 1:
                     print(f"Xpadd {r_padd}, YPadd {c_padd}, A ~ {n_a}, B ~ {n_b}")
+                    sys.stdout.flush()
                 
         if verbose > 0:
             print(f"MatrixProfilePlot | Compute | Range [{self.r_min}:{self.r_max}, {self.c_min}:{self.c_max}]")
+            sys.stdout.flush()
 
         data = self.data[self.r_min:self.r_max]
         
@@ -2425,11 +2510,13 @@ class MatrixProfilePlot:
 
         ## Addapt time serie ('zoom', PAA)
         if downsample_flag_a : 
-            if verbose > 0: print( "[ MPlot | Compute ] | -->  Downsample TA")
+            if verbose > 0: 
+                print( "[ MPlot | Compute ] | -->  Downsample TA")
+                sys.stdout.flush()
             if len(data) > max_points:
                 if verbose > 1: 
                     print(f"[ MPlot | Compute ] | ---> Downsample TA to {self.r_min} : {self.r_max}")
-                
+                    sys.stdout.flush()
                 self.data_paa, self.data_paa_factor = ut.downsample(
                     data         = data,
                     min_position = self.c_min,
@@ -2443,14 +2530,20 @@ class MatrixProfilePlot:
                 self.data_paa = data
             if verbose > 0: 
                 print(f"[ MPlot | Compute ] | Downsample TA ~ {len(self.data_paa)} ---> ")
+                sys.stdout.flush()
         else:
-            if verbose > 0: print("MPlot | Compute | Do not downsample => use original TA time series")
+            if verbose > 0: 
+                print("MPlot | Compute | Do not downsample => use original TA time series")
+                sys.stdout.flush()
             self.data_paa   = data
         if downsample_flag_b: 
-            if verbose > 0: print( "[ MPlot | Compute ] | -->  Downsample TB")
+            if verbose > 0: 
+                print( "[ MPlot | Compute ] | -->  Downsample TB")
+                sys.stdout.flush()
             if len(data_b) > max_points: 
                 if verbose > 0:
                     print("[ MPlot | Compute ] |  --> Downsample TB ")
+                    sys.stdout.flush()
 
                 self.data_b_paa, self.data_b_paa_factor = ut.downsample(
                     data         = data_b,
@@ -2466,14 +2559,18 @@ class MatrixProfilePlot:
             if verbose > 0: 
                 print(f"[ MPlot | Compute ] | Downsample TB_paa ~ {len(self.data_b_paa)} ---> ")
                 print( "[ MPlot | Compute ] |Downsample -->")
+                sys.stdout.flush()
         else:
-            if verbose > 0: print("MPlot | Compute | Do not downsample => use original TB time series")
+            if verbose > 0: 
+                print("MPlot | Compute | Do not downsample => use original TB time series")
+                sys.stdout.flush()
             self.data_b_paa = data_b
             
         
         ## Ensure parameters
         if verbose > 0:
             print("MPlot | Compute | --> Ensure parameters ")
+            sys.stdout.flush()
         
         self.MP_AB = MatrixProfile(
             data            = self.data_paa, 
@@ -2485,16 +2582,20 @@ class MatrixProfilePlot:
         ## Ensure parameters
         if verbose > 0:
             print("MPlot | Compute | --> provide_len ")
+            sys.stdout.flush()
 
         if provide_len or self.data_b is None:
             if verbose > 1: 
                 print("MPlot | Compute | --> provide_len ... 1 ... ")
+                sys.stdout.flush()
             if self.dominant_lens is None:
                 if verbose > 1: 
                     print("MPlot | Compute | --> provide_len ... 1.1 ... | No dominant lens")
+                    sys.stdout.flush()
                 if self.MP_AB.dominant_lens is None:
                     if verbose > 1: 
                         print("MPlot | Compute | --> provide_len ... 1.2 ... | No dominant lens | provide_lens")
+                        sys.stdout.flush()
                         print("Before: data ~", len(self.MP_AB.data))
                     self.MP_AB.provide_lens(
                         nlens = nlens, 
@@ -2506,33 +2607,37 @@ class MatrixProfilePlot:
             if verbose > 1:  
                 print("MPlot | Compute | --> provide_len ... 2 ...")
                 print(f"MPlot | Compute | provide_len ... 2 ... | Setup sequence len to dominant_lens[0]={ self.dominant_lens[0]}")
+                sys.stdout.flush()
             self.subsequence_len = self.dominant_lens[0]
         elif not provide_len:
             if verbose > 1: 
                 print("MPlot | Compute | --> provide_len ... 3 ...")
+                sys.stdout.flush()
             self.subsequence_len = subsequence_len
 
         else:
             if verbose > 1: 
                 print("MPlot | Compute | --> provide_len ... 3 ...")
                 print("MPlot | Compute | --> provide_len ... 3 ... | Data_b_paa ~ ", self.data_b_paa.shape)
+                sys.stdout.flush()
             self.subsequence_len = len(self.data_b_paa)
         
         if verbose > 0: 
             print(f"[ MPlot | Compute ] | Ensure Parameters TB_paa ~ {len(self.data_b_paa)} ---> ")
-
+            sys.stdout.flush()
         ## Ensure valid limits (so the compared subsequences are the same than with the global matrix)
         n_a_paa = len(self.data_paa)
         n_b_paa = len(self.data_b_paa)
         self.r_min, self.r_max = ensure_valid_limits(n_b_paa, self.subsequence_len, self.r_min, self.r_max, verbose = verbose-1 )
         self.c_min, self.c_max = ensure_valid_limits(n_a_paa, self.subsequence_len, self.c_min, self.c_max, verbose = verbose-1 )
         
-        if verbose > 0: print(f"MatrixProfilePlot | Compute | Final Range [{self.r_min}:{self.r_max}, {self.c_min}:{self.c_max}]")
-        
+        if verbose > 0: 
+            print(f"MatrixProfilePlot | Compute | Final Range [{self.r_min}:{self.r_max}, {self.c_min}:{self.c_max}]")
+            sys.stdout.flush()
         ## Instantiate self.DM_AB & MP_AB
         if verbose > 0: 
             print(f"MPlot | Compute | --> Instantiate DM & MP | TA ~ {len(self.data_paa)} | TB ~ {len(self.data_b_paa)}")
-
+            sys.stdout.flush()
         self.DM_AB = DistanceMatrix(
             data            = self.data_paa, 
             data_b          = self.data_b_paa,
@@ -2552,26 +2657,31 @@ class MatrixProfilePlot:
             print(f"MP_AB data_b ~ {len(self.MP_AB.data_b)}")
             print(f"DM_AB data_b ~ {len(self.DM_AB.data_b)}")
             print("MPlot | Compute | ... Checking inicializations ...")
+            sys.stdout.flush()
 
         ## Compute       
-        if verbose > 0:  print("MPlot | Compute | --> Compute MP")
-        self.MP_AB.compute(
-            method              = mp_method,
-            d                   = d,
-            time_flag           = time_flag,
-            verbose             = verbose-1,
-            provide_len         = provide_len,
-            nlens               = nlens,
-            min_lag             = min_lag,
-            threads             = threads,
-            gpus                = gpus,
-            allow_experimental  = allow_experimental
-        )
+        if verbose > 0:  
+            print("MPlot | Compute | --> Compute MP")
+            sys.stdout.flush()
+        if compute_mp:
+            self.MP_AB.compute(
+                method              = mp_method,
+                d                   = d,
+                time_flag           = time_flag,
+                verbose             = verbose-1,
+                provide_len         = provide_len,
+                nlens               = nlens,
+                min_lag             = min_lag,
+                threads             = threads,
+                gpus                = gpus,
+                allow_experimental  = allow_experimental
+            )
         if verbose > 0:  
             print(
                 "MPlot | Compute | --> Compute DM | Allow experimental: ", 
                 allow_experimental
             )
+            sys.stdout.flush()
         
         self.DM_AB.r_min = self.r_min
         self.DM_AB.r_max = self.r_max
@@ -2587,8 +2697,13 @@ class MatrixProfilePlot:
             min_lag             = min_lag,
             verbose             = verbose-1
         )
-        
-        if verbose > 0: print("MPlot | Compute | Compute DM -->")
+
+        if time_flag: 
+            t.end()
+            t.show()
+        if verbose > 0: 
+            print("MPlot | Compute | Compute DM -->")
+            sys.stdout.flush()
             
     def plot_check_limits(
         self,

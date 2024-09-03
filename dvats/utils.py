@@ -492,21 +492,22 @@ def downsample_propose_crop_(
         verbose = verbose-1
     )
     val = 0
-    if len(all_divisors == 0):
+    if len(all_divisors) == 0:
         if ( not nearest_val or potential_val < 1):
             raise ValueError("No valid divisors found for the given N within the min and max points range.")
-        else:
-            if ( nearest_val and potential_val > 0):
+    else:
+        if ( nearest_val and potential_val > 0):
                 val = min(all_divisors, key=lambda x: abs(x - potential_val))
-            elif (divisors_flag):
-                val = divisors(
-                    N       = N, 
-                    min_val = min_points, 
-                    max_val = max_points, 
-                    verbose = verbose-1
-                )[-1]
+        elif (divisors_flag):
+            val = divisors(
+                N       = N, 
+                min_val = min_points, 
+                max_val = max_points, 
+                verbose = verbose-1
+            )[-1]
+    
     if (allow_crop):
-        while (val < min_points): 
+        while (val < min_points and N > min_points): 
             N = N-1
             all_divisors = divisors(
                 N       = N, 
@@ -517,13 +518,6 @@ def downsample_propose_crop_(
             if len(all_divisors) > 0:
                 if ( nearest_val and potential_val > 0):
                     val = min(all_divisors, key=lambda x: abs(x - potential_val))
-                else:
-                    val = divisors(
-                        N          = N, 
-                        min_val    = min_points, 
-                        max_val    = max_points, 
-                        verbose    = verbose-1,
-                    )[-1]
     else: 
         raise DownsampleError()
         return -1

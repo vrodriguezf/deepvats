@@ -172,3 +172,8 @@ checklink/cookies.txt
 /docker/tmp_configComits.sh
 quarto-linux-amd64.deb
 nbs_pipeline/logs_orelm.txt
+nbs_pipeline/images/
+nbs_pipeline/output/
+nbs_pipeline/calidad_aire_madrid/Anio*
+nbs_pipeline/calidad_aire_madrid_2001_2024.csv
+nbs_pipeline/horario_ensanche_vallecas.csv

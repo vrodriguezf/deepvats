@@ -617,7 +617,8 @@ monash_solar_4_seconds_0 = AttrDict(
         #450 30 min - Too small for G4-0
         #900 1h
         ws = [450,900], #1 min - 30 min (15*60=900 = 1hora intervalos 4 secs)
-        stride = 450
+        stride = 1
+        #stride = 450
         #stride = 10800 #1 min TODO: Check
     ),
     dcae = AttrDict(#TODO: Check
@@ -916,7 +917,7 @@ def get_resampling_frequency(
         print("Frequency factor resampling frequency -->")
     return (suffix, resampling_freq)
 
-# %% ../nbs/config.ipynb 79
+# %% ../nbs/config.ipynb 80
 def frequency_factor_config(
     config: AttrDict, 
     frequency_factor:int = 1,
@@ -940,7 +941,7 @@ def frequency_factor_config(
         print("path: ", config.data_fpath)    
         print("Frequency factor config -->")
 
-# %% ../nbs/config.ipynb 80
+# %% ../nbs/config.ipynb 81
 def diff_attrdict(
     dict_original: AttrDict, 
     dict_modified: AttrDict,
@@ -968,7 +969,7 @@ def diff_attrdict(
             print_colored(key, modified_val=dict_modified[key], modified=True, missing_in_original=True)
 
 
-# %% ../nbs/config.ipynb 81
+# %% ../nbs/config.ipynb 82
 from copy import deepcopy
 def force_artifact_config_sd2a(
     config: AttrDict,
@@ -1005,7 +1006,7 @@ def force_artifact_config_sd2a(
             dict_modified=config, 
             both = both)
 
-# %% ../nbs/config.ipynb 85
+# %% ../nbs/config.ipynb 86
 def split_artifact_string(s:string) -> tuple[string, string, string]:
     # Divide la cadena en dos partes usando ':'
     path, version = s.split(':')
@@ -1016,7 +1017,7 @@ def split_artifact_string(s:string) -> tuple[string, string, string]:
     # Retorna los componentes separados
     return parts[0] + '/', parts[1], version
 
-# %% ../nbs/config.ipynb 87
+# %% ../nbs/config.ipynb 88
 def force_artifact_config_mvp(
     config: AttrDict,
     id:int = 0, 
@@ -1065,7 +1066,7 @@ def force_artifact_config_mvp(
             both = both
         )
 
-# %% ../nbs/config.ipynb 90
+# %% ../nbs/config.ipynb 91
 def force_artifact_config_dcae(
     config: AttrDict,
     id:int = 0, 

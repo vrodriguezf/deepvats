@@ -63,8 +63,19 @@ class TSArtifact(wandb.Artifact):
 
     @classmethod
     @delegates(__init__)
-    def from_df(cls, df:pd.DataFrame, name:str, path:str=None, sd:pd.Timestamp=None, ed:pd.Timestamp=None,
-                normalize:bool=False, missing_values_technique:str=None, resampling_freq:str=None, **kwargs):
+    def from_df(
+        cls, 
+        df:pd.DataFrame, 
+        name:str, 
+        path:str=None, 
+        sd:pd.Timestamp=None, 
+        ed:pd.Timestamp=None,
+        normalize:bool=False, 
+        missing_values_technique:str=None, 
+        resampling_freq:str=None, 
+        verbose:int = 0,
+        **kwargs,
+    ):
 
         """
         Create a TSArtifact of type `dataset`, using the DataFrame `df` samples from \
@@ -95,8 +106,10 @@ class TSArtifact(wandb.Artifact):
         """
         sd = df.index[0] if sd is None else sd
         ed = df.index[-1] if ed is None else ed
+        if (verbose > 1): print(f"[ From df ] sd {sd}, ed {ed}")
         obj = cls(name, sd=sd, ed=ed, **kwargs)
         df = df.query('@obj.sd <= index <= @obj.ed')
+        if (verbose > 1): print(f"[ From df ] df_query~{df.shape}")
         obj.metadata['TS']['created'] = 'from-df'
         obj.metadata['TS']['n_vars'] = df.columns.__len__()
 
@@ -104,11 +117,13 @@ class TSArtifact(wandb.Artifact):
         df = obj.handle_missing_values_techniques[missing_values_technique](df) if missing_values_technique is not None else df
         obj.metadata['TS']['handle_missing_values_technique'] = missing_values_technique.__str__()
         obj.metadata['TS']['has_missing_values'] = np.any(df.isna().values).__str__()
+        if (verbose > 1): print(f"[ From df ] df_missing~{df.shape}")
 
         # Indexing and Resampling
         if resampling_freq: df = df.resample(resampling_freq).mean()
         obj.metadata['TS']['n_samples'] = len(df)
         obj.metadata['TS']['freq'] = str(df.index.freq)
+        if (verbose > 1): print(f"[ From df ] df_resampled~{df.shape}")
 
         # Time Series Variables
         obj.metadata['TS']['vars'] = list(df.columns)
@@ -122,7 +137,7 @@ class TSArtifact(wandb.Artifact):
         # Hash and save
         hash_code = str(pd.util.hash_pandas_object(df).sum()) # str(hash(df.values.tobytes()))
         path = obj.default_storage_path/f'{hash_code}' if path is None else Path(path)/f'{hash_code}'
-        print("About to write df to ", path)
+        if verbose > 0: print("About to write df to ", path)
         ft.write_feather(df, path, compression = 'lz4')
         #feather.write_dataframe
         obj.metadata['TS']['hash'] = hash_code
@@ -161,7 +176,7 @@ def to_tsartifact(self:wandb.apis.public.Artifact):
 
 # %% ../nbs/load.ipynb 18
 @delegates(pd.to_datetime)
-def infer_or_inject_freq(df, injected_freq='1s', start_date=None, **kwargs):
+def infer_or_inject_freq(df, injected_freq='1s', start_date=None, verbose = 0, **kwargs):
     """
         Infer index frequency. If there's not a proper time index, create fake timestamps,
         keeping the desired `injected_freq`. If that is None, set a default one of 1 second.
@@ -172,7 +187,11 @@ def infer_or_inject_freq(df, injected_freq='1s', start_date=None, **kwargs):
         if injected_freq.endswith('mo'):
             months = int(injected_freq[:-2])
             freq = f'{months}M'
-            df = df.asfreq(freq)
+            if verbose > 1: print(f"df~{df.shape} | freq {freq}")
+            start_date = pd.to_datetime(ifnone(start_date, df.index[0]))
+            new_index = pd.date_range(start=start_date, periods=len(df), freq=freq)
+            df.index = new_index
+            if verbose > 1: print(df.shape)
             df.index.freq = pd.infer_freq(df.index)
         else:
             timedelta = pd.to_timedelta(injected_freq)

@@ -214,7 +214,7 @@ shinyServer(function(input, output, session) {
         on.exit({print("--> observeEvent tsdf | update select variables -->"); flush.console()})
         freezeReactiveValue(input, "select_variables")
         #ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
-        ts_variables$selected = names(isolate(tsdf()))
+        ts_variables$selected = names(tsdf())
         print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         updateCheckboxGroupInput(
             session = session,
@@ -301,7 +301,7 @@ shinyServer(function(input, output, session) {
     # Observe to check/uncheck all variables
     observeEvent(input$selectall,{
         req(tsdf)
-        ts_variables$selected <- names(isolate(tsdf()))
+        ts_variables$selected <- names(tsdf())
         if(input$selectall %%2 == 0){
             updateCheckboxGroupInput(session = session, 
                                      inputId = "select_variables",
@@ -516,7 +516,8 @@ shinyServer(function(input, output, session) {
         bs = dataset_logged_by$config$batch_size
         stride = input$stride 
         
-        print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
+        print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs , " | stride: ", stride))
+        print(paste0("reactive embs | get embeddings | Original stride: ", dataset_logged_by$config$stride))
         enc_input = X()
         #chunk_max = 10000000
         #shape <- dim(enc_input)
@@ -795,13 +796,13 @@ shinyServer(function(input, output, session) {
     )
 
     start_date <- reactive({
-        isolate(tsdf())$timeindex[1]
+        tsdf()$timeindex[1]
     })
 
     end_date <- reactive({
         end_date_id = 100000
-        end_date_id = min(end_date_id, nrow(isolate(tsdf())))
-        isolate(tsdf())$timeindex[end_date_id]
+        end_date_id = min(end_date_id, nrow(tsdf()))
+        tsdf()$timeindex[end_date_id]
     })
 
     ts_plot_base <- reactive({
@@ -811,7 +812,7 @@ shinyServer(function(input, output, session) {
         end_date = isolate(end_date())
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_init <- Sys.time()
-        tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected, - "timeindex")
+        tsdf_ <- tsdf() %>% select(ts_variables$selected, - "timeindex")
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
         t_end <- Sys.time()
         print(paste0("ts_plot_base | tsdf_xts time: ", t_end-t_init)) 
@@ -864,8 +865,8 @@ shinyServer(function(input, output, session) {
         reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
         # Populate the first element of the list with the idx of the first window.
         reduced_window_list[[1]] = c(
-            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
-            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[2]]]
+            tsdf()$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
+            tsdf()$timeindex[unlist_window_indices[idx_window_limits[2]]]
         ) 
         if (length(idx_window_limits) > 2) {
             # Populate the rest of the list
@@ -873,8 +874,8 @@ shinyServer(function(input, output, session) {
                 reduced_window_list[[i]]<- c(
                     #unlist_window_indices[idx_window_limits[i]+1],
                     #unlist_window_indices[idx_window_limits[i+1]]
-                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+                    tsdf()$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
+                    tsdf()$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
                )
             }
         }
@@ -908,13 +909,13 @@ shinyServer(function(input, output, session) {
             view_size = end_indices-start_indices+1
             max_size = 10000
 
-            start_date = isolate(tsdf())$timeindex[start_indices]
-            end_date = isolate(tsdf())$timeindex[end_indices]
+            start_date = tsdf()$timeindex[start_indices]
+            end_date = tsdf()$timeindex[end_indices]
 
-            print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
+            print(paste0("ts_plot | reuced_window_list (", start_date, ", ", end_date, ")", "view size ", view_size, " max size ", max_size))
             
             if (view_size > max_size) {
-                end_date = isolate(tsdf())$timeindex[start_indices + max_size - 1]
+                end_date = tsdf()$timeindex[start_indices + max_size - 1]
                 #range_color = "#FF0000" # Red
             } 
             
@@ -925,8 +926,8 @@ shinyServer(function(input, output, session) {
             count = 0
             for(ts_idxs in reduced_window_list) {
                 count = count + 1
-                start_event_date = isolate(tsdf())$timeindex[head(ts_idxs, 1)]
-                end_event_date = isolate(tsdf())$timeindex[tail(ts_idxs, 1)]
+                start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
+                end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
                 ts_plt <- ts_plt %>% dyShading(
                     from = start_event_date,
                     to = end_event_date,
@@ -998,8 +999,8 @@ shinyServer(function(input, output, session) {
         # Convertir a fechas POSIXct
         reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
             data.frame(
-                start = as.POSIXct(isolate(tsdf())$timeindex[x[1]], origin = "1970-01-01"),
-                end = as.POSIXct(isolate(tsdf())$timeindex[x[2]], origin = "1970-01-01")
+                start = as.POSIXct(tsdf()$timeindex[x[1]], origin = "1970-01-01"),
+                end = as.POSIXct(tsdf()$timeindex[x[2]], origin = "1970-01-01")
             )
         }))
 
@@ -1007,8 +1008,8 @@ shinyServer(function(input, output, session) {
         first_date = min(reduced_window_df$start)
         last_date = max(reduced_window_df$end)
     
-        left = as.POSIXct(isolate(tsdf())$timeindex[1],  origin = "1970-01-01")
-        right = as.POSIXct(isolate(tsdf())$timeindex[nrow(isolate(tsdf()))], origin = "1970-01-01")
+        left = as.POSIXct(tsdf()$timeindex[1],  origin = "1970-01-01")
+        right = as.POSIXct(tsdf()$timeindex[nrow(tsdf())], origin = "1970-01-01")
 
         # Configuración del gráfico base
         par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
@@ -1068,8 +1069,8 @@ shinyServer(function(input, output, session) {
         # Crear un conjunto de etiquetas de texto con información de las ventanas
         window_info <- lapply(1:length(reduced_window_list), function(i) {
             window <- reduced_window_list[[i]]
-            start <- format(as.POSIXct(isolate(tsdf())$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
-            end <- format(as.POSIXct(isolate(tsdf())$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+            start <- format(as.POSIXct(tsdf()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+            end <- format(as.POSIXct(tsdf()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
             color <- ifelse(i %% 2 == 0, "green", "blue")
             HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
         })

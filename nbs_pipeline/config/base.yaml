@@ -28,7 +28,7 @@ user_preferences:
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
     alias: &alias 'Monash-Australian_electricity_demand'
-    algorithm: &alg 'mvp-SWV'
+    algorithm: &alg 'mvp'
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 

@@ -53,6 +53,7 @@ if(torch$cuda$is_available()){
 tsai_data = reticulate::import("tsai.data.all")
 wandb = reticulate::import("wandb")
 pd = reticulate::import("pandas")
+np = reticulate::import("numpy")
 hdbscan = reticulate::import("hdbscan")
 dvats = reticulate::import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
 

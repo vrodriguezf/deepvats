@@ -25,6 +25,7 @@ shinyUI(fluidPage(
       hr(),
       selectizeInput("dataset", label = "Dataset", choices = NULL),
       selectizeInput("encoder", label = "Encoder", choices = NULL),
+      actionButton("play_pause", "Run!", icon = icon("play")),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
       sliderInput("wlen", "Select window size", min = 0, max = 0, value =0 , step = 1),

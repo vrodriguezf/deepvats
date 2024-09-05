@@ -12,7 +12,7 @@
 source("./server-helper.R")
 
 shinyServer(function(input, output, session) {
-    options(shiny.verbose = TRUE)
+    options(shiny.verbose = 1)
     #options(shiny.error = function() {
     #    traceback()
     #    stopApp()
@@ -64,11 +64,19 @@ shinyServer(function(input, output, session) {
         stride = ceiling(enc_ar()$metadata$stride/2)
     })
 
+    # Reactive value for ensuring correct dataset
+    tsdf_ready <- reactiveVal(FALSE)
+    # Reactive value for ensuring correct encoder input
+    enc_input_ready <- reactiveVal(FALSE)
+
     # Time series artifact
     ts_ar <- eventReactive(
         input$dataset, 
         {
         req(input$dataset)
+        tsdf_ready(FALSE)
+        enc_input_ready(FALSE)
+
         ar <- api$artifact(input$dataset, type='dataset')
         on.exit({print("eventReactive ts_ar -->"); flush.console()})
         ar
@@ -78,6 +86,8 @@ shinyServer(function(input, output, session) {
     # Reactive value for indexing saved projections plot
     prj_plot_id <- reactiveVal(0)
     
+    
+
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
@@ -214,7 +224,7 @@ shinyServer(function(input, output, session) {
         on.exit({print("--> observeEvent tsdf | update select variables -->"); flush.console()})
         freezeReactiveValue(input, "select_variables")
         #ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
-        ts_variables$selected = names(tsdf())
+        ts_variables$selected = names(isolate(tsdf()))
         print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         updateCheckboxGroupInput(
             session = session,
@@ -301,7 +311,7 @@ shinyServer(function(input, output, session) {
     # Observe to check/uncheck all variables
     observeEvent(input$selectall,{
         req(tsdf)
-        ts_variables$selected <- names(tsdf())
+        ts_variables$selected <- names(isolate(tsdf()))
         if(input$selectall %%2 == 0){
             updateCheckboxGroupInput(session = session, 
                                      inputId = "select_variables",
@@ -314,42 +324,83 @@ shinyServer(function(input, output, session) {
                                      selected = NULL)
         }
     })
+
     # Observe to update encoder input (enc_input = X())
-    observe({ #Event(input$dataset, input$encoder, input$wlen, input$stride, {
-    req(input$wlen != 0, input$stride != 0, input$stride != 1)
-    print(paste0("Check reactiveness | X |  wlen, stride |"))
+    observe({#Event(input$dataset, input$encoder, input$wlen, input$stride, {
+        # 5/09/2024 # Añadido dataset en el req
+        req(tsdf_ready, input$wlen != 0, input$stride != 0, input$stride != 1)
+
+        print(paste0("Enc input | Check reactiveness | X |  wlen, stride |"))
+        print(paste0("Enc input | Check reactiveness | X |  wlen, stride | tsdf_ready ", tsdf_ready()))
+        print(paste0("Enc input | Check reactiveness | X |  wlen, stride | tsdf ~ ", dim(isolate(tsdf()))))
         if (
-            is.null(X()) ||
-            !identical(
-                input$dataset, isolate(input$dataset)) || 
-                !identical(input$encoder, isolate(input$encoder)) || 
-                input$wlen != isolate(input$wlen) || 
-                input$stride != isolate(input$stride)
+            ! enc_input_ready()
+            #is.null(X()) ||
+            #!identical(
+                #input$dataset, isolate(input$dataset)) || 
+                #!identical(input$encoder, isolate(input$encoder)) || 
+                #input$wlen != isolate(input$wlen) || 
+                #input$stride != isolate(input$stride)
         ) {
-            print("--> ReactiveVal X | Update Sliding Window")
-            print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
-            print("reactive X | SWV")
+            print("Enc input | Update X")
+            print("Enc input | --> ReactiveVal X | Update Sliding Window")
+            print(paste0("Enc input | reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
+            print(paste0("Enc input | reactive X | ts_ar - id ", ts_ar()$id, " - name ", ts_ar()$name))
             
             t_x_0 <- Sys.time()
         
-            enc_input = dvats$exec_with_feather_k_output(
-                function_name = "prepare_forecasting_data",
-                module_name   = "tsai.data.preparation",
-                path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
-                k_output = as.integer(0),
-                verbose = TRUE,
-                time_flag = TRUE,
-                fcst_history = input$wlen
-            )
-
-            t_x_1 <- Sys.time()
-            t_sliding_window_view = t_x_1 - t_x_0
-            print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
             
-            print(paste0("reactive X | Update sliding window | Apply stride ", input$stride," | enc_input ~ ", dim(enc_input), "-->"))
-            on.exit({print("reactive X -->"); flush.console()})
+            #-- 05/09/2024 --# Devolviendo a Sliding window por problemas de tamaños en el enc_input 
+            
+            enc_input <- dvats$exec_with_feather_k_output(
+                function_name   = "prepare_forecasting_data",
+                module_name     = "tsai.data.preparation",
+                path            = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
+                k_output        = as.integer(0),
+                verbose         = as.integer(1),
+                time_flag       = TRUE,
+                fcst_history    = as.integer(input$wlen)
+            )
+            
+            #result <- tsai_data$SlidingWindow(
+            #    window_len = as.integer(input$wlen), 
+            #    stride = as.integer(input$stride), 
+            #    get_y = list()
+           # )(tsdf())[[1]]
+            
+            #dims <- dim(result)
+            #result_flat <- unlist(result)
+            #result_array <- array(
+            #    result_flat, 
+            #    dim = c(dims[1], dims[2], dims[3])
+            #    )
+
+            #str(result_array)
+    
+            #enc_input <- np$array(result_array)
+
+            #print(
+                #paste0("reactive X | result ~ ", dim(result)
+                #))
+            # --- Hasta aquí el cambio
+
+            #enc_input <- np$array(as.array(result))
+
+            print(
+                paste0("Enc input | reactive X | enc_input ~ ", dim(enc_input),
+                " | tsdf ~ ", dim(tsdf()))
+            )
+            #t_sliding_window_view = t_x_1 - t_x_0
+            #print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
+            
+            print(paste0("Enc input | reactive X | Update sliding window | Apply stride ", input$stride," | X ~ enc_input ~ ", dim(enc_input), "-->"))
+            on.exit({print("Enc input | reactive X -->"); flush.console()})
             X(enc_input)
+            enc_input_ready(TRUE)
+        } else {
+            print("Enc input | reactive X | X already updated")
         }
+        print(paste0("Enc input | reactive X | enc_input_ready ", enc_input_ready(), " tsdf ~ ", dim(tsdf()),  " | X ~ ", dim(X())))
         X()
     })
         
@@ -495,8 +546,11 @@ shinyServer(function(input, output, session) {
     })
     
     embs <- reactive({
-        req(X(), enc_l <- enc())
-        print("--> reactive embs | get embeddings")
+
+        req(tsdf(), X(), enc_l <- enc(), enc_input_ready())
+        print(paste0("--> reactive embs | get embeddings | enc_input_ready ", enc_input_ready()))
+        print(paste0("tsdf ~ ", dim(tsdf())))
+        print(paste0("X ~ ", dim(X())))
         if (torch$cuda$is_available()){
             print(paste0("CUDA devices: ", torch$cuda$device_count()))
           } else {
@@ -530,16 +584,16 @@ shinyServer(function(input, output, session) {
         #        python_string = paste0("
         #import dvats.all   
         cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+        print(paste0("reactive embs | get embeddings (set stride set batch size) | X ~  ", dim(enc_input)))
         result = dvats$get_enc_embs_set_stride_set_batch_size(
-            X = X(),
-            verbose = TRUE,
-            enc_learn = enc_l,
-            stride =  input$stride,  
-            batch_size = bs, 
-            cpu = cpu_flag, 
-            verbose = FALSE, 
-            time_flag = TRUE, 
-            chunk_size = chunk_size,
+            X           = enc_input,
+            verbose     = as.integer(1),
+            enc_learn   = enc_l,            
+            stride      =  as.integer(input$stride),  
+            batch_size  = as.integer(bs), 
+            cpu         = cpu_flag, 
+            time_flag   = TRUE, 
+            chunk_size  = as.integer(chunk_size),
             check_memory_usage = TRUE
         )
        
@@ -570,7 +624,7 @@ shinyServer(function(input, output, session) {
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = TRUE, 
-                verbose  = TRUE,
+                verbose     = as.integer(1),
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
                 random_state= as.integer(input$prj_random_state)
@@ -614,7 +668,7 @@ shinyServer(function(input, output, session) {
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = cpu_flag, 
-                verbose  = TRUE,
+                verbose     = as.integer(1),
                 n_neighbors = input$prj_n_neighbors, 
                 min_dist    = input$prj_min_dist, 
                 random_state= as.integer(input$prj_random_state)
@@ -668,6 +722,7 @@ shinyServer(function(input, output, session) {
             print("Reactive tsdf | Read feather --> ")
             flush.console()
             df_read_option <- "Read from feather"
+            tsdf_ready(TRUE)
             df
         }, error = function (e) { # Execute in case of error
             # --- Download from Weight & Biases and save the feather for the future --- #
@@ -696,6 +751,7 @@ shinyServer(function(input, output, session) {
                 mmap = TRUE
             ) %>% rename('timeindex' = `__index_level_0__`)
             df_read_option <- "Download from W&B and read from feather"
+            tsdf_ready(TRUE)
             df
         }, finally = { # Execute in any case
             t_end = Sys.time()
@@ -796,13 +852,13 @@ shinyServer(function(input, output, session) {
     )
 
     start_date <- reactive({
-        tsdf()$timeindex[1]
+        isolate(tsdf())$timeindex[1]
     })
 
     end_date <- reactive({
         end_date_id = 100000
         end_date_id = min(end_date_id, nrow(tsdf()))
-        tsdf()$timeindex[end_date_id]
+        isolate(tsdf())$timeindex[end_date_id]
     })
 
     ts_plot_base <- reactive({
@@ -812,7 +868,7 @@ shinyServer(function(input, output, session) {
         end_date = isolate(end_date())
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_init <- Sys.time()
-        tsdf_ <- tsdf() %>% select(ts_variables$selected, - "timeindex")
+        tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected, - "timeindex")
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
         t_end <- Sys.time()
         print(paste0("ts_plot_base | tsdf_xts time: ", t_end-t_init)) 
@@ -865,8 +921,8 @@ shinyServer(function(input, output, session) {
         reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
         # Populate the first element of the list with the idx of the first window.
         reduced_window_list[[1]] = c(
-            tsdf()$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
-            tsdf()$timeindex[unlist_window_indices[idx_window_limits[2]]]
+            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
+            isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[2]]]
         ) 
         if (length(idx_window_limits) > 2) {
             # Populate the rest of the list
@@ -874,8 +930,8 @@ shinyServer(function(input, output, session) {
                 reduced_window_list[[i]]<- c(
                     #unlist_window_indices[idx_window_limits[i]+1],
                     #unlist_window_indices[idx_window_limits[i+1]]
-                    tsdf()$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-                    tsdf()$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+                    isolate()$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
+                    isolate()$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
                )
             }
         }
@@ -888,7 +944,7 @@ shinyServer(function(input, output, session) {
         print("--> ts_plot | Before req 1")
         on.exit({print("ts_plot -->"); flush.console()})
 
-        req(tsdf(), ts_variables, input$wlen != 0, input$stride)
+        req(tsdf(), ts_variables, input$wlen != 0, input$stride, tsdf_ready())
 
         ts_plt = ts_plot_base()   
 
@@ -909,13 +965,13 @@ shinyServer(function(input, output, session) {
             view_size = end_indices-start_indices+1
             max_size = 10000
 
-            start_date = tsdf()$timeindex[start_indices]
-            end_date = tsdf()$timeindex[end_indices]
+            start_date = isolate()$timeindex[start_indices]
+            end_date = isolate()$timeindex[end_indices]
 
             print(paste0("ts_plot | reuced_window_list (", start_date, ", ", end_date, ")", "view size ", view_size, " max size ", max_size))
             
             if (view_size > max_size) {
-                end_date = tsdf()$timeindex[start_indices + max_size - 1]
+                end_date = isolate()$timeindex[start_indices + max_size - 1]
                 #range_color = "#FF0000" # Red
             } 
             
@@ -926,8 +982,8 @@ shinyServer(function(input, output, session) {
             count = 0
             for(ts_idxs in reduced_window_list) {
                 count = count + 1
-                start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
-                end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
+                start_event_date = isolate()$timeindex[head(ts_idxs, 1)]
+                end_event_date = isolate()$timeindex[tail(ts_idxs, 1)]
                 ts_plt <- ts_plt %>% dyShading(
                     from = start_event_date,
                     to = end_event_date,
@@ -999,8 +1055,8 @@ shinyServer(function(input, output, session) {
         # Convertir a fechas POSIXct
         reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
             data.frame(
-                start = as.POSIXct(tsdf()$timeindex[x[1]], origin = "1970-01-01"),
-                end = as.POSIXct(tsdf()$timeindex[x[2]], origin = "1970-01-01")
+                start = as.POSIXct(isolate()$timeindex[x[1]], origin = "1970-01-01"),
+                end = as.POSIXct(isolate()$timeindex[x[2]], origin = "1970-01-01")
             )
         }))
 
@@ -1008,8 +1064,8 @@ shinyServer(function(input, output, session) {
         first_date = min(reduced_window_df$start)
         last_date = max(reduced_window_df$end)
     
-        left = as.POSIXct(tsdf()$timeindex[1],  origin = "1970-01-01")
-        right = as.POSIXct(tsdf()$timeindex[nrow(tsdf())], origin = "1970-01-01")
+        left = as.POSIXct(isolate()$timeindex[1],  origin = "1970-01-01")
+        right = as.POSIXct(isolate()$timeindex[nrow(isolate())], origin = "1970-01-01")
 
         # Configuración del gráfico base
         par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
@@ -1069,8 +1125,8 @@ shinyServer(function(input, output, session) {
         # Crear un conjunto de etiquetas de texto con información de las ventanas
         window_info <- lapply(1:length(reduced_window_list), function(i) {
             window <- reduced_window_list[[i]]
-            start <- format(as.POSIXct(tsdf()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
-            end <- format(as.POSIXct(tsdf()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+            start <- format(as.POSIXct(isolate()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+            end <- format(as.POSIXct(isolate()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
             color <- ifelse(i %% 2 == 0, "green", "blue")
             HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
         })
@@ -1103,7 +1159,7 @@ shinyServer(function(input, output, session) {
        
     # Generate projections plot
     output$projections_plot <- renderPlot({
-        req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
+        req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0, tsdf_ready())
         print("--> Projections_plot")
         prjs_ <- req(projections())
         print("projections_plot | Prepare column highlights")

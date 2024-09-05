@@ -327,7 +327,6 @@ shinyServer(function(input, output, session) {
 
     # Observe to update encoder input (enc_input = X())
     observe({#Event(input$dataset, input$encoder, input$wlen, input$stride, {
-        # 5/09/2024 # Añadido dataset en el req
         req(tsdf_ready, input$wlen != 0, input$stride != 0, input$stride != 1)
 
         print(paste0("Enc input | Check reactiveness | X |  wlen, stride |"))
@@ -335,12 +334,6 @@ shinyServer(function(input, output, session) {
         print(paste0("Enc input | Check reactiveness | X |  wlen, stride | tsdf ~ ", dim(isolate(tsdf()))))
         if (
             ! enc_input_ready()
-            #is.null(X()) ||
-            #!identical(
-                #input$dataset, isolate(input$dataset)) || 
-                #!identical(input$encoder, isolate(input$encoder)) || 
-                #input$wlen != isolate(input$wlen) || 
-                #input$stride != isolate(input$stride)
         ) {
             print("Enc input | Update X")
             print("Enc input | --> ReactiveVal X | Update Sliding Window")
@@ -349,9 +342,6 @@ shinyServer(function(input, output, session) {
             
             t_x_0 <- Sys.time()
         
-            
-            #-- 05/09/2024 --# Devolviendo a Sliding window por problemas de tamaños en el enc_input 
-            
             enc_input <- dvats$exec_with_feather_k_output(
                 function_name   = "prepare_forecasting_data",
                 module_name     = "tsai.data.preparation",
@@ -361,37 +351,11 @@ shinyServer(function(input, output, session) {
                 time_flag       = TRUE,
                 fcst_history    = as.integer(input$wlen)
             )
-            
-            #result <- tsai_data$SlidingWindow(
-            #    window_len = as.integer(input$wlen), 
-            #    stride = as.integer(input$stride), 
-            #    get_y = list()
-           # )(tsdf())[[1]]
-            
-            #dims <- dim(result)
-            #result_flat <- unlist(result)
-            #result_array <- array(
-            #    result_flat, 
-            #    dim = c(dims[1], dims[2], dims[3])
-            #    )
-
-            #str(result_array)
-    
-            #enc_input <- np$array(result_array)
-
-            #print(
-                #paste0("reactive X | result ~ ", dim(result)
-                #))
-            # --- Hasta aquí el cambio
-
-            #enc_input <- np$array(as.array(result))
 
             print(
                 paste0("Enc input | reactive X | enc_input ~ ", dim(enc_input),
                 " | tsdf ~ ", dim(tsdf()))
             )
-            #t_sliding_window_view = t_x_1 - t_x_0
-            #print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "))
             
             print(paste0("Enc input | reactive X | Update sliding window | Apply stride ", input$stride," | X ~ enc_input ~ ", dim(enc_input), "-->"))
             on.exit({print("Enc input | reactive X -->"); flush.console()})
@@ -494,30 +458,6 @@ shinyServer(function(input, output, session) {
                         "
                     )
                 )
-                
-                #print(paste0("eventReactive enc | Download encoder's artifact | Looking for the nearest encoder trained with the same dataset"))
-                #runs <- isolate(ts_ar())$used_by()
-                #children <- list()
-                #for ( run in runs ) {
-                #    if (grepl("^02",run$name)){
-                #        generated_artifacts <- run$logged_artifacts()
-                #        for ( ar in ls( generated_artifacts )){
-                #            filtered_artifacts <- Filter(
-                #                function(art) {
-                #                    art$metadata$ref$type == "learner"
-                #                }, 
-                #                generated_artifacts
-                #            )
-                #             children <- append(children, list(filtered_artifacts))
-                #        }
-                #    }
-                #}
-                #print(paste0("eventReactive enc | Download encoder's artifact | Found ", length(children), " children"))
-
-                #for (child in filtered_children){
-                #    print(paste0("Child: ", child$name, " | ", child$metadata$ref$hash))
-                ##}
-                #encoder_artifact_dir <- children[[2]]$download()
                 encoder_artifact_dir
             })
 
@@ -573,16 +513,11 @@ shinyServer(function(input, output, session) {
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs , " | stride: ", stride))
         print(paste0("reactive embs | get embeddings | Original stride: ", dataset_logged_by$config$stride))
         enc_input = X()
-        #chunk_max = 10000000
-        #shape <- dim(enc_input)
-        #print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
-        #chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))
-        #N = max(3200,floor(chunk_size_/32))
+        
         chunk_size = 10000000 #N*32
-        #print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size, " | shape[1]*shape[2]: ", shape[1]*shape[2] ))
+        
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
-        #        python_string = paste0("
-        #import dvats.all   
+
         cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
         print(paste0("reactive embs | get embeddings (set stride set batch size) | X ~  ", dim(enc_input)))
         result = dvats$get_enc_embs_set_stride_set_batch_size(
@@ -597,7 +532,6 @@ shinyServer(function(input, output, session) {
             check_memory_usage = TRUE
         )
        
-        #result <- system(python_string)
         t_embs_1 <- Sys.time()
         diff <- t_embs_1 - t_embs_0
         diff_secs <- as.numeric(diff, units = "secs")
@@ -613,14 +547,9 @@ shinyServer(function(input, output, session) {
         embs = req(embs(), input$dr_method)
         embs = embs[complete.cases(embs),]
         print("--> prj_object")
-        #print(embs) #--
-        #print(paste0("--> prj_object | UMAP params ", str(umap_params_)))
         print("--> prj_object | UMAP params ")
         
         res = switch( input$dr_method,
-            #### Comprobando parametros para saber por qué salen diferentes los embeddings
-            ######### Comprobando los parámetros
-            #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = TRUE, 
@@ -662,9 +591,6 @@ shinyServer(function(input, output, session) {
         cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
 
         res = switch( input$dr_method,
-            #### Comprobando parametros para saber por qué salen diferentes los embeddings
-            ######### Comprobando los parámetros
-            #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = cpu_flag, 

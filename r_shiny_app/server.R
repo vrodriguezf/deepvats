@@ -854,10 +854,8 @@ shinyServer(function(input, output, session) {
             # Populate the rest of the list
             for (i in 2:(length(idx_window_limits)-1)){
                 reduced_window_list[[i]]<- c(
-                    #unlist_window_indices[idx_window_limits[i]+1],
-                    #unlist_window_indices[idx_window_limits[i+1]]
-                    isolate()$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-                    isolate()$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
+                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
                )
             }
         }
@@ -891,13 +889,13 @@ shinyServer(function(input, output, session) {
             view_size = end_indices-start_indices+1
             max_size = 10000
 
-            start_date = isolate()$timeindex[start_indices]
-            end_date = isolate()$timeindex[end_indices]
+            start_date = isolate(tsdf())$timeindex[start_indices]
+            end_date = isolate(tsdf())$timeindex[end_indices]
 
             print(paste0("ts_plot | reuced_window_list (", start_date, ", ", end_date, ")", "view size ", view_size, " max size ", max_size))
             
             if (view_size > max_size) {
-                end_date = isolate()$timeindex[start_indices + max_size - 1]
+                end_date = isolate(tsdf())$timeindex[start_indices + max_size - 1]
                 #range_color = "#FF0000" # Red
             } 
             
@@ -908,8 +906,8 @@ shinyServer(function(input, output, session) {
             count = 0
             for(ts_idxs in reduced_window_list) {
                 count = count + 1
-                start_event_date = isolate()$timeindex[head(ts_idxs, 1)]
-                end_event_date = isolate()$timeindex[tail(ts_idxs, 1)]
+                start_event_date = isolate(tsdf())$timeindex[head(ts_idxs, 1)]
+                end_event_date = isolate(tsdf())$timeindex[tail(ts_idxs, 1)]
                 ts_plt <- ts_plt %>% dyShading(
                     from = start_event_date,
                     to = end_event_date,
@@ -981,8 +979,8 @@ shinyServer(function(input, output, session) {
         # Convertir a fechas POSIXct
         reduced_window_df <- do.call(rbind, lapply(reduced_window_list, function(x) {
             data.frame(
-                start = as.POSIXct(isolate()$timeindex[x[1]], origin = "1970-01-01"),
-                end = as.POSIXct(isolate()$timeindex[x[2]], origin = "1970-01-01")
+                start = as.POSIXct(isolate(tsdf())$timeindex[x[1]], origin = "1970-01-01"),
+                end = as.POSIXct(isolate(tsdf())$timeindex[x[2]], origin = "1970-01-01")
             )
         }))
 
@@ -990,8 +988,8 @@ shinyServer(function(input, output, session) {
         first_date = min(reduced_window_df$start)
         last_date = max(reduced_window_df$end)
     
-        left = as.POSIXct(isolate()$timeindex[1],  origin = "1970-01-01")
-        right = as.POSIXct(isolate()$timeindex[nrow(isolate())], origin = "1970-01-01")
+        left = as.POSIXct(isolate(tsdf())$timeindex[1],  origin = "1970-01-01")
+        right = as.POSIXct(isolate(tsdf())$timeindex[nrow(isolate(tsdf()))], origin = "1970-01-01")
 
         # Configuración del gráfico base
         par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
@@ -1051,8 +1049,8 @@ shinyServer(function(input, output, session) {
         # Crear un conjunto de etiquetas de texto con información de las ventanas
         window_info <- lapply(1:length(reduced_window_list), function(i) {
             window <- reduced_window_list[[i]]
-            start <- format(as.POSIXct(isolate()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
-            end <- format(as.POSIXct(isolate()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+            start <- format(as.POSIXct(isolate(tsdf())$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+            end <- format(as.POSIXct(isolate(tsdf())$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
             color <- ifelse(i %% 2 == 0, "green", "blue")
             HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
         })

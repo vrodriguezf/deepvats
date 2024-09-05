@@ -68,6 +68,7 @@ shinyServer(function(input, output, session) {
     tsdf_ready <- reactiveVal(FALSE)
     # Reactive value for ensuring correct encoder input
     enc_input_ready <- reactiveVal(FALSE)
+    play <- reactiveVal(FALSE)
 
     # Time series artifact
     ts_ar <- eventReactive(
@@ -91,6 +92,22 @@ shinyServer(function(input, output, session) {
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
+
+    update_play_pause_button <- function() {
+        if (play()) {
+            updateActionButton(session, "play_pause", label = "Pause", icon = icon("pause"))
+            } else {
+                updateActionButton(session, "play_pause", label = "Run!", icon = icon("play"))
+            }
+    }
+
+    observeEvent(input$play_pause, {
+        print("--> observeEvent play_pause_button")
+        play(!play())
+        update_play_pause_button()
+        on.exit({print(paste0("observeEvent play_pause_button | Run ", play(), "-->")); flush.console()})
+    })
+
     observeEvent(
         req(exists("encs_l")), 
         {
@@ -109,7 +126,6 @@ shinyServer(function(input, output, session) {
     )
     
     observeEvent(input$dataset, {
-        #req(encs_l)
         print("--> observeEvent input_dataset | update encoder list")
         print(input$dataset)
         freezeReactiveValue(input, "encoder")
@@ -327,14 +343,14 @@ shinyServer(function(input, output, session) {
 
     # Observe to update encoder input (enc_input = X())
     observe({#Event(input$dataset, input$encoder, input$wlen, input$stride, {
-        req(tsdf_ready, input$wlen != 0, input$stride != 0, input$stride != 1)
-
+        req( tsdf_ready, input$wlen != 0, input$stride != 0, input$stride != 1)
         print(paste0("Enc input | Check reactiveness | X |  wlen, stride |"))
         print(paste0("Enc input | Check reactiveness | X |  wlen, stride | tsdf_ready ", tsdf_ready()))
         print(paste0("Enc input | Check reactiveness | X |  wlen, stride | tsdf ~ ", dim(isolate(tsdf()))))
         if (
             ! enc_input_ready()
         ) {
+            req(play())
             print("Enc input | Update X")
             print("Enc input | --> ReactiveVal X | Update Sliding Window")
             print(paste0("Enc input | reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
@@ -486,8 +502,7 @@ shinyServer(function(input, output, session) {
     })
     
     embs <- reactive({
-
-        req(tsdf(), X(), enc_l <- enc(), enc_input_ready())
+        req(tsdf(), X(), enc_l <- enc(), enc_input_ready(), play())
         print(paste0("--> reactive embs | get embeddings | enc_input_ready ", enc_input_ready()))
         print(paste0("tsdf ~ ", dim(tsdf())))
         print(paste0("X ~ ", dim(X())))
@@ -790,13 +805,13 @@ shinyServer(function(input, output, session) {
     ts_plot_base <- reactive({
         print("--> ts_plot_base")
         on.exit({print("ts_plot_base -->"); flush.console()})
-        start_date =isolate(start_date())
-        end_date = isolate(end_date())
+        start_date  = start_date()
+        end_date    = end_date()
         print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
-        t_init <- Sys.time()
-        tsdf_ <- isolate(tsdf()) %>% select(ts_variables$selected, - "timeindex")
-        tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
-        t_end <- Sys.time()
+        t_init      <- Sys.time()
+        tsdf_       <- isolate(tsdf()) %>% select(ts_variables$selected, - "timeindex")
+        tsdf_xts    <- xts(tsdf_, order.by = tsdf()$timeindex)
+        t_end       <- Sys.time()
         print(paste0("ts_plot_base | tsdf_xts time: ", t_end-t_init)) 
         #--- For debugging TMI
         #print(head(tsdf_xts))

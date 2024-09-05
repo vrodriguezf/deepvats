@@ -793,13 +793,17 @@ shinyServer(function(input, output, session) {
     )
 
     start_date <- reactive({
-        isolate(tsdf())$timeindex[1]
+        sd <- tsdf()$timeindex[1]
+        on.exit({print(paste0("start_date --> ", sd)); flush.console()})
+        sd  
     })
 
     end_date <- reactive({
         end_date_id = 100000
         end_date_id = min(end_date_id, nrow(tsdf()))
-        isolate(tsdf())$timeindex[end_date_id]
+        ed <- tsdf()$timeindex[end_date_id]
+        on.exit({print(paste0("end_date --> ", ed)); flush.console()})
+        ed 
     })
 
     ts_plot_base <- reactive({

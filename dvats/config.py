@@ -9,7 +9,7 @@ __all__ = ['monash_australian_electricity_demand_0', 'monash_sunspot_0', 'monash
            'get_artifact_config_sd2a', 'get_artifact_config_MVP_auxiliar_variables',
            'get_artifact_config_MVP_auxiliar_variables_SWV', 'check_project_and_entity',
            'get_artifact_config_MVP_check_errors', 'get_artifact_config_MVP', 'get_artifact_config_MVP_SWV',
-           'get_artifact_config_DCAE', 'get_artifact_config_embeddings', 'get_artifact_config_embeddings_SWV',
+           'get_artifact_config_DCAE', 'get_artifact_config_embeddings', 'get_artifact_config_embeddings_swv',
            'get_artifact_config_dimensionality_reduction', 'get_artifact_config_xai_lrp', 'show_attrdict',
            'show_available_configs', 'show_config', 'get_tested_config', 'print_colored', 'get_resampling_frequency',
            'frequency_factor_config', 'diff_attrdict', 'force_artifact_config_sd2a', 'split_artifact_string',
@@ -128,14 +128,23 @@ def get_config(
 
 # %% ../nbs/config.ipynb 17
 def build_enc_artifact(
-    config: AttrDict, 
-    verbose : int = 0
+    config  : AttrDict, 
+    verbose : int  = 0,
+    swv     : bool = False
 ) -> str:
     """
     Build enc_artifact name from config data.
     """
     version = config.user_preferences.wdb.version
     enc_artifact = config.configuration.encoder.artifacts.train.enc_prefix
+
+    if swv:
+        if not enc_artifact.endswith("-SWV"):
+            enc_artifact += "-SWV"
+    else:
+        if enc_artifact.endswith("-SWV"):
+            enc_artifact = enc_artifact[:-4]  # Remover '-SWV'
+    
     if (version == 'latest'):
         enc_artifact+=":latest"
     else:
@@ -435,7 +444,7 @@ def get_artifact_config_embeddings(verbose : int = 0) -> Tuple[AttrDict, str]:
     config = get_config(verbose, "03a-embeddings")
     job_type=config.job_type
     version = config.user_preferences.wdb.version
-    enc_artifact = build_enc_artifact(config, verbose)
+    enc_artifact = build_enc_artifact(config, verbose, swv = False)
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb       = config.wandb.use,
@@ -450,7 +459,7 @@ def get_artifact_config_embeddings(verbose : int = 0) -> Tuple[AttrDict, str]:
     return artifact_config, job_type
 
 # %% ../nbs/config.ipynb 43
-def get_artifact_config_embeddings_SWV(verbose : int = 0) -> Tuple[AttrDict, str]:
+def get_artifact_config_embeddings_swv(verbose : int = 0) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for embeddings (sliding window view) by fetching relevant settings and building the encoder artifact configuration.
     Validates the project and entity settings and returns the artifact configuration as an AttrDict, along with the job type.
@@ -458,7 +467,7 @@ def get_artifact_config_embeddings_SWV(verbose : int = 0) -> Tuple[AttrDict, str
     config = get_config(verbose, "03b-embeddings-sliding_window_view")
     job_type=config.job_type
     version = config.user_preferences.wdb.version
-    enc_artifact = build_enc_artifact(config, verbose)
+    enc_artifact = build_enc_artifact(config, verbose, swv = True)
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb       = config.wandb.use,
@@ -477,7 +486,10 @@ def get_artifact_config_embeddings_SWV(verbose : int = 0) -> Tuple[AttrDict, str
 ###################################
 # 04 - DIMENSIONALITY REDUCTION   #
 ###################################
-def get_artifact_config_dimensionality_reduction(verbose : int = 0) -> Tuple[AttrDict, str]:
+def get_artifact_config_dimensionality_reduction(
+    verbose : int = 0, 
+    swv : bool = False
+) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for dimensionality reduction tasks by fetching relevant settings, including building the encoder artifact.
     Returns the artifact configuration as an AttrDict, along with the job type.
@@ -485,7 +497,7 @@ def get_artifact_config_dimensionality_reduction(verbose : int = 0) -> Tuple[Att
 
     config          = get_config(verbose, "04-dimensionality_reduction")
     job_type        = config.job_type
-    enc_artifact = build_enc_artifact(config, verbose)
+    enc_artifact = build_enc_artifact(config, verbose, swv)
     config = config.configuration
     try:
         if config.encoder.artifacts.dr is not None:

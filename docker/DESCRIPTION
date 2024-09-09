@@ -16,6 +16,8 @@ Depends:
     plotly
     shinyFiles
     yaml
+    xts,
+    semantic.dashboard
 Remotes: 
     r-lib/later,
     apache/arrow/r

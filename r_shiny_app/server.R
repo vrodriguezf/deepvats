@@ -15,7 +15,11 @@ source("./modules/mplots.R")
 
 shinyServer(function(input, output, session) {
     options(shiny.verbose = TRUE)
- 
+    #options(shiny.error = function() {
+    #    traceback()
+    #    stopApp()
+})
+  
     ######################
     #  REACTIVES VALUES  #
     ######################
@@ -49,12 +53,25 @@ shinyServer(function(input, output, session) {
     
     # Reactive value created to store time series selected variables
     ts_variables <- reactiveValues(selected = NULL)
-    
-    
-    
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
+
+    update_play_pause_button <- function() {
+        if (play()) {
+            updateActionButton(session, "play_pause", label = "Pause", icon = icon("pause"))
+            } else {
+                updateActionButton(session, "play_pause", label = "Run!", icon = icon("play"))
+            }
+    }
+
+    observeEvent(input$play_pause, {
+        print("--> observeEvent play_pause_button")
+        play(!play())
+        update_play_pause_button()
+        on.exit({print(paste0("observeEvent play_pause_button | Run ", play(), "-->")); flush.console()})
+    })
+
     observeEvent(
         req(exists("encs_l")), 
         {
@@ -75,14 +92,6 @@ shinyServer(function(input, output, session) {
     mplot_compute_allow <- reactiveVal(TRUE)
 
     select_datasetServer(encs_l, mplot_compute_allow, input, output, session)
-    
-    # observeEvent(input$encoder, {
-    #   freezeReactiveValue(input, "embs_ar")
-    #   updateSelectizeInput(session = session, inputId = "embs_ar",
-    #                        choices = embs_l %>%
-    #                          keep(~ .$metadata$enc_artifact == input$encoder)
-    #                        %>% names)
-    # })
     
     observeEvent(
         input$encoder,
@@ -190,17 +199,19 @@ shinyServer(function(input, output, session) {
     })
 
     # Obtener el valor de stride
-    enc_ar_stride = reactive({
+    enc_ar_stride <- eventReactive(enc_ar(),{
         log_print("--> reactive enc_ar_stride", debug_level = debug_level, debug_group = 'generic')
         stride <- enc_ar()$metadata$stride
         on.exit({log_print(paste0("reactive_enc_ar_stride | --> ", stride), debug_level = debug_level, debug_group = 'generic'); flush.console()})
         stride
     })
         
-
+    # Reactive value for ensuring correct dataset
+    tsdf_ready <- reactiveVal(FALSE)
+    # Reactive value for ensuring correct encoder input
+    enc_input_ready <- reactiveVal(FALSE)
+    play <- reactiveVal(FALSE)
     
-
-
     observeEvent(input$wlen, {
         req(input$wlen)
         log_print(mssg = paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen), debug_level = debug_level, debug_group = 'generic')
@@ -366,8 +377,6 @@ shinyServer(function(input, output, session) {
         send_log("Select all variables_end", session)
     })
     
-    
-    
     ###############
     #  REACTIVES  #
     ###############
@@ -375,22 +384,46 @@ shinyServer(function(input, output, session) {
     X <- reactiveVal()
     
     observe({
-        #req(input$wlen != 0, input$stride != 0, tsdf())
-        req(input$wlen != 0, input$stride != 0, input$stride != 1)
+        req(
+            tsdf_ready, 
+            input$wlen != 0, 
+            input$stride != 0, 
+            input$stride != 1
+        )
         log_print("--> Reactive X | Update Sliding Window")
         log_print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
         log_print("reactive X | SWV")
         t_x_0 <- Sys.time()
-                enc_input = dvats$exec_with_feather_k_output(
-            function_name = "prepare_forecasting_data",
-            module_name   = "tsai.data.preparation",
-            path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
-            k_output = as.integer(0),
-            verbose = as.integer(1),
-            time_flag = TRUE,
-            #tsdf(), #%>%select(-"timeindex"),
-            fcst_history = input$wlen
-        )
+        if (
+            ! enc_input_ready()
+        ) { 
+            req(play())
+            print("Enc input | Update X")
+            print("Enc input | --> ReactiveVal X | Update Sliding Window")
+            print(paste0("Enc input | reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
+            print(paste0("Enc input | reactive X | ts_ar - id ", ts_ar()$id, " - name ", ts_ar()$name))
+            enc_input <- dvats$exec_with_feather_k_output(
+                function_name = "prepare_forecasting_data",
+                module_name   = "tsai.data.preparation",
+                path = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash),
+                k_output = as.integer(0),
+                verbose = as.integer(1),
+                time_flag = TRUE,
+                #tsdf(), #%>%select(-"timeindex"),
+                fcst_history = input$wlen
+            )
+            print(
+                paste0("Enc input | reactive X | enc_input ~ ", dim(enc_input),
+                " | tsdf ~ ", dim(tsdf()))
+            )
+            
+            print(paste0("Enc input | reactive X | Update sliding window | Apply stride ", input$stride," | X ~ enc_input ~ ", dim(enc_input), "-->"))
+            on.exit({print("Enc input | reactive X -->"); flush.console()})
+            X(enc_input)
+            enc_input_ready(TRUE)
+        } else {
+            print("Enc input | reactive X | X already updated")
+        }
 
         t_x_1 <- Sys.time() 
         t_sliding_window_view = t_x_1 - t_x_0
@@ -409,12 +442,12 @@ shinyServer(function(input, output, session) {
             log_print(paste0(
                 "reactive X | Update sliding window | Apply stride ", 
                 input$stride,
-                " | enc_input ~ ", 
-                dim(enc_input), 
+                " | enc_input ~ ",
+                dim(enc_input),
                 "-->"
             )); flush.console()
         })
-        X(enc_input)
+        X()
     })
     
     # Time series artifact
@@ -422,6 +455,8 @@ shinyServer(function(input, output, session) {
         input$dataset, 
         {
         req(input$dataset)
+        tsdf_ready(FALSE)
+        enc_input_ready(FALSE)
         log_print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset, "-->"))
         ar <- api$artifact(input$dataset, type='dataset')
         on.exit({log_print("eventReactive ts_ar -->"); flush.console()})
@@ -609,30 +644,6 @@ shinyServer(function(input, output, session) {
                         "
                     )
                 )
-
-                #print(paste0("eventReactive enc | Download encoder's artifact | Looking for the nearest encoder trained with the same dataset"))
-                #runs <- isolate(ts_ar())$used_by()
-                #children <- list()
-                #for ( run in runs ) {
-                #    if (grepl("^02",run$name)){
-                #        generated_artifacts <- run$logged_artifacts()
-                #        for ( ar in ls( generated_artifacts )){
-                #            filtered_artifacts <- Filter(
-                #                function(art) {
-                #                    art$metadata$ref$type == "learner"
-                #                }, 
-                #                generated_artifacts
-                #            )
-                #             children <- append(children, list(filtered_artifacts))
-                #        }
-                #    }
-                #}
-                #print(paste0("eventReactive enc | Download encoder's artifact | Found ", length(children), " children"))
-
-                #for (child in filtered_children){
-                #    print(paste0("Child: ", child$name, " | ", child$metadata$ref$hash))
-                ##}
-                #encoder_artifact_dir <- children[[2]]$download()
                 encoder_artifact_dir
             })
 
@@ -667,7 +678,10 @@ shinyServer(function(input, output, session) {
     
     
     embs <- reactive({
-        req(X(), enc_l <- enc())
+        req(tsdf(), X(), enc_l <- enc(), enc_input_ready(), play())
+        print(paste0("--> reactive embs | get embeddings | enc_input_ready ", enc_input_ready()))
+        print(paste0("tsdf ~ ", dim(tsdf())))
+        print(paste0("X ~ ", dim(X())))
         log_print("--> reactive embs | get embeddings")
         if (torch$cuda$is_available()){
             log_print(paste0("CUDA devices: ", torch$cuda$device_count()))
@@ -688,33 +702,29 @@ shinyServer(function(input, output, session) {
         bs = dataset_logged_by$config$batch_size
         stride = input$stride 
         
-        log_print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
+        print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs , " | stride: ", stride))
+        print(paste0("reactive embs | get embeddings | Original stride: ", dataset_logged_by$config$stride))
         enc_input = X()
-        #chunk_max = 10000000
-        #shape <- dim(enc_input)
-        #print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
-        #chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))
-        #N = max(3200,floor(chunk_size_/32))
+        
         chunk_size = 10000000 #N*32
         
         log_print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
    
-    cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
-log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
-    result = dvats$get_enc_embs_set_stride_set_batch_size(
-        X = X(),
-        verbose = as.integer(1),
-        enc_learn = enc_l,
-        stride =  input$stride,  
-        batch_size = bs, 
-        cpu = cpu_flag, 
-        time_flag = TRUE, 
-        chunk_size = chunk_size,
-        check_memory_usage = TRUE
-    )
-log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
-        
-        #result <- system(python_string)
+        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+        log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
+        result = dvats$get_enc_embs_set_stride_set_batch_size(
+            X                   = X(),
+            verbose             = as.integer(1),
+            enc_learn           = enc_l,
+            stride              =  as.integer(input$stride),  
+            batch_size          = as.integer(bs), 
+            cpu                 = cpu_flag, 
+            time_flag           = TRUE, 
+            chunk_size          = as.integer(chunk_size),
+            check_memory_usage  = TRUE
+        )
+
+    log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
         t_embs_1 <- Sys.time()
         diff <- t_embs_1 - t_embs_0
         diff_secs <- as.numeric(diff, units = "secs")
@@ -804,19 +814,14 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
         embs = req(embs(), input$dr_method)
         embs = embs[complete.cases(embs),]
         log_print("--> prj_object")
-        #log_print(embs) #--
-        #log_print(paste0("--> prj_object | UMAP params ", str(umap_params_)))
-        log_print("--> prj_object | UMAP params ")
+        log_print("--> prj_object | UMAP params")
         
         res = switch( input$dr_method,
-            #### Comprobando parametros para saber por qué salen diferentes los embeddings
-            ######### Comprobando los parámetros
-            #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = TRUE, 
-                verbose  = as.integer(1),
-                n_neighbors = input$prj_n_neighbors, 
+                verbose     = as.integer(1),
+                n_neighbors = as.integer(input$prj_n_neighbors),
                 min_dist    = input$prj_min_dist, 
                 random_state= as.integer(input$prj_random_state)
             ),
@@ -859,9 +864,6 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
         cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
 
         res = switch( input$dr_method,
-            #### Comprobando parametros para saber por qué salen diferentes los embeddings
-            ######### Comprobando los parámetros
-            #UMAP = dvats$get_UMAP_prjs(input_data = embs, cpu=F, n_neighbors = 15, min_dist = 0.1, random_state=as.integer(1234)),
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = cpu_flag, 
@@ -997,18 +999,13 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
                     mmap = TRUE
                 ) %>% rename('timeindex' = `__index_level_0__`)
                 df_read_option <- "Download from W&B and read from feather"
+                tsdf_ready(TRUE)
                 df
             }, finally = {
                 t_1 = Sys.time()
                 log_print(paste0("Reactive tsdf | Read feather | After | ", path))
                 log_print(paste0("Reactive tsdf | Read feather | Load time: ", t_1 - t_0, " seconds | N elements: ", nrow(df)), TRUE, log_path(), log_header())
-                #log_print(paste0("Reactive tsdf | Column to rowname | Before | ", path))
-                #df_ = df 
-                #df_ <- column_to_rownames(df_, var = "timeindex")
-                #t_2 = Sys.time()
-                #log_print(paste0("Reactive tsdf | Column to rowname | After | ", path))
-                #log_print(paste0("Reactive tsdf | Read feather | Rownames: ", t_2 - t_1, " seconds"), TRUE, log_path(), log_header())
-            
+           
                 temp_log <<- log_add(
                     log_mssg            = temp_log, 
                     function_           = "TSDF | Load dataset | Read feather",
@@ -1019,20 +1016,8 @@ log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", in
                     time                = t_1-t_0, 
                     mssg                = "Read feather"
                 )
-                #temp_log <<- log_add(
-                #    log_mssg            = temp_log, 
-                #    function_           = "TSDF | Load dataset | Rownames",
-                #    cpu_flag            = isolate(input$cpu_flag),
-                #    dr_method           = isolate(input$dr_method),
-                #    clustering_options  = isolate(input$clustering_options),
-                #    zoom                = isolate(input$zoom_btn),
-                #    mssg                = "Move timeindex column to rownames",
-                #    time                = t_2-t_1
-                #)
-            
                 flush.console()
                 df
-                #On exit está imprimiendo cosas raras
                 log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds | df ~ ", dim(df)));flush.console()
             })
             df
@@ -1134,15 +1119,18 @@ tcl_1 = Sys.time()
     
 
     start_date <- reactive({
-        tsdf()$timeindex[1]
+        sd <- tsdf()$timeindex[1]
+        on.exit({print(paste0("start_date --> ", sd)); flush.console()})
+        sd
     })
 
     end_date <- reactive({
-        end_date_id = 100000
+        end_date_id = as.integer(100000)
         end_date_id = min(end_date_id, nrow(tsdf()))
-        tsdf()$timeindex[end_date_id]
+        ed <- tsdf()$timeindex[end_date_id]
+        on.exit({print(paste0("end_date --> ", ed)); flush.console()})
+        ed
     })
-
     ts_plot_base <- reactive({
         log_print("--> ts_plot_base")
         on.exit({log_print("ts_plot_base -->"); flush.console()})
@@ -1150,7 +1138,7 @@ tcl_1 = Sys.time()
         end_date = isolate(end_date())
         log_print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_ts_plot_0 <- Sys.time()
-        tsdf_ <- tsdf() %>% select(isolate(ts_variables$selected), - "timeindex")
+        tsdf_ <- isolate(tsdf()) %>% select(isolate(ts_variables$selected), - "timeindex")
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
         t_ts_plot_1 <- Sys.time()
         log_print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_1-t_ts_plot_0)) 
@@ -1219,11 +1207,10 @@ tcl_1 = Sys.time()
         # Populate the rest of the list
         if (length(idx_window_limits) > 2) {
             for (i in 2:(length(idx_window_limits)-1)){
-            reduced_window_list[[i]]<- c(
-                tsdf()$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-                tsdf()$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
-                )
-            }
+                reduced_window_list[[i]]<- c(
+                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
+                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+               )
             }
         reduced_window_list
     })
@@ -1235,7 +1222,7 @@ tcl_1 = Sys.time()
         t_tsp_0 = Sys.time()
         on.exit({log_print("ts_plot -->"); flush.console()})
 
-        req(tsdf(), ts_variables, input$wlen != 0, input$stride)
+        req(tsdf(), ts_variables, input$wlen != 0, input$stride, tsdf_ready())
 
         ts_plt = ts_plot_base()   
 
@@ -1281,20 +1268,6 @@ tcl_1 = Sys.time()
                     color = range_color
                 ) 
             ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
-                #%>% dyEvent(
-                #    start_event_date, 
-                #    label = paste0("SW-", count), 
-                #    labelLoc="bottom" ,
-                #    strokePattern = "solid",
-                #    color = range_color 
-                #    ) %>% dyEvent(
-                #    end_event_date, 
-                #    label = paste0("SW-",paste0("SW-", count), 
-                #    labelLoc="bottom",
-                #    strokePattern = "solid"),
-                #    color = range_color
-                #    )
-
             }   
             
             ts_plt <- ts_plt
@@ -1451,16 +1424,17 @@ output$windows_text <- renderUI({
         req( 
             input$dataset,
             input$encoder,
-            input$wlen != 0, 
-            input$stride != 0
+            input$wlen != 0,
+            input$stride != 0,
+            tsdf_ready()
         )
         log_print("--> Projections_plot")
-t_pp_0 = Sys.time()
+        t_pp_0 = Sys.time()
         prjs_ <- req(projections())
         log_print("projections_plot | Prepare column highlights")
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
-log_print("Selected ts time points" , TRUE, log_path(), log_header())
+            log_print("Selected ts time points" , TRUE, log_path(), log_header())
             selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
             projections_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
             prjs_$highlight = projections_idxs

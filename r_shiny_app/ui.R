@@ -32,6 +32,7 @@ shinyUI(fluidPage(
       hr(),
       select_datasetUI("datasetModule"),
       selectizeInput("encoder", label = "Encoder", choices = NULL),
+      actionButton("play_pause", "Run!", icon = icon("play")),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
       actionBttn(

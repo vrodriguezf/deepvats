@@ -8,11 +8,17 @@ pip install -e /home/$USER/work
 echo $WANDB_ENTITY $USER $WANDB_PROJECT
 
 ### Ensuring to activate the correct conda
-echo "Aqui0"
 source /usr/local/share/miniconda3/etc/profile.d/conda.sh
 conda activate /usr/local/share/miniconda3/envs/env
+#Check
+conda list | grep wandb
+###
 
-echo "Aqui2" 
+#!/bin/bash
+
+############################
+# Extra pre-commit options #
+############################
 
 #Check
 conda list | grep wandb

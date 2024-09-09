@@ -51,6 +51,9 @@ configuration:
       # PulsusParadoxus SP02
       ws1: 15
       ws2: &wlen 100
+      #ws2 &wlen: 365 #Monash-Australian_electricity_demand
+      #ws1: 15 #Solar_4_seconds
+      #ws2: &wlen 30 #Solar_4_seconds
       # probability of masking in MVP
       r: 0.710
       valid_size: 0.2

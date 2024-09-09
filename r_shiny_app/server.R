@@ -18,7 +18,6 @@ shinyServer(function(input, output, session) {
     #options(shiny.error = function() {
     #    traceback()
     #    stopApp()
-})
   
     ######################
     #  REACTIVES VALUES  #
@@ -1212,6 +1211,7 @@ tcl_1 = Sys.time()
                     isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
                )
             }
+        }
         reduced_window_list
     })
     
@@ -1372,22 +1372,22 @@ tcl_1 = Sys.time()
         height=200
     )  
 
-output$windows_text <- renderUI({
-    req(length(embedding_ids()) > 0)
-    reduced_window_list = req(window_list())
+    output$windows_text <- renderUI({
+        req(length(embedding_ids()) > 0)
+        reduced_window_list = req(window_list())
 
-    # Crear un conjunto de etiquetas de texto con información de las ventanas
-    window_info <- lapply(1:length(reduced_window_list), function(i) {
-        window <- reduced_window_list[[i]]
-        start <- format(as.POSIXct(tsdf()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
-        end <- format(as.POSIXct(tsdf()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
-        color <- ifelse(i %% 2 == 0, "green", "blue")
-        HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+        # Crear un conjunto de etiquetas de texto con información de las ventanas
+        window_info <- lapply(1:length(reduced_window_list), function(i) {
+            window <- reduced_window_list[[i]]
+            start <- format(as.POSIXct(tsdf()$timeindex[window[1]], origin = "1970-01-01"), "%b %d")
+            end <- format(as.POSIXct(tsdf()$timeindex[window[2]], origin = "1970-01-01"), "%b %d")
+            color <- ifelse(i %% 2 == 0, "green", "blue")
+            HTML(paste0("<div style='color: ", color, "'>Window ", i, ": ", start, " - ", end, "</div>"))
+        })
+
+        # Devuelve todos los elementos de texto como una lista de HTML
+        do.call(tagList, window_info)
     })
-
-    # Devuelve todos los elementos de texto como una lista de HTML
-    do.call(tagList, window_info)
-})
     
     # Generate encoder info table
     #output$enc_info = renderDataTable({

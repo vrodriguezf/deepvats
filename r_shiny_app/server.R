@@ -383,11 +383,15 @@ shinyServer(function(input, output, session) {
     X <- reactiveVal()
     
     observe({
+        log_print(
+            paste0("--> Reactive X | Before req | tsdf_ready ", tsdf_ready(), 
+            " | wlen ", input$wlen, 
+            " | stride ", input$stride
+        ))
         req(
             tsdf_ready, 
             input$wlen != 0, 
-            input$stride != 0, 
-            input$stride != 1
+            input$stride != 0
         )
         log_print("--> Reactive X | Update Sliding Window")
         log_print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
@@ -396,7 +400,7 @@ shinyServer(function(input, output, session) {
         if (
             ! enc_input_ready()
         ) { 
-            req(play())
+            #req(play())
             print("Enc input | Update X")
             print("Enc input | --> ReactiveVal X | Update Sliding Window")
             print(paste0("Enc input | reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
@@ -442,7 +446,7 @@ shinyServer(function(input, output, session) {
                 "reactive X | Update sliding window | Apply stride ", 
                 input$stride,
                 " | enc_input ~ ",
-                dim(enc_input),
+                dim(X()),
                 "-->"
             )); flush.console()
         })
@@ -677,8 +681,10 @@ shinyServer(function(input, output, session) {
     
     
     embs <- reactive({
+        print(paste0(
+            "--> reactive embs (before req) | get embeddings | enc_input_ready ", enc_input_ready()," | play " , play()))
         req(tsdf(), X(), enc_l <- enc(), enc_input_ready(), play())
-        print(paste0("--> reactive embs | get embeddings | enc_input_ready ", enc_input_ready()))
+        print(paste0("--> reactive embs (after req) | get embeddings | enc_input_ready ", enc_input_ready()))
         print(paste0("tsdf ~ ", dim(tsdf())))
         print(paste0("X ~ ", dim(X())))
         log_print("--> reactive embs | get embeddings")
@@ -958,7 +964,7 @@ shinyServer(function(input, output, session) {
         {
             req(input$encoder, ts_ar())
             log_print(paste0("--> Reactive tsdf"))
-            req(allow_tsdf() == TRUE)
+            req(allow_tsdf())
             log_print("--> Reactive tsdf | allow_tsdf ")
             ts_ar = ts_ar()
             log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar()))
@@ -998,7 +1004,6 @@ shinyServer(function(input, output, session) {
                     mmap = TRUE
                 ) %>% rename('timeindex' = `__index_level_0__`)
                 df_read_option <- "Download from W&B and read from feather"
-                tsdf_ready(TRUE)
                 df
             }, finally = {
                 t_1 = Sys.time()
@@ -1016,8 +1021,9 @@ shinyServer(function(input, output, session) {
                     mssg                = "Read feather"
                 )
                 flush.console()
-                df
+                tsdf_ready(TRUE)
                 log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds | df ~ ", dim(df)));flush.console()
+                df
             })
             df
         })
@@ -1221,7 +1227,7 @@ tcl_1 = Sys.time()
         log_print("--> ts_plot | Before req 1")
         t_tsp_0 = Sys.time()
         on.exit({log_print("ts_plot -->"); flush.console()})
-
+        print(paste0("ts_plot | Before req 2 | tsdf_ready ", tsdf_ready()))
         req(tsdf(), ts_variables, input$wlen != 0, input$stride, tsdf_ready())
 
         ts_plt = ts_plot_base()   

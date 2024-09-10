@@ -16,7 +16,11 @@ shinyUI(fluidPage(
   ################################################
   ################## JScript Logs ################
   ################################################
-  tags$head(tags$script(log_script), tags$style(HTML(rotate_plot_style))),
+  tags$head(
+    tags$script(log_script), 
+    tags$style(HTML(rotate_plot_style)),
+    tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.8.2/css/all.css") #--#
+  ),
   
   #theme = shinythemes::shinytheme("cerulean"),
   # Application title
@@ -32,7 +36,7 @@ shinyUI(fluidPage(
       hr(),
       select_datasetUI("datasetModule"),
       selectizeInput("encoder", label = "Encoder", choices = NULL),
-      actionButton("play_pause", "Run!", icon = icon("play")),
+      actionButton("play_pause", "Run!", icon = shiny::icon("play")),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
       actionBttn(
@@ -87,7 +91,7 @@ shinyUI(fluidPage(
                     value = DEFAULT_VALUES$cluster_selection_epsilon_hdbscan, min=0, max=5, step = 0.01),
         actionBttn(inputId = "calculate_clusters", label = "Calculate and show clusters", style = "bordered",
                    color = "primary", size = "sm", block = TRUE)
-      ),
+      )
     ),
     # Show a plot of the generated distribution
     mainPanel(
@@ -104,7 +108,7 @@ shinyUI(fluidPage(
             h3("Logs"),
             verbatimTextOutput("logsOutput"),
             h3("Log dataframe"),
-            shiny::actionButton("update_logs", label = "Update logs", icon = icon("refresh")),
+            shiny::actionButton("update_logs", label = "Update logs", icon = shiny::icon("refresh")),
             shiny::downloadButton("download_data", "Download logs as CSV"),
             #shinyWidgets::sliderTextInput(
             #  "timestamp_range", 
@@ -116,7 +120,7 @@ shinyUI(fluidPage(
             #verbatimTextOutput(outputId = "res"),
             dataTableOutput("log_output")
           )
-        ),
+        )
       )
     )
   )

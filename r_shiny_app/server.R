@@ -58,9 +58,9 @@ shinyServer(function(input, output, session) {
 
     update_play_pause_button <- function() {
         if (play()) {
-            updateActionButton(session, "play_pause", label = "Pause", icon = icon("pause"))
+            updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
             } else {
-                updateActionButton(session, "play_pause", label = "Run!", icon = icon("play"))
+                updateActionButton(session, "play_pause", label = "Run!", icon = shiny::icon("play"))
             }
     }
 
@@ -400,7 +400,7 @@ shinyServer(function(input, output, session) {
         if (
             ! enc_input_ready()
         ) { 
-            #req(play())
+            req(play())
             print("Enc input | Update X")
             print("Enc input | --> ReactiveVal X | Update Sliding Window")
             print(paste0("Enc input | reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))

@@ -46,7 +46,7 @@ embeddings_aesthetics_update <- function(id) {
     label = "Update aestethics",
     style = "simple",
     color = "primary",
-    icon = icon("bar-chart"),
+    icon = shiny::icon("bar-chart"),
     size = "xs", block = TRUE
   )
 }
@@ -67,7 +67,7 @@ embeddings_aesthetics <- function(id){
       actionButton('savePlot', 'Save embedding projections plot'),
       embeddings_aesthetics_update("embeddings_aesthetics_update"),
       circle = FALSE, status = "primary",
-      icon = icon("gear"), width = "300px",size = "xs",
+      icon = shiny::icon("gear"), width = "300px",size = "xs",
       tooltip = tooltipOptions(title = "Configure the embedding appearance"),
       inputId = "projections_config"
     )
@@ -95,7 +95,7 @@ original_data_plot_controllers <- function(id){
         label   = "Select/Deselect all",
         style   = "simple",
         color   = "primary",
-        icon    = icon("check-double"),
+        icon    = shiny::icon("check-double"),
         size    = "xs", 
         block   = TRUE
       ),
@@ -106,7 +106,7 @@ original_data_plot_controllers <- function(id){
         status = "success",fill = TRUE
       ),
       circle = FALSE, status = "primary", size = "xs",
-      icon = icon("gear"), width = "300px",
+      icon = shiny::icon("gear"), width = "300px",
       tooltip = tooltipOptions(title = "Configure the TS appearance"),
       inputId = "ts_config"
     )
@@ -134,8 +134,8 @@ embeddings_zoom_button <- function(id){
     outline     = TRUE,
     plain       = TRUE,
     inline      = TRUE,
-    icon_on     = icon("search-minus"), 
-    icon_off    = icon("search-plus"),
+    icon_on     = shiny::icon("search-minus"), 
+    icon_off    = shiny::icon("search-plus"),
     status_on   = "danger",
     status_off  = "primary"
   )

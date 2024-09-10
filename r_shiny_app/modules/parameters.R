@@ -51,12 +51,12 @@ load_datasetUI <- function(id) {
         shiny::actionButton(
             ns("load_dataset"), 
             label = "Load dataset", 
-            icon = icon("database")
+            icon = shiny::icon ("database", style ="color: black; background-color: blue") #--#checking icons
         ),
         shiny::actionButton(
             ns("load_embs"), 
             label = "Load embeddings", 
-            icon = icon("project-diagram")
+            icon = shiny::icon("project-diagram") #--#checking icons
         )
       ),
     )

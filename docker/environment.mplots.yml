@@ -1,0 +1,15 @@
+name: env
+channels: 
+- conda-forge
+
+dependencies:
+  #-- Mplots
+  - pyscamp-gpu=4.0.1=py310h43b6314_1
+  - stumpy=1.12.0=pyhd8ed1ab_0
+  - ipympl=0.9.3=pyhd8ed1ab_0
+  - graph
+  #-- Octave 4 Eamonn's MPlots (expecting the python code :D)
+  - octave
+  - oct2py
+  - fltk
+  - aeon

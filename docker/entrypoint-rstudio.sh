@@ -7,6 +7,11 @@ echo "conda activate ${ENV_PREFIX}" >> ~/.bashrc
 #echo "export WANDB_ENTITY=${WANDB_ENTITY:-default}" >> ${HOME}/.bashrc
 # echo "WANDB_ENTITY=${WANDB_ENTITY:-default}" >> ${HOME}/.Renviron
 
+#... added for fixing fails when rebuilding docker ...#
+### Ensuring to activate the correct conda
+source /usr/local/share/miniconda3/etc/profile.d/conda.sh
+conda activate /usr/local/share/miniconda3/envs/env
+
 # Define an array of environment variable names from the ENV_VARS Compose variable
 IFS=',' read -ra ENV_VAR_NAMES <<< "$ENV_VARS"
 

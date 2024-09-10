@@ -1,0 +1,22 @@
+############################################
+# CONDA & MINICONDA WITH PYBASE DOCKERFILE #
+# For Jupyter service                      #
+############################################
+##############
+# Base image #
+##############
+##--- Setup Ubuntu
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04
+
+
+##--- Setup bash
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+#####################
+# Install miniconda #
+#####################
+
+RUN  source /usr/local/share/miniconda3/bin/activate env \
+     && mamba install -y -c conda-forge pre-commit \
+     && mamba clean --all --yes 
+

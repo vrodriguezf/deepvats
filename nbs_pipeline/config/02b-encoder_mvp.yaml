@@ -39,8 +39,21 @@ configuration:
       #ws2: &wlen 365 #sunspot
       #ws1: 10 #toy
       #ws2: &wlen 30 #toy
-      ws1: 1 #Monash-Australian_electricity_demand
-      ws2: 365 #Monash-Australian_electricity_demand
+      #ws1: 1 #Monash-Australian_electricity_demand
+      #ws2: &wlen365 #Monash-Australian_electricity_demand
+      # Insect one million
+      #ws1: 1
+      #ws2: &wlen 187
+      # Exoplanets
+      #ws1: 1
+      #ws2: &wlen 190
+
+      # PulsusParadoxus SP02
+      ws1: 15
+      ws2: &wlen 100
+      #ws2 &wlen: 365 #Monash-Australian_electricity_demand
+      #ws1: 15 #Solar_4_seconds
+      #ws2: &wlen 30 #Solar_4_seconds
       # probability of masking in MVP
       r: 0.710
       valid_size: 0.2

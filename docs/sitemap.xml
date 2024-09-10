@@ -2,26 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://vrodriguezf.github.io/dvats/utils.html</loc>
-    <lastmod>2023-11-22T22:58:32.544Z</lastmod>
-  </url>
-  <url>
-    <loc>https://vrodriguezf.github.io/dvats/dr.html</loc>
-    <lastmod>2023-11-22T22:58:31.280Z</lastmod>
-  </url>
-  <url>
-    <loc>https://vrodriguezf.github.io/dvats/encoder.html</loc>
-    <lastmod>2023-11-22T22:58:30.200Z</lastmod>
-  </url>
-  <url>
-    <loc>https://vrodriguezf.github.io/dvats/visualization.html</loc>
-    <lastmod>2023-11-22T22:58:29.200Z</lastmod>
+    <lastmod>2024-01-14T17:18:14.232Z</lastmod>
   </url>
   <url>
     <loc>https://vrodriguezf.github.io/dvats/load.html</loc>
-    <lastmod>2023-11-22T22:58:30.800Z</lastmod>
+    <lastmod>2024-01-14T17:18:12.884Z</lastmod>
   </url>
   <url>
-    <loc>https://vrodriguezf.github.io/dvats/index.html</loc>
-    <lastmod>2023-11-22T22:58:31.804Z</lastmod>
+    <loc>https://vrodriguezf.github.io/dvats/visualization.html</loc>
+    <lastmod>2024-01-14T17:18:10.880Z</lastmod>
+  </url>
+  <url>
+    <loc>https://vrodriguezf.github.io/dvats/encoder.html</loc>
+    <lastmod>2024-01-14T17:18:11.956Z</lastmod>
+  </url>
+  <url>
+    <loc>https://vrodriguezf.github.io/dvats/dr.html</loc>
+    <lastmod>2024-01-14T17:18:13.388Z</lastmod>
   </url>
 </urlset>

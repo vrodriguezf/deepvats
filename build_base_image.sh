@@ -1,3 +1,4 @@
+#!/bin/bash
 # Inicializa un array vacío
 args=()
 
@@ -5,8 +6,8 @@ args=()
 IFS='='
 while IFS='=' read -r key value _; do
     value="${value%$'\r'}"
-    echo "key: $key"
-    echo "value: $value"
+    #echo "key: $key"
+    #echo "value: $value"
     if [[ $key != \#* && $key != '' ]]; then  # Excluye comentarios y líneas vacías
         args+=(--build-arg "$key=$value")  # Agrega --build-arg y la variable como un elemento
     else
@@ -14,7 +15,7 @@ while IFS='=' read -r key value _; do
     fi
 done < docker/.env
 
-echo "Args:" "${args[@]}"
+#echo "Args:" "${args[@]}"
 
 
 # Ejecuta docker build con los argumentos

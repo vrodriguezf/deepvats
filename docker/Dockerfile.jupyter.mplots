@@ -1,0 +1,36 @@
+############################################
+# CONDA & MINICONDA WITH PYBASE DOCKERFILE #
+# For Jupyter service                      #
+############################################
+##############
+# Base image #
+##############
+##--- Setup Ubuntu
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks
+
+##--- Setup bash
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+##################
+# Install OCTAVE # 
+##################
+# Substitutes matlab as no inline installation found for matlab
+#RUN apt-get update \
+#    && apt-get install octave -y \
+#    && apt-get clean \
+    #&& rm -rf /var/lib/apt/lists/*
+
+#####################
+# Install miniconda #
+#####################
+
+RUN apt-get update && apt-get install -y libgl1-mesa-glx
+
+COPY docker/environment.mplots.yml /tmp/environment.mplots.yml
+
+RUN mamba env update --name env --file /tmp/environment.mplots.yml \
+    && mamba clean --all --yes
+
+# Failling the installation from environment for some reason 
+RUN mamba install aeon -c conda-forge -y \
+    && mamba clean --all --yes

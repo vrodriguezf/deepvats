@@ -1,0 +1,33 @@
+include: !include "base.yaml"
+
+#########################################################
+########### NBS - PIPELINE CONFIGURATION FILE ###########
+########### 04 - DIMENSIONALITY REDUCTION     ###########
+#########################################################
+###### Author: Maria Inmaculada Santamaria-Valenzuela   #
+###### Date: 08-2023                                    #
+#########################################################
+
+#################################
+# 04 - Dimensionality reduction #
+#################################
+job_type: 'dimensionality_reduction'
+configuration:
+  wandb: 
+    use: *use_wandb
+    # Whether to use or not wandb for experiment tracking
+    group: null
+    # The entity to use for wandb,
+    entity: *wdb_user
+    # The project to use for wandb,
+    project: *wdb_project 
+  encoder:
+    artifacts: 
+      train: 
+        enc_prefix: !join [ *wdb_user, '/', *wdb_project, '/', *alg]
+      # If none, the validation set used to train enc is used
+      valid: null
+    umap:
+      n_neighbors: 15
+      min_dist: 0.1
+      random_state: 1234

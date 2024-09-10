@@ -3,14 +3,14 @@ SRC = $(wildcard ./*.ipynb)
 all: pacmel_mining_use_case docs
 
 pacmel_mining_use_case: $(SRC)
-	nbdev_build_lib
+	nbdev_export
 	touch pacmel_mining_use_case
 
 docs_serve: docs
 	cd docs && bundle exec jekyll serve
 
 docs: $(SRC)
-	nbdev_build_docs
+	nbdev_docs
 	touch docs
 
 test:

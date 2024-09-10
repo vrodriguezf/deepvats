@@ -1,3 +1,8 @@
+source("./lib/ui/ui.R")
+source("./modules/information.R")
+source("./modules/mplots.R")
+source("./modules/embeddings.R")
+source("./modules/parameters.R")
 #
 # This is the user-interface definition of a Shiny web application. You can
 # run the application by clicking 'Run App' above.
@@ -8,6 +13,15 @@
 #
 
 shinyUI(fluidPage(
+  ################################################
+  ################## JScript Logs ################
+  ################################################
+  tags$head(
+    tags$script(log_script), 
+    tags$style(HTML(rotate_plot_style)),
+    tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.8.2/css/all.css") #--#
+  ),
+  
   #theme = shinythemes::shinytheme("cerulean"),
   # Application title
   titlePanel("DeepVATS"),
@@ -18,15 +32,30 @@ shinyUI(fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
-      fluidRow(
-        shiny::actionButton("load_dataset", label = "Load dataset", icon = icon("database")),
-        shiny::actionButton("load_embs", label = "Load embeddings", icon = icon("project-diagram"))
-      ),
+      load_datasetUI("load_dataset1"),
       hr(),
-      selectizeInput("dataset", label = "Dataset", choices = NULL),
+      select_datasetUI("datasetModule"),
       selectizeInput("encoder", label = "Encoder", choices = NULL),
+      actionButton("play_pause", "Run!", icon = shiny::icon("play")),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
+      actionBttn(
+        inputId = "get_tsdf", 
+        label = "Activate/Deactivate DF loading", 
+        style = "bordered", 
+        color = "primary", 
+        size = "sm", 
+        block = TRUE  
+      ),      
+      br(),
+      actionBttn(
+        inputId = "restore_wlen_stride",
+        label = "Restore window size and stride",
+        style = "bordered",
+        color = "primary",
+        siz   = "sm",
+        block = TRUE
+      ),
       sliderInput("wlen", "Select window size", min = 0, max = 0, value =0 , step = 1),
       sliderInput("stride", "Select stride", min = 0, max = 0, value = 0, step = 1),
       # sliderInput("points_emb", "Select range of points to plot in the projections", 
@@ -39,7 +68,7 @@ shinyUI(fluidPage(
       sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2000, value = 1234),
       ################
       radioButtons("cpu_flag", "Use: ", c("GPU", "CPU"), selected = "GPU", inline = T),
-      radioButtons("dr_method", "Projection method:", c("UMAP", "TSNE", "PCA"), selected="UMAP", inline=T),
+      radioButtons("dr_method", "Projection method:", c("UMAP", "TSNE", "PCA", "PCA_UMAP"), selected="PCA_UMAP", inline=T),
       br(),
       radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
                    choices = c("No clusters" = "no_clusters",
@@ -62,118 +91,37 @@ shinyUI(fluidPage(
                     value = DEFAULT_VALUES$cluster_selection_epsilon_hdbscan, min=0, max=5, step = 0.01),
         actionBttn(inputId = "calculate_clusters", label = "Calculate and show clusters", style = "bordered",
                    color = "primary", size = "sm", block = TRUE)
-      ),
+      )
     ),
     # Show a plot of the generated distribution
     mainPanel(
       tabsetPanel(
         id = "tabs",
+        embeddings_tabUI("embs_tab"),
+        info_tabUI("inf_tab"),
+        mplot_tabUI("mplot_tab1"),
+        #myModuleUI("myModule1"),
+      ######################## JSCript Logs button ###############################
         tabPanel(
-          "Projections",
+          "Logs",
           fluidRow(
-            h3("Embedding projections"),
-            fluidRow(
-              column(1,
-                     dropdownButton(
-                       tags$b("Set height of the projections plot (px):"),
-                       numericInput("embedding_plot_height", label = "Height",value =400),
-                       hr(),
-                       tags$b("Configure aestethics"),
-                       sliderInput("path_line_size", label = "path_line_size", 
-                                   value = DEFAULT_VALUES$path_line_size, min=0, max=5, step = 0.01),
-                       sliderInput("path_alpha", label = "path_alpha",
-                                   value = DEFAULT_VALUES$path_alpha, min=0, max=1, step = 0.01),
-                       sliderInput("point_alpha", label = "point_alpha",
-                                   value = DEFAULT_VALUES$point_alpha, min=0, max=1, step = 0.01),
-                       sliderInput("point_size", label = "point_size",
-                                   value = DEFAULT_VALUES$point_size, min=0, max=10, step = 0.5),
-                       checkboxInput("show_lines", "Show lines", value = TRUE),
-                       actionButton('savePlot', 'Save embedding projections plot'),
-
-                       actionBttn(inputId = "update_prj_graph",label = "Update aestethics",style = "simple",
-                                  color = "primary",icon = icon("bar-chart"),size = "xs", block = TRUE),
-                       circle = FALSE, status = "primary",
-                       icon = icon("gear"), width = "300px",size = "xs",
-                       tooltip = tooltipOptions(title = "Configure the embedding appearance"),
-                       inputId = "projections_config"
-                     )
-              ),
-              column(8,
-                     prettyToggle(
-                       inputId = "zoom_btn",
-                       label_on = "Zoom out",
-                       label_off = "Zoom in",
-                       shape = "square",
-                       outline = TRUE,
-                       plain = TRUE,
-                       inline = TRUE,
-                       icon_on = icon("search-minus"), 
-                       icon_off = icon("search-plus"),
-                       status_on = "danger",
-                       status_off = "primary"
-                     ),
-                     materialSwitch(
-                       inputId = "plot_windows",
-                       label = "Plot windows",
-                       status = "info",
-                       value = TRUE,
-                       inline = TRUE
-                     )
-              ),
-              column(3)
-            ),
-            fluidRow(
-              uiOutput("projections_plot_ui")
-            )
-          ),
-          fluidRow(h3("Original data")),
-          fluidRow(
-            dropdownButton(
-              tags$b("Select/deselect variables"),
-              tags$div(style= 'height:200px; overflow-y: scroll', 
-                       checkboxGroupInput(inputId = "select_variables",
-                                          label=NULL, choices = NULL, selected = NULL)
-              ),
-              actionBttn(inputId = "selectall",label = "Select/Deselect all",style = "simple",
-                         color = "primary",icon = icon("check-double"),size = "xs", block = TRUE),
-              hr(),
-              prettySwitch(inputId = "dygraph_sel",label = "Show stacked graphs (Not available yet)",
-                           status = "success",fill = TRUE),
-              circle = FALSE, status = "primary", size = "xs",
-              icon = icon("gear"), width = "300px",
-              tooltip = tooltipOptions(title = "Configure the TS appearance"),
-              inputId = "ts_config"
-            )
-          ),
-          fluidRow(
-            column(12,
-              #sliderInput(
-                #"nrows", "Select initial data range:", 
-                #min = 0, max = 10000, 
-                #value = c(0,0),
-                #step = 1000000
-              #),
-              dygraphOutput("ts_plot_dygraph") %>% withSpinner(),
-              plotOutput("windows_plot"),
-              uiOutput("windows_text")
-            )
+            h3("Logs"),
+            verbatimTextOutput("logsOutput"),
+            h3("Log dataframe"),
+            shiny::actionButton("update_logs", label = "Update logs", icon = shiny::icon("refresh")),
+            shiny::downloadButton("download_data", "Download logs as CSV"),
+            #shinyWidgets::sliderTextInput(
+            #  "timestamp_range", 
+            #  "Select Time Range:",
+            #  choices = c("Loading..."="Loading..."), #setNames(as.character(seq(0,10,1)), seq(0,10,1)),
+            #  selected = c("Loading...", "Loading..."),
+            #  animate = TRUE
+            #),
+            #verbatimTextOutput(outputId = "res"),
+            dataTableOutput("log_output")
           )
-          #verbatimTextOutput("projections_plot_interaction_info"),
-          #verbatimTextOutput("point")
-          
-        ),
-        tabPanel(
-          "Information",
-          fluidRow(
-            h3("Time series"),
-            dataTableOutput("ts_ar_info"),
-            h3("Configuration of the associated encoder"),
-            dataTableOutput("enc_info")
-          )
-        ),
+        )
       )
     )
   )
-
-  
 ))

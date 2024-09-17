@@ -53,6 +53,8 @@ RUN addgroup --gid $GID $USER  \
 
 #RUN sudo chown -R $UID:$GID /usr/local/share/miniconda3/envs/env
 
+RUN mkdir /content
+RUN sudo chown -R $UID:$GID /content
 #-- Move to user
 USER $USER
 

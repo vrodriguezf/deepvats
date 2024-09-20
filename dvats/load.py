@@ -306,3 +306,72 @@ def mat2csv(mat_file_path, csv_file_folder = '~/data/', verbose = 0):
         return data_df
 
 
+
+# %% ../nbs/load.ipynb 28
+import requests
+import zipfile
+from pathlib import Path
+
+def get_confirm_token(response):
+    for key, value in response.cookies.items():
+        if key.startswith('download_warning'):
+            return value
+    return None
+
+def save_response_content(response, destination):
+    with open(destination, "wb") as f:
+        for chunk in response.iter_content(chunk_size=32768):
+            if chunk:  # filter out keep-alive new chunks
+                f.write(chunk)
+
+def download_file_from_google_drive(id, destination):
+    URL = "https://docs.google.com/uc?export=download"
+
+    session = requests.Session()
+    response = session.get(URL, params={'id': id}, stream=True)
+    token = get_confirm_token(response)
+
+    if token:
+        params = {'id': id, 'confirm': token}
+        response = session.get(URL, params=params, stream=True)
+
+    # Check if the file is HTML (incorrect download)
+    if 'text/html' in response.headers['Content-Type']:
+        print("Failed to download the zip file. The link may require additional permissions or the ID may be incorrect.")
+    else:
+        save_response_content(response, destination)
+        print(f"File downloaded as: {destination}")
+
+def zip_contents(zip_path):
+    with zipfile.ZipFile(zip_path, 'r') as zip_file:
+        return zip_file.namelist()
+
+
+def unzip_mat(all_one, zip_path, extract_path, case = '', verbose = 0):
+    if verbose > 0: print("--> Unzip_mat", all_one, zip_path, extract_path, case, verbose)
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        mat_files = [file for file in zip_ref.namelist() if file.endswith('.mat') and not file.startswith('__MACOSX/')]
+        if verbose > 0: print(mat_files)
+        if all_one == "all":
+            # Extract
+            for file in mat_files:
+                zip_ref.extract(file, extract_path)
+            return f"{mat_files} extracted to {extract_path}"
+        
+        elif all_one == "one":
+            if case == "":
+                # Extract first .mat
+                zip_ref.extract(mat_files[0], extract_path)
+                return f"{mat_files[0]} extracted to  {extract_path}"
+            else:
+                # Extract <case>.mat
+                mat_file = next((file for file in mat_files if case in file), None)
+                if mat_file:
+                    zip_ref.extract(mat_file, extract_path)
+                    return f"{mat_file} extracted to {extract_path}"
+                else:
+                    return "None "+case+".mat found."
+        else:
+            return "First parameter must be 'all' or 'one'."
+        if verbose > 0: print("unzip_path -->")
+

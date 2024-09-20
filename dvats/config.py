@@ -9,7 +9,7 @@ __all__ = ['monash_australian_electricity_demand_0', 'monash_sunspot_0', 'monash
            'get_artifact_config_sd2a', 'get_artifact_config_MVP_auxiliar_variables',
            'get_artifact_config_MVP_auxiliar_variables_SWV', 'check_project_and_entity',
            'get_artifact_config_MVP_check_errors', 'get_artifact_config_MVP', 'get_artifact_config_MVP_SWV',
-           'get_artifact_config_DCAE', 'get_artifact_config_embeddings', 'get_artifact_config_embeddings_swv',
+           'get_artifact_config_DCAE', 'get_artifact_config_embeddings', 'get_artifact_config_embeddings_SWV',
            'get_artifact_config_dimensionality_reduction', 'get_artifact_config_xai_lrp', 'show_attrdict',
            'show_available_configs', 'show_config', 'get_tested_config', 'print_colored', 'get_resampling_frequency',
            'frequency_factor_config', 'diff_attrdict', 'force_artifact_config_sd2a', 'split_artifact_string',
@@ -65,7 +65,7 @@ def replace_includes_with_content(
     """
     if (verbose > 0):
         print("... About to replace includes with content")
-    with open(path+filename, 'r') as f:
+    with open(path+filename, 'r', encoding='utf-8') as f:
         content = f.read()
         
         # Mientras exista una directiva !include en el contenido, sigue reemplazándola
@@ -80,7 +80,7 @@ def replace_includes_with_content(
             include_filename = content[start_quote_idx:end_quote_idx]
             
             # Lee el archivo incluido
-            with open(path+include_filename, 'r') as include_file:
+            with open(path+include_filename, 'r', encoding='utf-8') as include_file:
                 included_content = include_file.read()
             
             # Reemplaza la directiva por el contenido del archivo incluido
@@ -444,7 +444,7 @@ def get_artifact_config_embeddings(verbose : int = 0) -> Tuple[AttrDict, str]:
     config = get_config(verbose, "03a-embeddings")
     job_type=config.job_type
     version = config.user_preferences.wdb.version
-    enc_artifact = build_enc_artifact(config, verbose, swv = False)
+    enc_artifact = build_enc_artifact(config, verbose)
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb       = config.wandb.use,
@@ -459,7 +459,7 @@ def get_artifact_config_embeddings(verbose : int = 0) -> Tuple[AttrDict, str]:
     return artifact_config, job_type
 
 # %% ../nbs/config.ipynb 43
-def get_artifact_config_embeddings_swv(verbose : int = 0) -> Tuple[AttrDict, str]:
+def get_artifact_config_embeddings_SWV(verbose : int = 0) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for embeddings (sliding window view) by fetching relevant settings and building the encoder artifact configuration.
     Validates the project and entity settings and returns the artifact configuration as an AttrDict, along with the job type.
@@ -467,7 +467,7 @@ def get_artifact_config_embeddings_swv(verbose : int = 0) -> Tuple[AttrDict, str
     config = get_config(verbose, "03b-embeddings-sliding_window_view")
     job_type=config.job_type
     version = config.user_preferences.wdb.version
-    enc_artifact = build_enc_artifact(config, verbose, swv = True)
+    enc_artifact = build_enc_artifact(config, verbose)
     config = config.configuration
     artifact_config = AttrDict(
         use_wandb       = config.wandb.use,
@@ -486,10 +486,7 @@ def get_artifact_config_embeddings_swv(verbose : int = 0) -> Tuple[AttrDict, str
 ###################################
 # 04 - DIMENSIONALITY REDUCTION   #
 ###################################
-def get_artifact_config_dimensionality_reduction(
-    verbose : int = 0, 
-    swv : bool = False
-) -> Tuple[AttrDict, str]:
+def get_artifact_config_dimensionality_reduction(verbose : int = 0) -> Tuple[AttrDict, str]:
     """
     Constructs the configuration for dimensionality reduction tasks by fetching relevant settings, including building the encoder artifact.
     Returns the artifact configuration as an AttrDict, along with the job type.
@@ -497,7 +494,7 @@ def get_artifact_config_dimensionality_reduction(
 
     config          = get_config(verbose, "04-dimensionality_reduction")
     job_type        = config.job_type
-    enc_artifact = build_enc_artifact(config, verbose, swv)
+    enc_artifact = build_enc_artifact(config, verbose)
     config = config.configuration
     try:
         if config.encoder.artifacts.dr is not None:
@@ -929,7 +926,7 @@ def get_resampling_frequency(
         print("Frequency factor resampling frequency -->")
     return (suffix, resampling_freq)
 
-# %% ../nbs/config.ipynb 80
+# %% ../nbs/config.ipynb 81
 def frequency_factor_config(
     config: AttrDict, 
     frequency_factor:int = 1,
@@ -953,7 +950,7 @@ def frequency_factor_config(
         print("path: ", config.data_fpath)    
         print("Frequency factor config -->")
 
-# %% ../nbs/config.ipynb 81
+# %% ../nbs/config.ipynb 82
 def diff_attrdict(
     dict_original: AttrDict, 
     dict_modified: AttrDict,
@@ -981,7 +978,7 @@ def diff_attrdict(
             print_colored(key, modified_val=dict_modified[key], modified=True, missing_in_original=True)
 
 
-# %% ../nbs/config.ipynb 82
+# %% ../nbs/config.ipynb 83
 from copy import deepcopy
 def force_artifact_config_sd2a(
     config: AttrDict,
@@ -1018,7 +1015,7 @@ def force_artifact_config_sd2a(
             dict_modified=config, 
             both = both)
 
-# %% ../nbs/config.ipynb 86
+# %% ../nbs/config.ipynb 87
 def split_artifact_string(s:string) -> tuple[string, string, string]:
     # Divide la cadena en dos partes usando ':'
     path, version = s.split(':')
@@ -1029,7 +1026,7 @@ def split_artifact_string(s:string) -> tuple[string, string, string]:
     # Retorna los componentes separados
     return parts[0] + '/', parts[1], version
 
-# %% ../nbs/config.ipynb 88
+# %% ../nbs/config.ipynb 89
 def force_artifact_config_mvp(
     config: AttrDict,
     id:int = 0, 
@@ -1078,7 +1075,7 @@ def force_artifact_config_mvp(
             both = both
         )
 
-# %% ../nbs/config.ipynb 91
+# %% ../nbs/config.ipynb 92
 def force_artifact_config_dcae(
     config: AttrDict,
     id:int = 0, 

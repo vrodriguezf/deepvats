@@ -180,6 +180,9 @@ def cluster_score(prjs, clusters_labels, verbose = 0):
     if verbose > 0:print("Silhouette_score:", score)
     return score
 
+# %% ../nbs/dr.ipynb 28
+import matplotlib.pyplot as plt
+
 # %% ../nbs/dr.ipynb 29
 def plot_projections(prjs, umap_params, fig_size = (25,25)):
     "Plot 2D projections thorugh a connected scatter plot"

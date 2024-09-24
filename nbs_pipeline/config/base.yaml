@@ -28,7 +28,8 @@ user_preferences:
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
     alias: &alias 'PulsusParadoxus-SP02'
-    algorithm: &alg 'mvp'
+    #algorithm: &alg 'mvp'
+    algorithm: &alg 'moment-embedding'
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 

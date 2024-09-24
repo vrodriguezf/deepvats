@@ -64,7 +64,9 @@ class DCAE_torch(Module):
 # %% ../nbs/encoder.ipynb 11
 ENCODER_EMBS_MODULE_NAME = {
     InceptionTimePlus: 'backbone', # for mvp based models
-    DCAE_torch: 'bottleneck.latent_in'
+    DCAE_torch: 'bottleneck.latent_in'#,
+    #MoiraiForecast: 'mask_encoding' #TODO: check
+    
 }
 
 # %% ../nbs/encoder.ipynb 13
@@ -92,30 +94,6 @@ def get_enc_embs_ensure_batch_size_(
             print(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}")
 
 # %% ../nbs/encoder.ipynb 15
-from fastai.learner import Learner
-from tsai.data.core import TSDataLoaders
-
-# %% ../nbs/encoder.ipynb 16
-def get_enc_embs_ensure_batch_size_(
-    dls        : TSDataLoaders,
-    batch_size : int = None,
-    verbose    : int = 0
-) -> None:
-    if batch_size is None:
-        if verbose > 1: 
-            print("[ Get Encoder Embeddings Ensure Batch Size ] No batch size proposed")
-        if dls.bs == 0: 
-            if verbose > 1: 
-                print("[ Get Encoder Embeddings Ensure Batch Size ] Using value 64 as 0 is not a valid value.")
-            enc_learn.dls.bs = 64
-        elif verbose > 1: 
-            print(f"[ Get Encoder Embeddings Ensure Batch Size ] Using the original value: {dls.bs}")
-    else:
-        dls.bs = batch_size
-        if verbose > 1: 
-            print(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}")
-
-# %% ../nbs/encoder.ipynb 17
 def get_enc_embs(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -200,7 +178,7 @@ def get_enc_embs(
     if to_numpy: embs = embs.numpy() if cpu else embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 18
+# %% ../nbs/encoder.ipynb 16
 def get_enc_embs_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 

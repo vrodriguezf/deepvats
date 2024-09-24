@@ -351,7 +351,7 @@ def get_enc_embs_moment(
     y = torch.from_numpy(X).to("cuda").float()
     # Get output
     with torch.no_grad():
-        outputs = enc_learn.model(y)
+        outputs = enc_learn(y)
     #| move tensors and models back to CPU
     if not cpu:
         y = y.detach().cpu().numpy()
@@ -375,16 +375,17 @@ def get_enc_embs(
     verbose         : int  = 0
 ):
     embs = None
-    match type(enc_learn):
-        case "<class 'momentfm.models.moment.MOMENTPipeline'>":
+    enc_learn_class = str(enc_learn.__class__)[8:-2]
+    match enc_learn_class:
+        case "momentfm.models.moment.MOMENTPipeline":
             if (enc_learn.task_name == "embedding"):
                 embs = get_enc_embs_moment(X, enc_learn, cpu, to_numpy, verbose)
             else:
                 print("Model embeddings implementation is not yet implemented.")        
-        case "<class 'fastai.learner.Learner'>":
+        case "fastai.learner.Learner":
             embs = get_enc_embs_MVP_set_stride_set_batch_size(X, enc_learn, stride, batch_size, module, cpu, average_seq_dim, to_numpy, verbose, False, 0, False)
         case _:
-            print("Model embeddings implementation is not yet implemented.")
+            print(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.")
     return embs
 
 # %% ../nbs/encoder.ipynb 20
@@ -403,8 +404,9 @@ def get_enc_embs_set_stride_set_batch_size(
     check_memory_usage : bool = False
 ): 
     embs = None
-    match type(enc_learn):
-        case "<class 'momentfm.models.moment.MOMENTPipeline'>":
+    enc_learn_class = str(enc_learn.__class__)[8:-2]
+    match enc_learn_class:
+        case "momentfm.models.moment.MOMENTPipeline":
             if (enc_learn.task_name == "embedding"):
                 embs = get_enc_embs_moment(
                     X = X,
@@ -415,8 +417,8 @@ def get_enc_embs_set_stride_set_batch_size(
                 )
             else:
                 print(f"[ get_enc_embs_set_stride_set_batch_size | moment | Task {enc_learn.task_name}] Model embeddings implementation is not yet implemented.")
-        case "<class 'fastai.learner.Learner'>":
+        case "fastai.learner.Learner":
             embs = get_enc_embs_MVP_set_stride_set_batch_size(X, enc_learn, stride, batch_size, module, cpu, average_seq_dim, to_numpy, verbose, time_flag, chunk_size, check_memory_usage)
         case _:
-            print(f"[ get_enc_embs_set_stride_set_batch_size ] Model embeddings implementation is not yet implemented for type {type(enc_learn)}.")
+            print(f"[ get_enc_embs_set_stride_set_batch_size ] Model embeddings implementation is not yet implemented for {enc_learn_class}.")
     return embs

@@ -2,8 +2,8 @@
 
 # %% auto 0
 __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'get_acts', 'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP',
-           'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moirai', 'get_enc_embs',
-           'get_enc_embs_set_stride_set_batch_size']
+           'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
+           'get_enc_embs_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size']
 
 # %% ../nbs/encoder.ipynb 2
 from .memory import *
@@ -355,14 +355,16 @@ def get_enc_embs_moment(
     enc_learn       : Learner, 
     cpu             : bool = False, 
     to_numpy        : bool = True,
-    verbose         : int  = 0
+    verbose         : int  = 0,
+    average_seq_dim : bool = True,
+    padd_step       : int  = 2
 ):
     if verbose > 0: print("--> get_enc_embs_moment")
     # Move tensor and model to GPU
     if cpu or not torch.cuda.is_available():
         if verbose > 0: print("get_enc_embs_moment | Using CPU (maybe no cuda available)")
         cpu = True
-        enc_learn.dls.cpu()
+        enc_learn.cpu()
         enc_learn.cpu()
     else:
         if verbose > 0: print("get_enc_embs_moment | Using CUDA")
@@ -373,21 +375,72 @@ def get_enc_embs_moment(
     # Get output
     with torch.no_grad():
         outputs = enc_learn(y)
+        if verbose > 0:
+            print(f"get_enc_embs_moment | Final shape: X ~ {y.shape}")
+                
     #| move tensors and models back to CPU
     if not cpu:
         y = y.detach().cpu().numpy()
     if verbose > 0: print("get_enc_embs_moment | Get Embeddings")
     embeddings = outputs.embeddings.detach().cpu()
+    if average_seq_dim: 
+        embeddings = embeddings.mean(dim = 1)
     if to_numpy:
-        embeddings = embeddings.numpy()
+        embeddings = embeddings.cpu().numpy()
     if verbose > 0: print("get_enc_embs_moment -->")
     return embeddings
 
-# %% ../nbs/encoder.ipynb 21
+# %% ../nbs/encoder.ipynb 20
+def get_enc_embs_moment_reconstruction(
+    X               : List [ List [ List [ float ] ] ], 
+    enc_learn       : Learner, 
+    cpu             : bool = False, 
+    to_numpy        : bool = True,
+    verbose         : int  = 0,
+    average_seq_dim : bool = True,
+    padd_step       : int  = 2
+):
+    """
+    For reconstruction sometimes mask get invalid values
+    To avoid them, the last dimension (sequence length) is padded with 0's until the error is skippedd
+    It should only get one iteration as it seems to be some MOMENT internal configuration for patches.
+    """
+    if cpu:
+        enc_learn.cpu()
+    else:
+        enc_learn.to("cuda")
+        y = torch.from_numpy(X).to("cuda").float()
+    success = False
+    while not success:
+        try:
+            if verbose > 1: 
+                print(f"get_enc_embs_moment_reconstruction | x_enc ~ {y.shape}")
+            acts = get_acts(
+                model = enc_learn,
+                #module = enc_learn.encoder.dropout,
+                module = enc_learn.head.dropout,
+                cpu = cpu,
+                x_enc = y
+            )
+            embs = acts[0]
+            success = True
+            if verbose > 1: 
+                print(f"get_enc_embs_moment_reconstruction | embs ~ {embs.shape}")
+        except Exception as e:
+            if verbose > 0:
+                print(f"get_enc_embs_moment | About to pad X (encoder input) | exception {e} | padd step: {padd_step}")
+            y = torch.nn.functional.pad(y,(0,padd_step))
+    if average_seq_dim: 
+        embs = embs.mean(dim = 1).mean(dim = 1)
+    if to_numpy:
+        embs = embs.cpu().numpy()
+    return embs
+
+# %% ../nbs/encoder.ipynb 22
 import uni2ts.model.moirai.module as moirai
 import uni2ts.model.moirai.forecast as moirai_forecast
 
-# %% ../nbs/encoder.ipynb 22
+# %% ../nbs/encoder.ipynb 23
 def get_enc_embs_moirai(
     enc_input       : List [ List [ List [ Float ] ] ], 
     enc_model       : moirai.MoiraiModule, 
@@ -492,7 +545,7 @@ def get_enc_embs_moirai(
         print("get_enc_embs_moirai -->")
     return embs
 
-# %% ../nbs/encoder.ipynb 23
+# %% ../nbs/encoder.ipynb 24
 def get_enc_embs(
     X               , 
     enc_learn       : Learner, 
@@ -507,10 +560,13 @@ def get_enc_embs(
     enc_learn_class = str(enc_learn.__class__)[8:-2]
     match enc_learn_class:
         case "momentfm.models.moment.MOMENTPipeline":
-            if (enc_learn.task_name == "embedding"):
-                embs = get_enc_embs_moment(X, enc_learn, cpu, to_numpy, verbose)
-            else:
-                print("Model embeddings implementation is not yet implemented.")        
+            match enc_learn.task_name:
+                case "embedding":
+                    embs = get_enc_embs_moment(X, enc_learn, cpu, to_numpy, verbose, average_seq_dim, **kwargs)
+                case "reconstruction":
+                    embs = get_enc_embs_moment_reconstruction(X, enc_learn, cpu, to_numpy, verbose, average_seq_dim, **kwargs)
+                case _:
+                    print(f"Model embeddings for moment-{enc_learn.task_name} is not yet implemented.")
         case "fastai.learner.Learner":
             embs = get_enc_embs_MVP_set_stride_set_batch_size(X, enc_learn, stride, batch_size, module, cpu, average_seq_dim, to_numpy, verbose, False, 0, False)
         case "uni2ts.model.moirai.module.MoiraiModule":
@@ -527,7 +583,7 @@ def get_enc_embs(
             print(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.")
     return embs
 
-# %% ../nbs/encoder.ipynb 24
+# %% ../nbs/encoder.ipynb 25
 def get_enc_embs_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -541,6 +597,7 @@ def get_enc_embs_set_stride_set_batch_size(
     time_flag          : bool = False, 
     chunk_size         : int  = 0, 
     check_memory_usage : bool = False,
+    **kwargs
 ): 
     embs = None
     enc_learn_class = str(enc_learn.__class__)[8:-2]
@@ -548,16 +605,13 @@ def get_enc_embs_set_stride_set_batch_size(
         case "momentfm.models.moment.MOMENTPipeline":
             if verbose > 0: 
                 print(f"get_enc_embs_set_stride_set_batch_size | Moment | {average_seq_dim}")
-            if (enc_learn.task_name == "embedding"):
-                embs = get_enc_embs_moment(
-                    X = X,
-                    enc_learn = enc_learn,
-                    cpu = cpu, 
-                    to_numpy= to_numpy,
-                    verbose=verbose
-                )
-            else:
-                print(f"[ get_enc_embs_set_stride_set_batch_size | moment | Task {enc_learn.task_name}] Model embeddings implementation is not yet implemented.")
+            match enc_learn.task_name:
+                case "embedding":
+                    embs = get_enc_embs_moment(X, enc_learn, cpu, to_numpy, verbose, average_seq_dim, **kwargs)
+                case "reconstruction":
+                    embs = get_enc_embs_moment_reconstruction(X, enc_learn, cpu, to_numpy, verbose, average_seq_dim, **kwargs)
+                case _:
+                    print(f"Model embeddings for moment-{enc_learn.task_name} is not yet implemented.")
         case "fastai.learner.Learner":
             if verbose > 0: 
                 print(f"get_enc_embs_set_stride_set_batch_size | MVP | {average_seq_dim}")
@@ -584,7 +638,8 @@ def get_enc_embs_set_stride_set_batch_size(
                 batch_size = batch_size,
                 cpu = cpu, 
                 to_numpy = to_numpy,
-                verbose = verbose
+                verbose = verbose,
+                **kwargs
             )
         case _:
             print(f"[ get_enc_embs_set_stride_set_batch_size ] Model embeddings implementation is not yet implemented for {enc_learn_class}.")

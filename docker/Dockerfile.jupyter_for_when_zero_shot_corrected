@@ -1,0 +1,130 @@
+#############################
+# JUPYTER VOLUME DOCKERFILE #
+#***************************#
+# Set up a jupyter-lab for  #
+# developing using deepvats #
+#############################
+##############
+# Base image #
+##############
+##--- Setup Ubuntu
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks-mplots-zeroshot
+
+#--- Tags
+LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
+LABEL cuda_version=${CUDA_VERSION}
+
+##---Initialize bash
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+#-- Environmental variables for wandb
+ENV LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 
+
+
+#-- Octave GUI - uing interactive octave plots
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive  apt-get install -y \
+    xvfb \
+    x11-xserver-utils \
+    gnuplot \
+    && rm -rf /var/lib/apt/lists/*
+
+
+########################
+# Create non-root user #
+########################
+ARG username=user\
+    uid=1000 \
+    gid=1000
+ENV USER=$username \
+    UID=$uid \
+    GID=$gid 
+ENV HOME=/home/$USER
+
+#-- Passwordless sudo (TODO: mv to root section)
+RUN addgroup --gid $GID $USER  \
+    && adduser --disabled-password \
+    --gecos "Non-root user" \
+    --uid $UID \
+    --gid $GID \
+    --home $HOME $USER\
+    && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+#RUN sudo chown -R $UID:$GID /usr/local/share/miniconda3/envs/env
+
+#-- Move to user
+USER $USER
+
+# Add the jupyterlab settings
+COPY --chown=$uid:$gid docker/jupyter_config $HOME/.jupyter
+
+#############################
+# Ensure miniconda for user #
+#############################
+
+#ENV MINICONDA_VERSION=4.10.3 \ 
+#    CONDA_DIR=/opt/miniconda3 
+
+#ENV PATH=$CONDA_DIR/bin:$PATH \
+ENV PROJECT_DIR=${HOME}
+#ENV ENV_PREFIX=/opt/env
+
+RUN echo "--> Activate conda"
+
+# Make conda activate command available from /bin/bash --interative shells
+RUN  conda init bash  \
+    # Create a project directory inside user home
+    && mkdir -p $PROJECT_DIR 
+
+RUN echo "--> WORKDIR"
+WORKDIR ${HOME}
+
+COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
+
+# Make bash automatically activate the conda environment
+RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc \
+    && echo "--> Exec entrypoint" \
+    && chmod u+x /usr/local/bin/entrypoint.sh
+    
+ENV PATH /usr/local/share/miniconda3/envs/env/bin:$PATH
+
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+
+ARG JUPYTER_TOKEN
+ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
+# default command will be to launch JupyterLab server for development
+
+COPY --chown=$UID:$GID  ./ $HOME/work
+
+RUN  source /usr/local/share/miniconda3/bin/activate env \
+     && cd $HOME/work \
+     && ls -la $HOME/work \
+     && git --version 
+
+SHELL [ "/bin/sh", "-c" ]
+RUN cd ${HOME}/work/ \
+    && git config --global --add safe.directory /home/macu/work \
+    && git rev-parse --is-inside-work-tree || (echo "Not inside a Git repository"; exit 1) \
+    && pre-commit install
+
+COPY docker/pre-commit .git/hooks/pre-commit
+
+RUN conda list octave
+
+#CMD ["sh", "-c", "jupyter lab --no-browser --ip 0.0.0.0 --ContentsManager.allow_hidden=True --NotebookApp.token=$JUPYTER_TOKEN"]
+
+RUN pip install aeon
+
+ARG JUPYTER_TOKEN
+ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
+
+CMD [\
+    "sh", "-c", \
+    "xvfb-run -a jupyter lab \
+    --no-browser \
+    --ip 0.0.0.0 \
+    --ContentsManager.allow_hidden=True \
+    --NotebookApp.token=$JUPYTER_TOKEN"\
+    ]
+

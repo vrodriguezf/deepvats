@@ -24,14 +24,20 @@ select_datasetServer <- function(
         log_print(input$dataset)
         freezeReactiveValue(input, "encoder")
         log_print(paste0("observeEvent input_dataset | update encoders for dataset ", input$dataset))
+        encs_names <- encs_l %>%  keep(
+            ~ .$metadata$train_artifact == input$dataset || 
+            any(sapply(zero_shot_models, grepl, x = .$name))
+            )
+        encs_names <- sapply(encs_names, function(art) art$name)
+        log_print(paste0(
+            "observeEvent input_dataset | Encoders for dataset ", input$dataset, " | ", encs_names)
+        )
         updateSelectizeInput(
             session = session,
             inputId = "encoder",
-            choices = encs_l %>% 
-            keep(~ .$metadata$train_artifact == input$dataset) %>% 
-            #map(~ .$metadata$enc_artifact) %>% 
-            names
+            choices = encs_names
         )
+        
         ### TODO: Ver cómo poner bien esta ñapa para que no se actualizen los gráficos antes que el stride
         updateSliderInput(session, "stride", value = 0)
         shinyjs::enable("get_tsdf")

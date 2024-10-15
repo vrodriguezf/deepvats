@@ -1,0 +1,85 @@
+#####################################################################
+# CONDA & MINICONDA WITH PYBASE DOCKERFILE                          #
+# For zeroshot models                                               #
+# dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks-mplots-zeroshot        #
+#####################################################################
+##############
+# Base image #
+##############
+##--- Setup Ubuntu
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks-mplots
+
+##--- Setup bash
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+COPY docker/environment.zeroshot.yml /tmp/environment.zeroshot.yml
+
+RUN mamba env update --name env --file /tmp/environment.zeroshot.yml \
+    && mamba clean --all --yes
+
+#############
+# Zero-shot #
+#############
+# POETRY
+RUN curl -sSL https://install.python-poetry.org | ${ENV_PREFIX}/bin/python3.10 -
+ENV POETRY_PATH="${HOME}/.local/bin/poetry"
+RUN ${POETRY_PATH} --version
+    
+# MOMENT
+ENV PIP $CONDA_DIR/envs/env/bin/pip
+RUN $PIP install git+https://github.com/moment-timeseries-foundation-model/moment.git         
+#RUN $PIP install git+https://github.com/moment-timeseries-foundation-model/moment.git@040df9a5091eb83201d8764acb96350a5c84f47e
+# Commit usado: 040df9a5091eb83201d8764acb96350a5c84f47e
+#RUN $PIP install git+https://github.com/misantamaria/moment.git@v1.0.0
+ENV LIB_PATH /usr/local/share/lib
+ENV PKGS $ENV_PREFIX/lib/python3.10/site-packages/
+RUN mkdir $LIB_PATH
+#RUN conda init bash \
+#    && /bin/bash -c "source $CONDA_DIR/etc/profile.d/conda.sh" \
+#    && cd $LIB_PATH\
+#    && rm -rf moment \
+#    && git clone https://github.com/misantamaria/moment.git \
+#    && cd moment \
+#    && git checkout v1.0.0 \
+#    && $PIP  install -e '.[notebook]' --no-warn-script-location --no-deps --target=$PKGS
+
+# MOIRAI
+RUN conda init bash \
+    && /bin/bash -c "source $CONDA_DIR/etc/profile.d/conda.sh" \
+    && cd $LIB_PATH \
+    && rm -rf uni2ts \
+    && git clone https://github.com/misantamaria/uni2ts.git \
+    && cd uni2ts \
+    && git checkout 1.1.2 \
+    && $PIP  install -e '.[notebook]' --no-warn-script-location --no-deps --target=$PKGS
+
+#TEMPO
+RUN conda init bash \
+    && /bin/bash -c "source $CONDA_DIR/etc/profile.d/conda.sh" \
+    && cd $LIB_PATH \
+    && rm -rf TEMPO TEMPO_project \
+    && git clone https://github.com/DC-research/TEMPO.git \
+    #&& git clone https://github.com/misantamaria/TEMPO.git \
+    && cd TEMPO \
+    #&& git checkout v1.0.0 \
+    && git checkout 755bcc765a0b6e9921063f5abded34dd900b2f14 \
+    && mv requirements.txt _requirements.txt \
+    && grep -v -- '--extra-index-url' _requirements.txt > requirements.txt \
+    && mv requirements.txt __requirements.txt \
+    && grep -v -- '#' __requirements.txt > requirements.txt \
+    && ${POETRY_PATH} init --name TEMPO --description "TEMPO" --author "Author Name <email@example.com>" --license "MIT" --no-interaction  \
+    && cat requirements.txt | xargs -I {} ${POETRY_PATH} add {} --no-interaction \
+    # Lock versions
+    && ${POETRY_PATH} lock --no-interaction \
+    # Install dependencies
+    && ${POETRY_PATH} install --no-interaction \
+    # Ensure modules 
+    && cd .. \
+    && find ./TEMPO -type d -exec touch {}/__init__.py \; \
+    && ${POETRY_PATH} new --name TEMPO --src TEMPO_project  \
+    && cd TEMPO_project \
+    && $PIP install -e . --no-deps  --target=$PKGS 
+
+RUN mkdir -p ${LIB_PATH}/TEMPO/TEMPO_checkpoints \
+    && chmod -R 777 /usr/local/share/lib/TEMPO/
+    # ---- Zero shot ---- #

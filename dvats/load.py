@@ -194,9 +194,19 @@ def infer_or_inject_freq(df, injected_freq='1s', start_date=None, verbose = 0, *
             if verbose > 1: print(df.shape)
             df.index.freq = pd.infer_freq(df.index)
         else:
-            timedelta = pd.to_timedelta(injected_freq)
-            df.index = pd.to_datetime(ifnone(start_date, 0), **kwargs) + timedelta*df.index
-            df.index.freq = pd.infer_freq(df.index)
+            try:
+                timedelta = pd.to_timedelta(injected_freq)
+                df.index = pd.to_datetime(ifnone(start_date, 0), **kwargs) + timedelta*df.index
+                df.index.freq = pd.infer_freq(df.index)
+            except Exception as e: 
+                print(f"Infer/Inject freq retry. Error: {e}")
+                timedelta = pd.to_timedelta(injected_freq)
+                start_date = pd.to_datetime(ifnone(start_date, df.index[0]), **kwargs)
+                new_index = pd.date_range(
+                    start = start_date, periods = len(df), 
+                    freq = timedelta)
+                df.index = new_index
+                df.index.freq = pd.infer_freq(df.index)
     else:
         df.index.freq = inferred_freq
     return df

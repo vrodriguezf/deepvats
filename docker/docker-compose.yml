@@ -27,6 +27,7 @@ services:
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/
       - conda-env:/usr/local/share/miniconda3/envs/env
       - miniconda:/usr/local/share/miniconda3
+      - lib:/usr/local/share/lib
     init: true
     stdin_open: true
     tty: true
@@ -44,8 +45,10 @@ services:
           dockerfile: docker/Dockerfile.rstudio
           args:
               - WANDB_API_KEY=${WANDB_API_KEY} #
-              - RETICULATE_PYTHON_ENV=/home/env
-              - RETICULATE_MINICONDA_PATH=/home/miniconda3
+              #- RETICULATE_PYTHON_ENV=/home/env
+              #- RETICULATE_MINICONDA_PATH=/home/miniconda3
+              - RETICULATE_PYTHON_ENV=/usr/local/share/miniconda3/envs/env
+              - RETICULATE_MINICONDA_PATH=/usr/local/share/miniconda3
               - USER=${USER_NAME} #* 
               - UID=${USER_ID} #*
               - GID=${GROUP_ID} #*
@@ -72,10 +75,8 @@ services:
          - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ 
          - ../dvats:/home/${USER_NAME}/dvats
          - conda-env:/usr/local/share/miniconda3/envs/env
-         - miniconda:/home/user/local/share/miniconda3 
-         # arreglar bien el error: /home/macu/work/nbs/mplot: No such file or directory
-         #- ../nbs/mplot/:/home/${USER_NAME}/work/nbs/mplot
-         ####
+         - miniconda:/usr/local/share/miniconda3 
+         - lib:/usr/local/share/lib
       deploy:
         resources:
           #limits:

@@ -5,7 +5,7 @@ __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'Re
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
            'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'funcname', 'update_patch',
            'styled_print', 'show_sequence', 'plot_with_dots', 'Interpolator', 'PAATransformer', 'DownsampleError',
-           'DivisorsError', 'divisors', 'downsample_propose_crop_', 'downsample']
+           'DivisorsError', 'divisors', 'downsample_propose_crop_', 'downsample', 'print_flush']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -622,3 +622,11 @@ def downsample(
         print(f"Downsample ------------------------>")
     return ts_paa, paa_factor
 
+
+# %% ../nbs/utils.ipynb 80
+import sys
+
+# %% ../nbs/utils.ipynb 81
+def print_flush(mssg, **kwargs):
+    print(mssg, **kwargs)
+    sys.stdout.flush()

@@ -70,18 +70,26 @@ shinyServer(function(input, output, session) {
         update_play_pause_button()
         on.exit({print(paste0("observeEvent play_pause_button | Run ", play(), "-->")); flush.console()})
     })
+    
+    observeEvent(input$cuda, {
+        print("--> Cleanning cuda objects")
+        torch$cuda$empty_cache()
+        print("Cleanning cuda objects -->")
+    })
 
     observeEvent(
-        req(exists("encs_l")), 
+        #req(exists("encs_l")), 
+        req(exists("data_l")),
         {
             freezeReactiveValue(input, "dataset")
             log_print("observeEvent encoders list enc_l | update dataset list | after freeze")
             updateSelectizeInput(
                 session = session,
                 inputId = "dataset",
-                choices = encs_l %>% 
-                map(~.$metadata$train_artifact) %>% 
-                set_names()
+                #choices = encs_l %>% 
+                #map(~.$metadata$train_artifact) %>% 
+                #set_names()
+                choices = sapply(data_l, function(art) art$name)
             )
             on.exit({log_print("observeEvent encoders list encs_l | update dataset list -->"); flush.console()})
         }, 
@@ -155,6 +163,26 @@ shinyServer(function(input, output, session) {
         }
     )
 
+    ############ WLEN TEXT ############
+    observe({
+        req(input$wlen_text > 0)
+        if (input$wlen != input$wlen_text) {
+            # Si se ingresa un valor en wlen_text menor que el mínimo o mayor que el máximo del slider, ajustamos el slider
+            if (input$wlen_text < input$wlen || input$wlen_text > input$wlen) {
+                updateSliderInput(session, "wlen", 
+                    min = min(input$wlen_text, input$wlen), 
+                    max = max(input$wlen_text, input$wlen), 
+                    value = input$wlen_text)
+                }
+        }
+        allow_update_len(FALSE)
+        })
+
+        observe({
+            req(input$wlen_text > 0)
+            allow_update_len(TRUE)
+        })
+    ####### --- wlen text ---  ########
 
 
     observeEvent(input$restore_wlen_stride, {
@@ -209,6 +237,7 @@ shinyServer(function(input, output, session) {
     tsdf_ready <- reactiveVal(FALSE)
     # Reactive value for ensuring correct encoder input
     enc_input_ready <- reactiveVal(FALSE)
+    allow_update_len <- reactiveVal(TRUE)
     play <- reactiveVal(FALSE)
     
     observeEvent(input$wlen, {
@@ -678,7 +707,50 @@ shinyServer(function(input, output, session) {
         enc
     })
 
-    
+    embs_kwargs <- reactive({
+        res <- list()
+        dataset <- isolate (X())
+        batch_size <- as.integer(dim(dataset)[1])
+        encoder <- input$encoder
+        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+        if (grepl("moment", encoder, ignore.case = TRUE)) {
+            log_print("embs_kwargs | Moment")
+            res <- list(
+                batch_size = batch_size,
+                cpu = cpu_flag,
+                to_numpy = TRUE,
+                verbose = as.integer(1),
+                padd_step = as.integer(2), 
+                average_seq_dim = TRUE
+            )
+        } else if (grepl("moirai", encoder, ignore.case = TRUE)) {
+            log_print("embs_kwargs | Moirai")
+#            size <- sub(".*moirai-(\\w+).*", "\\1", encoder)
+
+            res <- list(
+                cpu = cpu_flag,
+                to_numpy = TRUE,
+                batch_size = batch_size,
+                average_seq_dim = TRUE,
+                verbose = as.integer(2),
+                patch_size = as.integer(8), # Modificar en config (añadir en base.yml y modificar lectura)
+#                size = size,
+                time = TRUE
+            )
+        } else {
+            log_print("embs_kwargs | Learner (neither Moment or Moirai)")
+            res <- list(
+               stride = as.integer(input$stride),
+               cpu = cpu_flag,
+               to_numpy = TRUE,
+               batch_size = batch_size,
+               average_seq_dim = TRUE,
+               verbose = as.integer(1)
+           )
+        }
+        res
+    })
+
     
     embs <- reactive({
         print(paste0(
@@ -715,26 +787,46 @@ shinyServer(function(input, output, session) {
         
         log_print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
    
-        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+        
         log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
-        result = dvats$get_enc_embs_set_stride_set_batch_size(
-            X                   = X(),
-            verbose             = as.integer(1),
+        specific_kwargs <- embs_kwargs()
+        
+        kwargs <- list(
+            X                   = enc_input,
             enc_learn           = enc_l,
-            stride              =  as.integer(input$stride),  
-            batch_size          = as.integer(bs), 
-            cpu                 = cpu_flag, 
-            time_flag           = TRUE, 
-            chunk_size          = as.integer(chunk_size),
-            check_memory_usage  = TRUE
+            stride              = as.integer(input$stride) ,
+            verbose             = as.integer(1)
+        )
+        kwargs <- c(kwargs, specific_kwargs)
+        #log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size kwargs | ", kwargs))
+        #watch_gpu_kwargs <- list(
+        #    func = dvats$get_enc_embs_set_stride_set_batch_size
+        #)
+        #kwargs <- c( watch_gpu_kwargs, kwargs )
+        #result = do.call(
+        #    dvats$watch_gpu,
+        #    kwargs
+        #)
+        result = do.call(
+            dvats$get_enc_embs_set_stride_set_batch_size,
+            kwargs
         )
 
-    log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
+        log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
         t_embs_1 <- Sys.time()
         diff <- t_embs_1 - t_embs_0
         diff_secs <- as.numeric(diff, units = "secs")
         diff_mins <- as.numeric(diff, units = "mins")
-        log_print(paste0("get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | total time: ", diff_secs, " secs thus ", diff_mins, " mins"), TRUE, log_path(), log_header())
+        log_print(paste0(
+            "get_enc_embs_set_stride_set_batch_size | ", 
+            input$cpu_flag, 
+            " | total time: ", 
+            diff_secs, 
+            " secs thus ", 
+            diff_mins, 
+            " mins | result ~", dim(result)
+            ), TRUE, log_path(), log_header()
+        )
         temp_log <<- log_add(
             log_mssg            = temp_log, 
             function_           = "Embeddings",
@@ -748,6 +840,11 @@ shinyServer(function(input, output, session) {
         X <- NULL
         gc(verbose=as.integer(1))
         on.exit({log_print("reactive embs | get embeddings -->"); flush.console()})
+        log_print("...Cleaning GPU")
+        #enc_l$cpu()
+        #enc_input$cpu()
+        rm(enc_l, enc_input)
+        log_print("Cleaning GPU...")
         result
     })
 #enc = py_load_object(

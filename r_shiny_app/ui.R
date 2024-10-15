@@ -37,6 +37,7 @@ shinyUI(fluidPage(
       select_datasetUI("datasetModule"),
       selectizeInput("encoder", label = "Encoder", choices = NULL),
       actionButton("play_pause", "Run!", icon = shiny::icon("play")),
+      actionButton("cuda", "Remove CUDA objects", icon = shiny::icon("trash")),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
       actionBttn(
@@ -57,7 +58,17 @@ shinyUI(fluidPage(
         block = TRUE
       ),
       sliderInput("wlen", "Select window size", min = 0, max = 0, value =0 , step = 1),
+      numericInput("wlen_text", "Enter window size", value = 0, min = 0, max = 1000000, step = 1),
       sliderInput("stride", "Select stride", min = 0, max = 0, value = 0, step = 1),
+      conditionalPanel(
+        condition = "input.encoder.indexOf('moirai') != -1",
+        selectInput(
+          "patch_size", 
+          "Select patch size", 
+          choices = c(8, 16, 32, 64, 128), 
+          selected = 8
+        )
+      ),
       # sliderInput("points_emb", "Select range of points to plot in the projections", 
       #             min = 0, max = 0, value = 0, step = 1, ticks = FALSE),
       #uiOutput("points_prj_controls"),

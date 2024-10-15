@@ -30,10 +30,10 @@ library(xts)
 library(semantic.dashboard)
 library(htmlwidgets)
 
-
 #options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")
 
 torch <- reticulate::import("torch")
+momentfm <- reticulate::import("momentfm")
 #options(shiny.trace = TRUE)
 if(torch$cuda$is_available()){
   print(paste0("CUDA AVAILABLE. Num devices: ", torch$cuda$device_count()))

@@ -1,0 +1,22 @@
+name: env
+channels: 
+- conda-forge
+- anaconda 
+- huggingface
+dependencies:
+  #-- Mplots
+  - gluonts=0.14.4
+  - tqdm=4.66.2
+  - huggingface_hub=0.24.0
+  - transformers=4.33.3
+  - einops=0.7.*
+  - lightning>=2.0
+  - jaxtyping>=0.2.24
+  - python-dotenv=1.0.0
+  - hydra-core=1.3
+  - orjson
+  - tensorboard
+  - multiprocess
+  - safetensors
+  - datasets~=2.17.1
+  - jax[cpu]

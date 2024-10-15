@@ -39,7 +39,22 @@ encs_l <- dvats$get_wandb_artifacts(
                                     type = "learner", 
                                     last_version=F) %>% 
   discard(~ is_empty(.$aliases) | is_empty(.$metadata$train_artifact))
-encs_l <- encs_l %>% set_names(encs_l %>% map(~ glue(WANDB_ENTITY, "/", WANDB_PROJECT, "/", .$name)))
+
+data_l <- dvats$get_wandb_artifacts(
+  project_path = glue(
+    WANDB_ENTITY, "/", WANDB_PROJECT), 
+    type = "dataset", 
+    last_version=F
+) 
+                                    
+
+
   #discard(~ str_detect(.$name, "dcae"))
 
 log_print("Done!")
+
+encs_names <- sapply(encs_l, function(art) art$name)
+log_print(paste0("Available encoders: ", encs_names))
+
+# Add here any zero-shot model you may want to use
+zero_shot_models <- c("moment", "moirai")

@@ -2,8 +2,8 @@
 set -e
 #echo $ENV_PREFIX
 #conda list 
-ls -la /home/$USER/work
-pip install -e /home/$USER/work
+#ls -la /home/$USER/work
+#pip install -e /home/$USER/work
 
 echo $WANDB_ENTITY $USER $WANDB_PROJECT
 

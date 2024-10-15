@@ -164,6 +164,20 @@ RUN pip install aeon
 #     && conda deactivate
 # # ---- Zero shot ---- #
 
+COPY --chown=$UID:$GID ./Makefile $HOME/work/
+COPY --chown=$UID:$GID ./nbs $HOME/work/
+COPY --chown=$UID:$GID ./settings.ini $HOME/work/
+COPY --chown=$UID:$GID ./dvats $HOME/work/
+COPY --chown=$UID:$GID ./LICENSE $HOME/work/
+COPY --chown=$UID:$GID ./MANIFEST.in $HOME/work/
+COPY --chown=$UID:$GID ./nbs_pipeline $HOME/work/
+COPY --chown=$UID:$GID ./setup.py $HOME/work/
+COPY --chown=$UID:$GID ./README.md $HOME/work/
+
+RUN cd $HOME/work  \
+    && pip install -e $HOME/work
+
+
 ARG JUPYTER_TOKEN
 ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
 

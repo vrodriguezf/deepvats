@@ -479,7 +479,7 @@ shinyServer(function(input, output, session) {
             #####
             print(paste0("Enc input | reactive X | Update sliding window | Apply stride ", input$stride," | X ~ enc_input ~ ", dim(enc_input), "-->"))
             on.exit({print("Enc input | reactive X -->"); flush.console()})
-            browser()
+            #browser()
             enc_input_ready(TRUE)
             X(enc_input)
         } else {
@@ -1198,23 +1198,23 @@ score = 0
                 score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
                 }
                 log_print(paste0("Projections | Score ", score))
-                if (score <= 0) {
-                    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
-                    prjs <- prj_object_cpu()
-                    clusters = hdbscan$HDBSCAN(
-                        min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
-                        min_samples = as.integer(clusters_config$min_samples_hdbscan),
-                        cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
-                        metric = clusters_config$metric_hdbscan
-                    )$fit(prjs)
-score = 0
-                    unique_labels <- unique(clusters$labels_)
-                    total_unique_labels <- length(unique_labels)
-                    if(total_unique_labels > 1){
-                    score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
-                    }
-                    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
-                }
+                #if (score <= 0) {
+                #    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                #    prjs <- prj_object_cpu()
+                #    clusters = hdbscan$HDBSCAN(
+                #        min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
+                #        min_samples = as.integer(clusters_config$min_samples_hdbscan),
+                #        cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
+                #        metric = clusters_config$metric_hdbscan
+                #    )$fit(prjs)
+#score = 0
+ #                   unique_labels <- unique(clusters$labels_)
+ #                   total_unique_labels <- length(unique_labels)
+  #                  if(total_unique_labels > 1){
+   #                 score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
+    #                }
+                #    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
+                #}
                 prjs$cluster <- clusters$labels_
 tcl_1 = Sys.time()
                 log_print(paste0("Compute clusters | Execution time ", tcl_1 - tcl_0), TRUE, log_path(), log_header())

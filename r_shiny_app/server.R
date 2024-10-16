@@ -1160,9 +1160,8 @@ shinyServer(function(input, output, session) {
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
       req(input$wlen != 0, input$stride != 0)
-      ts_indices <- get_window_indices(1:nrow(isolate(projections())), w = input$wlen, s = input$stride)
-      #indices <- 1:nrow(isolate(projections()))
-      #ts_indices <- indices * input$stride + input$wlen
+      #ts_indices <- get_window_indices(1:nrow(isolate(projections())), w = input$wlen, s = input$stride)
+      ts_indices <- get_window_indices(1:nrow(projections()), w = input$wlen, s = input$stride)
       ts_indices
     })
     
@@ -1583,9 +1582,15 @@ tcl_1 = Sys.time()
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
             log_print("Selected ts time points" , TRUE, log_path(), log_header())
-            selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
-            projections_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
-            prjs_$highlight = projections_idxs
+            selected_ts_idx <- which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
+            indices_per_embedding <- tsidxs_per_embedding_idx()
+            #log_print(paste0("TS indices per embedding idx: ", indices_per_embedding))
+            projections_idxs <- indices_per_embedding %>% map_lgl(~ selected_ts_idx %in% .)
+            log_print(paste0("prjs_ ~ ", indices_per_embedding))
+            prjs_$highlight <- projections_idxs
+            
+            
+
         } else {
             prjs_$highlight = FALSE
         }

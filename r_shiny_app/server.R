@@ -238,6 +238,7 @@ shinyServer(function(input, output, session) {
     # Reactive value for ensuring correct encoder input
     enc_input_ready <- reactiveVal(FALSE)
     allow_update_len <- reactiveVal(TRUE)
+    #allow_update_embs <- reactiveVal(TRUE)
     play <- reactiveVal(FALSE)
     
     observeEvent(input$wlen, {
@@ -404,7 +405,16 @@ shinyServer(function(input, output, session) {
         }
         send_log("Select all variables_end", session)
     })
-    
+
+    #observeEvent(list(input$dataset, input$stide, input$wlen, input$patch_size), {
+    #    allow_update_embs(TRUE)
+    #})
+
+    observeEvent(input$stride, {
+        enc_input_ready(FALSE)
+    })
+
+
     ###############
     #  REACTIVES  #
     ###############
@@ -434,6 +444,7 @@ shinyServer(function(input, output, session) {
             print("Enc input | --> ReactiveVal X | Update Sliding Window")
             print(paste0("Enc input | reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
             print(paste0("Enc input | reactive X | ts_ar - id ", ts_ar()$id, " - name ", ts_ar()$name))
+            ############## SLIDING WINDOW VIEW
             enc_input <- dvats$exec_with_feather_k_output(
                 function_name = "prepare_forecasting_data",
                 module_name   = "tsai.data.preparation",
@@ -444,15 +455,33 @@ shinyServer(function(input, output, session) {
                 #tsdf(), #%>%select(-"timeindex"),
                 fcst_history = input$wlen
             )
+            ### Selecting indexes in the sliding window view version ###
             print(
-                paste0("Enc input | reactive X | enc_input ~ ", dim(enc_input),
-                " | tsdf ~ ", dim(tsdf()))
+                paste0("Enc input | reactive X | 1) enc_input ~ ", dim(enc_input))
             )
-            
+            indexes <- seq(1, dim(enc_input)[1], input$stride)
+            enc_input <- enc_input[indexes,,,drop = FALSE]
+            print(
+                paste0("Enc input | reactive X | 2) enc_input ~ ", dim(enc_input))
+            )
+            ############## SLIDING WINDOW (some problem with type conversion when trying to come back)
+            #enc_input <- tsai_data$SlidingWindow(window_len = input$wlen, stride = input$stride, get_y = list())(tsdf())[[1]]
+            #print(
+                #paste0("Enc input | reactive X | 1) enc_input ~ ", dim(enc_input),
+                #" | tsdf ~ ", dim(tsdf()))
+            #)
+            #indexes <- seq(1, dim(enc_input)[1], input$stride)
+
+            #print(
+            #    paste0("Enc input | reactive X | 2) enc_input ~ ", dim(enc_input),
+            #    " | tsdf ~ ", dim(tsdf()))
+            #)
+            #####
             print(paste0("Enc input | reactive X | Update sliding window | Apply stride ", input$stride," | X ~ enc_input ~ ", dim(enc_input), "-->"))
             on.exit({print("Enc input | reactive X -->"); flush.console()})
-            X(enc_input)
+            browser()
             enc_input_ready(TRUE)
+            X(enc_input)
         } else {
             print("Enc input | reactive X | X already updated")
         }
@@ -472,7 +501,7 @@ shinyServer(function(input, output, session) {
         )
         on.exit({
             log_print(paste0(
-                "reactive X | Update sliding window | Apply stride ", 
+                "reactive X | Update sliding window | Exit ", 
                 input$stride,
                 " | enc_input ~ ",
                 dim(X()),
@@ -720,7 +749,7 @@ shinyServer(function(input, output, session) {
                 cpu = cpu_flag,
                 to_numpy = TRUE,
                 verbose = as.integer(1),
-                padd_step = as.integer(2), 
+                padd_step = input$padd_step, 
                 average_seq_dim = TRUE
             )
         } else if (grepl("moirai", encoder, ignore.case = TRUE)) {
@@ -733,8 +762,7 @@ shinyServer(function(input, output, session) {
                 batch_size = batch_size,
                 average_seq_dim = TRUE,
                 verbose = as.integer(2),
-                patch_size = as.integer(8), # Modificar en config (añadir en base.yml y modificar lectura)
-#                size = size,
+                patch_size = as.integer(input$patch_size),
                 time = TRUE
             )
         } else {
@@ -753,6 +781,7 @@ shinyServer(function(input, output, session) {
 
     
     embs <- reactive({
+        #req(allow_update_embs())
         print(paste0(
             "--> reactive embs (before req) | get embeddings | enc_input_ready ", enc_input_ready()," | play " , play()))
         req(tsdf(), X(), enc_l <- enc(), enc_input_ready(), play())
@@ -781,7 +810,7 @@ shinyServer(function(input, output, session) {
         
         print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs , " | stride: ", stride))
         print(paste0("reactive embs | get embeddings | Original stride: ", dataset_logged_by$config$stride))
-        enc_input = X()
+        enc_input <- X()
         
         chunk_size = 10000000 #N*32
         
@@ -806,13 +835,14 @@ shinyServer(function(input, output, session) {
         #result = do.call(
         #    dvats$watch_gpu,
         #    kwargs
-        #)
-        result = do.call(
+        #) 
+        result <- do.call(
             dvats$get_enc_embs_set_stride_set_batch_size,
             kwargs
         )
 
         log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
+        log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size embs ~ | ", dim(result) ))
         t_embs_1 <- Sys.time()
         diff <- t_embs_1 - t_embs_0
         diff_secs <- as.numeric(diff, units = "secs")
@@ -845,6 +875,7 @@ shinyServer(function(input, output, session) {
         #enc_input$cpu()
         rm(enc_l, enc_input)
         log_print("Cleaning GPU...")
+        #allow_update_embs(FALSE)
         result
     })
 #enc = py_load_object(
@@ -957,7 +988,7 @@ shinyServer(function(input, output, session) {
         log_print("--> prj_object")
         t_prj_0 = Sys.time()
         embs = req(embs())
-        log_print("prj_object | Before complete cases ")
+        log_print(paste0("prj_object | Before complete cases embs ~", dim(embs)))
         embs = embs[complete.cases(embs),]
         #log_print(embs) #--
         #log_print(paste0("--> prj_object | UMAP params ", str(umap_params_)))
@@ -987,6 +1018,7 @@ shinyServer(function(input, output, session) {
             PCA_UMAP = dvats$get_PCA_UMAP_prjs(
                 input_data  = embs, 
                 cpu         = cpu_flag, 
+                verbose     = as.integer(1),
                 pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
                 umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
             )
@@ -1010,7 +1042,7 @@ shinyServer(function(input, output, session) {
             clustering_options  = isolate(input$clustering_options),
             zoom                = isolate(input$zoom_btn),
             time                =  t_prj_1-t_prj_0, 
-            mssg                = "Compute projections" 
+            mssg                = paste0("Compute projections | prj ~", dim(res)) 
         ); flush.console()
 
     })
@@ -1128,7 +1160,10 @@ shinyServer(function(input, output, session) {
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
       req(input$wlen != 0, input$stride != 0)
-      get_window_indices(1:nrow(isolate(projections())), w = input$wlen, s = input$stride)
+      ts_indices <- get_window_indices(1:nrow(isolate(projections())), w = input$wlen, s = input$stride)
+      #indices <- 1:nrow(isolate(projections()))
+      #ts_indices <- indices * input$stride + input$wlen
+      ts_indices
     })
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
@@ -1240,7 +1275,8 @@ tcl_1 = Sys.time()
         end_date = isolate(end_date())
         log_print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_ts_plot_0 <- Sys.time()
-        tsdf_ <- isolate(tsdf()) %>% select(isolate(ts_variables$selected), - "timeindex")
+        #tsdf_ <- isolate(tsdf()) %>% select(isolate(ts_variables$selected), - "timeindex")
+        tsdf_ <- tsdf() %>% select(ts_variables$selected, - "timeindex")
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
         t_ts_plot_1 <- Sys.time()
         log_print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_1-t_ts_plot_0)) 
@@ -1283,16 +1319,22 @@ tcl_1 = Sys.time()
         bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
     })
 
+    filtered_window_indices <- reactive({
+        req(length(embedding_ids() > 0))
+        embedding_indices <- embedding_ids()
+        #window_indices = get_window_indices(embedding_indices, input$wlen, input$stride)
+        ts_indices <- tsidxs_per_embedding_idx()
+        unique(unlist(ts_indices[embedding_indices]))
+    })
 
     window_list <- reactive({
         log_print("--> window_list")
         on.exit(log_print("window_list -->"))
         # Get the window indices
-        req(length(embedding_ids() > 0))
-        embedding_idxs = embedding_ids()
-        window_indices = get_window_indices(embedding_idxs, input$wlen, input$stride)
+        window_indices <- filtered_window_indices()
         # Put all the indices in one list and remove duplicates
-        unlist_window_indices = unique(unlist(window_indices))
+        unlist_window_indices = filtered_window_indices()
+        log_print(paste0("Window indices: ", unlist_window_indices))
         # Calculate a vector of differences to detect idx where a new window should be created 
         diff_vector <- diff(unlist_window_indices,1)
         # Take indexes where the difference is greater than one (that represent a change of window)
@@ -1327,7 +1369,7 @@ tcl_1 = Sys.time()
         print(paste0("ts_plot | Before req 2 | tsdf_ready ", tsdf_ready()))
         req(tsdf(), ts_variables, input$wlen != 0, input$stride, tsdf_ready())
 
-        ts_plt = ts_plot_base()   
+        ts_plt = ts_plot_base() 
 
         log_print("ts_plot | bp")
         #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)
@@ -1342,54 +1384,57 @@ tcl_1 = Sys.time()
             log_print(paste0("ts_plot | Selected projections ", reduced_window_list[1]), TRUE, log_path(), log_header())
             start_indices = min(sapply(reduced_window_list, function(x) x[1]))
             end_indices = max(sapply(reduced_window_list, function(x) x[2]))
+            if (!is.na(start_indices) && !is.na(end_indices)) {
+                view_size = end_indices-start_indices+1
+                max_size = 10000
 
-            view_size = end_indices-start_indices+1
-            max_size = 10000
+                start_date = tsdf()$timeindex[start_indices]
+                end_date = tsdf()$timeindex[end_indices]
 
-            start_date = tsdf()$timeindex[start_indices]
-            end_date = tsdf()$timeindex[end_indices]
-
-            log_print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
+                log_print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
             
-            if (view_size > max_size) {
-                end_date = tsdf()$timeindex[start_indices + max_size - 1]
-                #range_color = "#FF0000" # Red
-            } 
+                if (view_size > max_size) {
+                    end_date = tsdf()$timeindex[start_indices + max_size - 1]
+                    #range_color = "#FF0000" # Red
+                } 
             
-            range_color = "#CCEBD6" # Original
+                range_color = "#CCEBD6" # Original
             
 
-            # # Plot the windows
-            count = 0
-            for(ts_idxs in reduced_window_list) {
-                count = count + 1
-                start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
-                end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
-                ts_plt <- ts_plt %>% dyShading(
-                    from = start_event_date,
-                    to = end_event_date,
-                    color = range_color
-                ) 
-            ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
-            }   
+                # # Plot the windows
+                count = 0
+                for(ts_idxs in reduced_window_list) {
+                    count = count + 1
+                    start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
+                    end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
+                    ts_plt <- ts_plt %>% dyShading(
+                        from = start_event_date,
+                        to = end_event_date,
+                        color = range_color
+                    ) 
+                ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
+                }   
             
-            ts_plt <- ts_plt
-            # NOTE: This code block allows you to plot shadyng at once. 
-            #       The traditional method has to plot the dygraph n times 
-            #       (n being the number of rectangles to plot). With the adjacent
-            #       code it is possible to plot the dygraph only once. Currently
-            #       it does not work well because there are inconsistencies in the
-            #       timezones of the time series and shiny (there is a two-hour shift[the current plot method works well]),
-            #       which does not allow this method to be used correctly. If that
-            #       were fixed in the future everything would work fine.
-            # num_rects <- length(reduced_window_list)
-            # rects_ini <- vector(mode = "list", length = num_rects)
-            # rects_fin <- vector(mode = "list", length = num_rects)
-            # for(i in 1:num_rects) {
-            #     rects_ini[[i]] <- head(reduced_window_list[[i]],1)
-            #     rects_fin[[i]] <- tail(reduced_window_list[[i]],1)
-            # }
-            # ts_plt <- vec_dyShading(ts_plt,rects_ini, rects_fin,"red", rownames(tsdf()))
+                ts_plt <- ts_plt
+                # NOTE: This code block allows you to plot shadyng at once. 
+                #       The traditional method has to plot the dygraph n times 
+                #       (n being the number of rectangles to plot). With the adjacent
+                #       code it is possible to plot the dygraph only once. Currently
+                #       it does not work well because there are inconsistencies in the
+                #       timezones of the time series and shiny (there is a two-hour shift[the current plot method works well]),
+                #       which does not allow this method to be used correctly. If that
+                #       were fixed in the future everything would work fine.
+                # num_rects <- length(reduced_window_list)
+                # rects_ini <- vector(mode = "list", length = num_rects)
+                # rects_fin <- vector(mode = "list", length = num_rects)
+                # for(i in 1:num_rects) {
+                #     rects_ini[[i]] <- head(reduced_window_list[[i]],1)
+                #     rects_fin[[i]] <- tail(reduced_window_list[[i]],1)
+                # }
+                # ts_plt <- vec_dyShading(ts_plt,rects_ini, rects_fin,"red", rownames(tsdf()))
+            } else {
+                log_print(paste0("-- Error obtaining selected projection points start_id ", start_indices, "| end_id ", end_indices))
+            }
         }
         t_tsp_1 = Sys.time()
         log_print(paste0("ts plot | Execution time: ", t_tsp_1 - t_tsp_0))

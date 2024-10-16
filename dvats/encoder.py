@@ -99,10 +99,12 @@ def get_acts(
     module: torch.nn.Module, 
     cpu   : bool, 
     verbose : int = 0,
+    retry: bool = False,
+    acts_indices: List [ int ] = None,
     **model_kwargs #Parameters of the model
 ):
     if verbose > 0:
-        print(f"--> get acts ")
+        print(f"--> get acts | acts indices: {acts_indices}")
     if cpu:
         print(f"get acts | Moving to cpu")
         for key in model_kwargs:
@@ -119,15 +121,42 @@ def get_acts(
             except:
                 continue
         model.to("cuda")
-    if verbose > 0:
-        print(f"get acts | Add hooks")
+    if verbose > 0: print(f"get acts | Add hooks")
     h_act = hook_outputs([module], detach = True, cpu = cpu, grad = False)
-    if verbose > 0:
-        print(f"get acts | Run forward")
-    preds = model.eval()(**model_kwargs)
-    if verbose > 0:
-        print(f"get acts -->")
-    return [o.stored for o in h_act]
+    with torch.no_grad():
+        if verbose > 0: print(f"get acts | --> Run forward")
+        if retry:
+            if verbose > 0: print(f"get acts | Retry")
+            try: 
+                preds = model.eval()(**model_kwargs)
+            except Exception as e:
+                print(f"get acts | Retry | Error: {e}")
+                print(f"get acts | Retry | Kwargs: {model_kwargs}")
+                if not cpu:
+                    print_flush(f"get acts | Retry | Moving to cpu")
+                    for key in model_kwargs:
+                        try: #if not able to be moved, just not move it
+                            model_kwargs[key] = model_kwargs[key].cpu()
+                        except:
+                            continue
+                    model.to("cpu")
+                    if verbose > 0: print(f"get acts | Retry | cpu")
+                    print_flush(f"get acts | Retry | Get acts")
+                    preds = model.eval()(**model_kwargs)
+        else:
+            if verbose > 0: print(f"get acts | No Retry | Get acts")
+            preds = model.eval()(**model_kwargs)
+    if acts_indices is None:
+        res = [o.stored for o in h_act]
+    else: 
+        stored = [o.stored for o in h_act]
+        res = [stored[i] for i in acts_indices]
+        if len(acts_indices) == 1:
+            res = res[0]
+        del stored
+    if verbose > 0: print(f"get acts | Run forward -->")
+    if verbose > 0:print(f"get acts -->")
+    return res
 
 # %% ../nbs/encoder.ipynb 16
 from fastai.learner import Learner
@@ -468,7 +497,9 @@ def get_enc_embs_moment_reconstruction(
                 module = enc_learn.head.dropout,
                 cpu = cpu,
                 verbose = verbose,
-                x_enc = y
+                x_enc = y,
+                retry = False,
+                acts_indices = None
             )
             embs = acts[0]
             success = True
@@ -522,8 +553,8 @@ def get_enc_embs_moirai(
     enc_model       : moirai.MoiraiModule, 
     cpu             : False,
     average_seq_dim : bool = True, 
-    to_numpy        : bool = True,
     verbose         : int  = 0,
+    to_numpy        : bool = True,
     patch_size      : int  = 8,
     time            : bool = False
 ):
@@ -623,29 +654,33 @@ def get_enc_embs_moirai(
         module = enc_model.encoder.norm, 
         cpu    = cpu,
         verbose = verbose,
+        retry = True,
+        acts_indices = [0],
         **model_kwargs #Parameters of the model
     )
     
-    embs = acts[0]
+    embs = acts
     acts = None
     if average_seq_dim :
         if verbose > 0: 
             print(f"get_enc_embs_moirai | About to reduce activations")
         embs = embs.mean(dim = 1)
     
+    if not cpu:
+        #print(f"get_enc_embs_moirai | enc_input to cpu")
+        #enc_input.cpu()
+        print(f"get_enc_embs_moirai | enc_model to cpu")
+        enc_model.cpu()
+        print(f"get_enc_embs_moirai | torch cuda empty cache")
+        torch.cuda.empty_cache()
     if to_numpy: 
-        if verbose > 0: 
-            print(f"get_enc_embs_moirai | About to convert to numpy")
-        if cpu:
+        if cpu > 0:
             embs = embs.numpy() 
         else: 
             embs = embs.cpu().numpy()
-    if not cpu:
-        enc_input.cpu()
-        enc_model.cpu()
-        torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
     if verbose > 0: 
-        print(f"get_enc_embs_moirai | embs ~ embs.shape")
+        print(f"get_enc_embs_moirai | embs ~ {embs.shape}")
         print("get_enc_embs_moirai -->")
     return embs
 
@@ -679,7 +714,6 @@ def get_enc_embs(
                 enc_model  = enc_learn,
                 cpu        = cpu, 
                 average_seq_dim = average_seq_dim,
-                to_numpy   = to_numpy,
                 verbose    = verbose,
                 **kwargs
             )
@@ -702,23 +736,24 @@ def get_enc_embs_set_stride_set_batch_size(
     chunk_size         : int  = 0, 
     check_memory_usage : bool = False,
     **kwargs
-):            
+):
+    print_flush("--> get_enc_embs_set_stride_set_batch_size")
     embs = None
     enc_learn_class = str(enc_learn.__class__)[8:-2]
     match enc_learn_class:
         case "momentfm.models.moment.MOMENTPipeline":
             if verbose > 0: 
-                print(f"get_enc_embs_set_stride_set_batch_size | Moment | {average_seq_dim}")
+                print_flush(f"get_enc_embs_set_stride_set_batch_size | Moment | {average_seq_dim}")
             match enc_learn.task_name:
                 case "embedding":
                     embs = get_enc_embs_moment(X, enc_learn, cpu, to_numpy, verbose, average_seq_dim, **kwargs)
                 case "reconstruction":
                     embs = get_enc_embs_moment_reconstruction(X, enc_learn, cpu, to_numpy, verbose, average_seq_dim, **kwargs)
                 case _:
-                    print(f"Model embeddings for moment-{enc_learn.task_name} is not yet implemented.")
+                    print_flush(f"Model embeddings for moment-{enc_learn.task_name} is not yet implemented.")
         case "fastai.learner.Learner":
             if verbose > 0: 
-                print(f"get_enc_embs_set_stride_set_batch_size | MVP | {average_seq_dim}")
+                print_flush(f"get_enc_embs_set_stride_set_batch_size | MVP | {average_seq_dim}")
             embs = get_enc_embs_MVP_set_stride_set_batch_size(
                 X = X, 
                 enc_learn = enc_learn, 
@@ -735,25 +770,27 @@ def get_enc_embs_set_stride_set_batch_size(
             )
         case "uni2ts.model.moirai.module.MoiraiModule":
             if verbose > 0: 
-                print(f"get_enc_embs_set_stride_set_batch_size | Moirai | {average_seq_dim}")
+                print_flush(f"get_enc_embs_set_stride_set_batch_size | Moirai | {average_seq_dim}")
             embs = get_enc_embs_moirai(
                 enc_input  = X, 
                 enc_model  = enc_learn,
                 cpu        = cpu, 
                 average_seq_dim = average_seq_dim,
-                to_numpy   = to_numpy,
                 verbose    = verbose,
+                to_numpy = to_numpy,
                 **kwargs
             )
         case _:
-            print(f"[ get_enc_embs_set_stride_set_batch_size ] Model embeddings implementation is not yet implemented for {enc_learn_class}.")
+            print_flush(f"[ get_enc_embs_set_stride_set_batch_size ] Model embeddings implementation is not yet implemented for {enc_learn_class}.")
     # Ñapa: TODO: Gestionar que no se queden en memoria los modelos porque ocupan el 40% de la GPU al llamarlos desde R
+    if verbose > 0: print_flush(f"get_enc_embs_set_stride_set_batch_size | Before moving to CPU | embs~{embs.shape}")
     if cpu:
         #X.cpu()
         enc_learn.cpu()
         try: 
             enc_lear.dls.cpu()
         except Exception as e: 
-            print(f"Exception: {e}")
+            print_flush(f"get_enc_embs_set_stride_set_batch_size | Exception: {e}")
         #kwargs_to_cpu_(**kwargs)
+    if verbose > 0: print_flush(f"get_enc_embs_set_stride_set_batch_size | embs~{embs.shape} -->")
     return embs

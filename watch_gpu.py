@@ -81,4 +81,4 @@ if __name__ == "__main__":
         print(f"Free Memory: {free_memory} MB ({(free_memory / total_memory * 100):.2f}% of Total)")
         print(f"Total Memory: {total_memory} MB")
 
-        time.sleep(10)  # Refrescar cada 10 segundos
+        time.sleep(10)  # Refrescar cada 10 segundos 

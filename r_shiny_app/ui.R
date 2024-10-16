@@ -37,7 +37,7 @@ shinyUI(fluidPage(
       select_datasetUI("datasetModule"),
       selectizeInput("encoder", label = "Encoder", choices = NULL),
       actionButton("play_pause", "Run!", icon = shiny::icon("play")),
-      actionButton("cuda", "Remove CUDA objects", icon = shiny::icon("trash")),
+      actionButton("cuda", "Remove CUDA cache", icon = shiny::icon("trash")),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
       actionBttn(
@@ -67,6 +67,16 @@ shinyUI(fluidPage(
           "Select patch size", 
           choices = c(8, 16, 32, 64, 128), 
           selected = 8
+        )
+      ),
+      conditionalPanel(
+        condition = "input.encoder.indexOf('moment') != -1",
+        numericInput(
+          "padd_step", "Enter padding step size in case of error", 
+          value = 2, 
+          min = 2, 
+          max = 1000000, 
+          step = 1
         )
       ),
       # sliderInput("points_emb", "Select range of points to plot in the projections", 

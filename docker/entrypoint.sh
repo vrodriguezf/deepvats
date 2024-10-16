@@ -5,13 +5,13 @@ set -e
 #ls -la /home/$USER/work
 #pip install -e /home/$USER/work
 
-echo $WANDB_ENTITY $USER $WANDB_PROJECT
+#echo $WANDB_ENTITY $USER $WANDB_PROJECT
 
 ### Ensuring to activate the correct conda
 source /usr/local/share/miniconda3/etc/profile.d/conda.sh
 conda activate /usr/local/share/miniconda3/envs/env
 #Check
-conda list | grep wandb
+#conda list | grep wandb
 ###
 
 #!/bin/bash
@@ -21,12 +21,15 @@ conda list | grep wandb
 ############################
 
 #Check
-conda list | grep wandb
+#conda list | grep wandb
 ###
 
 
 
-echo "Aqui"
+#echo "Aqui"
+
+sudo chown -R $USER:$USER $HOME/work
+sudo chown -R $USER:$USER $HOME/data
 
 exec "$@"
 

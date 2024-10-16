@@ -177,6 +177,8 @@ COPY --chown=$UID:$GID ./README.md $HOME/work/
 RUN cd $HOME/work  \
     && pip install -e $HOME/work
 
+RUN pip install gputil
+
 
 ARG JUPYTER_TOKEN
 ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}

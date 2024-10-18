@@ -736,6 +736,8 @@ shinyServer(function(input, output, session) {
         enc
     })
 
+   
+
     embs_kwargs <- reactive({
         res <- list()
         dataset <- isolate (X())
@@ -779,12 +781,96 @@ shinyServer(function(input, output, session) {
         res
     })
 
-    
+    fine_tune_kwargs <- reactive({
+        res <- list()
+        dataset <- isolate (X())
+        batch_size <- as.integer(input$ft_batch_size)
+        encoder <- input$encoder
+        percent <- input$ft_window_percent_value
+        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+        if (grepl("moment", encoder, ignore.case = TRUE)) {
+            log_print("embs_kwargs | Moment")
+            res <- list(
+                batch_size = batch_size,
+                cpu = cpu_flag,
+                to_numpy = TRUE,
+                verbose = as.integer(2),
+                padd_step = input$padd_step, 
+                average_seq_dim = TRUE,
+                percent = percent
+            )
+        } else if (grepl("moirai", encoder, ignore.case = TRUE)) {
+            log_print("embs_kwargs | Moirai")
+#            size <- sub(".*moirai-(\\w+).*", "\\1", encoder)
+
+            res <- list(
+                cpu = cpu_flag,
+                to_numpy = TRUE,
+                batch_size = batch_size,
+                average_seq_dim = TRUE,
+                verbose = as.integer(2),
+                patch_size = as.integer(input$patch_size),
+                time = TRUE
+            )
+        } else {
+            log_print("embs_kwargs | Learner (neither Moment or Moirai)")
+            res <- list(
+               stride = as.integer(input$stride),
+               cpu = cpu_flag,
+               to_numpy = TRUE,
+               batch_size = batch_size,
+               average_seq_dim = TRUE,
+               verbose = as.integer(1)
+           )
+        }
+        res
+    })
+
+    ####  CACHING EMBEDDINGS ####
+    # TODO: Conseguir que funcione el cache, sigue recalculando todo
+    embs_first_comp <- reactiveVal(TRUE)
+    cached_embeddings <- reactiveVal(NULL)
+    last_inputs <- reactiveVal(
+        list (
+            dataset = NULL,
+            encoder = NULL,
+            wlen    = NULL,
+            stride  = NULL,
+            fine_tune = NULL
+        )
+    )
     embs <- reactive({
+        current_inputs <- list(
+                dataset = input$dataset,
+                encoder = input$encoder,
+                wlen    = input$wlen,
+                stride = input$stride,
+                fine_tune = input$fine_tune
+            )
+        if (embs_first_comp() || ! identical(current_inputs, last_inputs())){
+            log_print("Embs | First embedding computation, skipping cache")
+            embs_first_comp(FALSE)
+            res <- embs_comp()
+            cached_embeddings(res)
+        } else {
+            #log_print("Embs | Using bindCache")
+            #embs_comp() %>% bindCache(input$dataset, input$encoder, input$wlen, input$stride)
+            last_inputs(current_inputs)
+            res <- isolate(cached_embeddings())
+        }
+        res
+    })
+    ###########################
+
+    
+        
+    embs_comp <- reactive({
         #req(allow_update_embs())
         print(paste0(
             "--> reactive embs (before req) | get embeddings | enc_input_ready ", enc_input_ready()," | play " , play()))
         req(tsdf(), X(), enc_l <- enc(), enc_input_ready(), play())
+        
+        
         print(paste0("--> reactive embs (after req) | get embeddings | enc_input_ready ", enc_input_ready()))
         print(paste0("tsdf ~ ", dim(tsdf())))
         print(paste0("X ~ ", dim(X())))
@@ -820,13 +906,12 @@ shinyServer(function(input, output, session) {
         log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
         specific_kwargs <- embs_kwargs()
         
-        kwargs <- list(
+        kwargs_common <- list(
             X                   = enc_input,
             enc_learn           = enc_l,
-            stride              = as.integer(input$stride) ,
             verbose             = as.integer(1)
         )
-        kwargs <- c(kwargs, specific_kwargs)
+        kwargs <- c(kwargs_common, list(stride = as.integer(input$stride)), specific_kwargs)
         #log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size kwargs | ", kwargs))
         #watch_gpu_kwargs <- list(
         #    func = dvats$get_enc_embs_set_stride_set_batch_size
@@ -836,10 +921,41 @@ shinyServer(function(input, output, session) {
         #    dvats$watch_gpu,
         #    kwargs
         #) 
+        
+        if (input$fine_tune){
+            req(input$ft_batch_size, input$ft_window_percent)
+            #fine_tune_kwargs_specific <- fine_tune_kwargs()
+            #fine_tune_kwargs <- c(kwargs_common, list(stride = as.integer(1)), fine_tune_kwargs_specific)
+            if ( grepl("moment", input$encoder, ignore.case = TRUE)){
+                fine_tune_kwargs <- list(
+                    X = enc_input,
+                    enc_learn = enc_l,
+                    stride = as.integer(1),
+                    batch_size = as.integer(input$ft_batch_size),
+                    cpu = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
+                    average_seq_dim = FALSE,
+                    to_numpy = FALSE,
+                    verbose = as.integer(2),
+                    time_flag = TRUE,
+                    percent = as.numeric(input$ft_window_percent),
+                    padd_step = as.integer(input$padd_step),
+                    max_trials = as.integer(3)
+                )
+                do.call(
+                    dvats$fine_tune_moment_,
+                    fine_tune_kwargs
+                )
+            }
+        }
+        
         result <- do.call(
-            dvats$get_enc_embs_set_stride_set_batch_size,
-            kwargs
-        )
+                    dvats$get_enc_embs_set_stride_set_batch_size,
+                    kwargs
+                )
+        #result <- do.call(
+        #    dvats$get_enc_embs_set_stride_set_batch_size,
+        #    kwargs
+        #)
 
         log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
         log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size embs ~ | ", dim(result) ))
@@ -877,7 +993,7 @@ shinyServer(function(input, output, session) {
         log_print("Cleaning GPU...")
         #allow_update_embs(FALSE)
         result
-    })
+    }) #%>% bindCache(input$dataset, input$encoder, input$wlen, input$stride)
 #enc = py_load_object(
 #    os.path.join(
 #        DEFAULT_PATH_WANDB_ARTIFACTS, 
@@ -1168,10 +1284,10 @@ shinyServer(function(input, output, session) {
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
         log_print("--> Projections")
-        req(prj_object(), input$dr_method)
+        req(input$dr_method)
         #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
         log_print("Projections | before prjs")
-        prjs <- prj_object()
+        prjs <- req(prj_object())
         req(input$dataset, input$encoder, input$wlen, input$stride)
         log_print("Projections | before switch")
         log_print("Calculate clusters | before")
@@ -1576,8 +1692,9 @@ tcl_1 = Sys.time()
             tsdf_ready()
         )
         log_print("--> Projections_plot")
-        t_pp_0 = Sys.time()
+        t_pp_0 <- Sys.time()
         prjs_ <- req(projections())
+         
         log_print("projections_plot | Prepare column highlights")
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
@@ -1832,6 +1949,15 @@ tcl_1 = Sys.time()
 
     
     load_datasetServer("load_dataset1")
+
+    output$ft_batch_size_value <- renderText({
+        paste("Batch Size value:", input$ft_batch_size)
+    })
+  
+    output$ft_window_percent_value <- renderText({
+        paste("Window Percent value:", input$ft_window_percent)
+    })
+
 
 })
 

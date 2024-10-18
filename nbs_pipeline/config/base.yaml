@@ -33,8 +33,10 @@ user_preferences:
     alias: &alias 'outliers-3'
     #alias: &alias 'PulsusParadoxus-SP02'
     #algorithm: &alg 'mvp'
-    algorithm: &alg 'moirai-small'
+    #algorithm: &alg 'moirai-small'
     #algorithm: &alg 'moment-large-embedding'
+    algorithm: &alg 'moment-small-embedding'
+    #algorithm: &alg 'moment-small-reconstruction'
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 

@@ -35,7 +35,20 @@ shinyUI(fluidPage(
       load_datasetUI("load_dataset1"),
       hr(),
       select_datasetUI("datasetModule"),
-      selectizeInput("encoder", label = "Encoder", choices = NULL),
+      fluidRow(
+        column(4, selectizeInput("encoder", label = "Encoder", choices = NULL)),
+        column(2,checkboxInput("fine_tune", "Fine-tune", value = FALSE)),
+        column(4,
+          conditionalPanel(
+            condition = "input.fine_tune == true",
+            textInput("ft_batch_size", "Batch Size", value = 32),
+            textOutput("ft_batch_size_value"),
+            textInput("ft_window_percent", "Window Percent", value = 0.3),
+            textOutput("ft_window_percent_value")
+          )
+        )
+      ),
+      
       actionButton("play_pause", "Run!", icon = shiny::icon("play")),
       actionButton("cuda", "Remove CUDA cache", icon = shiny::icon("trash")),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),

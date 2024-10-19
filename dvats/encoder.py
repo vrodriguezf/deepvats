@@ -5,7 +5,8 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_t
            'sure_eval_moment', 'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP',
            'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
            'watch_gpu', 'get_enc_embs_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size',
-           'random_windows', 'print_progress_bar', 'fine_tune_moment_']
+           'random_windows', 'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
+           'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_', 'fine_tune_moment_train_', 'fine_tune_moment_']
 
 # %% ../nbs/encoder.ipynb 2
 from .memory import *
@@ -182,6 +183,7 @@ def get_acts_moment(enc_learn, cpu, verbose, y, mask = None, padd_step = 100, re
             success = True
             if verbose > 0 and acts_indices == [0] : print_flush(f"get_acts_moment | Trial {trial} | embs ~ {embs.shape}")
         except Exception as e:
+            if trial == max_trials - 1 : raise
             if verbose > 0:
                 print_flush(f"get_acts_moment | Trial {trial} | About to pad X (encoder input) | exception {e} | padd step: {padd_step}")
                 print_flush(f"get_acts_moment | Trial {trial} | y ~ {y.shape}")
@@ -241,27 +243,56 @@ def sure_eval_moment(enc_learn, cpu, verbose, y, input_mask = None, mask = None,
             if verbose > 0:
                 print_flush(f"sure_eval_moment | Trial {trial} | About to pad X (encoder input) | exception {e} | padd step: {padd_step}")
                 print_flush(f"sure_eval_moment | Trial {trial} | y ~ {y.shape}")
-            if "tensor a" in str(e) and "tensor b" in str(e):
-                match = re.search(r'tensor a \((\d+)\) must match the size of tensor b \((\d+)\)', str(e))
+            if "tensor a" in str(e) and "tensor b" in str(e) and "dimension" in str(e):
+                match = re.search(r'tensor a \((\d+)\) must match the size of tensor b \((\d+)\) at non-singleton dimension (\d+)', str(e))
                 tensor_a_size = int(match.group(1))
                 tensor_b_size = int(match.group(2))
-                padd = True
-                if trial > 1: 
-                    if verbose > 0: print_flush(f"------------------- Trial {trial}  -----------------")
-                    if tensor_a_size > tensor_a_size_old:
-                        if verbose > 0: print_flush(f"------------------- Trial {trial} | a > a_old -----------------")
-                        padd = False
-                        y = y [ ..., : tensor_a_size - tensor_b_size]
-                        if verbose > 0: print_flush(f"------------------- Trial {trial} |a > a_old | Reduced |  y ~ {y.shape} -----------------")
-                if padd:
-                    if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd -----------------")
-                    if tensor_a_size > tensor_b_size: 
-                        if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd | a > b -----------------")
-                        padd_step = tensor_a_size - tensor_b_size
-                    y = torch.nn.functional.pad(y,(0,padd_step))
-                tensor_a_size_old = tensor_a_size
+                dimension = int(match.group(3))
+                match dimension:
+                    case 2 | 1:
+                        padd = True
+                        if trial > 1: 
+                            if verbose > 0: print_flush(f"------------------- Trial {trial}  -----------------")
+                            if tensor_a_size > tensor_a_size_old:
+                                if verbose > 0: print_flush(f"------------------- Trial {trial} | a > a_old -----------------")
+                                padd = False
+                                y = y [ ..., : tensor_a_size - tensor_b_size]
+                                if verbose > 0: print_flush(f"------------------- Trial {trial} |a > a_old | Reduced |  y ~ {y.shape} -----------------")
+                        if padd:
+                            if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd -----------------")
+                            if tensor_a_size > tensor_b_size: 
+                                if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd | a > b -----------------")
+                                padd_step = tensor_a_size - tensor_b_size
+                            y = torch.nn.functional.pad(y,(0,padd_step))
+                        tensor_a_size_old = tensor_a_size
+                    #case 1: 
+                    #    if verbose > 0:
+                    #        print_flush(f"sure_eval_moment | Trial {trial} | Error dimension 0 | mask ~ {mask.shape} | mask_input ~ {input_mask.shape} | batch ~ {y.shape}")
+                    #        if mask.shape[1] < y.shape[2]: mask = torch.nn.functional.pad(mask,(0,y.shape[2]-mask.shape[1]))
+                    #        if input_mask.shape[2] < y.shape[2]: mask = torch.nn.functional.pad(input_mask,(0,y.shape[2]-input_mask.shape[2]))
+
+                    case 0:
+                        if verbose > 0: 
+                            print_flush(f"sure_eval_moment | Trial {trial} | Error dimension 0 | mask ~ {mask.shape} | mask_input ~ {input_mask.shape} | batch ~ {y.shape}")                    
+                        if mask.shape[0] > y.shape[0]:
+                            mask = mask[:y.shape[0]]
+                        if input_mask.shape[0] > y.shape[0]:
+                            input_mask = input_mask[:y.shape[0]]
+                        
+                        if mask.shape[0] < y.shape[0]:
+                            extra_rows_shape = (-mask.shape[0]+y.shape[0],mask.shape[1])
+                            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | Mask lower than batch | rows to add: {extra_rows_shape }")                    
+                            extra_rows = torch.zeros(extra_rows_shape, dtype = torch.float32)
+                            mask = torch.cat((mask, extra_rows), dim=0)
+                        if input_mask.shape[0] < y.shape[0]:
+                            extra_rows_shape = (-input_mask.shape[0]+y.shape[0],y.shape[1], y.shape[2])
+                            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | Mask lower than batch | rows to add: {extra_rows_shape }")                    
+                            extra_rows = torch.zeros(extra_rows_shape, dtype = torch.float32)
+                            input_mask = torch.cat((input_mask, extra_rows), dim=0)
             else:
-                if verbose > 0: print_flush("Not the usual error. No padding, just fail")
+                if verbose > 0: 
+                    print_flush("Not the usual error. No padding, just fail")
+                raise
         if verbose > 0: print_flush(f"sure_eval_moment -->")
     y = y_copy
     if not cpu: y.to("cuda")
@@ -604,29 +635,6 @@ def get_enc_embs_moment_reconstruction(
         retry = False ,
         max_trials = 5
     )
-    success = False
-    while not success:
-        try:
-            if verbose > 1: 
-                print_flush(f"get_enc_embs_moment_reconstruction | x_enc ~ {y.shape}")
-            acts = get_acts(
-                model = enc_learn,
-                #module = enc_learn.encoder.dropout,
-                module = enc_learn.head.dropout,
-                cpu = cpu,
-                verbose = verbose,
-                x_enc = y,
-                retry = False,
-                acts_indices = None
-            )
-            embs = acts[0]
-            success = True
-            if verbose > 1: 
-                print_flush(f"get_enc_embs_moment_reconstruction | embs ~ {embs.shape}")
-        except Exception as e:
-            if verbose > 0:
-                print_flush(f"get_enc_embs_moment | About to pad X (encoder input) | exception {e} | padd step: {padd_step}")
-            y = torch.nn.functional.pad(y,(0,padd_step))
     if average_seq_dim: 
         embs = embs.mean(dim = 1).mean(dim = 1)
     if to_numpy:
@@ -914,11 +922,15 @@ def get_enc_embs_set_stride_set_batch_size(
     return embs
 
 # %% ../nbs/encoder.ipynb 34
-from momentfm.utils.masking import Masking
-
-# %% ../nbs/encoder.ipynb 35
 def random_windows(X : List [ List [ List [ float ]]], n_windows = None, percent = 0.2, verbose = 0):
-    n_windows = int(n_windows if n_windows is not None else np.ceil(percent*X.shape[0]))
+    """
+    Parameters: 
+    - X: Numpy array of windows. Expected shape: [batch_size or n_samples, n_vars, window_len]
+    Given a numpy array of windows, selects:
+    - n_windows random windows from the array, if n_windows is given.
+    - ceil(percent*len(X)) random windows otherwise
+    """
+    n_windows = int(min(X.shape[0], n_windows) if n_windows is not None else np.ceil(percent*X.shape[0]))
     if verbose > 0: print_flush(f"Random windows | n_windows: {n_windows}")
     random_indices = np.random.randint(0, int(X.shape[0]), n_windows)
     windows = X[ random_indices ]
@@ -926,123 +938,322 @@ def random_windows(X : List [ List [ List [ float ]]], n_windows = None, percent
     if verbose > 0: print_flush(f"windows ~ {windows.shape}")
     return windows
 
-# %% ../nbs/encoder.ipynb 36
-def print_progress_bar(iteration, total, length=40):
-    percent = f"{100 * (iteration / total):.1f}"
-    filled_length = int(length * iteration // total)
-    bar = '=' * filled_length + '-' * (length - filled_length)
-    print_flush(f'\rProgress: |{bar}| {percent}% Complete', end='\r')
-
 # %% ../nbs/encoder.ipynb 37
-def fine_tune_moment_(
-    X                  : List [ List [ List [ float ] ] ], 
-    enc_learn          : Learner, 
-    stride             : int,      
-    batch_size          : int = 32,
-    cpu                : bool = False, 
-    average_seq_dim    : bool = True, 
-    to_numpy           : bool = True, 
-    verbose            : int  = 0, 
-    time_flag          : bool = False,
-    n_windows           : int = None,
-    percent             : float = 0.2,
-    padd_step : int = 2,
-    max_trials : int = 3
-):
-    if verbose > 0: print_flush("--> fine_tune_moment_")
-    criterion = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(enc_learn.parameters(), lr=1e-4)
-    mask_generator = Masking(mask_ratio = 0.3)
-    if verbose > 1: print_flush("fine_tune_moment_ | Random windows")
-    windows = random_windows(X, n_windows, percent, verbose-1)
-    if verbose > 1: print_flush("fine_tune_moment_ | Move to device")
-    if cpu:
-        device = "cpu"
-        enc_learn.cpu()
-        y = windows.cpu().float()
-    else:
-        device = torch.cuda.current_device()
-        enc_learn.to("cuda")
-        y = windows.to("cuda").float()
+from momentfm.utils.masking import Masking
+from tqdm.auto import tqdm
+from transformers import get_scheduler
+import evaluate
 
-    if verbose > 1: print_flush("fine_tune_moment_ | Empty masks")
-    # Empty masks
-    n_samples, n_channels, window_size = y.shape
+# %% ../nbs/encoder.ipynb 38
+def fine_tune_moment_compute_loss_check_sizes_(batch, output, verbose = 0):
+    if verbose > 0: print_flush("--> fine_tune_moment_compute_loss_check_sizes_")
+    b = batch.clone()
+    b_2 = batch.shape[2]
+    re_2 = output.reconstruction.shape[2]
+    if b_2 > re_2:
+        if verbose > 0: print_flush(f" Fine tune loop | TODO: Why? Original {b_2} > {re_2}  Reconstruction")
+        b = b[...,:re_2]
+    elif re_2 > b_2:
+        if verbose > 1: print_flush(f" Fine tune loop | Why ? Original {b_2} < {re_2} Reconstruction ? Padding")
+        output.reconstruction = output.reconstruction[...,:b_2]
+    else: 
+        if verbose > 1: print_flush(f" Fine tune loop | re_2 {re_2} == {b_2} y_2")
+    if verbose > 1: 
+        print_flush(f"---------- Checking loss  ------- | reconstruction ~ {output.reconstruction.shape} | original_ ~ {b.shape}")
+    if verbose > 0: print_flush("fine_tune_moment_compute_loss_check_sizes_ -->")
+    return b
+
+# %% ../nbs/encoder.ipynb 39
+def fine_tune_moment_compute_loss(batch, output, criterion = torch.nn.MSELoss, verbose = 0, input_mask = None, mask = None):
+    if verbose > 0: print_flush("--> fine_tune_moment_compute_loss")
+    b = fine_tune_moment_compute_loss_check_sizes_(batch = batch, output = output, verbose = verbose)
+    if verbose > 0: print_flush(f"fine_tune_moment_compute_loss | b~{b.shape} | o~{output.reconstruction.shape}")
+    compute_loss = criterion()
+    recon_loss = compute_loss(output.reconstruction, b)
+    batch_masks = output.input_mask if input_mask is None else input_mask
+    mask = output.pretrain_mask if mask is None else mask
+    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | batch ~ {b.shape}")
+    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | batch_masks ~ {batch_masks.shape}")
+    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | mask ~ {mask.shape}")
+    observed_mask = batch_masks * (1-mask)
+    masked_loss = observed_mask * recon_loss
+    loss = masked_loss.nansum() / (observed_mask.nansum() + 1e-7)
+    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | loss: {loss.item()}")
+    if verbose > 0: print_flush(f"Loss type: {type(loss)}")  # Debe ser <class 'torch.Tensor'>
+    if verbose > 0: print_flush("fine_tune_moment_compute_loss -->")
+    return loss
+
+# %% ../nbs/encoder.ipynb 40
+def fine_tune_moment_eval_preprocess(
+    predictions : List [ List [ float ]],
+    references : List [ List [ float ]],
+    verbose : int = 0
+):
+    """
+    Parameters:
+    - predictions torch (float)
+    - references torch (float)
+    Returns: 
+        - Predictions and references ensuring same shape and no NaN values. 
+        - Uses the shape of the smallest torch for the modification.
+    """
+    if verbose > 0: 
+        print(f"fine_tune_moment_eval | Before reshape | preds~{predictions.shape}")            
+        print(f"fine_tune_moment_eval | Before reshape | refs~{references.shape}")
+    predictions = einops.rearrange(predictions, "b v w -> (b v) w")
+    references = einops.rearrange(references, "b v w -> (b v) w")
+    # Avoid NaN 
+    if predictions.shape[1] > references.shape[1]: predictions = predictions[:,:references.shape[1]]
+    if predictions.shape[1] < references.shape[1]: references = references[:,:predictions.shape[1]]
+    if verbose > 0: 
+        print(f"Eval | After reshape | preds~{predictions.shape}")
+        print(f"Eval | After reshape | refs~{references.shape}")
+        
+    nan_mask = torch.isnan(predictions) | torch.isnan(references)
+    predictions = torch.where(nan_mask, torch.tensor(0.0), predictions)
+    references = torch.where(nan_mask, torch.tensor(0.0), references)
+    if verbose > 0: 
+        print(f"Eval | After NaN | preds~{predictions.shape}")
+        print(f"Eval | After NaN | refs~{references.shape}")
+    return predictions, references
+
+# %% ../nbs/encoder.ipynb 41
+def fine_tune_moment_eval_(
+    enc_learn : Learner,
+    dl_eval   : DataLoader,
+    num_epochs: int = 1,
+    cpu       : bool = False,
+    verbose   : int = 0
+):
+    # Select device
+    device = "cpu" if cpu else torch.cuda.current_device()
+    # Load metrics
+    mse_metric = evaluate.load('mse', "multilist")
+    rmse_metric = evaluate.load('mse', "multilist")
+    mae_metric = evaluate.load('mae', "multilist")
+    smape_metric = evaluate.load("smape", "multilist")
+    num_evaluation_steps = len(dl_eval)
+    progress_bar = tqdm(range(num_evaluation_steps))
+    # Predict evaluation dataset
+    enc_learn.eval()
+    for batch in dl_eval:
+        with torch.no_grad():
+            output = sure_eval_moment(
+                enc_learn = enc_learn, 
+                cpu = cpu,
+                verbose = verbose,                     
+                y = batch, 
+                input_mask = None,
+                mask = None,
+                padd_step = 100, 
+                max_trials = 5, 
+                acts_indices = None
+            )
+        logits = output.logits
+        predictions = output.reconstruction
+        references = batch
+        predictions, references = fine_tune_moment_eval_preprocess(predictions = predictions, references = references, verbose = verbose)
+        mse_metric.add_batch(predictions=predictions, references = references)
+        rmse_metric.add_batch(predictions=predictions, references = references)
+        mae_metric.add_batch(predictions=predictions, references = references)
+        smape_metric.add_batch(predictions=predictions, references = references)
+        progress_bar.update(1)
+    mse   = mse_metric.compute(squared = False)
+    rmse  = rmse_metric.compute(squared = True)
+    mae   = mae_metric.compute()
+    smape = smape_metric.compute()
+    eval_results = {
+        "mse": mse,
+        "rmse": rmse,
+        "mae": mae,
+        "smape": smape
+    }
+    enc_learn.train()
+    return eval_results
+
+# %% ../nbs/encoder.ipynb 42
+def fine_tune_moment_train_(
+    enc_learn : Learner, 
+    dl_train: DataLoader,
+    ds_train,
+    batch_size : int,
+    num_epochs : int = 1,
+    criterion = torch.nn.MSELoss, 
+    optimizer = torch.optim.Adam, 
+    lr = 1e-4, 
+    lr_scheduler_flag = False, 
+    lr_scheduler_name = "linear",
+    lr_scheduler_num_warmup_steps = 0,
+    cpu = False,
+    verbose = 0
+):
+    # Optimizer and learning rate scheduler
+    optimizer = torch.optim.Adam(enc_learn.parameters(), lr)
+    num_training_steps = num_epochs * len(dl_train)
+    losses = []
+    if lr_scheduler_flag:
+        lr_scheduler = get_scheduler(
+            name = lr_scheduler_name,
+            optimizer = optimizer,
+            num_warmup_steps = lr_scheduler_num_warmup_steps,
+            num_training_steps = num_training_steps
+        )
+    # Select device
+    device = "cpu" if cpu else torch.cuda.current_device()
+        
+    # Training loop
+    if verbose > 1: print_flush("fine_tune_moment_ | Training loop")
+    progress_bar = tqdm(range(num_training_steps))
+    # Masks
+    mask_generator = Masking(mask_ratio = 0.3)
+    n_samples, n_channels, window_size = ds_train.shape
     batch_masks = torch.ones(
         (batch_size, window_size), 
         device = device
     ).long()
-    if verbose > 1: print_flush("fine_tune_moment_ | Fine tune loop")
-    #total = int(np.floor(n_samples/batch_size))
-    #if verbose > 1: print_flush(f"N_samples: {n_samples}, Batch_size: {batch_size} Total: {total}")
-    for i in range(0, n_samples, batch_size):
-        #if verbose > 0: print_progress_bar(i, total)
-        batch_end = min(i+batch_size, y.shape[0])
-        batch = y[i:batch_end]
-        if batch.shape[0] < batch_size:
-            batch_masks = torch.ones(
-                (batch.shape[0], window_size),
-                device = device
-            ).long()
-        if verbose > 1: print_flush(f"fine_tuning_moment_ | Fine tune loop | --- 1) --- batch ~ {batch.shape}")
-        if verbose > 1: print_flush(f"fine_tuning_moment_ | Fine tune loop | --- 1) --- batch_masks ~ {batch_masks.shape}")
         
-        mask = mask_generator.generate_mask(
-            x = batch,
-            input_mask = batch_masks
-        )
-        if mask.shape[1] < batch_masks.shape[1]:
-            mask = torch.nn.functional.pad(mask,(0,batch_masks.shape[1]-mask.shape[1]))
-        if verbose > 1: print_flush(f"fine_tuning_moment_ | Fine tune loop | --- 2) --- batch ~ {batch.shape}")
-        if verbose > 1: print_flush(f"fine_tuning_moment_ | Fine tune loop | --- 2) --- batch_masks ~ {batch_masks.shape}")
-        if verbose > 1: print_flush(f"fine_tuning_moment_ | Fine tune loop | --- 2) --- mask ~ {mask.shape}")
-        #output = sure_eval_moment(
-        #    enc_learn = enc_learn, 
-        #    cpu = cpu,
-        #    verbose = verbose-1, 
-        #    y = batch, 
-        #    input_mask = batch_masks, 
-        #    mask = mask, 
-        #    padd_step = padd_step, 
-        #    max_trials = max_trials, 
-        #    acts_indices = None
-        #)
+    if verbose > 1: print_flush("fine_tune_moment_ | Fine tune loop")        
+    for epoch in range(num_epochs):
+        for batch in dl_train:
+            batch.to(device)
+            bms = batch_masks
+            if batch.shape[0] < batch_masks.shape[0]:  
+                bms = batch_masks[:batch.shape[0]]
+            if verbose > 1: 
+                print_flush(
+                    f"fine_tune_moment_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape}"
+                )
+            mask = mask_generator.generate_mask(
+                x = batch,
+                input_mask = bms
+            )
+            if mask.shape[0] < bms.shape[0]:  bms = batch_masks[:mask.shape[0]]
+            if mask.shape[1]  < batch_masks.shape[1] : mask = torch.nn.functional.pad(mask,(0,batch_masks.shape[1]-mask.shape[1]))
+            if verbose > 1: 
+                print_flush(
+                    f"fine_tune_moment_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}"
+                )
+            output = sure_eval_moment(
+                enc_learn = enc_learn, 
+                cpu = cpu,
+                verbose = verbose-1, 
+                y = batch, 
+                input_mask = batch_masks, # None
+                mask = mask, # None
+                padd_step = 100, 
+                max_trials = 5, 
+                acts_indices = None
+            )
+            # Compute output loss
+            loss = fine_tune_moment_compute_loss(batch, output, criterion, verbose = verbose, input_mask = bms, mask = mask )
+            losses.append(loss.item())
+            # Update weights
+            optimizer.zero_grad()
+            loss.backward()
+            # Optimize
+            optimizer.step()
+            if lr_scheduler_flag: lr_scheduler.step()
+            progress_bar.update(1)
+    return losses
 
-        output = sure_eval_moment(
-            enc_learn = enc_learn, 
+# %% ../nbs/encoder.ipynb 43
+from torch.nn.modules.loss import _Loss
+
+# %% ../nbs/encoder.ipynb 44
+def fine_tune_moment_(
+    X                               : List [ List [ List [ float ]]], 
+    enc_learn                       : Learner, 
+    stride                          : int   = 1,      
+    batch_size                      : int   = 32,
+    cpu                             : bool  = False,
+    to_numpy                        : bool  = True, 
+    verbose                         : int   = 0, 
+    time_flag                       : bool  = False,
+    n_windows                       : int   = None,
+    n_windows_percent               : float = 0.2,
+    validation_percent              : float = 0.2, 
+    training_percent                : float = 0.2,
+    num_epochs                      : int   = 3,
+    shot                            : bool  = True,
+    eval                            : bool  = True,
+    criterion                       : _Loss = torch.nn.MSELoss, 
+    optimizer                               = torch.optim.Adam, 
+    lr                              : float =  1e-4, 
+    lr_scheduler_flag               : bool  = False, 
+    lr_scheduler_name               : str   = "linear",
+    lr_scheduler_num_warmup_steps   : int   = 0,
+):   
+    if verbose > 0: print_flush("--> fine_tune_moment_")
+    t_shot = 0
+    t_eval_1 = 0
+    t_eval_2 = 0
+    losses = []
+    eval_results_pre = ""
+    eval_results_post = ""
+
+    if time_flag:
+        timer = Time()
+    # Prepare the dataset
+    train_split_index = min(X.shape[0], n_windows) if n_windows is not None else np.ceil(training_percent * X.shape[0])
+    eval_split_index = min(X.shape[0], n_windows) if n_windows is not None else np.ceil(validation_percent * X.shape[0])
+    train_split_index = int(train_split_index)
+    eval_split_index = int(eval_split_index)
+    if shot: ds_train = X[:train_split_index]
+    if eval: ds_test  = torch.from_numpy(X[:eval_split_index]).float()
+    # -- Select only the small percentage for few-shot
+    if verbose > 1: print_flush("fine_tune_moment_ | Random windows")
+    if shot:
+        ds_train = random_windows(ds_train, n_windows, n_windows_percent, verbose-1)
+        ds_train = ds_train.float()
+        # Create the dataloader
+        dl_train = DataLoader(ds_train, batch_size = batch_size, shuffle = True)
+    if eval: dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
+    if eval:
+        if time_flag: timer.start()
+        eval_results_pre = fine_tune_moment_eval_(
+            enc_learn = enc_learn,
+            dl_eval = dl_eval,
+            num_epochs = num_epochs,
             cpu = cpu,
-            verbose = verbose-1, 
-            y = batch, 
-            input_mask = None, 
-            mask = None, 
-            padd_step = padd_step, 
-            max_trials = max_trials, 
-            acts_indices = None
+            verbose = verbose-1
         )
-        # Compute loss
-        b_2 = batch.shape[2]
-        re_2 = output.reconstruction.shape[2]
-        b_ = batch.clone()
-        
-        if b_2 > re_2:
-            if verbose > 0: print_flush(f" Fine tune loop | TODO: Why? Original {b_2} > {re_2}  Reconstruction")
-            b_ = b[...,:re_2]
-        elif re_2 > b_2:
-            if verbose > 1: print_flush(f" Fine tune loop | Why ? Original {b_2} < {re_2} Reconstruction ? Padding")
-            output.reconstruction = output.reconstruction[...,:b_2]
-        else: 
-            if verbose > 1: print_flush(f" Fine tune loop | re_2 {re_2} == {b_2} y_2")
-        if verbose > 1: 
-            print_flush(f"---------- Checking loss (batch {i//batch_size}) ------- | reconstruction ~ {output.reconstruction.shape} | original_ ~ {b_.shape}")
-        recon_loss = criterion(output.reconstruction, b_)
-        if verbose > 1: print_flush(f"fine_tuning_moment_ | Fine tune loop | --- 3) --- batch ~ {batch.shape}")
-        if verbose > 1: print_flush(f"fine_tuning_moment_ | Fine tune loop | --- 3) --- batch_masks ~ {batch_masks.shape}")
-        if verbose > 1: print_flush(f"fine_tuning_moment_ | Fine tune loop | --- 3) --- mask ~ {mask.shape}")
-        observed_mask = batch_masks * (1-mask)
-        masked_loss = observed_mask * recon_loss
-        loss = masked_loss.nansum() / (observed_mask.nansum() + 1e-7)
-        if verbose > 0: print_flush(f"fine_tuning_moment_ | Fine tune loop | loss {i}: {loss.item()}")
-        # Backward & optimization
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+        if time_flag: 
+            timer.end()
+            t_eval_1 = timer.duration()
+            if verbose > 0: timer.show()
+    if shot:
+        if time_flag: timer.start()
+        losses = fine_tune_moment_train_(
+            enc_learn = enc_learn,
+            dl_train = dl_train,
+            ds_train = ds_train,
+            batch_size = batch_size,
+            num_epochs = num_epochs,
+            criterion = torch.nn.MSELoss, 
+            optimizer = torch.optim.Adam, 
+            lr = 1e-4, 
+            lr_scheduler_flag = False, 
+            lr_scheduler_name = "linear",
+            lr_scheduler_num_warmup_steps = 0,
+            cpu = cpu,
+            verbose = verbose-1
+        )
+        if time_flag:
+            timer.end()
+            t_shot = timer.duration()
+            if verbose > 0: timer.show()
+    if eval:    
+        if time_flag: timer.start()
+        eval_results_post = fine_tune_moment_eval_(
+            enc_learn = enc_learn,
+            dl_eval = dl_eval,
+            num_epochs = num_epochs,
+            cpu = cpu,
+            verbose = verbose-1
+        )
+        if time_flag:
+            timer.end()
+            t_eval_2 = timer.duration()
+            if verbose > 0: timer.show()
+        if verbose > 0: print("Evaluation summary")
+    return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2

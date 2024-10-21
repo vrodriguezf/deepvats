@@ -43,8 +43,13 @@ shinyUI(fluidPage(
             condition = "input.fine_tune == true",
             textInput("ft_batch_size", "Batch Size", value = 32),
             textOutput("ft_batch_size_value"),
-            textInput("ft_window_percent", "Window Percent", value = 0.3),
+            textInput("ft_window_percent", "Maskared windows percent", value = 0.75), # mask
             textOutput("ft_window_percent_value")
+            textInput("ft_training_percent", "Training windows percent", value = 0.1),
+            textInput("ft_validation_percent", "Validation windows percent", value = 0.3)
+            actionButton("fine_tune_play", "Run!", icon = shiny::icon("play"))
+            textInput("ft_num_epochs", "Number of epochs", value = 10),
+            textInput("ft_min_windows_distance", "Minimum distance between windows", value = 5),
           )
         )
       ),

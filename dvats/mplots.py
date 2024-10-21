@@ -3,13 +3,12 @@
 # %% auto 0
 __all__ = ['octave', 'eamonn_drive_mplots', 'configure_octave', 'euclidean_distance', 'z_normalize',
            'z_normalized_euclidean_distance', 'show_subsequence', 'plot_subsequence', 'GD_Mat', 'MatlabMatrix',
-           'find_dominant_window_sizes_list', 'plot_subsequences_aux', 'plot_subsequences', 'plot_dataFrame',
-           'plot_dataFrame_compareSubsequences', 'df_plot_colored_variables', 'plot_df_with_intervals_and_colors',
-           'make_symmetric_', 'check_symmetric', 'moving_mean', 'sum_of_squared_differences', 'get_precomputes',
-           'convert_non_finite_to_zero', 'distance_matrix', 'DistanceProfile', 'DistanceMatrix', 'plot_motif',
-           'plot_motif_separated', 'MatrixProfile', 'downsample', 'matrix_profile', 'compute', 'MatrixProfiles',
-           'ensure_valid_limits', 'zoom_index', 'restore_index', 'threshold_interval', 'MatrixProfilePlot',
-           'MatrixProfilePlotCached']
+           'plot_subsequences_aux', 'plot_subsequences', 'plot_dataFrame', 'plot_dataFrame_compareSubsequences',
+           'df_plot_colored_variables', 'plot_df_with_intervals_and_colors', 'make_symmetric_', 'check_symmetric',
+           'moving_mean', 'sum_of_squared_differences', 'get_precomputes', 'convert_non_finite_to_zero',
+           'distance_matrix', 'DistanceProfile', 'DistanceMatrix', 'plot_motif', 'plot_motif_separated',
+           'MatrixProfile', 'downsample', 'matrix_profile', 'compute', 'MatrixProfiles', 'ensure_valid_limits',
+           'zoom_index', 'restore_index', 'threshold_interval', 'MatrixProfilePlot', 'MatrixProfilePlotCached']
 
 # %% ../nbs/mplots.ipynb 4
 ## -- Deepvats
@@ -30,13 +29,9 @@ import datetime as dt
 import math
 import warnings
 
-from aeon.segmentation._clasp import ClaSPSegmenter, find_dominant_window_sizes
-from aeon.datasets import load_electric_devices_segmentation
-from aeon.visualisation import plot_series_with_change_points, plot_series_with_profiles
-
 ## -- Classes & types
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple, Callable
+from typing import List, Optional, Tuple, Callable, Union
 ## -- Plotting
 import matplotlib
 import matplotlib.pyplot as plt
@@ -387,83 +382,7 @@ class MatlabMatrix:
             self.data = np.concatenate((start, out0, stop))
             return self.data
 
-# %% ../nbs/mplots.ipynb 40
-def find_dominant_window_sizes_list(
-        X           : List [ float ], 
-        nsizes      : int               = 1,
-        offset      : float             = 0.05, 
-        verbose     : int               = 0
-    ) -> List [ int ]:
-
-    if verbose > 0:
-        print( "-----> Find_dominant_window_sizes_list -----" )
-        print( "    X ~ ",  len(X) )
-        print( "    Looking for - at most - the best", nsizes, "window sizes")
-        print( "    Offset", offset, "max size:", offset*len(X))
-        print( "Find_dominant_window_sizes_list | --> Freqs computed")
-        
-    X = np.array(X)
-    
-    fourier = np.absolute(np.fft.fft(X))   
-    freqs = np.fft.fftfreq(X.shape[0], 1)
-    
-    if verbose > 0: 
-        print( "Find_dominant_window_sizes_list | Freqs computed -->")
-        print( "Find_dominant_window_sizes_list | --> Coefs and window_sizes")
-
-    coefs = []
-    window_sizes = []
-
-    for coef, freq in zip(fourier, freqs):
-        if coef and freq > 0:
-            coefs.append(coef)
-            window_sizes.append(1 / freq)
-
-    coefs = np.array(coefs)
-    window_sizes = np.asarray(window_sizes, dtype=np.int64)
-    
-    if verbose > 0: 
-        print( "Find_dominant_window_sizes_list | Coefs and window_sizes -->")
-        print( "Find_dominant_window_sizes_list | --> Find and return valid window_sizes")
-
-    idx = np.argsort(coefs)[::-1]
-    
-    if verbose > 0: 
-        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 0 ...", idx)
-        
-    sorted_window_sizes = window_sizes[idx]
-    
-    if verbose > 0: 
-        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 1 ...")
-
-    # Find and return all valid window sizes
-    valid_window_sizes = [
-        int(window_size / 2) for window_size in sorted_window_sizes
-        #if 20 <= window_size < int(X.shape[0] * offset)
-        if 20 <= window_size < int(len(X) * offset)
-    ]
-    
-    if verbose > 0: 
-        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2 ...")
-
-    # If no valid window sizes are found, return the first from sorted list
-    if not valid_window_sizes:
-        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2a ...", nsizes)
-        sizes = [sorted_window_sizes[0] // 2][:nsizes]
-    else:
-        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ...", nsizes)
-        sizes = valid_window_sizes[:nsizes]
-        
-    if verbose > 0: 
-        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes -->")
-    
-    if verbose > 0:
-        print("    Sizes:", sizes)
-        print( "----- Find dominant_window_sizes_list ----->" )
-    
-    return sizes
-
-# %% ../nbs/mplots.ipynb 46
+# %% ../nbs/mplots.ipynb 37
 def plot_subsequences_aux(
     ax              : plt.Axes, 
     x_coords        : List[ int ],  
@@ -537,7 +456,7 @@ def plot_subsequences(
     buttons = widgets.HBox([prev_button, next_button])
     display(buttons)
 
-# %% ../nbs/mplots.ipynb 47
+# %% ../nbs/mplots.ipynb 38
 def plot_dataFrame(title, df, vars = [], interval = 10000):
     if len(vars) > 0:
         num_vars = len(df.columns)
@@ -575,7 +494,7 @@ def plot_dataFrame(title, df, vars = [], interval = 10000):
         plt.show()
     else: raise ValueError("No variable proposed for plotting")
 
-# %% ../nbs/mplots.ipynb 48
+# %% ../nbs/mplots.ipynb 39
 def plot_dataFrame_compareSubsequences(
     title, df, var, subsequence_len, seq1_init, seq2_init, 
     title_fontsize = '30',
@@ -602,7 +521,7 @@ def plot_dataFrame_compareSubsequences(
     plt.show()
     
 
-# %% ../nbs/mplots.ipynb 50
+# %% ../nbs/mplots.ipynb 41
 def df_plot_colored_variables(df):
     # Show time series plot
     fig, ax = plt.subplots(1, figsize=(15,5), )
@@ -615,7 +534,7 @@ def df_plot_colored_variables(df):
     plt.legend()
     display(plt.show())
 
-# %% ../nbs/mplots.ipynb 51
+# %% ../nbs/mplots.ipynb 42
 def plot_df_with_intervals_and_colors(title, df, interval=10000):
     num_variables = len(df.columns)
     num_intervals = len(df) // interval + 1  # Calcula el número necesario de intervalos/subplots
@@ -646,7 +565,7 @@ def plot_df_with_intervals_and_colors(title, df, interval=10000):
     plt.tight_layout()
     plt.show()
 
-# %% ../nbs/mplots.ipynb 53
+# %% ../nbs/mplots.ipynb 44
 def make_symmetric_(
         mat : List [ float ]
     ) -> None:
@@ -665,7 +584,7 @@ def check_symmetric(
     return sym
 
 
-# %% ../nbs/mplots.ipynb 56
+# %% ../nbs/mplots.ipynb 47
 def moving_mean(a, w):
   result = np.zeros((len(a) - w + 1,))
   p = a[0]
@@ -805,7 +724,7 @@ def distance_matrix(a,b,w, minlag = None):
 
     return out
 
-# %% ../nbs/mplots.ipynb 58
+# %% ../nbs/mplots.ipynb 49
 @dataclass
 class DistanceProfile:
     """ Vector of distances between each subsequence in TA and a reference sequence TB"""
@@ -995,7 +914,7 @@ class DistanceProfile:
         plt.tight_layout()
         plt.show()
 
-# %% ../nbs/mplots.ipynb 66
+# %% ../nbs/mplots.ipynb 57
 @dataclass
 class DistanceMatrix: 
     """ Similarity matrix """
@@ -1030,7 +949,7 @@ class DistanceMatrix:
             self.subsequence_len = find_dominant_window_sizes(self.data, offset = offset)
             self.dominant_lens = [self.subsequence_len]
         else:
-            self.dominant_lens = find_dominant_window_sizes_list(
+            self.dominant_lens = ut.find_dominant_window_sizes_list(
                 self.data,
                 nsizes      = nlens,
                 offset      = offset,
@@ -1410,7 +1329,7 @@ class DistanceMatrix:
         self.shape = self.distances.shape
         return self.distances    
 
-# %% ../nbs/mplots.ipynb 70
+# %% ../nbs/mplots.ipynb 61
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -1436,7 +1355,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 71
+# %% ../nbs/mplots.ipynb 62
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -1475,7 +1394,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 74
+# %% ../nbs/mplots.ipynb 65
 @dataclass
 class MatrixProfile:
     """ Class for better usability of Matrix Profile inside deepVATS"""
@@ -1813,7 +1732,7 @@ class MatrixProfile:
             if verbose > 0:
                 print(f"DistanceProfile | provide_lens | nlens == {nlens} | --> find dominant window sizes")
                 print(f"DistanceProfile | provide_lens | nlens == {nlens} | --> find dominant window sizes data ~", len(self.data))
-            self.dominant_lens = find_dominant_window_sizes_list(
+            self.dominant_lens = ut.find_dominant_window_sizes_list(
                 self.data,
                 nsizes      = nlens,
                 offset      = offset,
@@ -1826,7 +1745,7 @@ class MatrixProfile:
     def __str__(self):
         return f"MP: {self.distances}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
-# %% ../nbs/mplots.ipynb 76
+# %% ../nbs/mplots.ipynb 67
 def downsample(
     self             : MatrixProfile,
     downsample_flag  : bool                         = False,
@@ -2070,10 +1989,10 @@ def matrix_profile(
             print("matrix profile -->")
     return mp, index, index_left, index_right, duration
 
-# %% ../nbs/mplots.ipynb 77
+# %% ../nbs/mplots.ipynb 68
 MatrixProfile.matrix_profile = matrix_profile
 
-# %% ../nbs/mplots.ipynb 78
+# %% ../nbs/mplots.ipynb 69
 def compute(
     self            : MatrixProfile,
     method          : str                           = 'naive', 
@@ -2135,7 +2054,7 @@ def compute(
     return self.distances
 MatrixProfile.compute = compute
 
-# %% ../nbs/mplots.ipynb 90
+# %% ../nbs/mplots.ipynb 81
 @dataclass
 class MatrixProfiles:
     matrix_profiles : List[ MatrixProfile ] = field( default_factory=list )
@@ -2274,7 +2193,7 @@ class MatrixProfiles:
         plt.show()
 
 
-# %% ../nbs/mplots.ipynb 108
+# %% ../nbs/mplots.ipynb 99
 def ensure_valid_limits(
     total_len       : int,
     subsequence_len : int, # divisor
@@ -2317,7 +2236,7 @@ def restore_index(
 
 
 
-# %% ../nbs/mplots.ipynb 110
+# %% ../nbs/mplots.ipynb 101
 def threshold_interval(
     data            : List [ List [ float ] ],
     threshold_min   : float,
@@ -2362,7 +2281,7 @@ def threshold_interval(
                 if (verbose > 2): print(result)
     return result
 
-# %% ../nbs/mplots.ipynb 112
+# %% ../nbs/mplots.ipynb 103
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -3205,7 +3124,7 @@ class MatrixProfilePlot:
         return plt
         """
 
-# %% ../nbs/mplots.ipynb 117
+# %% ../nbs/mplots.ipynb 108
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -3506,7 +3425,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-# %% ../nbs/mplots.ipynb 121
+# %% ../nbs/mplots.ipynb 112
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

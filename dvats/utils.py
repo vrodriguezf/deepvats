@@ -5,7 +5,9 @@ __all__ = ['generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'Re
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
            'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'funcname', 'update_patch',
            'styled_print', 'show_sequence', 'plot_with_dots', 'Interpolator', 'PAATransformer', 'DownsampleError',
-           'DivisorsError', 'divisors', 'downsample_propose_crop_', 'downsample', 'print_flush']
+           'DivisorsError', 'divisors', 'downsample_propose_crop_', 'downsample', 'print_flush',
+           'find_dominant_window_sizes_list_single_old', 'select_separated_sizes',
+           'find_dominant_window_sizes_list_single', 'group_similar_sizes', 'find_dominant_window_sizes_list']
 
 # %% ../nbs/utils.ipynb 3
 from .imports import *
@@ -630,3 +632,240 @@ import sys
 def print_flush(mssg, **kwargs):
     print(mssg, **kwargs)
     sys.stdout.flush()
+
+# %% ../nbs/utils.ipynb 89
+def find_dominant_window_sizes_list_single_old(
+        X            : List [ float ],
+        nsizes       : int  = 1,
+        offset       : float= 0.05, 
+        min_distance : int  = 1,
+        verbose      : int  = 0
+    ) -> List [ int ]:
+
+    if verbose > 0: print( "---> Find_dominant_window_sizes_list" )
+    if verbose > 1:
+        print( "Find_dominant_window_sizes_list | X ~ ",  X.shape )
+        print( "Find_dominant_window_sizes_list | Looking for - at most - the best", nsizes, "window sizes")
+        print( "Find_dominant_window_sizes_list | Offset", offset, "max size:", offset*len(X))
+    if verbose > 0: print( "Find_dominant_window_sizes_list | --> Freqs")
+        
+    X = np.array(X)
+    
+    fourier = np.absolute(np.fft.fft(X))   
+    freqs = np.fft.fftfreq(X.shape[0], 1)
+    
+    if verbose > 1: 
+        print( f"Find_dominant_window_sizes_list | Freqs {freqs} -->")
+        print( f"Find_dominant_window_sizes_list | coefs {fourier} -->")
+    if verbose > 0: print( f"Find_dominant_window_sizes_list | Freqs -->")
+
+    coefs = []
+    window_sizes = []
+
+    for coef, freq in zip(fourier, freqs):
+        if coef and freq > 0:
+            coefs.append(coef)
+            window_sizes.append(1 / freq)
+
+    coefs = np.array(coefs)
+    window_sizes = np.asarray(window_sizes, dtype=np.int64)
+    
+    if verbose > 0: 
+        print( "Find_dominant_window_sizes_list | Coefs and window_sizes -->")
+        print( "Find_dominant_window_sizes_list | --> Find and return valid window_sizes")
+
+    idx = np.argsort(coefs)[::-1]
+    
+    if verbose > 1: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 0 ...", idx)
+        
+    sorted_window_sizes = window_sizes[idx]
+    
+    if verbose > 1: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 1 ...")
+
+    # Find and return all valid window sizes
+    valid_window_sizes = [
+        int(window_size / 2) for window_size in sorted_window_sizes
+        #if 20 <= window_size < int(X.shape[0] * offset)
+        if 20 <= window_size < int(len(X) * offset)
+    ]
+    
+    if verbose > 1: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2 ...")
+
+    # If no valid window sizes are found, return the first from sorted list
+    if not valid_window_sizes:
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2a ...", nsizes)
+        sizes = [sorted_window_sizes[0] // 2][:nsizes]
+    else:
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ...", nsizes)
+        sizes = valid_window_sizes[:nsizes]
+        
+    if verbose > 0: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes -->")
+    if verbose > 1:
+        print("Find_dominant_window_sizes_list | Sizes:", sizes)
+    if verbose > 0:
+        print( "Find dominant_window_sizes_list --->" )
+    
+    return sizes
+
+# %% ../nbs/utils.ipynb 90
+def select_separated_sizes(
+    xs : List [ int ],
+    min_distance : int = 1,
+    nsizes          : int = 1
+) -> List [ int ]:
+    ys = []
+    for window_size in xs:
+        if not ys or abs(window_size - ys[-1]) >= min_distance:
+            ys.append(window_size)
+        if len(ys) == nsizes:
+            break
+    return ys
+
+# %% ../nbs/utils.ipynb 92
+def find_dominant_window_sizes_list_single(
+        X            : List[float],
+        nsizes       : int               = 1,
+        offset       : float             = 0.05, 
+        min_distance : int               = 1,    # Asegurar distancia mínima entre tamaños
+        verbose      : int               = 0
+    ) -> List[int]:
+
+    if verbose > 0: print( "---> Find_dominant_window_sizes_list" )
+    if verbose > 1:
+        print( f"Find_dominant_window_sizes_list | X ~ {X.shape}" )
+        print( f"Find_dominant_window_sizes_list | Looking for - at most - the best {nsizes} window sizes")
+        print( f"Find_dominant_window_sizes_list | Offset {offset} max size: {offset*len(X)}")
+    if verbose > 0: print( "Find_dominant_window_sizes_list | --> Freqs")
+        
+    X = np.array(X)
+    
+    fourier = np.absolute(np.fft.fft(X))   
+    freqs = np.fft.fftfreq(X.shape[0], 1)
+    
+    if verbose > 2: 
+        print( f"Find_dominant_window_sizes_list | Freqs {freqs} -->")
+        print( f"Find_dominant_window_sizes_list | coefs {fourier} -->")
+    if verbose > 0: print( f"Find_dominant_window_sizes_list | Freqs -->")
+
+    coefs = []
+    window_sizes = []
+
+    for coef, freq in zip(fourier, freqs):
+        if coef and freq > 0:
+            coefs.append(coef)
+            window_sizes.append(1 / freq)
+
+    coefs = np.array(coefs)
+    window_sizes = np.asarray(window_sizes, dtype=np.int64)
+    
+    if verbose > 0: 
+        print( "Find_dominant_window_sizes_list | Coefs and window_sizes -->")
+        print( "Find_dominant_window_sizes_list | --> Find and return valid window_sizes")
+
+    idx = np.argsort(coefs)[::-1]
+    
+    if verbose > 1: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 0 ...", idx)
+        
+    sorted_window_sizes = window_sizes[idx]
+    
+    if verbose > 1: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 1 ...")
+
+    # Find and return all valid window sizes
+    valid_window_sizes = [
+        int(window_size) for window_size in sorted_window_sizes
+        if window_size < int(len(X) * offset)
+    ]
+    
+    if verbose > 1: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2 ...")
+
+    # Ensure sizes separated at least at "min_distance" 
+    sizes = select_separated_sizes(valid_window_sizes, min_distance, nsizes)
+
+    # If no valid window sizes are found, return the first from sorted list
+    if not sizes:
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2a ...", nsizes)
+        sizes = sorted_window_sizes[0][:nsizes]
+    else:
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ...", nsizes)
+
+    if verbose > 0: 
+        print( "Find_dominant_window_sizes_list | Find and return valid window_sizes -->")
+    if verbose > 1:
+        print("Find_dominant_window_sizes_list | Sizes:", sizes)
+    if verbose > 0:
+        print( "Find dominant_window_sizes_list --->" )
+    
+    return sizes
+
+
+# %% ../nbs/utils.ipynb 95
+def group_similar_sizes(vars_sizes, nsizes, tolerance=2):
+    """
+    Selects the best window sizes across multiple variables,
+    ensuring no repetitions and that the sizes are sufficiently close.
+    """
+    indices = [0] * len(vars_sizes)  # Indices for each variable
+    selected_sizes = []  # Selected window sizes
+
+    while len(selected_sizes) < nsizes:
+        # Get the smallest available size across all variables
+        current_sizes = [vars_sizes[i][indices[i]] for i in range(len(vars_sizes)) if indices[i] < len(vars_sizes[i])]
+        min_size = min(current_sizes)
+
+        # Select sizes close to the minimum and avoid duplicates
+        for i in range(len(vars_sizes)):
+            if indices[i] < len(vars_sizes[i]) and abs(vars_sizes[i][indices[i]] - min_size) <= tolerance:
+                if vars_sizes[i][indices[i]] not in selected_sizes:  # Avoid duplicates
+                    selected_sizes.append(vars_sizes[i][indices[i]])
+                indices[i] += 1  # Move to the next size for that variable
+
+                if len(selected_sizes) >= nsizes:
+                    break
+
+        # End if no more sizes are left in any variable
+        if all(idx >= len(vars_sizes[i]) for i, idx in enumerate(indices)):
+            break
+
+    # Remove duplicates from the selected sizes and return the first nsizes
+    selected_sizes = list(dict.fromkeys(selected_sizes))  # Remove duplicates
+    return selected_sizes[:nsizes]
+
+
+
+# %% ../nbs/utils.ipynb 96
+def find_dominant_window_sizes_list(
+        X,
+        nsizes          : int   = 1,
+        offset          : float = 0.05, 
+        verbose         : int   = 0,
+        min_distance    : int   = 1
+    ) -> List [ int ]:
+
+    if verbose > 0:
+        print_flush( f"---> Find_dominant_window_sizes_list" )
+    
+    if len(X.shape) == 1: 
+        sizes = find_dominant_window_sizes_list_single(X,nsizes,offset, min_distance, verbose)
+    else: 
+        if ( isinstance(X, pd.DataFrame ) ): X = X.values
+        if verbose > 0: print_flush( f"Find_dominant_window_sizes_list | X ~ {X.shape}" )
+        vars_sizes = []
+        for var in range( X.shape[1] ):
+            if verbose > 1: print_flush( f"Find_dominant_window_sizes_list | Get sizes for var {var}" )
+            var_sizes = find_dominant_window_sizes_list_single(X[:, var], nsizes, offset, min_distance, verbose)
+            vars_sizes.append(var_sizes)
+            if verbose > 1: 
+                print_flush( f"Find_dominant_window_sizes_list | Get sizes for var {var} | {var_sizes}" )
+        if verbose > 0: print_flush( f"Find_dominant_window_sizes_list | Grouping sizes" )
+        sizes = group_similar_sizes(vars_sizes, nsizes, tolerance = 2)
+        if verbose > 1:
+            print_flush(f"find_dominant_window_sizes_list | Final selected window sizes: {sizes}")
+    if verbose > 0: print_flush( f"Find_dominant_window_sizes_list -->" )
+    return sizes

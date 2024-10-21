@@ -64,6 +64,16 @@ shinyServer(function(input, output, session) {
             }
     }
 
+    update_play_fine_tune_button <- function() {
+        if (play_fine_tune()) {
+            updateActionButton(session, "fine_tune_play", label = "Pause", icon = shiny::icon("pause"))
+            } else {
+            updateActionButton(session, "fine_tune_play", label = "Run!", icon = shiny::icon("play"))
+        }
+    }
+
+
+
     observeEvent(input$play_pause, {
         print("--> observeEvent play_pause_button")
         play(!play())
@@ -239,8 +249,10 @@ shinyServer(function(input, output, session) {
     enc_input_ready <- reactiveVal(FALSE)
     allow_update_len <- reactiveVal(TRUE)
     #allow_update_embs <- reactiveVal(TRUE)
+
     play <- reactiveVal(FALSE)
-    
+    play_fine_tune <- reactiveVal(FALSE)
+
     observeEvent(input$wlen, {
         req(input$wlen)
         log_print(mssg = paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen), debug_level = debug_level, debug_group = 'generic')
@@ -922,7 +934,7 @@ shinyServer(function(input, output, session) {
         #    kwargs
         #) 
         
-        if (input$fine_tune){
+        if (input$fine_tune and play_fine_tune()){
             req(input$ft_batch_size, input$ft_window_percent)
             #fine_tune_kwargs_specific <- fine_tune_kwargs()
             #fine_tune_kwargs <- c(kwargs_common, list(stride = as.integer(1)), fine_tune_kwargs_specific)
@@ -933,19 +945,31 @@ shinyServer(function(input, output, session) {
                     stride = as.integer(1),
                     batch_size = as.integer(input$ft_batch_size),
                     cpu = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
-                    average_seq_dim = FALSE,
                     to_numpy = FALSE,
-                    verbose = as.integer(2),
+                    verbose = as.integer(1),
                     time_flag = TRUE,
-                    percent = as.numeric(input$ft_window_percent),
-                    padd_step = as.integer(input$padd_step),
-                    max_trials = as.integer(3)
+                    # n_windows = as.integer(100),
+                    n_windows_percent   = as.numeric(input$ft_window_percent),
+                    training_percent    = as.numeric(input$ft_training_percent),
+                    validation_percent  = as.numeric(input$ft_validation_percent),
+                    num_epochs          = as.integer(input$ft_num_epochs)
+                    shot                = TRUE,
+                    eval_pre            = TRUE,
+                    eval_post           = TRUE,
+                    lr_scheduler_flag   = FALSE,
+                    lr_scheduler_name   = "linear",
+                    lr_scheduler_warmup_steps = 0,
+                    window_sizes        = list(as.integer(input$wlen)),
+                    n_window_sizes      = 1,
+                    window_sizes_offset = 0.05,
+                    windows_min_distance = as.integer(input$ft_min_windows_distance)
                 )
                 do.call(
                     dvats$fine_tune_moment_,
                     fine_tune_kwargs
                 )
             }
+            play_fine_tune(False)
         }
         
         result <- do.call(
@@ -1058,6 +1082,44 @@ shinyServer(function(input, output, session) {
 #    print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
 #    result
 #})
+
+observeEvent(input$fine_tune){
+    if (input$fine_tune and play_fine_tune()){
+        if ( grepl("moment", input$encoder, ignore.case = TRUE)){
+            fine_tune_kwargs <- list(
+                X = enc_input,
+                enc_learn = enc_l,
+                stride = as.integer(1),
+                batch_size = as.integer(input$ft_batch_size),
+                cpu = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
+                to_numpy = FALSE,
+                verbose = as.integer(1),
+                time_flag = TRUE,
+                # n_windows = as.integer(100),
+                n_windows_percent   = as.numeric(input$ft_window_percent),
+                training_percent    = as.numeric(input$ft_training_percent),
+                validation_percent  = as.numeric(input$ft_validation_percent),
+                num_epochs          = as.integer(input$ft_num_epochs)
+                shot                = TRUE,
+                eval_pre            = TRUE,
+                eval_post           = TRUE,
+                lr_scheduler_flag   = FALSE,
+                lr_scheduler_name   = "linear",
+                lr_scheduler_warmup_steps = 0,
+                window_sizes        = list(as.integer(input$wlen)),
+                n_window_sizes      = as.integer(input$ft_num_windows),
+                window_sizes_offset = 0.05,
+                windows_min_distance = as.integer(input$ft_min_windows_distance)
+            )
+            do.call(
+                dvats$fine_tune_moment_,
+                fine_tune_kwargs
+            )
+        }
+        play_fine_tune(False)
+    }
+}
+
 
  prj_object_cpu <- reactive({
         embs = req(embs(), input$dr_method)

@@ -6,7 +6,8 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_t
            'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
            'watch_gpu', 'get_enc_embs_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size',
            'random_windows', 'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
-           'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_', 'fine_tune_moment_train_', 'fine_tune_moment_']
+           'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_', 'fine_tune_moment_train_',
+           'fine_tune_moment_single_', 'fine_tune_moment_']
 
 # %% ../nbs/encoder.ipynb 2
 from .memory import *
@@ -1158,32 +1159,36 @@ def fine_tune_moment_train_(
 
 # %% ../nbs/encoder.ipynb 43
 from torch.nn.modules.loss import _Loss
+from tsai.data.preparation import SlidingWindow
+from .utils import find_dominant_window_sizes_list
+from .config import show_attrdict
 
 # %% ../nbs/encoder.ipynb 44
-def fine_tune_moment_(
-    X                               : List [ List [ List [ float ]]], 
+def fine_tune_moment_single_(
+    X                               : List [ List [ List [ float ]]],
     enc_learn                       : Learner, 
-    stride                          : int   = 1,      
-    batch_size                      : int   = 32,
-    cpu                             : bool  = False,
-    to_numpy                        : bool  = True, 
-    verbose                         : int   = 0, 
-    time_flag                       : bool  = False,
-    n_windows                       : int   = None,
-    n_windows_percent               : float = 0.2,
-    validation_percent              : float = 0.2, 
-    training_percent                : float = 0.2,
-    num_epochs                      : int   = 3,
-    shot                            : bool  = True,
-    eval                            : bool  = True,
-    criterion                       : _Loss = torch.nn.MSELoss, 
-    optimizer                               = torch.optim.Adam, 
-    lr                              : float =  1e-4, 
-    lr_scheduler_flag               : bool  = False, 
-    lr_scheduler_name               : str   = "linear",
-    lr_scheduler_num_warmup_steps   : int   = 0,
-):   
-    if verbose > 0: print_flush("--> fine_tune_moment_")
+    stride                          : int           = 1,      
+    batch_size                      : int           = 32,
+    cpu                             : bool          = False,
+    to_numpy                        : bool          = True, 
+    verbose                         : int           = 0, 
+    time_flag                       : bool          = False,
+    n_windows                       : int           = None,
+    n_windows_percent               : float         = 0.2,
+    validation_percent              : float         = 0.2, 
+    training_percent                : float         = 0.2,
+    num_epochs                      : int           = 3,
+    shot                            : bool          = True,
+    eval_pre                        : bool          = True,
+    eval_post                       : bool          = True,
+    criterion                       : _Loss         = torch.nn.MSELoss, 
+    optimizer                                       = torch.optim.Adam, 
+    lr                              : float         =  1e-4, 
+    lr_scheduler_flag               : bool          = False, 
+    lr_scheduler_name               : str           = "linear",
+    lr_scheduler_num_warmup_steps   : int           = 0
+):
+    if verbose > 0: print_flush("--> fine_tune_moment_single")
     t_shot = 0
     t_eval_1 = 0
     t_eval_2 = 0
@@ -1199,16 +1204,16 @@ def fine_tune_moment_(
     train_split_index = int(train_split_index)
     eval_split_index = int(eval_split_index)
     if shot: ds_train = X[:train_split_index]
-    if eval: ds_test  = torch.from_numpy(X[:eval_split_index]).float()
+    if eval_pre or eval_post: ds_test  = torch.from_numpy(X[:eval_split_index]).float()
     # -- Select only the small percentage for few-shot
-    if verbose > 1: print_flush("fine_tune_moment_ | Random windows")
+    if verbose > 1: print_flush("fine_tune_moment_single | Random windows")
     if shot:
         ds_train = random_windows(ds_train, n_windows, n_windows_percent, verbose-1)
         ds_train = ds_train.float()
         # Create the dataloader
         dl_train = DataLoader(ds_train, batch_size = batch_size, shuffle = True)
-    if eval: dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
-    if eval:
+    if eval_pre or eval_post: dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
+    if eval_pre:
         if time_flag: timer.start()
         eval_results_pre = fine_tune_moment_eval_(
             enc_learn = enc_learn,
@@ -1242,7 +1247,7 @@ def fine_tune_moment_(
             timer.end()
             t_shot = timer.duration()
             if verbose > 0: timer.show()
-    if eval:    
+    if eval_post:    
         if time_flag: timer.start()
         eval_results_post = fine_tune_moment_eval_(
             enc_learn = enc_learn,
@@ -1255,5 +1260,119 @@ def fine_tune_moment_(
             timer.end()
             t_eval_2 = timer.duration()
             if verbose > 0: timer.show()
-        if verbose > 0: print("Evaluation summary")
+        if verbose > 0: 
+            print_flush(f"fine_tune_moment_single | Evaluation summary")
+            if eval_pre: 
+                print_flush(f"Eval pre: ")
+                show_attrdict(eval_results_pre)
+            if eval_post: 
+                print_flush(f"Eval post: ")
+                show_attrdict(eval_results_post)
+    if verbose > 0: print_flush("fine_tune_moment_single -->")
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2
+
+# %% ../nbs/encoder.ipynb 45
+def fine_tune_moment_(
+    X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
+    enc_learn                       : Learner, 
+    stride                          : int           = 1,      
+    batch_size                      : int           = 32,
+    cpu                             : bool          = False,
+    to_numpy                        : bool          = True, 
+    verbose                         : int           = 0, 
+    time_flag                       : bool          = False,
+    n_windows                       : int           = None,
+    n_windows_percent               : float         = 0.2,
+    validation_percent              : float         = 0.2, 
+    training_percent                : float         = 0.2,
+    num_epochs                      : int           = 3,
+    shot                            : bool          = True,
+    eval_pre                        : bool          = True,
+    eval_post                       : bool          = True,
+    criterion                       : _Loss         = torch.nn.MSELoss, 
+    optimizer                                       = torch.optim.Adam, 
+    lr                              : float         =  1e-4, 
+    lr_scheduler_flag               : bool          = False, 
+    lr_scheduler_name               : str           = "linear",
+    lr_scheduler_num_warmup_steps   : int           = 0,
+    window_sizes                    : List [int]    = None,
+    n_window_sizes                  : int           = 1,
+    window_sizes_offset             : int           = 0.05,
+    windows_min_distance            : int           = 1
+):   
+    if verbose > 0: print_flush("--> fine_tune_moment_")
+    lossess = []
+    eval_results_pre = ""
+    eval_results_post = []
+    t_shots = []
+    t_shot = 0
+    t_evals = []
+    t_eval = 0
+    dss = []
+    if isinstance(X, list):
+        X = np.array(X)
+        pd.DataFrame(X)
+    if ( isinstance(X,pd.DataFrame) ): 
+        if verbose > 0: print("fine_tune_moment_ | X not-windowed dataset")
+        if window_sizes is None or n_window_sizes > len(window_sizes):
+            if verbose > 0: 
+                print("fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences")
+            # Select Fourier's dominant frequences
+            window_sizes_ = find_dominant_window_sizes_list(
+                X       = X, 
+                nsizes  = n_window_sizes, 
+                offset  = window_sizes_offset, 
+                min_distance = windows_min_distance,
+                verbose = verbose-1
+            )
+            window_sizes = window_sizes_ if window_sizes is None else list(set(window_sizes + window_sizes_))[:n_window_sizes]
+            if verbose > 0: 
+                print(f"fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences | {window_sizes}")
+        if verbose > 0: print("fine_tune_moment_ | Building the datasets")
+        for w in window_sizes:
+            enc_input, _ = SlidingWindow(window_len = w, stride = stride, get_y=[])(X)
+            dss.append(enc_input)
+    else: 
+        dss = [X]
+    if verbose > 0: print(f"fine_tune_moment_ | Processing {len(dss)} datasets")
+    for enc_input in dss:
+        if verbose > 0: print(f"fine_tune_moment_ | Processing wlen {enc_input.shape[1]}")
+        ( 
+            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2
+        ) =  fine_tune_moment_single_(
+            X                               = enc_input, 
+            enc_learn                       = enc_learn,
+            stride                          = stride,
+            batch_size                      = batch_size,
+            cpu                             = cpu,
+            to_numpy                        = to_numpy,
+            verbose                         = verbose,
+            time_flag                       = time_flag,
+            n_windows                       = n_windows,
+            n_windows_percent               = n_windows_percent,
+            validation_percent              = validation_percent,
+            training_percent                = training_percent,
+            num_epochs                      = num_epochs,
+            shot                            = shot,
+            eval_pre                        = eval_pre,
+            eval_post                       = eval_post,
+            criterion                       = criterion,
+            optimizer                       = optimizer,
+            lr                              = lr,
+            lr_scheduler_flag               = lr_scheduler_flag,
+            lr_scheduler_name               = lr_scheduler_name,
+            lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps
+        )
+        
+        lossess.append(losses)
+        if (eval_pre): eval_results_pre = eval_results_pre_
+        eval_results_post.append(eval_results_post_)
+        t_shots.append(t_shot_)
+        if eval_pre: t_evals.append(t_eval_1)
+        if eval_post: t_evals.append(t_eval_2)
+        eval_pre = False
+    t_shot = sum(t_shots)
+    t_eval = sum(t_evals)
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval
+
+    

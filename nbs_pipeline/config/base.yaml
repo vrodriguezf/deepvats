@@ -13,21 +13,21 @@ user_preferences:
   # Whether to use or not wandb for experiment tracking
   use_wandb: &use_wandb true
   wdb:
-    user: &wdb_user mi-santamaria
-    project_name: &wdb_project deepvats
+    user: &wdb_user angel-gutierrez
+    project_name: &wdb_project ream
     version: &wdb_version 'latest' 
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode: &wdb_mode 'online'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder: &path '~/data/'
-    fname: &fname "penguin_sample"
+    fname: &fname "toy"
     ftype: &ftype '.csv'
-    cols: &cols [0]
+    cols: &cols []
     freq: &freq '10h'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    alias: &alias 'Monash-Australian_electricity_demand'
+    alias: &alias 'toy'
     algorithm: &alg 'mvp-SWV'
   directories:
     # Folder to store temporary files

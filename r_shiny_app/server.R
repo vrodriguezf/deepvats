@@ -435,8 +435,8 @@ shinyServer(function(input, output, session) {
     print(paste0("reactive embs | get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs ))
     enc_input = X()
     #chunk_max = 10000000
-    #shape <- dim(enc_input)
-    #print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
+    shape <- dim(enc_input)
+    print(paste0("reactive embs | get embeddings (set stride set batch size) | enc_input shape: ", shape ))
     #chunk_size_ = min(shape[1]*shape[2],chunk_max/(shape[1]*shape[2]))
     #N = max(3200,floor(chunk_size_/32))
     chunk_size = 10000000 #N*32
@@ -589,9 +589,11 @@ shinyServer(function(input, output, session) {
   
   # Auxiliary object for the interaction ts->projections
   tsidxs_per_embedding_idx <- reactive({
-    req(input$wlen != 0, input$stride != 0)
-    get_window_indices(1:nrow(isolate(projections())), w = input$wlen, s = input$stride)
-  })
+      req(input$wlen != 0, input$stride != 0)
+      #ts_indices <- get_window_indices(1:nrow(isolate(projections())), w = input$wlen, s = input$stride)
+      ts_indices <- get_window_indices(1:nrow(projections()), w = input$wlen, s = input$stride)
+      ts_indices
+    })
   
   # Filter the embedding points and calculate/show the clusters if conditions are met.
   projections <- reactive({
@@ -724,52 +726,55 @@ shinyServer(function(input, output, session) {
   })
   
   # Handle plotly brush event
-  embedding_ids <- reactive({
+embedding_ids <- reactive({
     print("--> embedding idx")
-    on.exit(print("embedding idx -->"))
-    bp <- selected_points()
-    if (is.null(bp)) {
-      return(integer(0))
-    } else {
-      bp$pointNumber + 1  # Adjusting for 0-based index
-    }
+    on.exit(print(paste0("embedding idx -->", bp)))
+    bp <- selected_points()[2]
   })
+
+  #filtered_window_indices <- reactive({
+  #      req(length(embedding_ids() > 0))
+  #      embedding_indices <- embedding_ids()
+         #window_indices = get_window_indices(embedding_indices, input$wlen, input$stride)
+  #      ts_indices <- tsidxs_per_embedding_idx()
+  #      unique(unlist(ts_indices[embedding_indices]))
+  #  })
   
-  window_list <- reactive({
-    print("--> window_list")
-    on.exit(print("window_list -->"))
-    # Get the window indices
-    req(length(embedding_ids() > 0))
-    embedding_idxs = embedding_ids()
-    window_indices = get_window_indices(embedding_idxs, input$wlen, input$stride)
-    # Put all the indices in one list and remove duplicates
-    unlist_window_indices = unique(unlist(window_indices))
-    # Calculate a vector of differences to detect idx where a new window should be created 
-    diff_vector <- diff(unlist_window_indices,1)
-    # Take indexes where the difference is greater than one (that represent a change of window)
-    idx_window_limits <- which(diff_vector!=1)
-    # Include the first and last index to have a whole set of indexes.
-    idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
-    # Create a reduced window list
-    reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
-    # Populate the first element of the list with the idx of the first window.
-    reduced_window_list[[1]] = c(
-      isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
-      isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[2]]]
-    ) 
-    if (length(idx_window_limits) > 2) {
-      # Populate the rest of the list
-      for (i in 2:(length(idx_window_limits)-1)){
-        reduced_window_list[[i]]<- c(
-          #unlist_window_indices[idx_window_limits[i]+1],
-          #unlist_window_indices[idx_window_limits[i+1]]
-          isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-          isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+window_list <- reactive({
+        print("--> window_list")
+        on.exit(print("window_list -->"))
+        # Get the window indices
+        #window_indices <- filtered_window_indices()
+        # Put all the indices in one list and remove duplicates
+        #unlist_window_indices =  filtered_window_indices()
+         window_indices = get_window_indices(embedding_ids(), input$wlen, input$stride)
+        # Put all the indices in one list and remove duplicates
+         unlist_window_indices = unique(unlist(window_indices))
+        print(paste0("Window indices: ", unlist_window_indices))
+        # Calculate a vector of differences to detect idx where a new window should be created
+        diff_vector <- diff(unlist_window_indices,1)
+        # Take indexes where the difference is greater than one (that represent a change of window)
+        idx_window_limits <- which(diff_vector!=1)
+        # Include the first and last index to have a whole set of indexes.
+        idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
+        # Create a reduced window list
+        reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
+        # Populate the first element of the list with the idx of the first window.
+        reduced_window_list[[1]] = c(
+            tsdf()$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
+            tsdf()$timeindex[unlist_window_indices[idx_window_limits[2]]]
         )
-      }
-    }
-    reduced_window_list
-  })
+        # Populate the rest of the list
+        if (length(idx_window_limits) > 2) {
+            for (i in 2:(length(idx_window_limits)-1)){
+                reduced_window_list[[i]]<- c(
+                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
+                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+               )
+            }
+        }
+        reduced_window_list
+    })
   
   # Reactive expression to generate ts_plot
   ts_plot <- reactive({

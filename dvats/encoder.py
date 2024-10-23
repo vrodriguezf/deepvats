@@ -6,8 +6,9 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_t
            'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
            'watch_gpu', 'get_enc_embs_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size',
            'random_windows', 'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
-           'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_', 'fine_tune_moment_train_',
-           'fine_tune_moment_single_', 'fine_tune_moment_']
+           'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
+           'fine_tune_moment_train_loop_step_', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
+           'fine_tune_moment_']
 
 # %% ../nbs/encoder.ipynb 2
 from .memory import *
@@ -214,36 +215,51 @@ def get_acts_moment(enc_learn, cpu, verbose, y, mask = None, padd_step = 100, re
     return embs
 
 # %% ../nbs/encoder.ipynb 16
-def sure_eval_moment(enc_learn, cpu, verbose, y, input_mask = None, mask = None, padd_step = 100, retry = False, max_trials = 5, acts_indices = [0]):
-    y.to("cpu")
+def sure_eval_moment(
+    enc_learn, 
+    cpu, 
+    verbose, 
+    y, 
+    input_mask = None, 
+    mask = None, 
+    padd_step = 100, 
+    retry = False, 
+    max_trials = 5, 
+    acts_indices = [0],
+    #- Printing options for debugging
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a',
+    continue_if_fail: bool          = False
+):
+    if verbose > 0: print_flush(f"---> sure_eval_moment", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+    device = "cpu" if cpu else torch.cuda.current_device()
     y_copy = y.clone()
-    
-    if verbose > 0: print_flush(f"---> sure_eval_moment")
+    y_copy.to("cpu")
+    if verbose > 0: print_flush(f"sure_eval_moment | cpu | {cpu} | device | {device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path) 
     success = False 
     trial = 0
     output = None
-    if cpu:
-        enc_learn.to("cpu")
-        y.to("cpu")
-        if input_mask is not None: input_mask.to("cpu")
-        if mask is not None: mask.to("cpu")
-    else:
-        enc_learn.to("cuda")
-        y.to("cuda")
-        if input_mask is not None: input_mask.to("cuda")
-        if mask is not None: mask.to("cuda")
+    
     while not success and trial < max_trials:
         trial += 1
         try:
-            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | x_enc ~ {y.shape}")
-            
+            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | x_enc ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            if input_mask is not None: input_mask = input_mask.to(device)
+            if mask is not None: mask = mask.to(device)
+            y = y.to(device)
+            enc_learn = enc_learn.to(device)
+            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | device {device} | input_mask device: {input_mask.device if input_mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | device {device} | mask device: {mask.device if mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | device {device} | y device: {y.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
             output = enc_learn(x_enc = y, input_mask = input_mask, mask = mask)
             success = True
-            if verbose > 0 and acts_indices == [0] : print_flush(f"sure_eval_moment | Trial {trial} | embs ~ {embs.shape}")
+            if verbose > 0 and acts_indices == [0] : 
+                print_flush(f"sure_eval_moment | Trial {trial} | embs ~ {embs.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         except Exception as e:
             if verbose > 0:
-                print_flush(f"sure_eval_moment | Trial {trial} | About to pad X (encoder input) | exception {e} | padd step: {padd_step}")
-                print_flush(f"sure_eval_moment | Trial {trial} | y ~ {y.shape}")
+                print_flush(f"sure_eval_moment | Trial {trial} | About to pad X (encoder input) | exception {e} | padd step: {padd_step}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+                print_flush(f"sure_eval_moment | Trial {trial} | y ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
             if "tensor a" in str(e) and "tensor b" in str(e) and "dimension" in str(e):
                 match = re.search(r'tensor a \((\d+)\) must match the size of tensor b \((\d+)\) at non-singleton dimension (\d+)', str(e))
                 tensor_a_size = int(match.group(1))
@@ -253,16 +269,16 @@ def sure_eval_moment(enc_learn, cpu, verbose, y, input_mask = None, mask = None,
                     case 2 | 1:
                         padd = True
                         if trial > 1: 
-                            if verbose > 0: print_flush(f"------------------- Trial {trial}  -----------------")
+                            if verbose > 0: print_flush(f"------------------- Trial {trial}  -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                             if tensor_a_size > tensor_a_size_old:
-                                if verbose > 0: print_flush(f"------------------- Trial {trial} | a > a_old -----------------")
+                                if verbose > 0: print_flush(f"------------------- Trial {trial} | a > a_old -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                                 padd = False
                                 y = y [ ..., : tensor_a_size - tensor_b_size]
-                                if verbose > 0: print_flush(f"------------------- Trial {trial} |a > a_old | Reduced |  y ~ {y.shape} -----------------")
+                                if verbose > 0: print_flush(f"------------------- Trial {trial} |a > a_old | Reduced |  y ~ {y.shape} -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                         if padd:
-                            if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd -----------------")
+                            if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                             if tensor_a_size > tensor_b_size: 
-                                if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd | a > b -----------------")
+                                if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd | a > b -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                                 padd_step = tensor_a_size - tensor_b_size
                             y = torch.nn.functional.pad(y,(0,padd_step))
                         tensor_a_size_old = tensor_a_size
@@ -274,7 +290,7 @@ def sure_eval_moment(enc_learn, cpu, verbose, y, input_mask = None, mask = None,
 
                     case 0:
                         if verbose > 0: 
-                            print_flush(f"sure_eval_moment | Trial {trial} | Error dimension 0 | mask ~ {mask.shape} | mask_input ~ {input_mask.shape} | batch ~ {y.shape}")                    
+                            print_flush(f"sure_eval_moment | Trial {trial} | Error dimension 0 | mask ~ {mask.shape} | mask_input ~ {input_mask.shape} | batch ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)                    
                         if mask.shape[0] > y.shape[0]:
                             mask = mask[:y.shape[0]]
                         if input_mask.shape[0] > y.shape[0]:
@@ -282,19 +298,19 @@ def sure_eval_moment(enc_learn, cpu, verbose, y, input_mask = None, mask = None,
                         
                         if mask.shape[0] < y.shape[0]:
                             extra_rows_shape = (-mask.shape[0]+y.shape[0],mask.shape[1])
-                            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | Mask lower than batch | rows to add: {extra_rows_shape }")                    
+                            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | Mask lower than batch | rows to add: {extra_rows_shape }", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                             extra_rows = torch.zeros(extra_rows_shape, dtype = torch.float32)
                             mask = torch.cat((mask, extra_rows), dim=0)
                         if input_mask.shape[0] < y.shape[0]:
                             extra_rows_shape = (-input_mask.shape[0]+y.shape[0],y.shape[1], y.shape[2])
-                            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | Mask lower than batch | rows to add: {extra_rows_shape }")                    
+                            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | Mask lower than batch | rows to add: {extra_rows_shape }", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                             extra_rows = torch.zeros(extra_rows_shape, dtype = torch.float32)
                             input_mask = torch.cat((input_mask, extra_rows), dim=0)
             else:
                 if verbose > 0: 
-                    print_flush("Not the usual error. No padding, just fail")
-                raise
-        if verbose > 0: print_flush(f"sure_eval_moment -->")
+                    print_flush("Not the usual error. No padding, just fail", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+                if not continue_if_fail: raise
+        if verbose > 0: print_flush(f"sure_eval_moment -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     y = y_copy
     if not cpu: y.to("cuda")
     return output
@@ -923,7 +939,16 @@ def get_enc_embs_set_stride_set_batch_size(
     return embs
 
 # %% ../nbs/encoder.ipynb 34
-def random_windows(X : List [ List [ List [ float ]]], n_windows = None, percent = 0.2, verbose = 0):
+def random_windows(
+    X : List [ List [ List [ float ]]], 
+    n_windows = None, 
+    percent = 0.2, 
+    verbose = 0,
+    #- Printing options for debugging
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a'
+):
     """
     Parameters: 
     - X: Numpy array of windows. Expected shape: [batch_size or n_samples, n_vars, window_len]
@@ -932,11 +957,11 @@ def random_windows(X : List [ List [ List [ float ]]], n_windows = None, percent
     - ceil(percent*len(X)) random windows otherwise
     """
     n_windows = int(min(X.shape[0], n_windows) if n_windows is not None else np.ceil(percent*X.shape[0]))
-    if verbose > 0: print_flush(f"Random windows | n_windows: {n_windows}")
+    if verbose > 0: print_flush(f"Random windows | n_windows: {n_windows}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     random_indices = np.random.randint(0, int(X.shape[0]), n_windows)
     windows = X[ random_indices ]
     windows = torch.from_numpy(windows)
-    if verbose > 0: print_flush(f"windows ~ {windows.shape}")
+    if verbose > 0: print_flush(f"windows ~ {windows.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return windows
 
 # %% ../nbs/encoder.ipynb 37
@@ -946,49 +971,80 @@ from transformers import get_scheduler
 import evaluate
 
 # %% ../nbs/encoder.ipynb 38
-def fine_tune_moment_compute_loss_check_sizes_(batch, output, verbose = 0):
-    if verbose > 0: print_flush("--> fine_tune_moment_compute_loss_check_sizes_")
+def fine_tune_moment_compute_loss_check_sizes_(
+    batch           : List [ List [ List [ float ] ] ], 
+    output, 
+    verbose         : int   = 0,
+    # Print options
+    print_to_path   : bool  = False,
+    print_path      : str   = "~/data/logs/logs.txt",
+    print_mode      : str   = 'a'
+):
+    if verbose > 0: print_flush("--> fine_tune_moment_compute_loss_check_sizes_", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     b = batch.clone()
     b_2 = batch.shape[2]
     re_2 = output.reconstruction.shape[2]
     if b_2 > re_2:
-        if verbose > 0: print_flush(f" Fine tune loop | TODO: Why? Original {b_2} > {re_2}  Reconstruction")
+        if verbose > 0: print_flush(f" Fine tune loop | TODO: Why? Original {b_2} > {re_2}  Reconstruction", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         b = b[...,:re_2]
     elif re_2 > b_2:
-        if verbose > 1: print_flush(f" Fine tune loop | Why ? Original {b_2} < {re_2} Reconstruction ? Padding")
+        if verbose > 1: print_flush(f" Fine tune loop | Why ? Original {b_2} < {re_2} Reconstruction ? Padding", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         output.reconstruction = output.reconstruction[...,:b_2]
     else: 
-        if verbose > 1: print_flush(f" Fine tune loop | re_2 {re_2} == {b_2} y_2")
+        if verbose > 1: print_flush(f" Fine tune loop | re_2 {re_2} == {b_2} y_2", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     if verbose > 1: 
-        print_flush(f"---------- Checking loss  ------- | reconstruction ~ {output.reconstruction.shape} | original_ ~ {b.shape}")
-    if verbose > 0: print_flush("fine_tune_moment_compute_loss_check_sizes_ -->")
+        print_flush(f"---------- Checking loss  ------- | reconstruction ~ {output.reconstruction.shape} | original_ ~ {b.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    if verbose > 0: print_flush("fine_tune_moment_compute_loss_check_sizes_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return b
 
 # %% ../nbs/encoder.ipynb 39
-def fine_tune_moment_compute_loss(batch, output, criterion = torch.nn.MSELoss, verbose = 0, input_mask = None, mask = None):
-    if verbose > 0: print_flush("--> fine_tune_moment_compute_loss")
-    b = fine_tune_moment_compute_loss_check_sizes_(batch = batch, output = output, verbose = verbose)
-    if verbose > 0: print_flush(f"fine_tune_moment_compute_loss | b~{b.shape} | o~{output.reconstruction.shape}")
+def fine_tune_moment_compute_loss(
+    batch, 
+    output, 
+    criterion   = torch.nn.MSELoss, 
+    verbose     = 0, 
+    input_mask  = None, 
+    mask        = None,
+    # Print options
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a'
+):
+    if verbose > 0: print_flush("--> fine_tune_moment_compute_loss", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+    b = fine_tune_moment_compute_loss_check_sizes_(batch = batch, output = output, verbose = verbose, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
+    if verbose > 0: print_flush(f"fine_tune_moment_compute_loss | b~{b.shape} | o~{output.reconstruction.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    o = output.reconstruction
+    device = b.device if b.device != "cpu" else o.device
+    b = b.to(device)
+    o = o.to(device)
     compute_loss = criterion()
-    recon_loss = compute_loss(output.reconstruction, b)
+    recon_loss = compute_loss(o, b)
     batch_masks = output.input_mask if input_mask is None else input_mask
     mask = output.pretrain_mask if mask is None else mask
-    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | batch ~ {b.shape}")
-    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | batch_masks ~ {batch_masks.shape}")
-    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | mask ~ {mask.shape}")
+    batch_masks = batch_masks.to(device)
+    mask = mask.to(device)
+    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | batch ~ {b.shape} | {b.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | batch_masks ~ {batch_masks.shape} | {batch_masks.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | mask ~ {mask.shape} | {mask.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    
     observed_mask = batch_masks * (1-mask)
     masked_loss = observed_mask * recon_loss
     loss = masked_loss.nansum() / (observed_mask.nansum() + 1e-7)
-    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | loss: {loss.item()}")
-    if verbose > 0: print_flush(f"Loss type: {type(loss)}")  # Debe ser <class 'torch.Tensor'>
-    if verbose > 0: print_flush("fine_tune_moment_compute_loss -->")
+    if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | loss: {loss.item()}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    if verbose > 1: print_flush(f"Loss type: {type(loss)}")  # Debe ser <class 'torch.Tensor'>
+    if verbose > 0: print_flush("fine_tune_moment_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return loss
 
 # %% ../nbs/encoder.ipynb 40
 def fine_tune_moment_eval_preprocess(
     predictions : List [ List [ float ]],
     references : List [ List [ float ]],
-    verbose : int = 0
+    verbose : int = 0,
+    # Print options
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a'
+
 ):
     """
     Parameters:
@@ -999,32 +1055,76 @@ def fine_tune_moment_eval_preprocess(
         - Uses the shape of the smallest torch for the modification.
     """
     if verbose > 0: 
-        print(f"fine_tune_moment_eval | Before reshape | preds~{predictions.shape}")            
-        print(f"fine_tune_moment_eval | Before reshape | refs~{references.shape}")
+        print_flush(f"fine_tune_moment_eval | Before reshape | preds~{predictions.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)            
+        print_flush(f"fine_tune_moment_eval | Before reshape | refs~{references.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     predictions = einops.rearrange(predictions, "b v w -> (b v) w")
     references = einops.rearrange(references, "b v w -> (b v) w")
     # Avoid NaN 
     if predictions.shape[1] > references.shape[1]: predictions = predictions[:,:references.shape[1]]
     if predictions.shape[1] < references.shape[1]: references = references[:,:predictions.shape[1]]
     if verbose > 0: 
-        print(f"Eval | After reshape | preds~{predictions.shape}")
-        print(f"Eval | After reshape | refs~{references.shape}")
+        print_flush(f"Eval | After reshape | preds~{predictions.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        print_flush(f"Eval | After reshape | refs~{references.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         
     nan_mask = torch.isnan(predictions) | torch.isnan(references)
     predictions = torch.where(nan_mask, torch.tensor(0.0), predictions)
     references = torch.where(nan_mask, torch.tensor(0.0), references)
     if verbose > 0: 
-        print(f"Eval | After NaN | preds~{predictions.shape}")
-        print(f"Eval | After NaN | refs~{references.shape}")
+        print_flush(f"Eval | After NaN | preds~{predictions.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        print_flush(f"Eval | After NaN | refs~{references.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return predictions, references
 
 # %% ../nbs/encoder.ipynb 41
+def fine_tune_moment_eval_step_(
+    enc_learn : Learner,
+    batch,
+    mse_metric, 
+    rmse_metric,
+    mae_metric,
+    smape_metric,
+    cpu       : bool = False,
+    verbose   : int = 0,
+    # Print options
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a'
+
+):
+    with torch.no_grad():
+        output = sure_eval_moment(
+            enc_learn = enc_learn, 
+            cpu = cpu,
+            verbose = verbose,                     
+            y = batch, 
+            input_mask = None,
+            mask = None,
+            padd_step = 100, 
+            max_trials = 5, 
+            acts_indices = None,
+            print_to_path = print_to_path, print_path = print_path, print_mode = print_mode
+        )
+        predictions = output.reconstruction
+        references = batch
+        predictions = predictions.to(device)
+        references = references.to(device)
+        predictions, references = fine_tune_moment_eval_preprocess(predictions = predictions, references = references, verbose = verbose, print_to_path = print_to_path, print_path = print_path, print_mode = print_mode)
+        mse_metric.add_batch(predictions=predictions, references = references)
+        rmse_metric.add_batch(predictions=predictions, references = references)
+        mae_metric.add_batch(predictions=predictions, references = references)
+        smape_metric.add_batch(predictions=predictions, references = references)
+        return mse_metric, rmse_metric, mae_metric, smape_metric
+
+# %% ../nbs/encoder.ipynb 42
 def fine_tune_moment_eval_(
     enc_learn : Learner,
     dl_eval   : DataLoader,
     num_epochs: int = 1,
     cpu       : bool = False,
-    verbose   : int = 0
+    verbose   : int = 0,
+    # Print options
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a'
 ):
     # Select device
     device = "cpu" if cpu else torch.cuda.current_device()
@@ -1034,31 +1134,38 @@ def fine_tune_moment_eval_(
     mae_metric = evaluate.load('mae', "multilist")
     smape_metric = evaluate.load("smape", "multilist")
     num_evaluation_steps = len(dl_eval)
-    progress_bar = tqdm(range(num_evaluation_steps))
-    # Predict evaluation dataset
+    enc_learn = enc_learn.to(device)
     enc_learn.eval()
+    #if print_to_path:
+    #    pf = open(os.path.expanduser(print_path + "_progress"), "w")
+    #    progress_bar = tqdm(range(num_evaluation_steps), file = pf)
+    #    # Predict evaluation dataset
+    #    for batch in dl_eval:
+    #        batch = batch.to(device)
+    #        mse_metric, rmse_metric, mae_metric, smape_metric = fine_tune_moment_eval_step_(
+    #            enc_learn = enc_learn, 
+    #            batch = batch, 
+    #            mse_metric = mse_metric, 
+    #            rmse_metric = rmse_metric,
+    #            mae_metric = mae_metric,
+    #            smape_metric = smape_metric,
+    #        )
+    #        progress_bar.update(1)
+    #    progress_bar.close()
+    #else:
+    progress_bar = tqdm(range(num_evaluation_steps))
     for batch in dl_eval:
-        with torch.no_grad():
-            output = sure_eval_moment(
-                enc_learn = enc_learn, 
-                cpu = cpu,
-                verbose = verbose,                     
-                y = batch, 
-                input_mask = None,
-                mask = None,
-                padd_step = 100, 
-                max_trials = 5, 
-                acts_indices = None
-            )
-        logits = output.logits
-        predictions = output.reconstruction
-        references = batch
-        predictions, references = fine_tune_moment_eval_preprocess(predictions = predictions, references = references, verbose = verbose)
-        mse_metric.add_batch(predictions=predictions, references = references)
-        rmse_metric.add_batch(predictions=predictions, references = references)
-        mae_metric.add_batch(predictions=predictions, references = references)
-        smape_metric.add_batch(predictions=predictions, references = references)
+        batch = batch.to(device)
+        mse_metric, rmse_metric, mae_metric, smape_metric = fine_tune_moment_eval_step_(
+            enc_learn = enc_learn, 
+            batch = batch, 
+            mse_metric = mse_metric, 
+            rmse_metric = rmse_metric,
+            mae_metric = mae_metric,
+            smape_metric = smape_metric,
+        )
         progress_bar.update(1)
+    progress_bar.close()
     mse   = mse_metric.compute(squared = False)
     rmse  = rmse_metric.compute(squared = True)
     mae   = mae_metric.compute()
@@ -1072,7 +1179,79 @@ def fine_tune_moment_eval_(
     enc_learn.train()
     return eval_results
 
-# %% ../nbs/encoder.ipynb 42
+# %% ../nbs/encoder.ipynb 43
+def fine_tune_moment_train_loop_step_(
+    enc_learn: Learner,
+    batch, 
+    batch_masks,
+    criterion                               = torch.nn.MSELoss, 
+    optimizer                               = torch.optim.Adam, 
+    lr                              : float = 1e-4, 
+    lr_scheduler_flag               : bool  = False, 
+    lr_scheduler_name               : str   = "linear",
+    lr_scheduler_num_warmup_steps   : int   = 0,
+    cpu                             : bool  = False,
+    verbose                         : int   = 0,
+    print_to_path                   : bool  = False,
+    print_path                      : str   = "~/data/logs/logs.txt",
+    print_mode                      : str   = 'a',
+
+): 
+    bms = batch_masks
+    mask_generator = Masking(mask_ratio = 0.3)
+    if batch.shape[0] < batch_masks.shape[0]:  
+        bms = batch_masks[:batch.shape[0]]
+    if verbose > 1: 
+        print_flush(
+            f"fine_tune_moment_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape}",
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+        )
+    mask = mask_generator.generate_mask(
+        x = batch,
+        input_mask = bms
+    )
+    if mask.shape[0] < bms.shape[0]:  bms = batch_masks[:mask.shape[0]]
+    if mask.shape[1]  < batch_masks.shape[1] :
+        mask = torch.nn.functional.pad(mask,(0,batch_masks.shape[1]-mask.shape[1]))
+    if verbose > 1: 
+        print_flush(
+            f"fine_tune_moment_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}",
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+        )
+    batch = batch.to(device)
+    mask = mask.to(device)
+    batch_masks = batch_masks.to(device)
+    enc_learn = enc_learn.to(device)
+    if verbose > 1: 
+        print_flush(
+            f"fine_tune_moment_step | sure_eval_moment | b{batch.device} | m{mask.device} | bm{batch_masks.device} ",
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+        )
+    output = sure_eval_moment(
+        enc_learn = enc_learn, 
+        cpu = cpu,
+        verbose = verbose, 
+        y = batch, 
+        input_mask = batch_masks, # None
+        mask = mask, # None
+        padd_step = 100, 
+        max_trials = 5, 
+        acts_indices = None,
+        print_to_path = print_to_path, print_path = print_path, print_mode = 'a',
+        continue_if_fail = True
+    )
+    # Compute output loss
+    if output is None:
+        print_flush(
+            f"fine_tune_moment_step | Execution failed | Output none ",
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+        )
+        loss = 0
+    else: 
+        loss = fine_tune_moment_compute_loss(batch, output, criterion, verbose = verbose, input_mask = bms, mask = mask, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
+    return loss
+
+# %% ../nbs/encoder.ipynb 44
 def fine_tune_moment_train_(
     enc_learn : Learner, 
     dl_train: DataLoader,
@@ -1086,8 +1265,13 @@ def fine_tune_moment_train_(
     lr_scheduler_name = "linear",
     lr_scheduler_num_warmup_steps = 0,
     cpu = False,
-    verbose = 0
+    verbose = 0,
+    print_to_path   : bool  = False,
+    print_path      : str   = "~/data/logs/logs.txt",
+    print_mode      : str   = 'a',
 ):
+    # Select device
+    device = "cpu" if cpu else torch.cuda.current_device()
     # Optimizer and learning rate scheduler
     optimizer = torch.optim.Adam(enc_learn.parameters(), lr)
     num_training_steps = num_epochs * len(dl_train)
@@ -1099,71 +1283,87 @@ def fine_tune_moment_train_(
             num_warmup_steps = lr_scheduler_num_warmup_steps,
             num_training_steps = num_training_steps
         )
-    # Select device
-    device = "cpu" if cpu else torch.cuda.current_device()
         
     # Training loop
-    if verbose > 1: print_flush("fine_tune_moment_ | Training loop")
-    progress_bar = tqdm(range(num_training_steps))
+    if verbose > 1: print_flush("fine_tune_moment_ | Training loop", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     # Masks
-    mask_generator = Masking(mask_ratio = 0.3)
     n_samples, n_channels, window_size = ds_train.shape
     batch_masks = torch.ones(
         (batch_size, window_size), 
         device = device
     ).long()
-        
-    if verbose > 1: print_flush("fine_tune_moment_ | Fine tune loop")        
+    if verbose > 1: print_flush(f"fine_tune_moment_ | Fine tune loop | print_to_path {print_to_path}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)     
+    #if print_to_path:
+    #    pf = os.path.expanduser(print_path + "_progress")
+    #    with open (pf, "w") as f:
+    #        progress_bar = tqdm(range(num_training_steps), file = f)
+    #        enc_learn = enc_learn.to(device)   
+    #        for epoch in range(num_epochs):
+    #            for batch in dl_train:
+    #                losses = fine_tune_moment_train_loop_step_(
+    #                    enc_learn                       = enc_learn,
+    #                    batch                           = batch,
+    #                    batch_masks                     = batch_masks, 
+    #                    criterion                       = criterion,
+    #                    optimizer                       = optimizer,
+    #                    lr                              = lr,
+    #                    lr_scheduler_flag               = lr_scheduler_flag,
+    #                    lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps,
+    #                    cpu                             = cpu,
+    #                    verbose                         = verbose,
+    #                    print_to_path                   = print_to_path,
+    #                    print_mode                      = 'a'
+    #                )
+    #                progress_bar.update(1)
+    #        progress_bar.close()
+    #else:
+    progress_bar = tqdm(range(num_training_steps))
     for epoch in range(num_epochs):
-        for batch in dl_train:
-            batch.to(device)
-            bms = batch_masks
-            if batch.shape[0] < batch_masks.shape[0]:  
-                bms = batch_masks[:batch.shape[0]]
-            if verbose > 1: 
-                print_flush(
-                    f"fine_tune_moment_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape}"
+        for i, batch in enumerate(dl_train):
+            if verbose > 0: print_flush(f"batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps}")
+            loss = fine_tune_moment_train_loop_step_(
+                    enc_learn                       = enc_learn,
+                    batch                           = batch,
+                    batch_masks                     = batch_masks, 
+                    criterion                       = criterion,
+                    optimizer                       = optimizer,
+                    lr                              = lr,
+                    lr_scheduler_flag               = lr_scheduler_flag,
+                    lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps,
+                    cpu                             = cpu,
+                    verbose                         = verbose,
+                    print_to_path                   = print_to_path,
+                    print_mode                      = 'a'
                 )
-            mask = mask_generator.generate_mask(
-                x = batch,
-                input_mask = bms
-            )
-            if mask.shape[0] < bms.shape[0]:  bms = batch_masks[:mask.shape[0]]
-            if mask.shape[1]  < batch_masks.shape[1] : mask = torch.nn.functional.pad(mask,(0,batch_masks.shape[1]-mask.shape[1]))
-            if verbose > 1: 
-                print_flush(
-                    f"fine_tune_moment_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}"
-                )
-            output = sure_eval_moment(
-                enc_learn = enc_learn, 
-                cpu = cpu,
-                verbose = verbose-1, 
-                y = batch, 
-                input_mask = batch_masks, # None
-                mask = mask, # None
-                padd_step = 100, 
-                max_trials = 5, 
-                acts_indices = None
-            )
-            # Compute output loss
-            loss = fine_tune_moment_compute_loss(batch, output, criterion, verbose = verbose, input_mask = bms, mask = mask )
-            losses.append(loss.item())
-            # Update weights
-            optimizer.zero_grad()
-            loss.backward()
-            # Optimize
-            optimizer.step()
+            try: 
+                losses.append(loss.item())
+                optimizer.zero_grad()  
+                loss.backward()
+                # Optimize
+                optimizer.step()
+            except Exception as e: 
+                print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}")
+                if isinstance(loss, int):
+                    losses.append(loss)                    
+                else:
+                    losses.append(np.nan)
+                optimizer.zero_grad()
+                optimizer.step()
+            
+                
+            
             if lr_scheduler_flag: lr_scheduler.step()
             progress_bar.update(1)
+    progress_bar.close()
     return losses
 
-# %% ../nbs/encoder.ipynb 43
+# %% ../nbs/encoder.ipynb 45
 from torch.nn.modules.loss import _Loss
 from tsai.data.preparation import SlidingWindow
 from .utils import find_dominant_window_sizes_list
 from .config import show_attrdict
 
-# %% ../nbs/encoder.ipynb 44
+# %% ../nbs/encoder.ipynb 46
 def fine_tune_moment_single_(
     X                               : List [ List [ List [ float ]]],
     enc_learn                       : Learner, 
@@ -1186,9 +1386,12 @@ def fine_tune_moment_single_(
     lr                              : float         =  1e-4, 
     lr_scheduler_flag               : bool          = False, 
     lr_scheduler_name               : str           = "linear",
-    lr_scheduler_num_warmup_steps   : int           = 0
+    lr_scheduler_num_warmup_steps   : int           = 0,
+    print_to_path                   : bool          = False,
+    print_path                      : str           = "~/data/logs/logs.txt",
+    print_mode                      : str           = 'a'
 ):
-    if verbose > 0: print_flush("--> fine_tune_moment_single")
+    if verbose > 0: print_flush("--> fine_tune_moment_single", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode )
     t_shot = 0
     t_eval_1 = 0
     t_eval_2 = 0
@@ -1198,80 +1401,102 @@ def fine_tune_moment_single_(
 
     if time_flag:
         timer = Time()
+    if verbose > 0: print_flush("fine_tune_moment_single | Prepare the dataset", print_to_path = print_to_path, print_path = print_path, print_mode = 'a' )
     # Prepare the dataset
     train_split_index = min(X.shape[0], n_windows) if n_windows is not None else np.ceil(training_percent * X.shape[0])
     eval_split_index = min(X.shape[0], n_windows) if n_windows is not None else np.ceil(validation_percent * X.shape[0])
     train_split_index = int(train_split_index)
     eval_split_index = int(eval_split_index)
-    if shot: ds_train = X[:train_split_index]
-    if eval_pre or eval_post: ds_test  = torch.from_numpy(X[:eval_split_index]).float()
+    if shot: 
+        if verbose > 0: 
+            print_flush(f"fine_tune_moment_single | Selecting ds train | {train_split_index} windows", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        ds_train = X[:train_split_index]
+    if eval_pre or eval_post: 
+        if verbose > 0: 
+            print_flush(f"fine_tune_moment_single | Selecting validation train | {eval_split_index} windows", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        ds_test  = torch.from_numpy(X[:eval_split_index]).float()
     # -- Select only the small percentage for few-shot
-    if verbose > 1: print_flush("fine_tune_moment_single | Random windows")
     if shot:
-        ds_train = random_windows(ds_train, n_windows, n_windows_percent, verbose-1)
+        if verbose > 0: 
+            print_flush("fine_tune_moment_single | Train DataLoader | Random windows", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        ds_train = random_windows(ds_train, n_windows, n_windows_percent, verbose-1, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
         ds_train = ds_train.float()
         # Create the dataloader
+        if verbose > 0: 
+            print_flush("fine_tune_moment_single | Train DataLoader | DataLoader", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         dl_train = DataLoader(ds_train, batch_size = batch_size, shuffle = True)
-    if eval_pre or eval_post: dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
+    if eval_pre or eval_post: 
+        if verbose > 0: 
+            print_flush("fine_tune_moment_single | Validation DataLoader", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
     if eval_pre:
+        print_flush(f"fine_tune_moment_single | Eval Pre | wlen {X.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         if time_flag: timer.start()
         eval_results_pre = fine_tune_moment_eval_(
             enc_learn = enc_learn,
             dl_eval = dl_eval,
             num_epochs = num_epochs,
             cpu = cpu,
-            verbose = verbose-1
+            verbose = verbose-1,
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
         )
         if time_flag: 
             timer.end()
             t_eval_1 = timer.duration()
-            if verbose > 0: timer.show()
+            if verbose > 0: timer.show(verbose = verbose, print_to_path = print_to_path, print_mode = 'a')
     if shot:
-        if time_flag: timer.start()
-        losses = fine_tune_moment_train_(
-            enc_learn = enc_learn,
-            dl_train = dl_train,
-            ds_train = ds_train,
-            batch_size = batch_size,
-            num_epochs = num_epochs,
-            criterion = torch.nn.MSELoss, 
-            optimizer = torch.optim.Adam, 
-            lr = 1e-4, 
-            lr_scheduler_flag = False, 
-            lr_scheduler_name = "linear",
-            lr_scheduler_num_warmup_steps = 0,
-            cpu = cpu,
-            verbose = verbose-1
-        )
-        if time_flag:
-            timer.end()
-            t_shot = timer.duration()
-            if verbose > 0: timer.show()
+        print_flush(f"fine_tune_moment_single | Train | wlen {X.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        try:
+            if time_flag: timer.start()
+            losses = fine_tune_moment_train_(
+                enc_learn = enc_learn,
+                dl_train = dl_train,
+                ds_train = ds_train,
+                batch_size = batch_size,
+                num_epochs = num_epochs,
+                criterion = torch.nn.MSELoss, 
+                optimizer = torch.optim.Adam, 
+                lr = 1e-4, 
+                lr_scheduler_flag = False, 
+                lr_scheduler_name = "linear",
+                lr_scheduler_num_warmup_steps = 0,
+                cpu = cpu,
+                verbose = verbose-1,
+                print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+            )
+            if time_flag:
+                timer.end()
+                t_shot = timer.duration()
+                if verbose > 0: timer.show(verbose = verbose, print_to_path = print_to_path, print_mode = 'a')
+        except Exception as e:
+            print_flush(f"fine_tune_moment_single | Train | Window {X.shape[2]} not valid | {e}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     if eval_post:    
+        print_flush(f"fine_tune_moment_single | Eval Post | wlen {X.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         if time_flag: timer.start()
         eval_results_post = fine_tune_moment_eval_(
             enc_learn = enc_learn,
             dl_eval = dl_eval,
             num_epochs = num_epochs,
             cpu = cpu,
-            verbose = verbose-1
+            verbose = verbose-1,
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
         )
         if time_flag:
             timer.end()
             t_eval_2 = timer.duration()
-            if verbose > 0: timer.show()
-        if verbose > 0: 
-            print_flush(f"fine_tune_moment_single | Evaluation summary")
-            if eval_pre: 
-                print_flush(f"Eval pre: ")
-                show_attrdict(eval_results_pre)
-            if eval_post: 
-                print_flush(f"Eval post: ")
-                show_attrdict(eval_results_post)
-    if verbose > 0: print_flush("fine_tune_moment_single -->")
+            if verbose > 0: timer.show(verbose = verbose, print_to_path = print_to_path, print_mode = 'a')
+            if verbose > 0: 
+                print_flush(f"fine_tune_moment_single | Evaluation summary", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+                if eval_pre: 
+                    print_flush(f"Eval pre: ", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+                    show_attrdict(eval_results_pre, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
+                if eval_post: 
+                    print_flush(f"Eval post: ", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+                    show_attrdict(eval_results_post, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
+    if verbose > 0: print_flush("fine_tune_moment_single -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2
 
-# %% ../nbs/encoder.ipynb 45
+# %% ../nbs/encoder.ipynb 47
 def fine_tune_moment_(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     enc_learn                       : Learner, 
@@ -1291,16 +1516,21 @@ def fine_tune_moment_(
     eval_post                       : bool          = True,
     criterion                       : _Loss         = torch.nn.MSELoss, 
     optimizer                                       = torch.optim.Adam, 
-    lr                              : float         =  1e-4, 
+    lr                              : float         = 1e-4, 
     lr_scheduler_flag               : bool          = False, 
     lr_scheduler_name               : str           = "linear",
     lr_scheduler_num_warmup_steps   : int           = 0,
     window_sizes                    : List [int]    = None,
     n_window_sizes                  : int           = 1,
     window_sizes_offset             : int           = 0.05,
-    windows_min_distance            : int           = 1
+    windows_min_distance            : int           = 1,
+    full_dataset                    : bool          = False,
+    #- Printing options for debugging
+    print_to_path                   : bool          = False,
+    print_path                      : str           = "~/data/logs/logs.txt",
+    print_mode                      : str           = 'a'
 ):   
-    if verbose > 0: print_flush("--> fine_tune_moment_")
+    if verbose > 0: print_flush("--> fine_tune_moment_", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     lossess = []
     eval_results_pre = ""
     eval_results_post = []
@@ -1312,31 +1542,32 @@ def fine_tune_moment_(
     if isinstance(X, list):
         X = np.array(X)
         pd.DataFrame(X)
-    if ( isinstance(X,pd.DataFrame) ): 
-        if verbose > 0: print("fine_tune_moment_ | X not-windowed dataset")
+    if ( isinstance(X,pd.DataFrame) or full_dataset): 
+        if verbose > 0: print_flush("fine_tune_moment_ | X not-windowed dataset", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         if window_sizes is None or n_window_sizes > len(window_sizes):
             if verbose > 0: 
-                print("fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences")
+                print_flush("fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences",  print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
             # Select Fourier's dominant frequences
             window_sizes_ = find_dominant_window_sizes_list(
                 X       = X, 
                 nsizes  = n_window_sizes, 
                 offset  = window_sizes_offset, 
                 min_distance = windows_min_distance,
-                verbose = verbose-1
+                verbose = verbose-1,
+                print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
             )
             window_sizes = window_sizes_ if window_sizes is None else list(set(window_sizes + window_sizes_))[:n_window_sizes]
             if verbose > 0: 
-                print(f"fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences | {window_sizes}")
-        if verbose > 0: print("fine_tune_moment_ | Building the datasets")
+                print_flush(f"fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences | {window_sizes}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        if verbose > 0: print_flush("fine_tune_moment_ | Building the datasets", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         for w in window_sizes:
             enc_input, _ = SlidingWindow(window_len = w, stride = stride, get_y=[])(X)
             dss.append(enc_input)
     else: 
         dss = [X]
-    if verbose > 0: print(f"fine_tune_moment_ | Processing {len(dss)} datasets")
+    if verbose > 0: print_flush(f"fine_tune_moment_ | Processing {len(dss)} datasets", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     for enc_input in dss:
-        if verbose > 0: print(f"fine_tune_moment_ | Processing wlen {enc_input.shape[1]}")
+        if verbose > 0: print_flush(f"fine_tune_moment_ | Processing wlen {enc_input.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         ( 
             losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2
         ) =  fine_tune_moment_single_(
@@ -1361,7 +1592,8 @@ def fine_tune_moment_(
             lr                              = lr,
             lr_scheduler_flag               = lr_scheduler_flag,
             lr_scheduler_name               = lr_scheduler_name,
-            lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps
+            lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps,
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
         )
         
         lossess.append(losses)

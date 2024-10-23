@@ -19,7 +19,7 @@ shinyUI(fluidPage(
   tags$head(
     tags$script(log_script), 
     tags$style(HTML(rotate_plot_style)),
-    tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.8.2/css/all.css") #--#
+    tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.8.2/css/all.css")
   ),
   
   #theme = shinythemes::shinytheme("cerulean"),
@@ -44,17 +44,20 @@ shinyUI(fluidPage(
             textInput("ft_batch_size", "Batch Size", value = 32),
             textOutput("ft_batch_size_value"),
             textInput("ft_window_percent", "Maskared windows percent", value = 0.75), # mask
-            textOutput("ft_window_percent_value")
+            textOutput("ft_window_percent_value"),
             textInput("ft_training_percent", "Training windows percent", value = 0.1),
-            textInput("ft_validation_percent", "Validation windows percent", value = 0.3)
-            actionButton("fine_tune_play", "Run!", icon = shiny::icon("play"))
+            textInput("ft_validation_percent", "Validation windows percent", value = 0.3),
             textInput("ft_num_epochs", "Number of epochs", value = 10),
-            textInput("ft_min_windows_distance", "Minimum distance between windows", value = 5),
+            textInput("ft_min_windows_distance", "Minimum distance between windows sizes", value = 5),
+            textInput("ft_num_windows", "Number of windows", value = 3),
+            verbatimTextOutput("ft_output"),
+            actionButton("fine_tune_play", "Shot!", icon = shiny::icon("play"))
           )
         )
       ),
       
-      actionButton("play_pause", "Run!", icon = shiny::icon("play")),
+      actionButton("play_pause", "Start with the dataset!", icon = shiny::icon("play")),
+      actionButton("play_embs", "Get Embeddings!", icon = shiny::icon("play")),
       actionButton("cuda", "Remove CUDA cache", icon = shiny::icon("trash")),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),

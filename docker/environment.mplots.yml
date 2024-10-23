@@ -1,7 +1,7 @@
 name: env
 channels: 
 - conda-forge
-
+- anaconda
 dependencies:
   #-- Mplots
   - pyscamp-gpu=4.0.1=py310h43b6314_1

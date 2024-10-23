@@ -64,14 +64,20 @@ shinyServer(function(input, output, session) {
             }
     }
 
+    play_fine_tune <- reactiveVal(FALSE)
     update_play_fine_tune_button <- function() {
+        log_print(paste0("--> Updating play_fine_tune ", play_fine_tune()))
+        play_fine_tune(!play_fine_tune())
         if (play_fine_tune()) {
             updateActionButton(session, "fine_tune_play", label = "Pause", icon = shiny::icon("pause"))
-            } else {
+        } else {
             updateActionButton(session, "fine_tune_play", label = "Run!", icon = shiny::icon("play"))
         }
+        log_print(paste0(" Updating play_fine_tune --> ", play_fine_tune()))
     }
-
+    observeEvent(input$fine_tune_play, {
+        update_play_fine_tune_button()
+    })
 
 
     observeEvent(input$play_pause, {
@@ -248,10 +254,14 @@ shinyServer(function(input, output, session) {
     # Reactive value for ensuring correct encoder input
     enc_input_ready <- reactiveVal(FALSE)
     allow_update_len <- reactiveVal(TRUE)
-    #allow_update_embs <- reactiveVal(TRUE)
+    allow_update_embs <- reactiveVal(FALSE)
 
     play <- reactiveVal(FALSE)
-    play_fine_tune <- reactiveVal(FALSE)
+
+    observeEvent(input$play_embs, {
+        allow_update_embs(!allow_update_embs())
+    })
+
 
     observeEvent(input$wlen, {
         req(input$wlen)
@@ -877,10 +887,9 @@ shinyServer(function(input, output, session) {
     
         
     embs_comp <- reactive({
-        #req(allow_update_embs())
         print(paste0(
             "--> reactive embs (before req) | get embeddings | enc_input_ready ", enc_input_ready()," | play " , play()))
-        req(tsdf(), X(), enc_l <- enc(), enc_input_ready(), play())
+        req(tsdf(), X(), enc_l <- enc(), enc_input_ready(), allow_update_embs())
         
         
         print(paste0("--> reactive embs (after req) | get embeddings | enc_input_ready ", enc_input_ready()))
@@ -933,44 +942,6 @@ shinyServer(function(input, output, session) {
         #    dvats$watch_gpu,
         #    kwargs
         #) 
-        
-        if (input$fine_tune and play_fine_tune()){
-            req(input$ft_batch_size, input$ft_window_percent)
-            #fine_tune_kwargs_specific <- fine_tune_kwargs()
-            #fine_tune_kwargs <- c(kwargs_common, list(stride = as.integer(1)), fine_tune_kwargs_specific)
-            if ( grepl("moment", input$encoder, ignore.case = TRUE)){
-                fine_tune_kwargs <- list(
-                    X = enc_input,
-                    enc_learn = enc_l,
-                    stride = as.integer(1),
-                    batch_size = as.integer(input$ft_batch_size),
-                    cpu = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
-                    to_numpy = FALSE,
-                    verbose = as.integer(1),
-                    time_flag = TRUE,
-                    # n_windows = as.integer(100),
-                    n_windows_percent   = as.numeric(input$ft_window_percent),
-                    training_percent    = as.numeric(input$ft_training_percent),
-                    validation_percent  = as.numeric(input$ft_validation_percent),
-                    num_epochs          = as.integer(input$ft_num_epochs)
-                    shot                = TRUE,
-                    eval_pre            = TRUE,
-                    eval_post           = TRUE,
-                    lr_scheduler_flag   = FALSE,
-                    lr_scheduler_name   = "linear",
-                    lr_scheduler_warmup_steps = 0,
-                    window_sizes        = list(as.integer(input$wlen)),
-                    n_window_sizes      = 1,
-                    window_sizes_offset = 0.05,
-                    windows_min_distance = as.integer(input$ft_min_windows_distance)
-                )
-                do.call(
-                    dvats$fine_tune_moment_,
-                    fine_tune_kwargs
-                )
-            }
-            play_fine_tune(False)
-        }
         
         result <- do.call(
                     dvats$get_enc_embs_set_stride_set_batch_size,
@@ -1083,42 +1054,67 @@ shinyServer(function(input, output, session) {
 #    result
 #})
 
-observeEvent(input$fine_tune){
-    if (input$fine_tune and play_fine_tune()){
-        if ( grepl("moment", input$encoder, ignore.case = TRUE)){
-            fine_tune_kwargs <- list(
-                X = enc_input,
-                enc_learn = enc_l,
-                stride = as.integer(1),
-                batch_size = as.integer(input$ft_batch_size),
-                cpu = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
-                to_numpy = FALSE,
-                verbose = as.integer(1),
-                time_flag = TRUE,
-                # n_windows = as.integer(100),
-                n_windows_percent   = as.numeric(input$ft_window_percent),
-                training_percent    = as.numeric(input$ft_training_percent),
-                validation_percent  = as.numeric(input$ft_validation_percent),
-                num_epochs          = as.integer(input$ft_num_epochs)
-                shot                = TRUE,
-                eval_pre            = TRUE,
-                eval_post           = TRUE,
-                lr_scheduler_flag   = FALSE,
-                lr_scheduler_name   = "linear",
-                lr_scheduler_warmup_steps = 0,
-                window_sizes        = list(as.integer(input$wlen)),
-                n_window_sizes      = as.integer(input$ft_num_windows),
-                window_sizes_offset = 0.05,
-                windows_min_distance = as.integer(input$ft_min_windows_distance)
-            )
-            do.call(
-                dvats$fine_tune_moment_,
-                fine_tune_kwargs
-            )
-        }
-        play_fine_tune(False)
+observe({
+    log_print("Observe event | Input fine tune | Play fine tune ... Waiting ...")
+    req(play_fine_tune(), input$fine_tune)
+    log_print("Observe event | Input fine tune | Play fine tune")
+
+    if (grepl("moment", input$encoder, ignore.case = TRUE)) {
+        fine_tune_kwargs <- list(
+            X                               = isolate(tsdf()) %>% select(-timeindex),
+            enc_learn                       = isolate(enc()),
+            stride                          = as.integer(1),
+            batch_size                      = as.integer(input$ft_batch_size),
+            cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
+            to_numpy                        = FALSE,
+            verbose                         = as.integer(0),
+            time_flag                       = TRUE,
+            n_windows_percent               = as.numeric(input$ft_window_percent),
+            training_percent                = as.numeric(input$ft_training_percent),
+            validation_percent              = as.numeric(input$ft_validation_percent),
+            num_epochs                      = as.integer(input$ft_num_epochs),
+            shot                            = TRUE,
+            eval_pre                        = TRUE,
+            eval_post                       = TRUE,
+            lr_scheduler_flag               = FALSE,
+            lr_scheduler_name               = "linear",
+            lr_scheduler_num_warmup_steps   = as.integer(0),
+            window_sizes                    = list(as.integer(input$wlen)),
+            n_window_sizes                  = as.integer(input$ft_num_windows),
+            window_sizes_offset             = as.numeric(0.05),
+            windows_min_distance            = as.integer(input$ft_min_windows_distance),
+            full_dataset                    = TRUE
+        )
+        showModal(modalDialog(
+            title = "Processing...",
+            "Please wait while the model is fine tuned.",
+            uiOutput("dummyLoad") %>% shinycssloaders::withSpinner(
+                #type = 2,
+                #color = "#0275D8",
+                #color.background =  "#FFFFFF"
+            ),  
+            easyClose = FALSE,
+            footer = NULL
+        ))
+        # Ejecutar la operación de fine-tuning
+        t_init <- Sys.time()
+        result <- do.call(dvats$fine_tune_moment_, fine_tune_kwargs)
+        t_end <- Sys.time()
+        t_shot = result(5)
+        diff = t_end - t_init
+        diff_secs = diff
+        diff_mins = diff / 60
+        log_print(paste0("Fine tune: ", diff_secs, " s | approx ", diff_mins, "min" ))
+        log_print(paste0("Fine tune Python shot time: ", t_shot, "s" ))
+        update_play_fine_tune_button()
+        removeModal()
     }
-}
+})
+
+
+
+
+
 
 
  prj_object_cpu <- reactive({

@@ -20,6 +20,7 @@ import os
 import yaml
 import sys
 from tsai.basics import *
+from .utils import print_flush
 
 # %% ../nbs/config.ipynb 7
 sys.path.append(os.path.abspath('../nbs_pipeline'))
@@ -64,7 +65,7 @@ def replace_includes_with_content(
     The final processed content, with all '!include' directives substituted is returned as a string.
     """
     if (verbose > 0):
-        print("... About to replace includes with content")
+        print_flush("... About to replace includes with content")
     with open(path+filename, 'r', encoding='utf-8') as f:
         content = f.read()
         
@@ -105,20 +106,20 @@ def get_config(
     # Debug messages
     if (verbose > 0):
         current_directory = os.getcwd()
-        print("Current: " + current_directory)
-        print("yml: "+ path + filename)
+        print_flush("Current: " + current_directory)
+        print_flush("yml: "+ path + filename)
     
     # Add join constructor
     yaml.add_constructor('!join', join_constructor)
     
     if (verbose > 0): 
-        print("Getting content"+ path + filename)
+        print_flush("Getting content"+ path + filename)
     
     # Get file content
     full_content = replace_includes_with_content(filename, path, verbose)
     
     if (verbose > 0):
-        print("Load content"+ path + filename)
+        print_flush("Load content"+ path + filename)
     
     # Load content 
     config = yaml.load(full_content, Loader=yaml.FullLoader)
@@ -150,7 +151,7 @@ def build_enc_artifact(
     else:
         enc_artifact=enc_artifact+":v"+version
     if (verbose > 0):
-        print("enc_artifact: "+enc_artifact)
+        print_flush("enc_artifact: "+enc_artifact)
     return enc_artifact
 
 
@@ -171,12 +172,12 @@ def get_project_data(verbose : int = 0) -> [str, str, str, str]:
     data        = data_name +":"+version
     if verbose > 0:
         dashes = '-----------'        
-        print(dashes+"Project configuration"+dashes)
-        print("user: " + user)
-        print("project: " + project)
-        print("version: " + version)
-        print("data: "+ data)
-        print(dashes+"Project configuration"+dashes)
+        print_flush(dashes+"Project configuration"+dashes)
+        print_flush("user: " + user)
+        print_flush("project: " + project)
+        print_flush("version: " + version)
+        print_flush("data: "+ data)
+        print_flush(dashes+"Project configuration"+dashes)
     return user, project, version, data
 
 # %% ../nbs/config.ipynb 21
@@ -322,7 +323,7 @@ def get_artifact_config_MVP_check_errors(
         
     if artifact_config.use_wandb:
         if (artifact_config.analysis_mode != 'online'):
-            print("Changing to online analysis mode - use_wandb=true")
+            print_flush("Changing to online analysis mode - use_wandb=true")
             artifact_config.analysis_mode = 'online'
     else:
         project = 'work-nbs'
@@ -403,7 +404,7 @@ def get_artifact_config_DCAE(verbose : int = 0) -> Tuple[AttrDict, str]:
     """
     user, project, version, data = get_project_data(verbose)
     config = get_config(verbose, "02a-encoder_dcae")
-    if verbose > 0:print("Antes de leer configuration " + str(config))
+    if verbose > 0:print_flush("Antes de leer configuration " + str(config))
     config = config.configuration
     
     artifact_config = AttrDict(
@@ -534,9 +535,9 @@ def get_artifact_config_xai_lrp(verbose : int = 0) -> Tuple[AttrDict, str]:
     emb_artifact    = build_emb_artifact(config, verbose)
     config = config.configuration
     if verbose > 0:
-        print("-- config --")
+        print_flush("-- config --")
         show_attrdict(config)
-        print("-- config --")
+        print_flush("-- config --")
     artifact_config = AttrDict(
         use_wandb           = config.wandb.use, 
         wandb_group         = config.wandb.group,
@@ -833,16 +834,23 @@ tested_configs = {
 }
 
 # %% ../nbs/config.ipynb 67
-def show_attrdict(dict: AttrDict):
+def show_attrdict(
+    dict            : AttrDict, 
+    # Print options
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a'
+):
     for key, value in dict.items():
-        print(f"{key}: {value}")
+        print_flush(f"{key}: {value}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, print_time = print_to_path)
+        print_mode = 'a'
 
 # %% ../nbs/config.ipynb 68
 def show_available_configs():
-    print("Available datasets: ")
+    print_flush("Available datasets: ")
     i = 0
     for key, val in tested_configs.items():
-        print(f"{i} - {key}")
+        print_flush(f"{i} - {key}")
         i+=1
     
 
@@ -878,13 +886,13 @@ def print_colored(
     reset = "\033[0m"
     
     if modified and both:
-        print(f"{color}{key}: {original_val}{reset} -> {modified_val}{reset}")
+        print_flush(f"{color}{key}: {original_val}{reset} -> {modified_val}{reset}")
     elif missing_in_modified:
-        print(f"{color}{key} is missing in modified dict | {original_val} {reset}")
+        print_flush(f"{color}{key} is missing in modified dict | {original_val} {reset}")
     elif missing_in_original:
-        print(f"{color}{key} is missing in original dict | {modified_val} {reset}")
+        print_flush(f"{color}{key} is missing in original dict | {modified_val} {reset}")
     else:
-        print(f"{color}{key}: {modified_val}{reset}")
+        print_flush(f"{color}{key}: {modified_val}{reset}")
 
 # %% ../nbs/config.ipynb 77
 import pandas as pd
@@ -896,13 +904,13 @@ def get_resampling_frequency(
     verbose = 0
 ):
     if verbose > 0:
-        print("--> Frequency factor resampling frequency")
-        print("Freq factor: ", frequency_factor)
+        print_flush("--> Frequency factor resampling frequency")
+        print_flush("Freq factor: ", frequency_factor)
     freq_new = pd.to_timedelta(freq)
     freq_new = freq_new*frequency_factor
     if verbose > 0:
-        print("freq_original: ", freq)
-        print("freq_new: ", freq_new)
+        print_flush("freq_original: ", freq)
+        print_flush("freq_new: ", freq_new)
     suffix = "-"
     resampling_freq=""
     if freq_new.days > 0 and freq_new.seconds == pd.to_timedelta(0,'s'):
@@ -921,9 +929,9 @@ def get_resampling_frequency(
         suffix = str(seconds)+'s'
         resampling_freq = str(seconds)+'S'
     if verbose > 0:
-        print("suffix: ", suffix)
-        print("resampling_freq: ", resampling_freq)
-        print("Frequency factor resampling frequency -->")
+        print_flush("suffix: ", suffix)
+        print_flush("resampling_freq: ", resampling_freq)
+        print_flush("Frequency factor resampling frequency -->")
     return (suffix, resampling_freq)
 
 # %% ../nbs/config.ipynb 81
@@ -934,9 +942,9 @@ def frequency_factor_config(
     verbose = 0
 ):
     if verbose > 0:
-        print("--> Frequency factor config")
-        print("Freq factor: ", frequency_factor)
-        print("frequency_factor_change_alias: ", frequency_factor_change_alias)
+        print_flush("--> Frequency factor config")
+        print_flush("Freq factor: ", frequency_factor)
+        print_flush("frequency_factor_change_alias: ", frequency_factor_change_alias)
     suffix, config.resampling_freq = get_resampling_frequency(config.freq, frequency_factor, verbose)
 
     if frequency_factor_change_alias:
@@ -945,10 +953,10 @@ def frequency_factor_config(
         #config.data_fpath = filename+"-"+suffix+".tsf"
 
     if verbose > 0:    
-        print("resampling_freq: ", config.freq)
-        print("name: ", config.artifact_name)
-        print("path: ", config.data_fpath)    
-        print("Frequency factor config -->")
+        print_flush("resampling_freq: ", config.freq)
+        print_flush("name: ", config.artifact_name)
+        print_flush("path: ", config.data_fpath)    
+        print_flush("Frequency factor config -->")
 
 # %% ../nbs/config.ipynb 82
 def diff_attrdict(
@@ -991,7 +999,7 @@ def force_artifact_config_sd2a(
     to_set = get_tested_config(id)
     if verbose > 0:
         config_before = deepcopy(config)
-        print("Selecting ", list(tested_configs.items())[id][0])
+        print_flush("Selecting ", list(tested_configs.items())[id][0])
     config.artifact_name = to_set.alias
     config.data_cols = to_set.cols
     config.data_fpath= "~/data/"+to_set.fname+to_set.ftype

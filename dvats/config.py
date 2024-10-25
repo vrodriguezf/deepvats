@@ -173,10 +173,10 @@ def get_project_data(verbose : int = 0) -> [str, str, str, str]:
     if verbose > 0:
         dashes = '-----------'        
         print_flush(dashes+"Project configuration"+dashes)
-        print_flush("user: " + user)
-        print_flush("project: " + project)
-        print_flush("version: " + version)
-        print_flush("data: "+ data)
+        print_flush(f"user: {user}")
+        print_flush(f"project: {project}")
+        print_flush(f"version: {version}")
+        print_flush(f"data: {data}")
         print_flush(dashes+"Project configuration"+dashes)
     return user, project, version, data
 
@@ -905,12 +905,12 @@ def get_resampling_frequency(
 ):
     if verbose > 0:
         print_flush("--> Frequency factor resampling frequency")
-        print_flush("Freq factor: ", frequency_factor)
+        print_flush(f"Freq factor: {frequency_factor}")
     freq_new = pd.to_timedelta(freq)
     freq_new = freq_new*frequency_factor
     if verbose > 0:
-        print_flush("freq_original: ", freq)
-        print_flush("freq_new: ", freq_new)
+        print_flush(f"freq_original: {freq}")
+        print_flush(f"freq_new: {freq_new}")
     suffix = "-"
     resampling_freq=""
     if freq_new.days > 0 and freq_new.seconds == pd.to_timedelta(0,'s'):
@@ -929,8 +929,8 @@ def get_resampling_frequency(
         suffix = str(seconds)+'s'
         resampling_freq = str(seconds)+'S'
     if verbose > 0:
-        print_flush("suffix: ", suffix)
-        print_flush("resampling_freq: ", resampling_freq)
+        print_flush(f"suffix: {suffix}")
+        print_flush(f"resampling_freq: {resampling_freq}")
         print_flush("Frequency factor resampling frequency -->")
     return (suffix, resampling_freq)
 
@@ -943,8 +943,8 @@ def frequency_factor_config(
 ):
     if verbose > 0:
         print_flush("--> Frequency factor config")
-        print_flush("Freq factor: ", frequency_factor)
-        print_flush("frequency_factor_change_alias: ", frequency_factor_change_alias)
+        print_flush(f"Freq factor: {frequency_factor}")
+        print_flush(f"frequency_factor_change_alias: {frequency_factor_change_alias}")
     suffix, config.resampling_freq = get_resampling_frequency(config.freq, frequency_factor, verbose)
 
     if frequency_factor_change_alias:
@@ -953,9 +953,9 @@ def frequency_factor_config(
         #config.data_fpath = filename+"-"+suffix+".tsf"
 
     if verbose > 0:    
-        print_flush("resampling_freq: ", config.freq)
-        print_flush("name: ", config.artifact_name)
-        print_flush("path: ", config.data_fpath)    
+        print_flush(f"resampling_freq: {config.freq}")
+        print_flush(f"name: {config.artifact_name}")
+        print_flush(f"path: {config.data_fpath}")    
         print_flush("Frequency factor config -->")
 
 # %% ../nbs/config.ipynb 82

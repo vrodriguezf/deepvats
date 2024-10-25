@@ -249,9 +249,10 @@ def sure_eval_moment(
             if mask is not None: mask = mask.to(device)
             y = y.to(device)
             enc_learn = enc_learn.to(device)
-            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | device {device} | input_mask device: {input_mask.device if input_mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | device {device} | mask device: {mask.device if mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-            if verbose > 0: print_flush(f"sure_eval_moment | Trial {trial} | device {device} | y device: {y.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            if verbose > 0: 
+                print_flush(f"sure_eval_moment | Trial {trial} | device {device} | input_mask~{input_mask.shape} device: {input_mask.device if input_mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+                print_flush(f"sure_eval_moment | Trial {trial} | device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+                print_flush(f"sure_eval_moment | Trial {trial} | device {device} | y~{y.shape} device: {y.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
             output = enc_learn(x_enc = y, input_mask = input_mask, mask = mask)
             success = True
             if verbose > 0 and acts_indices == [0] : 
@@ -1197,42 +1198,53 @@ def fine_tune_moment_train_loop_step_(
     print_mode                      : str   = 'a',
 
 ): 
+    device = torch.cuda.current_device() if not cpu else "cpu"
     bms = batch_masks
     mask_generator = Masking(mask_ratio = 0.3)
     if batch.shape[0] < batch_masks.shape[0]:  
         bms = batch_masks[:batch.shape[0]]
     if verbose > 1: 
         print_flush(
-            f"fine_tune_moment_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape}",
-            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+            f"fine_tune_moment_train_loop_step_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape}",
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose
         )
+    
+    batch   = batch.to(device)
+    bms     = bms.to(device) 
+
+    if bms.shape[0] > batch.shape[0]: bms = bms[:batch.shape[0]]
+
     mask = mask_generator.generate_mask(
         x = batch,
         input_mask = bms
     )
+
     if mask.shape[0] < bms.shape[0]:  bms = batch_masks[:mask.shape[0]]
     if mask.shape[1]  < batch_masks.shape[1] :
         mask = torch.nn.functional.pad(mask,(0,batch_masks.shape[1]-mask.shape[1]))
-    if verbose > 1: 
-        print_flush(
-            f"fine_tune_moment_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}",
-            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
-        )
+    
     batch = batch.to(device)
     mask = mask.to(device)
-    batch_masks = batch_masks.to(device)
+    bms = bms.to(device)
     enc_learn = enc_learn.to(device)
     if verbose > 1: 
         print_flush(
-            f"fine_tune_moment_step | sure_eval_moment | b{batch.device} | m{mask.device} | bm{batch_masks.device} ",
-            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+            f"fine_tune_moment_train_loop_step_ | Fine tune loop | batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}",
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose
+        )
+    for param in enc_learn.parameters():
+        param = param.to(device)
+    if verbose > 1: 
+        print_flush(
+            f"fine_tune_moment_train_loop_step_ | sure_eval_moment | b{batch.device} | m{mask.device} | bm{bms.device}",
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose
         )
     output = sure_eval_moment(
         enc_learn = enc_learn, 
         cpu = cpu,
         verbose = verbose, 
         y = batch, 
-        input_mask = batch_masks, # None
+        input_mask = bms, # None
         mask = mask, # None
         padd_step = 100, 
         max_trials = 5, 
@@ -1243,8 +1255,8 @@ def fine_tune_moment_train_loop_step_(
     # Compute output loss
     if output is None:
         print_flush(
-            f"fine_tune_moment_step | Execution failed | Output none ",
-            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+            f"fine_tune_moment_train_loop_step_ | Execution failed | Output none ",
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose
         )
         loss = 0
     else: 
@@ -1285,14 +1297,14 @@ def fine_tune_moment_train_(
         )
         
     # Training loop
-    if verbose > 1: print_flush("fine_tune_moment_ | Training loop", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+    if verbose > 1: print_flush("fine_tune_moment_train_ | Training loop", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     # Masks
     n_samples, n_channels, window_size = ds_train.shape
     batch_masks = torch.ones(
         (batch_size, window_size), 
         device = device
     ).long()
-    if verbose > 1: print_flush(f"fine_tune_moment_ | Fine tune loop | print_to_path {print_to_path}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)     
+    if verbose > 1: print_flush(f"fine_tune_moment_train | Fine tune loop | print_to_path {print_to_path}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)     
     #if print_to_path:
     #    pf = os.path.expanduser(print_path + "_progress")
     #    with open (pf, "w") as f:
@@ -1318,9 +1330,10 @@ def fine_tune_moment_train_(
     #        progress_bar.close()
     #else:
     progress_bar = tqdm(range(num_training_steps))
+    if verbose > 0: print_flush(f"fine_tune_moment_train | num_epochs {num_epochs} | n_batches {len(dl_train)}")
     for epoch in range(num_epochs):
         for i, batch in enumerate(dl_train):
-            if verbose > 0: print_flush(f"batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps}")
+            if verbose > 0: print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps}")
             loss = fine_tune_moment_train_loop_step_(
                     enc_learn                       = enc_learn,
                     batch                           = batch,

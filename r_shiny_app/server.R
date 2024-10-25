@@ -1067,7 +1067,7 @@ observe({
             batch_size                      = as.integer(input$ft_batch_size),
             cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
             to_numpy                        = FALSE,
-            verbose                         = as.integer(0),
+            verbose                         = as.integer(1),
             time_flag                       = TRUE,
             n_windows_percent               = as.numeric(input$ft_window_percent),
             training_percent                = as.numeric(input$ft_training_percent),
@@ -1100,12 +1100,23 @@ observe({
         t_init <- Sys.time()
         result <- do.call(dvats$fine_tune_moment_, fine_tune_kwargs)
         t_end <- Sys.time()
-        t_shot = result(5)
+        eval_results_pre <- result[[2]]
+        eval_results_post <- result[[3]]
+        t_shots <- result[[4]]
+        t_shot <- result[[5]]
+        t_evals <- result[[6]]
+        t_eval <- result[[7]]
         diff = t_end - t_init
         diff_secs = diff
         diff_mins = diff / 60
         log_print(paste0("Fine tune: ", diff_secs, " s | approx ", diff_mins, "min" ))
-        log_print(paste0("Fine tune Python shot time: ", t_shot, "s" ))
+        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ))
+        log_print(paste0("Fine tune Python total shot time: ", t_shot, "s" ))
+        log_print(paste0("Fine tune Python single eval steps time: ", t_shots, "s" ))
+        log_print(paste0("Fine tune Python total eval time: ", t_shot, "s" ))
+        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ))
+        log_print(paste0("Fine tune eval results pre-tune: ", eval_results_pre, "s" ))
+        log_print(paste0("Fine tune eval results post-tune: ", eval_results_post, "s" ))
         update_play_fine_tune_button()
         removeModal()
     }

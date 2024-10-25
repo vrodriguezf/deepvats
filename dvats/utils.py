@@ -180,11 +180,11 @@ import pickle
 def exec_with_feather(function, path = None, verbose = 0, *args, **kwargs):
     result = None
     if not (path is None):
-        if verbose > 0: print_flush("--> Exec with feather | reading input from ", path)
+        if verbose > 0: print_flush(f"--> Exec with feather | reading input from {path}")
         input = ft.read_feather(path)
-        if verbose > 0: print_flush("--> Exec with feather | Apply function ", path)
+        if verbose > 0: print_flush(f"--> Exec with feather | Apply function {path}")
         result = function(input, *args, **kwargs)
-        if verbose > 0: print_flush("Exec with feather --> ", path)
+        if verbose > 0: print_flush(f"Exec with feather --> ", {path})
     return result
 
 # %% ../nbs/utils.ipynb 46
@@ -194,7 +194,7 @@ def py_function(module_name, function_name, verbose = 0):
     except:
         module = __import__(module_name, fromlist=[''])
         function = getattr(module, function_name)
-    print_flush("py function: ", function_name, ": ", function)
+    print_flush(f"py function: {function_name}: {function}")
     return function
 
 # %% ../nbs/utils.ipynb 49
@@ -229,17 +229,17 @@ def exec_with_and_feather_k_output(function_name, module_name = "main", path_inp
     function = py_function(module_name, function_name, verbose-1)
     if time_flag: t_start = time.time()
     if not (path_input is None):
-        if verbose > 0: print_flush("--> Exec with feather | reading input from ", path_input)
+        if verbose > 0: print_flush(f"--> Exec with feather | reading input from {path_input}")
         input = ft.read_feather(path_input)
         if verbose > 0: 
-            print_flush("--> Exec with feather | Apply function ", function_name, "input type: ", type(input))
+            print_flush(f"--> Exec with feather | Apply function {function_name} input type: {type(input)}")
         
         result = function(input, *args, **kwargs)[k_output]
         ft.write_feather(df, path, compression = 'lz4')
     if time_flag:
         t_end = time.time()
-        print_flush("Exec with feather | time: ", t_end-t_start)
-    if verbose > 0: print_flush("Exec with feather --> ", path_output)
+        print_flush(f"Exec with feather | time: {t_end-t_start}")
+    if verbose > 0: print_flush(f"Exec with feather --> {path_output}")
     return path_output
 
 # %% ../nbs/utils.ipynb 53
@@ -255,14 +255,14 @@ class Time:
     function    : str   =  ''
 
     def start(self, verbose = 0): 
-        if verbose > 0: print_flush("--> Start: ", self.function)
+        if verbose > 0: print_flush(f"--> Start: {self.function}")
         self.time_start = time.time()
         return self.time_start
 
     def end(self, verbose= 0):
         self.time_end = time.time()
         self.time_total = self.duration()
-        if verbose > 0: print_flush("End: ", self.function, "-->")
+        if verbose > 0: print_flush(f"End: {self.function} -->")
         return self.time_end
         
     def duration(self):
@@ -293,7 +293,7 @@ from IPython.display import clear_output, DisplayHandle
 def update_patch(self, obj):
     clear_output(wait=True)
     self.display(obj)
-    print_flush("... Enabling Vs Code execution ...")
+    print_flush(f"... Enabling Vs Code execution ...")
 
 # %% ../nbs/utils.ipynb 61
 from IPython.display import display, HTML
@@ -404,7 +404,7 @@ class Interpolator(BaseEstimator, TransformerMixin):
             X = X.reshape(1, -1)
         
         if self.plot_original_data:
-            if self.verbose > 0: print_flush("Interpolator | Plot original data")
+            if self.verbose > 0: print_flush(f"Interpolator | Plot original data")
             for dim in range (X.ndim-1):
                 if self.verbose > 1: print_flush(f"Interpolator | Plot original data dimension {dim}")
                 plot_with_dots(
@@ -477,7 +477,7 @@ class PAATransformer(BaseEstimator, TransformerMixin):
         if self.plot_aggregated:
             for dim in range (X.ndim-1):
                 if self.verbose > 1:
-                    print_flush("Plos res | Dim", dim)
+                    print_flush(f"Plos res | Dim", {dim}, verbose = verbose)
                 plot_with_dots(
                     result[dim], 
                     sequence_flag = False, 
@@ -508,7 +508,7 @@ def divisors(
     max_val:int, 
     verbose = 0
 ) -> List [ int ] : 
-    print_flush("Verbose: ", verbose)
+    if verbose > 0: print_flush(f"--> divisors | verbose: {verbose}", verbose = verbose)
     if verbose > 0: 
         print_flush(f"Looking for the divisors of {N} between {min_val} and {max_val}")
     if (N < 0 or min_val < 0):
@@ -681,11 +681,11 @@ def find_dominant_window_sizes_list_single_old(
         verbose      : int  = 0
     ) -> List [ int ]:
 
-    if verbose > 0: print_flush( "---> Find_dominant_window_sizes_list" )
+    if verbose > 0: print_flush(f"---> Find_dominant_window_sizes_list")
     if verbose > 1:
-        print_flush( "Find_dominant_window_sizes_list | X ~ ",  X.shape )
-        print_flush( "Find_dominant_window_sizes_list | Looking for - at most - the best", nsizes, "window sizes")
-        print_flush( "Find_dominant_window_sizes_list | Offset", offset, "max size:", offset*len(X))
+        print_flush( f"Find_dominant_window_sizes_list | X ~ {X.shape}" )
+        print_flush( f"Find_dominant_window_sizes_list | Looking for - at most - the best {nsizes} window sizes")
+        print_flush( f"Find_dominant_window_sizes_list | Offset {offset} max size: {offset*len(X)}")
     if verbose > 0: print_flush( "Find_dominant_window_sizes_list | --> Freqs")
         
     X = np.array(X)
@@ -716,7 +716,7 @@ def find_dominant_window_sizes_list_single_old(
     idx = np.argsort(coefs)[::-1]
     
     if verbose > 1: 
-        print_flush( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 0 ...", idx)
+        print_flush( f"Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 0 ... {idx}")
         
     sorted_window_sizes = window_sizes[idx]
     
@@ -735,16 +735,16 @@ def find_dominant_window_sizes_list_single_old(
 
     # If no valid window sizes are found, return the first from sorted list
     if not valid_window_sizes:
-        if verbose > 1: print_flush( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2a ...", nsizes)
+        if verbose > 1: print_flush( f"Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2a ... {nsizes}")
         sizes = [sorted_window_sizes[0] // 2][:nsizes]
     else:
-        if verbose > 1: print_flush( "Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ...", nsizes)
+        if verbose > 1: print_flush( f"Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ... {nsizes}")
         sizes = valid_window_sizes[:nsizes]
         
     if verbose > 0: 
         print_flush( "Find_dominant_window_sizes_list | Find and return valid window_sizes -->")
     if verbose > 1:
-        print_flush("Find_dominant_window_sizes_list | Sizes:", sizes)
+        print_flush(f"Find_dominant_window_sizes_list | Sizes: {sizes}")
     if verbose > 0:
         print_flush( "Find dominant_window_sizes_list --->" )
     

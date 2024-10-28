@@ -22,20 +22,21 @@ user_preferences:
   data:
     #folder: &path '~/data/'
     folder: &path '~/data/synthetic_data/'
-    fname: &fname 'synthetic_outliers(III)'
-    #fname: &fname 'synthetic_segmentation(I)'
+    #fname: &fname 'synthetic_outliers(III)'
+    fname: &fname 'synthetic_segmentation(I)'
     #fname: &fname 'PulsusParadoxusSP02_30_10000' #'exoplanets' #"Insect_one_million"
     ftype: &ftype '.csv'
     cols: &cols [13]
     freq: &freq '1s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    alias: &alias 'outliers-3'
+    #alias: &alias 'outliers-3'
     #alias: &alias 'PulsusParadoxus-SP02'
-    #algorithm: &alg 'mvp'
+    alias: &alias 'S1'
+    algorithm: &alg 'mvp'
     #algorithm: &alg 'moirai-small'
     #algorithm: &alg 'moment-large-embedding'
-    algorithm: &alg 'moment-small-embedding'
+    #algorithm: &alg 'moment-small-embedding'
     #algorithm: &alg 'moment-small-reconstruction'
   directories:
     # Folder to store temporary files

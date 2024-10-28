@@ -24,10 +24,24 @@ select_datasetServer <- function(
         log_print(input$dataset)
         freezeReactiveValue(input, "encoder")
         log_print(paste0("observeEvent input_dataset | update encoders for dataset ", input$dataset))
-        encs_names <- encs_l %>%  keep(
-            ~ .$metadata$train_artifact == input$dataset || 
-            any(sapply(zero_shot_models, grepl, x = .$name))
-            )
+        
+        
+
+        ts_ar <- api$artifact(input$dataset, type='dataset')
+
+        aliases <- ts_ar$name 
+        header <- sub(":.*", "", ts_ar$name)
+        aliases <- c(ts_ar$name, paste0(header, ":", ts_ar$aliases))
+
+        
+        encs_names <- encs_l %>% keep(
+            ~ {
+                train_artifact <- sub(".*/", "", .$metadata$train_artifact)
+                is_match <- train_artifact %in% aliases
+                is_match || any(sapply(zero_shot_models, grepl, x = .$name))
+            }
+        )
+  
         encs_names <- sapply(encs_names, function(art) art$name)
         log_print(paste0(
             "observeEvent input_dataset | Encoders for dataset ", input$dataset, " | ", encs_names)

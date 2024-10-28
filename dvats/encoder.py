@@ -1031,8 +1031,8 @@ def fine_tune_moment_compute_loss(
     observed_mask = batch_masks * (1-mask)
     masked_loss = observed_mask * recon_loss
     loss = masked_loss.nansum() / (observed_mask.nansum() + 1e-7)
+    if verbose > 2: print_flush(f"Loss type: {type(loss)}",print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)  # Debe ser <class 'torch.Tensor'>
     if verbose > 1: print_flush(f"fine_tune_moment_compute_loss | loss: {loss.item()}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    if verbose > 1: print_flush(f"Loss type: {type(loss)}")  # Debe ser <class 'torch.Tensor'>
     if verbose > 0: print_flush("fine_tune_moment_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return loss
 
@@ -1330,10 +1330,10 @@ def fine_tune_moment_train_(
     #        progress_bar.close()
     #else:
     progress_bar = tqdm(range(num_training_steps))
-    if verbose > 0: print_flush(f"fine_tune_moment_train | num_epochs {num_epochs} | n_batches {len(dl_train)}")
+    if verbose > 0: print_flush(f"fine_tune_moment_train | num_epochs {num_epochs} | n_batches {len(dl_train)}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     for epoch in range(num_epochs):
         for i, batch in enumerate(dl_train):
-            if verbose > 0: print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps}")
+            if verbose > 0: print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
             loss = fine_tune_moment_train_loop_step_(
                     enc_learn                       = enc_learn,
                     batch                           = batch,
@@ -1355,7 +1355,7 @@ def fine_tune_moment_train_(
                 # Optimize
                 optimizer.step()
             except Exception as e: 
-                print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}")
+                print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                 if isinstance(loss, int):
                     losses.append(loss)                    
                 else:
@@ -1404,7 +1404,7 @@ def fine_tune_moment_single_(
     print_path                      : str           = "~/data/logs/logs.txt",
     print_mode                      : str           = 'a'
 ):
-    if verbose > 0: print_flush("--> fine_tune_moment_single", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode )
+    if verbose > 0: print_flush("--> fine_tune_moment_single", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose )
     t_shot = 0
     t_eval_1 = 0
     t_eval_2 = 0
@@ -1414,7 +1414,7 @@ def fine_tune_moment_single_(
 
     if time_flag:
         timer = Time()
-    if verbose > 0: print_flush("fine_tune_moment_single | Prepare the dataset", print_to_path = print_to_path, print_path = print_path, print_mode = 'a' )
+    if verbose > 0: print_flush("fine_tune_moment_single | Prepare the dataset", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose )
     # Prepare the dataset
     train_split_index = min(X.shape[0], n_windows) if n_windows is not None else np.ceil(training_percent * X.shape[0])
     eval_split_index = min(X.shape[0], n_windows) if n_windows is not None else np.ceil(validation_percent * X.shape[0])

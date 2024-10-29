@@ -10,6 +10,7 @@
 #TODO: Separar la aplicación en módulos y limpiar el código. 
 source("./lib/server/logs.R")
 source("./lib/server/plots.R")
+source("./lib/server/server.R")
 source("./modules/parameters.R")
 source("./modules/mplots.R")
 
@@ -1342,10 +1343,10 @@ observe({
     
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
-      req(input$wlen != 0, input$stride != 0)
-      #ts_indices <- get_window_indices(1:nrow(isolate(projections())), w = input$wlen, s = input$stride)
-      ts_indices <- get_window_indices(1:nrow(projections()), w = input$wlen, s = input$stride)
-      ts_indices
+        #window_indices = get_window_indices(embedding_indices, input$wlen, input$stride)
+        req(input$wlen != 0, input$stride != 0)
+        ts_indices <- get_window_indices(1:nrow(projections()), w = input$wlen, s = input$stride)
+        ts_indices
     })
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
@@ -1501,12 +1502,19 @@ tcl_1 = Sys.time()
         bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
     })
 
+    
+    
+    
     filtered_window_indices <- reactive({
         req(length(embedding_ids() > 0))
+        #embedding_indices <- embedding_ids()
+        #ts_indices <- tsidxs_per_embedding_idx()
+        #unique(unlist(ts_indices[embedding_indices]))
+
         embedding_indices <- embedding_ids()
-        #window_indices = get_window_indices(embedding_indices, input$wlen, input$stride)
-        ts_indices <- tsidxs_per_embedding_idx()
-        unique(unlist(ts_indices[embedding_indices]))
+        
+        window_indices <- get_window_indices_(embedding_indices, input$wlen, input$stride)
+        window_indices
     })
 
     window_list <- reactive({
@@ -1517,7 +1525,6 @@ tcl_1 = Sys.time()
         window_indices <- filtered_window_indices()
         # Put all the indices in one list and remove duplicates
         unlist_window_indices = filtered_window_indices()
-        log_print(paste0("Window indices: ", unlist_window_indices))
         # Calculate a vector of differences to detect idx where a new window should be created 
         diff_vector <- diff(unlist_window_indices,1)
         # Take indexes where the difference is greater than one (that represent a change of window)
@@ -1580,7 +1587,7 @@ tcl_1 = Sys.time()
                 end_date = tsdf()$timeindex[end_indices]
                 start_date
 
-                log_print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
+                log_print(paste0("ts_plot | reduced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
             
                 if (view_size > max_size) {
                     end_date = tsdf()$timeindex[start_indices + max_size - 1]
@@ -1893,16 +1900,16 @@ tcl_1 = Sys.time()
                     debug_level = debug_level, 
                     debug_group ='main'
                 )
-            temp_log <<- log_add(
-                log_mssg                = temp_log, 
-                function_               = "TS Plot Dygraph",
-                cpu_flag                = isolate(input$cpu_flag),
-                dr_method               = isolate(input$dr_method),
-                clustering_options      = isolate(input$clustering_options),
-                zoom                    = isolate(input$zoom),
-                mssg                    = paste0("R execution time | Selected prj points: ", isolate(embedding_ids())),
-                time                    = tspd_1-tspd_0
-            )
+            #temp_log <<- log_add(
+            #    log_mssg                = temp_log, 
+            #    function_               = "TS Plot Dygraph",
+            #    cpu_flag                = isolate(input$cpu_flag),
+            #    dr_method               = isolate(input$dr_method),
+            #    clustering_options      = isolate(input$clustering_options),
+            #    zoom                    = isolate(input$zoom),
+            #    mssg                    = paste0("R execution time | Selected prj points: ", isolate(embedding_ids())),
+            #    time                    = tspd_1-tspd_0
+            #)
             ts_plot
         }   
     )

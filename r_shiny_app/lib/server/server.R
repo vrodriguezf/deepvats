@@ -58,3 +58,18 @@ get_ts_plot_name <- function(dataset_name, encoder_name, prj_plot_id, input){
     print(paste0("ts plot name: ", plt_name))
     plt_name
 }
+
+get_window_indices_ <- function(prjs, wlen, stride) {
+    log_print(paste0("|| get_window_indices_ || prjs ~", dim(prjs)))
+    log_print(paste0("|| get_window_indices_ || wlen", wlen))
+    log_print(paste0("|| get_window_indices_ || stride", stride))
+    window_indices <- sapply(prjs, function(idx) {
+        #start_idx <- floor((idx - 1) / stride) * stride + 1
+        #seq(start_idx, start_idx + wlen - 1)
+        start_idx <- ((idx-1)*stride) + 1
+        seq(start_idx, start_idx + wlen)
+    })
+    res <-  unique(unlist(window_indices))
+    log_print(paste0("|| get_window_indices_ || window_indices ~", length(res)))
+    res
+}

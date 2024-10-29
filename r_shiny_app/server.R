@@ -852,6 +852,7 @@ shinyServer(function(input, output, session) {
     ####  CACHING EMBEDDINGS ####
     # TODO: Conseguir que funcione el cache, sigue recalculando todo
     embs_first_comp <- reactiveVal(TRUE)
+
     cached_embeddings <- reactiveVal(NULL)
     last_inputs <- reactiveVal(
         list (
@@ -864,22 +865,26 @@ shinyServer(function(input, output, session) {
     )
     embs <- reactive({
         current_inputs <- list(
-                dataset = input$dataset,
-                encoder = input$encoder,
-                wlen    = input$wlen,
-                stride = input$stride,
-                fine_tune = input$fine_tune
-            )
+            dataset   = input$dataset,
+            encoder   = input$encoder,
+            wlen      = input$wlen,
+            stride    = input$stride,
+            fine_tune = input$fine_tune
+        )
         if (embs_first_comp() || ! identical(current_inputs, last_inputs())){
             shinyjs::enable("embs_comp")
-            log_print("Embs | First embedding computation, skipping cache")
+            log_print("|| Embs || First embedding computation, skipping cache")
             embs_first_comp(FALSE)
-            cached_embeddings(embs_comp())
+            res <- embs_comp()
+            cached_embeddings(res)
             shinyjs::disable("embs_comp")
         } else {
+            log_print("|| Embs || Use cached")
             last_inputs(current_inputs)
+            res <- isolate(embs_comp())
         }
-        isolate(cached_embeddings())
+        log_print(paste0("|| embs res ||", dim(res)))
+        res
     })
     ###########################
 
@@ -889,7 +894,6 @@ shinyServer(function(input, output, session) {
         print(paste0(
             "--> reactive embs (before req) | get embeddings | enc_input_ready ", enc_input_ready()," | play " , play()))
         req(tsdf(), X(), enc_l <- enc(), enc_input_ready(), allow_update_embs())
-        
         
         print(paste0("--> reactive embs (after req) | get embeddings | enc_input_ready ", enc_input_ready()))
         print(paste0("tsdf ~ ", dim(tsdf())))
@@ -921,8 +925,6 @@ shinyServer(function(input, output, session) {
         chunk_size = 10000000 #N*32
         
         log_print(paste0("reactive embs | get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
-   
-        
         log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
         specific_kwargs <- embs_kwargs()
         
@@ -932,25 +934,12 @@ shinyServer(function(input, output, session) {
             verbose             = as.integer(1)
         )
         kwargs <- c(kwargs_common, list(stride = as.integer(input$stride)), specific_kwargs)
-        #log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size kwargs | ", kwargs))
-        #watch_gpu_kwargs <- list(
-        #    func = dvats$get_enc_embs_set_stride_set_batch_size
-        #)
-        #kwargs <- c( watch_gpu_kwargs, kwargs )
-        #result = do.call(
-        #    dvats$watch_gpu,
-        #    kwargs
-        #) 
         
         result <- do.call(
                     dvats$get_enc_embs_set_stride_set_batch_size,
                     kwargs
                 )
-        #result <- do.call(
-        #    dvats$get_enc_embs_set_stride_set_batch_size,
-        #    kwargs
-        #)
-
+     
         log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"))
         log_print(paste0("reactive embs | get_enc_embs_set_stride_set_batch_size embs ~ | ", dim(result) ))
         t_embs_1 <- Sys.time()
@@ -981,13 +970,12 @@ shinyServer(function(input, output, session) {
         gc(verbose=as.integer(1))
         on.exit({log_print("reactive embs | get embeddings -->"); flush.console()})
         log_print("...Cleaning GPU")
-        #enc_l$cpu()
-        #enc_input$cpu()
         rm(enc_l, enc_input)
-        log_print("Cleaning GPU...")
-        #allow_update_embs(FALSE)
+        log_print(paste0("Cleaning GPU... || ", dim(result)))
         result
-    }) #%>% bindCache(input$dataset, input$encoder, input$wlen, input$stride)
+    }) 
+
+
 #enc = py_load_object(
 #    os.path.join(
 #        DEFAULT_PATH_WANDB_ARTIFACTS, 
@@ -1527,11 +1515,14 @@ tcl_1 = Sys.time()
         unlist_window_indices = filtered_window_indices()
         # Calculate a vector of differences to detect idx where a new window should be created 
         diff_vector <- diff(unlist_window_indices,1)
+        #log_print(paste0("|| window list || diff ", diff_vector))
         # Take indexes where the difference is greater than one (that represent a change of window)
         idx_window_limits <- which(diff_vector!=1)
+        log_print(paste0("|| window_list || idx_window_limits", idx_window_limits))
         # Include the first and last index to have a whole set of indexes.
         idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
-        # Create a reduced window list
+        
+        # Create a reduced window lists
         reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
         # Populate the first element of the list with the idx of the first window.
         reduced_window_list[[1]] = c(            
@@ -1781,7 +1772,8 @@ tcl_1 = Sys.time()
         if (!is.null(input$ts_plot_dygraph_click)) {
             log_print("Selected ts time points" , TRUE, log_path(), log_header())
             selected_ts_idx <- which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
-            indices_per_embedding <- tsidxs_per_embedding_idx()
+            ##### ---- AQUI --- #### #indices_per_embedding <- tsidxs_per_embedding_idx()
+            indices_per_embedding <- get_window_indices(embedding_ids(), input$wlen, input$stride)
             #log_print(paste0("TS indices per embedding idx: ", indices_per_embedding))
             projections_idxs <- indices_per_embedding %>% map_lgl(~ selected_ts_idx %in% .)
             log_print(paste0("prjs_ ~ ", indices_per_embedding))

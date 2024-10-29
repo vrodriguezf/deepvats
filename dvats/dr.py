@@ -152,14 +152,22 @@ def get_PCA_UMAP_prjs(
     """
     Computes PCA -> UMAP projections of input data
     """
-    if verbose > 1: print(f"About to compute PCA input_data~{input_data.shape}")
+    if verbose > 1: 
+        try:
+            print(f"About to compute PCA input_data~{input_data.shape}")
+        except: 
+            print(f"About to compute PCA input_data~{len(input_data)}")
     prjs = get_PCA_prjs(
         X   = input_data, 
         cpu = cpu, 
         **pca_kwargs
     )
 
-    if verbose > 0: print(f"PCA prjs~{prjs.shape}")
+    if verbose > 0: 
+        try:
+            print(f"PCA prjs~{prjs.shape}")
+        except:
+            print(f"PCA prjs~{len(prjs.shape)}")
     if verbose > 1: print("About to compute UMAP")
         
     prjs = get_UMAP_prjs(
@@ -169,7 +177,11 @@ def get_PCA_UMAP_prjs(
         **umap_kwargs
     )
 
-    if verbose > 0: print (f"UMAP prjs~{prjs.shape}")
+    if verbose > 0: 
+        try:
+            print(f"UMAP prjs~{prjs.shape}")
+        except:
+            print(f"UMAP prjs~{len(prjs.shape)}")
     return prjs
     
 

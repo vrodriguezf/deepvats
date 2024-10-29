@@ -68,14 +68,11 @@ get_window_indices_ <- function(prjs, wlen, stride) {
     window_indices <- c()
     for (idx in prjs){
         start_idx <- ((idx-1)*stride)+1
-        end_idx <- ((start_idx + wlen -1))
+        end_idx <- start_idx + wlen -1
         indices <- unlist(seq(start_idx, end_idx))
-        log_print(paste0("|| get_window_indices_ || idx ", idx, " sd ", start_idx, " ed ", end_idx, indices))
+        log_print(paste0("|| get_window_indices_ || idx ", idx, " sd ", start_idx, " ed ", end_idx))
         window_indices <- c(window_indices, indices)
     }
-    log_print(paste0("|| get_window_indices_ || window_indices Before ~", dim(res)))
-    res <-  unlist(window_indices)
-    log_print(paste0("|| get_window_indices_ || window_indices Before unique ~", dim(res)))
     res <- unique(window_indices)
     log_print(paste0("|| get_window_indices_ || window_indices ~", res))
     res

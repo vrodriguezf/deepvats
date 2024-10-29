@@ -793,7 +793,7 @@ shinyServer(function(input, output, session) {
         } else {
             log_print("embs_kwargs | Learner (neither Moment or Moirai)")
             res <- list(
-               stride = as.integer(input$stride),
+               stride = as.integer(1),
                cpu = cpu_flag,
                to_numpy = TRUE,
                batch_size = batch_size,
@@ -838,7 +838,7 @@ shinyServer(function(input, output, session) {
         } else {
             log_print("embs_kwargs | Learner (neither Moment or Moirai)")
             res <- list(
-               stride = as.integer(input$stride),
+               stride =  as.integer(1), #as.integer(input$stride),
                cpu = cpu_flag,
                to_numpy = TRUE,
                batch_size = batch_size,
@@ -1515,7 +1515,7 @@ tcl_1 = Sys.time()
         unlist_window_indices = filtered_window_indices()
         # Calculate a vector of differences to detect idx where a new window should be created 
         diff_vector <- diff(unlist_window_indices,1)
-        log_print(paste0("|| window list || diff ", diff_vector))
+        #log_print(paste0("|| window list || diff ", diff_vector))
         # Take indexes where the difference is greater than one (that represent a change of window)
         idx_window_limits <- which(diff_vector!=1)
         log_print(paste0("|| window_list || idx_window_limits", idx_window_limits))

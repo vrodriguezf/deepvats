@@ -328,17 +328,17 @@ def get_enc_embs_ensure_batch_size_(
 ) -> None:
     if batch_size is None:
         if verbose > 1: 
-            print_flush("[ Get Encoder Embeddings Ensure Batch Size ] No batch size proposed")
+            print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] No batch size proposed", verbose = verbose)
         if dls.bs == 0: 
             if verbose > 1: 
-                print_flush("[ Get Encoder Embeddings Ensure Batch Size ] Using value 64 as 0 is not a valid value.")
+                print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Using value 64 as 0 is not a valid value.", verbose = verbose)
             enc_learn.dls.bs = 64
         elif verbose > 1: 
-            print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Using the original value: {dls.bs}")
+            print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Using the original value: {dls.bs}", verbose = verbose)
     else:
         dls.bs = batch_size
         if verbose > 1: 
-            print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}")
+            print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}", verbose = verbose)
 
 # %% ../nbs/encoder.ipynb 20
 def get_enc_embs_MVP(
@@ -461,52 +461,52 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
     if time_flag:
         t_start = time.time()
     if verbose > 0:
-        print_flush("--> get_enc_embs_set_stride_set_batch_size")
+        print_flush("--> get_enc_embs_MVP_set_stride_set_batch_size", verbose = verbose)
     if check_memory_usage: gpu_memory_status()
     X = X[::stride]
     enc_learn.dls.bs = batch_size 
 
     get_enc_embs_ensure_batch_size_(enc_learn.dls, batch_size, verbose)
     
-    if verbose > 0: print_flush("get_enc_embs_set_stride_set_batch_size | Check CUDA | X ~ ", X.shape[0])
+    if verbose > 0: print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Check CUDA | X ~ {X.shape[0]}", verbose = verbose)
     if cpu:
-        if verbose > 0: print_flush("get_enc_embs_set_stride_set_batch_size | Get enc embs CPU")
+        if verbose > 0: print_flush("get_enc_embs_MVP_set_stride_set_batch_size | Get enc embs CPU")
         enc_learn.dls.cpu()
         enc_learn.cpu()
     else:
         if torch.cuda.is_available():
             if verbose > 0: 
-                print_flush("get_enc_embs_set_stride_set_batch_size | CUDA device id:", torch.cuda.current_device())
-                print_flush("get_enc_embs_set_stride_set_batch_size | CUDA device name: ", torch.cuda.get_device_name(torch.cuda.current_device()))
-                print_flush("get_enc_embs_set_stride_set_batch_size | Ensure empty cache & move 2 GPU")
+                print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | CUDA device id: {torch.cuda.current_device()}", verbose = verbose)
+                print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | CUDA device name: {torch.cuda.get_device_name(torch.cuda.current_device())}", verbose = verbose)
+                print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Ensure empty cache & move 2 GPU")
             torch.cuda.empty_cache()
             enc_learn.dls.cuda()
             enc_learn.cuda()
         else:
-            if verbose > 0: print_flush("get_enc_embs_set_stride_set_batch_size | No cuda available. Set CPU = true")
+            if verbose > 0: print_flush("get_enc_embs_MVP_set_stride_set_batch_size | No cuda available. Set CPU = true")
             cpu = True
             
     get_enc_embs_ensure_batch_size_(enc_learn.dls, batch_size, verbose)
 
-    if verbose > 0: print_flush("get_enc_embs_set_stride_set_batch_size | Set dataset from X (enc_learn does not contain dls)")
+    if verbose > 0: print_flush("get_enc_embs_MVP_set_stride_set_batch_size | Set dataset from X (enc_learn does not contain dls)", verbose = verbose)
     aux_dl = enc_learn.dls.valid.new_dl(X=X)
     aux_dl.bs = enc_learn.dls.bs if enc_learn.dls.bs>0 else 64
-    if verbose > 0: print_flush("get_enc_embs_set_stride_set_batch_size | Get module")
+    if verbose > 0: print_flush("get_enc_embs_MVP_set_stride_set_batch_size | Get module", verbose = verbose)
     module = nested_attr(enc_learn.model,ENCODER_EMBS_MODULE_NAME[type(enc_learn.model)]) if module is None else module
     
     if verbose > 0: 
-        #print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | module ", module)
-        print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl len", len(aux_dl))
-        print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl.batch_len ", len(next(iter(aux_dl))))
-        print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl.bs ", aux_dl.bs)
+        #print_flush("get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | module ", module)
+        print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | aux_dl len {len(aux_dl)}", verbose = verbose)
+        print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | aux_dl.batch_len {len(next(iter(aux_dl)))}", verbose = verbose)
+        print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | aux_dl.bs {aux_dl.bs}", verbose = verbose)
         if (not cpu):
             total = torch.cuda.get_device_properties(device).total_memory
             used = torch.cuda.memory_allocated(torch.cuda.current_device())
             reserved = torch.cuda.memory_reserved(torch.cuda.current_device())
-            print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | total_mem ", total)
-            print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | used_mem ", used)
-            print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | reserved_mem ", reserved)
-            print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | available_mem ", total-reserved)
+            print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | total_mem {total}", verbose = verbose)
+            print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | used_mem {used}", verbose = verbose)
+            print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | reserved_mem {reserved}" ,verbose = verbose)
+            print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | available_mem {total-reserved}", verbose = verbose)
             sys.stdout.flush()
                                               
     if (cpu or ( chunk_size == 0 )):
@@ -523,10 +523,10 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
     else:
         embs = []
         total_chunks=max(1,round(len(X)/chunk_size))
-        if verbose > 0: print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | aux_dl len | " + str(len(X)) + " chunk size: " + str(chunk_size) + " => " + str(total_chunks) + " chunks")
+        if verbose > 0: print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | aux_dl len | {str(len(X))}  chunk size: {str(chunk_size) } => { str(total_chunks) }  chunks", verbose = verbose)
         for i in range(0, total_chunks):
             if verbose > 0: 
-                print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | Chunk [ " + str(i) + "/"+str(total_chunks)+"] => " + str(round(i*100/total_chunks)) + "%")
+                print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | Chunk [ {str(i)}/{str(total_chunks)}] => {str(round(i*100/total_chunks))}%", verbose = verbose)
                 sys.stdout.flush()
             chunk = [batch for (n, batch) in enumerate(aux_dl) if (chunk_size*i <= n  and chunk_size*(i+1) > n) ]
             chunk_embs = [
@@ -543,18 +543,18 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
             embs.extend(chunk_embs)
             torch.cuda.empty_cache()
         if verbose > 0: 
-            print_flush("get_enc_embs_set_stride_set_batch_size | Get acts and grads | 100%")
+            print_flush("get_enc_embs_MVP_set_stride_set_batch_size | Get acts and grads | 100%", verbose = verbose)
             sys.stdout.flush()
     
-    if verbose > 0: print_flush("get_enc_embs_set_stride_set_batch_size | concat embeddings")
+    if verbose > 0: print_flush("get_enc_embs_MVP_set_stride_set_batch_size | concat embeddings", verbose = verbose)
     
     embs = to_concat(embs)
     
-    if verbose > 0: print_flush("get_enc_embs_set_stride_set_batch_size | Reduce")
+    if verbose > 0: print_flush("get_enc_embs_MVP_set_stride_set_batch_size | Reduce", verbose = verbose)
     
     if embs.ndim == 3 and average_seq_dim: embs = embs.mean(axis=2)
     
-    if verbose > 0: print_flush("get_enc_embs_set_stride_set_batch_size | Convert to numpy")
+    if verbose > 0: print_flush("get_enc_embs_MVP_set_stride_set_batch_size | Convert to numpy", verbose = verbose)
     
     if to_numpy: 
         if cpu or chunk_size > 0:
@@ -565,12 +565,12 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
     if time_flag:
         t = time.time()-t_start
         if verbose > 0:
-            print_flush("get_enc_embs_set_stride_set_batch_size " + str(t) + " seconds -->")
+            print_flush("get_enc_embs_MVP_set_stride_set_batch_size " + str(t) + " seconds -->", verbose = verbose)
         else:
-            print_flush("get_enc_embs_set_stride_set_batch_size " + str(t) + " seconds")
+            print_flush("get_enc_embs_MVP_set_stride_set_batch_size " + str(t) + " seconds", verbose = verbose)
     if check_memory_usage: gpu_memory_status()
     if verbose > 0: 
-        print_flush("get_enc_embs_set_stride_set_batch_size -->")
+        print_flush("get_enc_embs_MVP_set_stride_set_batch_size -->", verbose = verbose)
     return embs
 
 # %% ../nbs/encoder.ipynb 22
@@ -583,18 +583,18 @@ def get_enc_embs_moment(
     average_seq_dim : bool = True
 ):
     if verbose > 0: 
-        print_flush("--> get_enc_embs_moment")
+        print_flush("--> get_enc_embs_moment", verbose = verbose)
     # Move tensor and model to GPU
     if cpu or not torch.cuda.is_available():
         if verbose > 0: 
-            print_flush("get_enc_embs_moment | Using CPU (maybe no cuda available)")
+            print_flush("get_enc_embs_moment | Using CPU (maybe no cuda available)", verbose = verbose)
         cpu = True
         enc_learn.cpu()
     else:
         if verbose > 0: 
-            print_flush("get_enc_embs_moment | Using CUDA")
+            print_flush("get_enc_embs_moment | Using CUDA", verbose = verbose)
         enc_learn.to("cuda")
-    if verbose > 0: print_flush("get_enc_embs_moment | Convert y")
+    if verbose > 0: print_flush("get_enc_embs_moment | Convert y", verbose = verbose)
     enc_learn.eval()
     if cpu:
         y = torch.from_numpy(X).cpu().float()
@@ -603,23 +603,23 @@ def get_enc_embs_moment(
     # Get output
     with torch.no_grad():
         if verbose > 0: 
-            print_flush("get_enc_embs_moment | Get outputs")
+            print_flush("get_enc_embs_moment | Get outputs", verbose = verbose)
         outputs = enc_learn(y)
         if verbose > 0:
-            print_flush(f"get_enc_embs_moment | Final shape: X ~ {y.shape}")
+            print_flush(f"get_enc_embs_moment | Final shape: X ~ {y.shape}", verbose = verbose)
                 
     #| move tensors and models back to CPU
     if not cpu:
         y = y.detach().cpu().numpy()
     if verbose > 0: 
-        print_flush("get_enc_embs_moment | Get Embeddings")
+        print_flush("get_enc_embs_moment | Get Embeddings", verbose = verbose)
     embeddings = outputs.embeddings.detach().cpu()
     if average_seq_dim: 
         embeddings = embeddings.mean(dim = 1)
     if to_numpy:
         embeddings = embeddings.cpu().numpy()
     if verbose > 0: 
-        print_flush("get_enc_embs_moment -->")
+        print_flush("get_enc_embs_moment -->", verbose = verbose)
     return embeddings
 
 # %% ../nbs/encoder.ipynb 23
@@ -706,23 +706,23 @@ def get_enc_embs_moirai(
         timer = Time()
         timer.start()
     if verbose > 0: 
-        print_flush("--> get_enc_embs_moirai")
+        print_flush("--> get_enc_embs_moirai", verbose = verbose)
     # Move tensor and model to GPU
     past_target = einops.rearrange(
         torch.as_tensor(enc_input, dtype = torch.float32),
         "n_windows n_vars window_size -> n_windows window_size n_vars"
     )
     if cpu or not torch.cuda.is_available():
-        if verbose > 0: print_flush("get_enc_embs_moirai | Using CPU (maybe no cuda available)")
+        if verbose > 0: print_flush("get_enc_embs_moirai | Using CPU (maybe no cuda available)", verbose = verbose)
         cpu = True
         enc_model.cpu()
         past_target.cpu()
     else:
-        if verbose > 0: print_flush("get_enc_embs_moirai | Using CUDA")
+        if verbose > 0: print_flush("get_enc_embs_moirai | Using CUDA", verbose = verbose)
         enc_model.to("cuda")
         past_target.to("cuda")
         
-    if verbose > 0: print_flush("get_enc_embs_moirai | Get Outputs")
+    if verbose > 0: print_flush("get_enc_embs_moirai | Get Outputs", verbose = verbose)
 
     
     past_observed_target = torch.ones_like(past_target, dtype=torch.bool)
@@ -807,15 +807,15 @@ def get_enc_embs_moirai(
     acts = None
     if average_seq_dim :
         if verbose > 0: 
-            print_flush(f"get_enc_embs_moirai | About to reduce activations")
+            print_flush(f"get_enc_embs_moirai | About to reduce activations", verbose = verbose)
         embs = embs.mean(dim = 1)
     
     if not cpu:
         #print_flush(f"get_enc_embs_moirai | enc_input to cpu")
         #enc_input.cpu()
-        print_flush(f"get_enc_embs_moirai | enc_model to cpu")
+        print_flush(f"get_enc_embs_moirai | enc_model to cpu", verbose = verbose)
         enc_model.cpu()
-        print_flush(f"get_enc_embs_moirai | torch cuda empty cache")
+        print_flush(f"get_enc_embs_moirai | torch cuda empty cache", verbose = verbose)
         torch.cuda.empty_cache()
     if to_numpy: 
         if cpu > 0:
@@ -824,8 +824,8 @@ def get_enc_embs_moirai(
             embs = embs.cpu().numpy()
             torch.cuda.empty_cache()
     if verbose > 0: 
-        print_flush(f"get_enc_embs_moirai | embs ~ {embs.shape}")
-        print_flush("get_enc_embs_moirai -->")
+        print_flush(f"get_enc_embs_moirai | embs ~ {embs.shape}", verbose = verbose)
+        print_flush("get_enc_embs_moirai -->", verbose = verbose)
     return embs
 
 # %% ../nbs/encoder.ipynb 30
@@ -849,7 +849,7 @@ def get_enc_embs(
                 case "reconstruction":
                     embs = get_enc_embs_moment_reconstruction(X, enc_learn, cpu, to_numpy, verbose, average_seq_dim, **kwargs)
                 case _:
-                    print_flush(f"Model embeddings for moment-{enc_learn.task_name} is not yet implemented.")
+                    print_flush(f"Model embeddings for moment-{enc_learn.task_name} is not yet implemented.", verbose = verbose)
         case "fastai.learner.Learner":
             embs = get_enc_embs_MVP_set_stride_set_batch_size(X, enc_learn, stride, batch_size, module, cpu, average_seq_dim, to_numpy, verbose, False, 0, False)
         case "uni2ts.model.moirai.module.MoiraiModule":
@@ -862,7 +862,7 @@ def get_enc_embs(
                 **kwargs
             )
         case _:
-            print_flush(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.")
+            print_flush(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.", verbose = verbose)
     return embs
 
 # %% ../nbs/encoder.ipynb 31
@@ -881,23 +881,23 @@ def get_enc_embs_set_stride_set_batch_size(
     check_memory_usage : bool = False,
     **kwargs
 ):
-    print_flush("--> get_enc_embs_set_stride_set_batch_size")
+    print_flush("--> get_enc_embs_set_stride_set_batch_size", verbose = verbose)
     embs = None
     enc_learn_class = str(enc_learn.__class__)[8:-2]
     match enc_learn_class:
         case "momentfm.models.moment.MOMENTPipeline":
             if verbose > 0: 
-                print_flush(f"get_enc_embs_set_stride_set_batch_size | Moment | {average_seq_dim}")
+                print_flush(f"get_enc_embs_set_stride_set_batch_size | Moment | {average_seq_dim}", verbose = verbose)
             match enc_learn.task_name:
                 case "embedding":
                     embs = get_enc_embs_moment( X = X, enc_learn = enc_learn, cpu = cpu, to_numpy = to_numpy, verbose = verbose, average_seq_dim = average_seq_dim)
                 case "reconstruction":
                     embs = get_enc_embs_moment_reconstruction(X= X, enc_learn = enc_learn, cpu = cpu, to_numpy = to_numpy, verbose = verbose, average_seq_dim = average_seq_dim, **kwargs)
                 case _:
-                    print_flush(f"Model embeddings for moment-{enc_learn.task_name} is not yet implemented.")
+                    print_flush(f"Model embeddings for moment-{enc_learn.task_name} is not yet implemented.", verbose = verbose)
         case "fastai.learner.Learner":
             if verbose > 0: 
-                print_flush(f"get_enc_embs_set_stride_set_batch_size | MVP | {average_seq_dim}")
+                print_flush(f"get_enc_embs_set_stride_set_batch_size | MVP | {average_seq_dim}", verbose = verbose)
             embs = get_enc_embs_MVP_set_stride_set_batch_size(
                 X = X, 
                 enc_learn = enc_learn, 
@@ -914,7 +914,7 @@ def get_enc_embs_set_stride_set_batch_size(
             )
         case "uni2ts.model.moirai.module.MoiraiModule":
             if verbose > 0: 
-                print_flush(f"get_enc_embs_set_stride_set_batch_size | Moirai | {average_seq_dim}")
+                print_flush(f"get_enc_embs_set_stride_set_batch_size | Moirai | {average_seq_dim}", verbose = verbose)
             embs = get_enc_embs_moirai(
                 enc_input  = X, 
                 enc_model  = enc_learn,
@@ -925,18 +925,18 @@ def get_enc_embs_set_stride_set_batch_size(
                 **kwargs
             )
         case _:
-            print_flush(f"[ get_enc_embs_set_stride_set_batch_size ] Model embeddings implementation is not yet implemented for {enc_learn_class}.")
+            print_flush(f"[ get_enc_embs_set_stride_set_batch_size ] Model embeddings implementation is not yet implemented for {enc_learn_class}.", verbose = verbose)
     # Ñapa: TODO: Gestionar que no se queden en memoria los modelos porque ocupan el 40% de la GPU al llamarlos desde R
-    if verbose > 0: print_flush(f"get_enc_embs_set_stride_set_batch_size | Before moving to CPU | embs~{embs.shape}")
+    if verbose > 0: print_flush(f"get_enc_embs_set_stride_set_batch_size | Before moving to CPU | embs~{embs.shape}", verbose = verbose)
     if cpu:
         #X.cpu()
         enc_learn.cpu()
         try: 
             enc_lear.dls.cpu()
         except Exception as e: 
-            print_flush(f"get_enc_embs_set_stride_set_batch_size | Exception: {e}")
+            print_flush(f"get_enc_embs_set_stride_set_batch_size | Exception: {e}", verbose = verbose)
         #kwargs_to_cpu_(**kwargs)
-    if verbose > 0: print_flush(f"get_enc_embs_set_stride_set_batch_size | embs~{embs.shape} -->")
+    if verbose > 0: print_flush(f"get_enc_embs_set_stride_set_batch_size | embs~{embs.shape} -->", verbose = verbose)
     return embs
 
 # %% ../nbs/encoder.ipynb 34

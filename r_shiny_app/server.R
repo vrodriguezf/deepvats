@@ -870,17 +870,15 @@ shinyServer(function(input, output, session) {
                 fine_tune = input$fine_tune
             )
         if (embs_first_comp() || ! identical(current_inputs, last_inputs())){
+            shinyjs::enable("embs_comp")
             log_print("Embs | First embedding computation, skipping cache")
             embs_first_comp(FALSE)
-            res <- embs_comp()
-            cached_embeddings(res)
+            cached_embeddings(embs_comp())
+            shinyjs::disable("embs_comp")
         } else {
-            #log_print("Embs | Using bindCache")
-            #embs_comp() %>% bindCache(input$dataset, input$encoder, input$wlen, input$stride)
             last_inputs(current_inputs)
-            res <- isolate(cached_embeddings())
         }
-        res
+        isolate(cached_embeddings())
     })
     ###########################
 
@@ -1512,6 +1510,7 @@ tcl_1 = Sys.time()
     })
 
     window_list <- reactive({
+        # Get the indices of the windows related to the selected projection points
         log_print("--> window_list")
         on.exit(log_print("window_list -->"))
         # Get the window indices
@@ -1528,16 +1527,16 @@ tcl_1 = Sys.time()
         # Create a reduced window list
         reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
         # Populate the first element of the list with the idx of the first window.
-        reduced_window_list[[1]] = c(
-            tsdf()$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
-            tsdf()$timeindex[unlist_window_indices[idx_window_limits[2]]]
+        reduced_window_list[[1]] = c(            
+            unlist_window_indices[idx_window_limits[1]+1],
+            unlist_window_indices[idx_window_limits[2]]
         ) 
         # Populate the rest of the list
         if (length(idx_window_limits) > 2) {
             for (i in 2:(length(idx_window_limits)-1)){
                 reduced_window_list[[i]]<- c(
-                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
+                    unlist_window_indices[idx_window_limits[i]+1],
+                    unlist_window_indices[idx_window_limits[i+1]]
                )
             }
         }
@@ -1565,15 +1564,21 @@ tcl_1 = Sys.time()
         log_print("ts_plot | Before if")
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
             reduced_window_list = req(window_list())
-            log_print(paste0("ts_plot | Selected projections ", reduced_window_list[1]), TRUE, log_path(), log_header())
+            #log_print(paste0("ts_plot | Selected projections ", reduced_window_list[1]), TRUE, log_path(), log_header())
             start_indices = min(sapply(reduced_window_list, function(x) x[1]))
             end_indices = max(sapply(reduced_window_list, function(x) x[2]))
+
+            log_print(paste0("|| ts_plot || Reduced ", reduced_window_list))
+            log_print(paste0("|| ts_plot || sd_id ", start_indices))
+            log_print(paste0("|| ts_plot || ed_id ", end_indices))
+
             if (!is.na(start_indices) && !is.na(end_indices)) {
                 view_size = end_indices-start_indices+1
                 max_size = 10000
 
                 start_date = tsdf()$timeindex[start_indices]
                 end_date = tsdf()$timeindex[end_indices]
+                start_date
 
                 log_print(paste0("ts_plot | reuced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
             

@@ -143,49 +143,6 @@ make_individual_dygraph <- function(i){
   plt
 }
 
-log_print <- function(mssg, file_flag = FALSE, file_path = "", log_header = "") {
-  time <- format(Sys.time(), "%H:%M:%OS3")
-  formated_mssg = paste0(time, "::::", log_header, "::::", mssg, "\n")
-  print(formated_mssg)
-  if (file_flag && file_path != "") {
-    file_path = paste0 ("../data/", file_path)
-    if (!file.exists(file_path)) {
-      file.create(file_path)
-    }
-    cat(formated_mssg, file = file_path, append = TRUE)
-  }
-}
-
-log_add <- function(
-  log_mssg, 
-  function_,
-  cpu_flag,
-  dr_method,
-  clustering_options,
-  zoom,
-  mssg, 
-  time
-) {
-  if (is.null(time)) {print("Time is empty! Check it out")}
-  timestamp = format(as.POSIXct(Sys.time(), origin = "1970-01-01"), "%Y-%m-%d %H:%M:%OS3")
-  new_mssg = data.frame(
-    timestamp           = timestamp,
-    function_           = function_,
-    cpu_flag            = cpu_flag,
-    dr_method           = dr_method,
-    clustering_options  = clustering_options,
-    zoom                = ifelse(is.null(zoom), FALSE, zoom),
-    time                = ifelse(is.null(time), 0, time),
-    mssg                = ifelse(is.null(mssg), "", mssg),
-    stringsAsFactors    = FALSE  # Evitar factores
-  )
-  print(paste0("Log add | ", function_))
-  new_mssg = rbind(log_mssg, new_mssg)
-  return(new_mssg) 
-}
-
-
-
 # Función para leer o inicializar el ID de ejecución
 get_execution_id <- function(file) {
   if (file.exists(file)) {
@@ -200,3 +157,11 @@ get_execution_id <- function(file) {
   print(paste0("Execution id: ", id))
   return(id)
 }
+
+# Check if an element is enabled or not
+jsCode <- '
+shinyjs.checkEnabled = function(id) {
+  var isEnabled = !document.getElementById(id).hasAttribute("disabled");
+  Shiny.setInputValue(id + "_enabled", isEnabled);
+}
+'

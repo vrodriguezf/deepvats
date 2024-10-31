@@ -17,6 +17,7 @@ select_datasetServer <- function(
     encs_l, mplot_compute_allow, input, output, session
 ){
     observeEvent(input$dataset, {
+        req(input$dataset != "")
         mplot_compute_allow(FALSE)
         shinyjs::disable("get_tsdf")
         #req(encs_l)

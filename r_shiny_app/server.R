@@ -122,26 +122,26 @@ shinyServer(function(input, output, session) {
         {
             log_print(
                 mssg = "--> observeEvent input_encoder", 
-                file_flag = TRUE, 
-                file_path = log_path(),
-                log_header =log_header(),
-                debug_level, 'main'
+                file_flag   = TRUE, 
+                file_path   = log_path(),
+                log_header  = log_header(),
+                debug_group = 'main'
             )
             
             freezeReactiveValue(input, "wlen")
             
-            log_print("observeEvent input_encoder | update wlen | Before enc_ar", debug_level = debug_level, debug_group = 'generic')
+            log_print("observeEvent input_encoder | update wlen | Before enc_ar", debug_group = 'generic')
             
             enc_ar = enc_ar()
             
-            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar: ", enc_ar, "| Set wlen slider values"), debug_level = debug_level, debug_group = 'generic')
+            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar: ", enc_ar, "| Set wlen slider values"),  debug_group = 'generic')
     
             if (is.null(enc_ar$metadata$mvp_ws)) {
-                log_print("observeEvent input_encoder | update wlen | Set wlen slider values from w | ", debug_level = debug_level, debug_group = 'generic')
+                log_print("observeEvent input_encoder | update wlen | Set wlen slider values from w | ",  debug_group = 'generic')
                 enc_ar$metadata$mvp_ws = c(enc_ar$metadata$w, enc_ar$metadata$w)
             }
             
-            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ), debug_level = debug_level, debug_group = 'generic')
+            log_print(paste0("observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ),  debug_group = 'generic')
             
             wmin <- enc_ar$metadata$mvp_ws[1]
             wmax <- enc_ar$metadata$mvp_ws[2]
@@ -151,7 +151,7 @@ shinyServer(function(input, output, session) {
                 paste0(
                     "observeEvent input_encoder | update wlen | Update slider input (", 
                     wmin, ", ", wmax, " ) -> ", wlen 
-                ), debug_level = debug_level, debug_group = 'generic')
+                ),  debug_group = 'generic')
             
             updateSliderInput(session = session, inputId = "wlen",
                 min = wmin,
@@ -204,7 +204,7 @@ shinyServer(function(input, output, session) {
 
     observeEvent(input$restore_wlen_stride, {
         enc_ar = isolate(enc_ar())
-         log_print(paste0("observeEvent restore wlen stride | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ), debug_level = debug_level, debug_group = 'generic')
+         log_print(paste0("observeEvent restore wlen stride | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ),  debug_group = 'generic')
             
             wmin <- enc_ar$metadata$mvp_ws[1]
             wmax <- enc_ar$metadata$mvp_ws[2]
@@ -214,7 +214,7 @@ shinyServer(function(input, output, session) {
                 paste0(
                     "observeEvent restore wlen stride | update wlen | Update slider input (", 
                     wmin, ", ", wmax, " ) -> ", wlen 
-                ), debug_level = debug_level, debug_group = 'generic')
+                ),  debug_group = 'generic')
             
             updateSliderInput(session = session, inputId = "wlen",
                 min = wmin,
@@ -244,9 +244,9 @@ shinyServer(function(input, output, session) {
 
     # Obtener el valor de stride
     enc_ar_stride <- eventReactive(enc_ar(),{
-        log_print("--> reactive enc_ar_stride", debug_level = debug_level, debug_group = 'generic')
+        log_print("--> reactive enc_ar_stride",  debug_group = 'generic')
         stride <- enc_ar()$metadata$stride
-        on.exit({log_print(paste0("reactive_enc_ar_stride | --> ", stride), debug_level = debug_level, debug_group = 'generic'); flush.console()})
+        on.exit({log_print(paste0("reactive_enc_ar_stride | --> ", stride),  debug_group = 'generic'); flush.console()})
         stride
     })
         
@@ -261,22 +261,28 @@ shinyServer(function(input, output, session) {
 
     observeEvent(input$play_embs, {
         allow_update_embs(!allow_update_embs())
+        shinyjs::js$checkEnabled("embs")
+        if (input$embs_enabled){
+            shinyjs::disable("embs")
+        } else {
+            shinyjs::enable("embs")
+        }
     })
 
 
     observeEvent(input$wlen, {
         req(input$wlen)
-        log_print(mssg = paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen), debug_level = debug_level, debug_group = 'generic')
+        log_print(mssg = paste0("--> observeEvent input_wlen | update slide stride value | wlen ",  input$wlen),  debug_group = 'generic')
         tryCatch({
             old_value = input$stride
             if (input$stride == 0 | input$stride == 1){
                 old_value = enc_ar_stride()
-                log_print(paste0("enc_ar_stride: ", old_value), debug_level = debug_level, debug_group = 'generic')
+                log_print(paste0("enc_ar_stride: ", old_value),  debug_group = 'generic')
             }
             
             freezeReactiveValue(input, "stride")
             
-            log_print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value), debug_level = debug_level, debug_group = 'generic')
+            log_print(paste0("oserveEvent input_wlen | update slide stride value | Update stride to ", old_value),  debug_group = 'generic')
         
             updateSliderInput(
                 session = session, inputId = "stride", 
@@ -285,7 +291,7 @@ shinyServer(function(input, output, session) {
             )
 
         }, error = function(e){
-            log_print(paste0("observeEvent input_wlen | update slide stride value | Error | ", e$message), file_flag = FALSE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic')
+            log_print(paste0("observeEvent input_wlen | update slide stride value | Error | ", e$message), file_flag = FALSE, file_path = log_path(), log_header = log_header(),  debug_group = 'generic')
         }, warning = function(w) {
             message(paste0("observeEvent input_wlen | update slide stride value | Warning | ", w$message))
         })
@@ -293,7 +299,7 @@ shinyServer(function(input, output, session) {
             log_print(paste0( 
             "observeEvent input_wlen | update slide stride value | Finally |  wlen min ",  
             1, " max ", input$wlen, " current value ", input$stride, " -->"), 
-            file_flag = FALSE, file_path = log_path(), log_header = log_header(), debug_level = debug_level, debug_group = 'generic'
+            file_flag = FALSE, file_path = log_path(), log_header = log_header(),  debug_group = 'generic'
         ); flush.console()})
     })
 
@@ -309,8 +315,8 @@ shinyServer(function(input, output, session) {
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
         req(allow_tsdf() == TRUE)
-        log_print("--> observeEvent tsdf | update select variables", debug_level = debug_level, debug_group = 'main')
-        on.exit({log_print("--> observeEvent tsdf | update select variables -->", debug_level = debug_level, debug_group = 'main'); flush.console()})
+        log_print("--> observeEvent tsdf | update select variables",  debug_group = 'main')
+        on.exit({log_print("--> observeEvent tsdf | update select variables -->",  debug_group = 'main'); flush.console()})
         
         ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
         
@@ -327,9 +333,9 @@ shinyServer(function(input, output, session) {
        
     # Update precomputed_clusters reactive value when the input changes
     observeEvent(input$clusters_labels_name, {
-        log_print("--> observe | precomputed_cluster selected ", debug_level = debug_level, debug_group = 'generic')
+        log_print("--> observe | precomputed_cluster selected ",  debug_group = 'generic')
         precomputed_clusters$selected <- req(input$clusters_labels_name)
-        log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected), debug_level = debug_level, debug_group = 'generic')
+        log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected),  debug_group = 'generic')
     })
     
     
@@ -357,8 +363,8 @@ shinyServer(function(input, output, session) {
     # Observe the events related to zoom the projections graph
     observeEvent(input$zoom_btn, {
         send_log("Zoom btn_start", session)
-        log_print("--> observeEvent zoom_btn", debug_level = debug_level, debug_group = 'generic')
-        on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn)), debug_level = debug_level, debug_group = 'generic'))
+        log_print("--> observeEvent zoom_btn",  debug_group = 'generic')
+        on.exit(log_print(paste0("--> observeEvent zoom_btn ", isTRUE(input$zoom_btn)),  debug_group = 'generic'))
         
         brush <- input$projections_brush
         if (!is.null(brush)) {
@@ -851,7 +857,6 @@ shinyServer(function(input, output, session) {
 
     ####  CACHING EMBEDDINGS ####
     # TODO: Conseguir que funcione el cache, sigue recalculando todo
-    embs_first_comp <- reactiveVal(TRUE)
 
     cached_embeddings <- reactiveVal(NULL)
     last_inputs <- reactiveVal(
@@ -871,10 +876,23 @@ shinyServer(function(input, output, session) {
             stride    = input$stride,
             fine_tune = input$fine_tune
         )
-        if (embs_first_comp() || ! identical(current_inputs, last_inputs())){
+        if (is.null(cached_embeddings()) || ! identical(current_inputs, last_inputs())){
             shinyjs::enable("embs_comp")
-            log_print("|| Embs || First embedding computation, skipping cache")
-            embs_first_comp(FALSE)
+            if (DEBUG_LEVEL > 0){
+                if (is.null(cached_embeddings())){
+                    log_print("|| Embs || First embedding computation, skipping cache")
+                } else {
+                    different_params <- names(current_inputs)[
+                        sapply(names(current_inputs), 
+                        function(name) !identical(current_inputs[[name]], last_inputs()[[name]]))
+                    ]
+                    for (param in different_params) {
+                        old_value <- last_inputs()[[param]]
+                        new_value <- current_inputs[[param]]
+                        log_print(sprintf("|| Embs || | %-10s | Old: %-20s | New: %-20s |", param, old_value, new_value))
+                    }   
+                }
+            }
             res <- embs_comp()
             cached_embeddings(res)
             shinyjs::disable("embs_comp")
@@ -1501,7 +1519,7 @@ tcl_1 = Sys.time()
 
         embedding_indices <- embedding_ids()
         
-        window_indices <- get_window_indices_(embedding_indices, input$wlen, input$stride)
+        window_indices <- get_window_indices_(embedding_indices, input$wlen, input$stride, log_path(), log_header())
         window_indices
     })
 
@@ -1889,7 +1907,6 @@ tcl_1 = Sys.time()
                     file_flag = TRUE, 
                     file_path = log_path(), 
                     log_header = log_header(), 
-                    debug_level = debug_level, 
                     debug_group ='main'
                 )
             #temp_log <<- log_add(

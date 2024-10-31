@@ -34,6 +34,8 @@ configuration:
     mvp:
       # Tuple (min_w, max_x) to train MVP with adaptable window sizes. Usually max_w = config.w
       # Set to null to train MVP with fixed window size
+      #ws1: 288 #32
+      #ws2: &wlen 720 #72
       ws1: 36
       ws2: &wlen 72
       # probability of masking in MVP
@@ -49,6 +51,5 @@ configuration:
       # This will set the percentage of items that go to val 
       # window size for the sliding window (taxi=48, steamflow=640)
       #w
-      #size: *wlen
-      size: 72
+      size: *wlen
       

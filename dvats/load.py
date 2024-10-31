@@ -204,8 +204,10 @@ def infer_or_inject_freq(df, injected_freq='1s', start_date=None, verbose = 0, *
                 start_date = pd.to_datetime(ifnone(start_date, df.index[0]), **kwargs)
                 new_index = pd.date_range(
                     start = start_date, periods = len(df), 
-                    freq = timedelta)
+                    freq = timedelta
+                )
                 df.index = new_index
+                if start_date is not None: df.index += start_date
                 df.index.freq = pd.infer_freq(df.index)
     else:
         df.index.freq = inferred_freq

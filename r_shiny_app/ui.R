@@ -1,4 +1,5 @@
 source("./lib/ui/ui.R")
+source("./lib/global/global.R")
 source("./modules/information.R")
 source("./modules/mplots.R")
 source("./modules/embeddings.R")
@@ -21,14 +22,16 @@ shinyUI(fluidPage(
     tags$style(HTML(rotate_plot_style)),
     tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.8.2/css/all.css")
   ),
-  
   #theme = shinythemes::shinytheme("cerulean"),
   # Application title
   titlePanel("DeepVATS"),
   
   # Load Shinyjs
   shinyjs::useShinyjs(),
-  
+  extendShinyjs( 
+    text = jsCode,  
+    functions = c("checkEnabled") 
+  ),
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(

@@ -82,7 +82,7 @@ data:
     # Resampling frequency (null for no resampling)
     resampling_freq: '20T'
     # Starting date (in format yyyy-mm-dd) (set to null for default start date)
-    start_date: null
+    start_date: '2022-03-01'
     # Ratio of test set, only if range_training and range_testing are null
     # Set to null for no test set (offline mode, all training)
     test_split: null

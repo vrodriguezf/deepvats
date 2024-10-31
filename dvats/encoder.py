@@ -105,12 +105,17 @@ def get_acts(
     verbose : int = 0,
     retry: bool = False,
     acts_indices: List [ int ] = None,
+    #- Printing options for debugging
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a',
+    continue_if_fail: bool          = False,
     **model_kwargs #Parameters of the model
 ):
     if verbose > 0:
-        print_flush(f"--> get acts | acts indices: {acts_indices}")
+        print_flush(f"--> get acts | acts indices: {acts_indices}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     if cpu:
-        if verbose > 0: print_flush(f"get acts | Moving to cpu")
+        if verbose > 0: print_flush(f"get acts | Moving to cpu", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
         for key in model_kwargs:
             try: #if not able to be moved, just not move it
                 model_kwargs[key] = model_kwargs[key].cpu()
@@ -118,37 +123,37 @@ def get_acts(
                 continue
         model.to("cpu")
     else:
-        if verbose > 0: print_flush(f"get acts | Moving to gpu")
+        if verbose > 0: print_flush(f"get acts | Moving to gpu", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
         for key in model_kwargs:
             try: #if not able to be moved, just not move it
                 model_kwargs[key] = model_kwargs[key].to("cuda")
             except:
                 continue
         model.to("cuda")
-    if verbose > 0: print_flush(f"get acts | Add hooks")
+    if verbose > 0: print_flush(f"get acts | Add hooks", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     h_act = hook_outputs([module], detach = True, cpu = cpu, grad = False)
     with torch.no_grad():
-        if verbose > 0: print_flush(f"get acts | --> Run forward")
+        if verbose > 0: print_flush(f"get acts | --> Run forward", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
         if retry:
-            if verbose > 0: print_flush(f"get acts | Retry")
+            if verbose > 0: print_flush(f"get acts | Retry", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
             try: 
                 preds = model.eval()(**model_kwargs)
             except Exception as e:
-                print_flush(f"get acts | Retry | Error: {e}")
-                print_flush(f"get acts | Retry | Kwargs: {model_kwargs}")
+                print_flush(f"get acts | Retry | Error: {e}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+                print_flush(f"get acts | Retry | Kwargs: {model_kwargs}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                 if not cpu:
-                    print_flush(f"get acts | Retry | Moving to cpu")
+                    print_flush(f"get acts | Retry | Moving to cpu", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                     for key in model_kwargs:
                         try: #if not able to be moved, just not move it
                             model_kwargs[key] = model_kwargs[key].cpu()
                         except:
                             continue
                     model.to("cpu")
-                    if verbose > 0: print_flush(f"get acts | Retry | cpu")
-                    print_flush(f"get acts | Retry | Get acts")
+                    if verbose > 0: print_flush(f"get acts | Retry | cpu", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+                    print_flush(f"get acts | Retry | Get acts", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                     preds = model.eval()(**model_kwargs)
         else:
-            if verbose > 2: print_flush(f"get acts | No Retry | Get acts | model kwargs: {model_kwargs}")
+            if verbose > 2: print_flush(f"get acts | No Retry | Get acts | model kwargs: {model_kwargs}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
             preds = model.eval()(**model_kwargs)
     if acts_indices is None:
         res = [o.stored for o in h_act]
@@ -158,19 +163,36 @@ def get_acts(
         if len(acts_indices) == 1:
             res = res[0]
         del stored
-    if verbose > 0: print_flush(f"get acts | Run forward -->")
-    if verbose > 0:print_flush(f"get acts -->")
+    if verbose > 0: print_flush(f"get acts | Run forward -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+    if verbose > 0:print_flush(f"get acts -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return res
 
 # %% ../nbs/encoder.ipynb 15
-def get_acts_moment(enc_learn, cpu, verbose, y, mask = None, padd_step = 100, retry = False, max_trials = 5, acts_indices = [0]):
+def get_acts_moment(
+    enc_learn, 
+    cpu             : bool          = False, 
+    verbose         : int           = 0, 
+    y               : List [ float ]= [], 
+    mask                            = None, 
+    padd_step       : int           = 100, 
+    # Parameters for avoiding errors
+    retry           : bool          = False, 
+    max_trials      : int           = 5,
+    # Activation selector (various vectors in the acts)
+    acts_indices    : List [ int ]  = [0],
+    #- Printing options for debugging
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a',
+    continue_if_fail: bool          = False
+):
     success = False 
     trial = 0
     embs = None
     while not success and trial < max_trials:
         trial += 1
         try:
-            if verbose > 0: print_flush(f"get_acts_moment | Trial {trial} | x_enc ~ {y.shape}")
+            if verbose > 0: print_flush(f"get_acts_moment | Trial {trial} | x_enc ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
             embs = get_acts(
                 model = enc_learn,
                 #module = enc_learn.encoder.dropout,
@@ -180,36 +202,37 @@ def get_acts_moment(enc_learn, cpu, verbose, y, mask = None, padd_step = 100, re
                 x_enc = y,
                 retry = retry,
                 acts_indices = acts_indices,
-                mask = mask
+                mask = mask,
+                print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, print_time = print_to_path
             )
             success = True
-            if verbose > 0 and acts_indices == [0] : print_flush(f"get_acts_moment | Trial {trial} | embs ~ {embs.shape}")
+            if verbose > 0 and acts_indices == [0] : print_flush(f"get_acts_moment | Trial {trial} | embs ~ {embs.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
         except Exception as e:
             if trial == max_trials - 1 : raise
             if verbose > 0:
-                print_flush(f"get_acts_moment | Trial {trial} | About to pad X (encoder input) | exception {e} | padd step: {padd_step}")
-                print_flush(f"get_acts_moment | Trial {trial} | y ~ {y.shape}")
+                print_flush(f"get_acts_moment | Trial {trial} | About to pad X (encoder input) | exception {e} | padd step: {padd_step}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+                print_flush(f"get_acts_moment | Trial {trial} | y ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
             if "tensor a" in str(e) and "tensor b" in str(e):
                 match = re.search(r'tensor a \((\d+)\) must match the size of tensor b \((\d+)\)', str(e))
                 tensor_a_size = int(match.group(1))
                 tensor_b_size = int(match.group(2))
                 padd = True
                 if trial > 1: 
-                    if verbose > 0: print_flush(f"------------------- Trial {trial}  -----------------")
+                    if verbose > 0: print_flush(f"------------------- Trial {trial}  -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                     if tensor_a_size > tensor_a_size_old:
-                        if verbose > 0:  print_flush(f"------------------- Trial {trial} | a > a_old -----------------")
+                        if verbose > 0:  print_flush(f"------------------- Trial {trial} | a > a_old -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                         padd = False
                         y = y [ ..., : tensor_a_size - tensor_b_size]
-                        if verbose > 0: print_flush(f"------------------- Trial {trial} |a > a_old | Reduced |  y ~ {y.shape} -----------------")
+                        if verbose > 0: print_flush(f"------------------- Trial {trial} |a > a_old | Reduced |  y ~ {y.shape} -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                 if padd:
-                    if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd -----------------")
+                    if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                     if tensor_a_size > tensor_b_size: 
-                        if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd | a > b -----------------")
+                        if verbose > 0: print_flush(f"------------------- Trial {trial} | Padd | a > b -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                         padd_step = tensor_a_size - tensor_b_size
                     y = torch.nn.functional.pad(y,(0,padd_step))
                 tensor_a_size_old = tensor_a_size
             else:
-                if verbose > 0: print_flush("Not the usual error. No padding, just fail")
+                if verbose > 0: print_flush("Not the usual error. No padding, just fail", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
                 raise
                 
     return embs
@@ -478,7 +501,7 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
             if verbose > 0: 
                 print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | CUDA device id: {torch.cuda.current_device()}", verbose = verbose)
                 print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | CUDA device name: {torch.cuda.get_device_name(torch.cuda.current_device())}", verbose = verbose)
-                print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Ensure empty cache & move 2 GPU")
+                print_flush(f"get_enc_embs_MVP_set_stride_set_batch_size | Ensure empty cache & move 2 GPU", verbose = verbose)
             torch.cuda.empty_cache()
             enc_learn.dls.cuda()
             enc_learn.cuda()
@@ -626,11 +649,16 @@ def get_enc_embs_moment(
 def get_enc_embs_moment_reconstruction(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
-    cpu             : bool = False, 
-    to_numpy        : bool = True,
-    verbose         : int  = 0,
-    average_seq_dim : bool = True,
-    padd_step       : int  = 2
+    cpu             : bool          = False, 
+    to_numpy        : bool          = True,
+    verbose         : int           = 0,
+    average_seq_dim : bool          = True,
+    padd_step       : int           = 2,
+    #- Printing options for debugging
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a',
+    continue_if_fail: bool          = False
 ):
     """
     For reconstruction sometimes mask get invalid values
@@ -644,14 +672,15 @@ def get_enc_embs_moment_reconstruction(
         enc_learn.to("cuda")
         y = torch.from_numpy(X).to("cuda").float()
     embs = get_acts_moment(
-        enc_learn = enc_learn, 
-        cpu = cpu, 
-        verbose = verbose, 
-        y = y, 
-        mask = None,
-        padd_step = padd_step,
-        retry = False ,
-        max_trials = 5
+        enc_learn       = enc_learn, 
+        cpu             = cpu, 
+        verbose         = verbose, 
+        y               = y, 
+        mask            = None,
+        padd_step       = padd_step,
+        retry           = False ,
+        max_trials      = 5,
+        print_to_path   = print_to_path, print_path = print_path, print_mode = print_mode
     )
     if average_seq_dim: 
         embs = embs.mean(dim = 1).mean(dim = 1)
@@ -898,6 +927,8 @@ def get_enc_embs_set_stride_set_batch_size(
         case "fastai.learner.Learner":
             if verbose > 0: 
                 print_flush(f"get_enc_embs_set_stride_set_batch_size | MVP | {average_seq_dim}", verbose = verbose)
+            if verbose > 1:
+                print_flush(f"get_enc_embs_set_stride_set_batch_size | X ~{X.shape}", verbose = verbose)
             embs = get_enc_embs_MVP_set_stride_set_batch_size(
                 X = X, 
                 enc_learn = enc_learn, 

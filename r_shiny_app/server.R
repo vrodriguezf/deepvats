@@ -262,6 +262,7 @@ shinyServer(function(input, output, session) {
     observeEvent(input$play_embs, {
         allow_update_embs(!allow_update_embs())
         shinyjs::js$checkEnabled("embs")
+        req(input$embs_enabled)
         if (input$embs_enabled){
             shinyjs::disable("embs")
         } else {

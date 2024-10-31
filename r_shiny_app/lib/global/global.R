@@ -161,7 +161,11 @@ get_execution_id <- function(file) {
 # Check if an element is enabled or not
 jsCode <- '
 shinyjs.checkEnabled = function(id) {
+  console.log("ID:", id);  // Imprimir ID en la consola del navegador
   var isEnabled = !document.getElementById(id).hasAttribute("disabled");
+  console.log("Is Enabled:", isEnabled);  // Imprimir el estado de habilitación
   Shiny.setInputValue(id + "_enabled", isEnabled);
+  console.log("Shiny input updated:", id + "_enabled");  // Confirmación de actualización
 }
 '
+#Cuidado, poner print en jsCode te abre la ventana de imprimir de ctrl+P

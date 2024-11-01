@@ -54,7 +54,11 @@ if (UPDATE_WANDB_ARTIFACTS) {
 }
 
 encs_names <- sapply(encs_l, function(art) art$name)
-log_print(paste0("Available encoders: ", encs_names))
+
+log_print(
+  paste0("Available encoders: ", encs_names),
+  debug_group = 'tmi'
+)
 
 # Add here any zero-shot model you may want to use
 zero_shot_models <- c("moment", "moirai")

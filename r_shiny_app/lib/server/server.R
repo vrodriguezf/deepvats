@@ -58,12 +58,10 @@ get_ts_plot_name <- function(
     prj_plot_id, 
     input
 ){
-    if (VERBOSE > 0){log_print("--> get_ts_plot_name")}
+    log_print("--> get_ts_plot_name", debug_group = 'main')
     plt_name <- paste0(dataset_name,  "_", encoder_name, input$dr_method, "_ts.html")
-    if (VERBOSE > 0){
-        log_print(paste0("ts plot name: ", plt_name))
-        log_print("get_ts_plot_name -->")
-    }
+    log_print(paste0("ts plot name: ", plt_name), debug_group = 'main')
+    log_print("get_ts_plot_name -->", debug_group = 'main')
     plt_name
 }
 
@@ -82,16 +80,16 @@ get_window_indices_ <- function(
         debug_group = "embs"
     )
 
-# Llamar a log_print con diferentes mensajes usando do.call
-do.call(log_print, c(list(mssg = paste0("|| get_window_indices_ || prjs ~", length(prjs))), kwargs))
-do.call(log_print, c(list(mssg = paste0("|| get_window_indices_ || wlen ", wlen)), kwargs))
-do.call(log_print, c(list(mssg = paste0("|| get_window_indices_ || stride ", stride)), kwargs))
+    # Llamar a log_print con diferentes mensajes usando do.call
+    do.call(log_print, c(list(mssg = paste0("|| get_window_indices_ || prjs ~", length(prjs))), kwargs))    
+    do.call(log_print, c(list(mssg = paste0("|| get_window_indices_ || wlen ", wlen)), kwargs))
+    do.call(log_print, c(list(mssg = paste0("|| get_window_indices_ || stride ", stride)), kwargs))
     window_indices <- c()
     for (idx in prjs){
         start_idx <- ((idx-1)*stride)+1
         end_idx <- start_idx + wlen -1
         indices <- unlist(seq(start_idx, end_idx))
-        if (VERBOSE > 3){log_print(paste0("|| get_window_indices_ || idx ", idx, " sd ", start_idx, " ed ", end_idx))}
+        log_print(paste0("|| get_window_indices_ || idx ", idx, " sd ", start_idx, " ed ", end_idx), debug_group = 'tmi')
         window_indices <- c(window_indices, indices)
     }
     res <- unique(window_indices)

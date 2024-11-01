@@ -13,26 +13,32 @@ header <-"r_shiny_app_logs"
 id_file <- file.path(data_path, header, "execution_id")
 
 ### Debug variables
-DEBUG_LEVEL = 0 # Logged Group >= DEBUG_LEVEL
-FILE_FLAG   = FALSE
-DEBUG_GROUPS= list (
+DEBUG_LEVEL <- 0 # Logged Group >= DEBUG_LEVEL
+FILE_FLAG   <- FALSE
+LOG_PATH    <- ""
+LOG_HEADER  <- ""
+DEBUG_GROUPS<- list (
   'generic' = 0,
   'main'    = 1,
+  'button'  = 2,
   'embs'    = 1,
-  'force'  = -1
+  'time'    = 8,
+  'matrix'  = 9,
+  'tmi'     = 10,
+  'force'   = -1
 )
 
 log_print <- function(
   mssg, 
   file_flag     = FILE_FLAG, 
-  file_path     = "", 
-  log_header    = "",
+  file_path     = LOG_PATH, 
+  log_header    = LOG_HEADER,
   debug_level   = DEBUG_LEVEL,
   debug_group   = 'generic'
 ) {
     debug_group_id = DEBUG_GROUPS[[debug_group]]
     
-    if (debug_group_id == -1 || debug_group_id >= debug_level){
+    if (debug_group_id == -1 || debug_group_id <= debug_level){
         time <- format(Sys.time(), "%H:%M:%OS3")
         formated_mssg = paste0(time, "::::", log_header, "::::", mssg, "\n")
         cat(formated_mssg)
@@ -71,7 +77,7 @@ log_add <- function(
     mssg                = ifelse(is.null(mssg), "", mssg),
     stringsAsFactors    = FALSE  # Evitar factores
   )
-  log_print(paste0("Log add | ", function_))
+  log_print(paste0("Log add | ", function_, debug_group = 'time'))
   new_mssg = rbind(log_mssg, new_mssg)
   return(new_mssg) 
 }

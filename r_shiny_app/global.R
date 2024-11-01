@@ -5,6 +5,7 @@ source("./dependencies.R")
 #options(shiny.error = browser, shiny.sanitize.errors = FALSE, shiny.fullstacktrace = TRUE)
 
 # Logs handling and configuration
+source("./lib/global/wandb.R")
 source("./lib/global/logs.R")
 source("./lib/global/plots.R")
 
@@ -12,6 +13,7 @@ source("./lib/global/plots.R")
 # CONFIG #
 ##########
 QUERY_RUNS_LIMIT = 1
+UPDATE_WANDB_ARTIFACTS = FALSE
 DEFAULT_PATH_WANDB_ARTIFACTS = paste0(Sys.getenv("HOME"), "/data/wandb_artifacts")
 hdbscan_metrics <- hdbscan$dist_metrics$METRIC_MAPPING
 #hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
@@ -34,25 +36,22 @@ WANDB_PROJECT = Sys.getenv("WANDB_PROJECT")
 ##############################################
 
 api <- wandb$Api()
+encs_l_path <- path.expand("~/data/r_shiny_app_logs/encs_l.pickle")
+data_l_path <- path.expand("~/data/r_shiny_app_logs/data_l.pickle")
 
-log_print("Querying encoders")
-encs_l <- dvats$get_wandb_artifacts(
-  project_path = glue(WANDB_ENTITY, "/", WANDB_PROJECT), 
-    type = "learner", 
-    last_version=F
-) %>% discard(
-  ~ is_empty(.$aliases) | is_empty(.$metadata$train_artifact)
-)
-
-data_l <- dvats$get_wandb_artifacts(
-  project_path = glue(WANDB_ENTITY, "/", WANDB_PROJECT), 
-    type = "dataset", 
-    last_version=F
-) 
-
-#discard(~ str_detect(.$name, "dcae"))
-
-log_print("Done!")
+if (UPDATE_WANDB_ARTIFACTS) {
+  downloaded <- download_and_write_data(encs_l_path, data_l_path)
+  encs_l <- downloaded[[1]]
+  data_l <- downloaded[[2]]
+} else {
+  tryCatch({
+    encs_l <- py_load_object(encs_l_path)
+    data_l <- py_load_object(data_l_path)
+  }, error = function(e) {
+    message("Could not read from local files, downloading and saving...")
+    download_and_write_data(encs_l_path, data_l_path)
+  })
+}
 
 encs_names <- sapply(encs_l, function(art) art$name)
 log_print(paste0("Available encoders: ", encs_names))

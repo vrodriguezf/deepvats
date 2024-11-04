@@ -13,7 +13,7 @@ source("./lib/global/plots.R")
 # CONFIG #
 ##########
 QUERY_RUNS_LIMIT = 1
-UPDATE_WANDB_ARTIFACTS = FALSE
+UPDATE_WANDB_ARTIFACTS = TRUE
 DEFAULT_PATH_WANDB_ARTIFACTS = paste0(Sys.getenv("HOME"), "/data/wandb_artifacts")
 hdbscan_metrics <- hdbscan$dist_metrics$METRIC_MAPPING
 #hdbscan_metrics <- c('euclidean', 'l2', 'l1', 'manhattan', 'cityblock', 'braycurtis', 'canberra', 'chebyshev', 'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean', 'haversine')
@@ -41,8 +41,8 @@ data_l_path <- path.expand("~/data/r_shiny_app_logs/data_l.pickle")
 
 if (UPDATE_WANDB_ARTIFACTS) {
   downloaded <- download_and_write_data(encs_l_path, data_l_path)
-  encs_l <- downloaded[[1]]
-  data_l <- downloaded[[2]]
+  encs_l <- downloaded[['encs_l']]
+  data_l <- downloaded[['data_l']]
 } else {
   tryCatch({
     encs_l <- py_load_object(encs_l_path)

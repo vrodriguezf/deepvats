@@ -1,10 +1,9 @@
-##############################################################
-########### NBS - PIPELINE CONFIGURATION FILE (S1) ###########
-##############################################################
-###### Author: Maria Inmaculada Santamaria-Valenzuela        #
-###### Date: 08-2023                                         #
-###### Mod: María Inmaculada Santamaria-Valenzuela 10/2024   #
-##############################################################
+#########################################################
+########### NBS - PIPELINE CONFIGURATION FILE ###########
+#########################################################
+###### Author: Maria Inmaculada Santamaria-Valenzuela   #
+###### Date: 08-2023                                    #
+#########################################################
 
 ##########################
 # Basic user preferences #
@@ -81,9 +80,9 @@ data:
     range_training: null
     range_testing: null
     # Resampling frequency (null for no resampling)
-    resampling_freq: '20T'
+    resampling_freq: '15T'
     # Starting date (in format yyyy-mm-dd) (set to null for default start date)
-    start_date: null
+    start_date: '2022-03-01'
     # Ratio of test set, only if range_training and range_testing are null
     # Set to null for no test set (offline mode, all training)
     test_split: null

@@ -1,0 +1,55 @@
+include: !include "base.yaml"
+#########################################################
+########### NBS - PIPELINE CONFIGURATION FILE ###########
+########### 02b - ENCODER MVP [S1]            ###########
+#########################################################
+###### Author: Maria Inmaculada Santamaria-Valenzuela   #
+###### Date: 08-2023                                    #
+###### MOD: MISV 10/2024                                #
+#########################################################
+#MVP = Masked Value Predition
+
+#####################
+# 02b - ENCODER MVP #
+#####################
+configuration:
+  job_type: 'encoder_MVP'
+  alias: *alias
+  wandb:
+    mode: *wdb_mode
+    # Whether to group this run in a wandb group (for sweeps)
+    group: null
+  specifications:
+    batch_size: 16
+    #batch_size: 512 #1024 #32
+    # Number of epochs to train for
+    n_epoch: 100
+    mask:
+      # Mask future samplesx
+      future: false
+      # True: mask stateful samples, False: mask individual time steps
+      stateful: true
+      # (only for multivariate ts) mask all variables at once
+      sync: false
+    mvp:
+      # Tuple (min_w, max_x) to train MVP with adaptable window sizes. Usually max_w = config.w
+      # Set to null to train MVP with fixed window size
+      #ws1: 288 #32
+      #ws2: &wlen 720 #72
+      ws1: 36
+      ws2: &wlen 72
+      # probability of masking in MVP
+      r: 0.4
+      valid_size: 0.2
+      normalize:
+        by_sample: false
+        # Whether to use a single batch or not for the normalization (TSStandardize)
+        use_single_batch: false
+    sliding_windows:
+      # n datapoints the window is moved ahead along the sequence in the sliding window
+      stride: 1
+      # This will set the percentage of items that go to val 
+      # window size for the sliding window (taxi=48, steamflow=640)
+      #w
+      size: *wlen
+      

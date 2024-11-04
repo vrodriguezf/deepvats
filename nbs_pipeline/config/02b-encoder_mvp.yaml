@@ -1,11 +1,10 @@
 include: !include "base.yaml"
 #########################################################
 ########### NBS - PIPELINE CONFIGURATION FILE ###########
-########### 02b - ENCODER MVP [S1]            ###########
+########### 02b - ENCODER MVP                 ###########
 #########################################################
 ###### Author: Maria Inmaculada Santamaria-Valenzuela   #
 ###### Date: 08-2023                                    #
-###### MOD: MISV 10/2024                                #
 #########################################################
 #MVP = Masked Value Predition
 
@@ -20,10 +19,9 @@ configuration:
     # Whether to group this run in a wandb group (for sweeps)
     group: null
   specifications:
-    batch_size: 16
-    #batch_size: 512 #1024 #32
+    batch_size: 32
     # Number of epochs to train for
-    n_epoch: 100
+    n_epoch: 200
     mask:
       # Mask future samplesx
       future: false
@@ -32,12 +30,8 @@ configuration:
       # (only for multivariate ts) mask all variables at once
       sync: false
     mvp:
-      # Tuple (min_w, max_x) to train MVP with adaptable window sizes. Usually max_w = config.w
-      # Set to null to train MVP with fixed window size
-      #ws1: 288 #32
-      #ws2: &wlen 720 #72
-      ws1: 36
-      ws2: &wlen 72
+      ws1: 32
+      ws2: &wlen 96
       # probability of masking in MVP
       r: 0.4
       valid_size: 0.2

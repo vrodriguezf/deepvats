@@ -1410,25 +1410,56 @@ tcl_1 = Sys.time()
         on.exit({log_print("Projections -->"); flush.console()})
       prjs
     })
-    
+
+  
     # Update the colour palette for the clusters
+    #update_palette <- reactive({
+    #    prjs <- req(projections())
+    #    if ("cluster" %in% names(prjs)) {
+    #        unique_labels <- unique(prjs$cluster)
+    #        log_print(unique_labels)
+    #        ## IF the value "-1" exists, assign the first element of mycolors to #000000, if not, assign the normal colorRampPalette
+    #        
+    #        if (as.integer(-1) %in% unique_labels) 
+    #            colour_palette <- 
+    #            #colour_palette <- append("#000000", colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels)-1))
+    #        else 
+    #            #colour_palette <- colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels))
+    #    }
+    #    else
+    #        colour_palette <- "red"
+    #    
+    #    colour_palette
+    #})
     update_palette <- reactive({
         prjs <- req(projections())
         if ("cluster" %in% names(prjs)) {
             unique_labels <- unique(prjs$cluster)
             log_print(unique_labels)
-            ## IF the value "-1" exists, assign the first element of mycolors to #000000, if not, assign the normal colorRampPalette
-            if (as.integer(-1) %in% unique_labels) 
-                colour_palette <- append("#000000", colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels)-1))
-            else 
-                colour_palette <- colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels))
-        }
-        else
+
+            # Selecciona colores específicos según el número de clusters
+            num_labels <- length(unique_labels)
+
+            if (num_labels == 1) {
+                # Un solo cluster, asignar color rojo oscuro
+                colour_palette <- c("#8B0000")
+            } else if (num_labels == 2) {
+                # Dos clusters, asignar rojo oscuro y azul oscuro
+                colour_palette <- c("#8B0000", "#00008B")
+            } else if (num_labels <= 9) {
+                # Tres o más clusters pero menos de 9, usa la paleta Set1 de colores distintivos
+                colour_palette <- brewer.pal(num_labels, "Set1")
+            } else {
+                # Más de 9 clusters, usa colores aleatorios vibrantes
+                colour_palette <- distinctColorPalette(num_labels, palette = "vibrant")
+            }
+
+        } else {
             colour_palette <- "red"
-        
+        }
+
         colour_palette
     })
-    
     
 
     start_date <- reactive({

@@ -23,7 +23,7 @@ configuration:
     batch_size: 16
     #batch_size: 512 #1024 #32
     # Number of epochs to train for
-    n_epoch: 100
+    n_epoch: 200
     mask:
       # Mask future samplesx
       future: false

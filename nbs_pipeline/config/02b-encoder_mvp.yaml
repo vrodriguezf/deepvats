@@ -1,7 +1,7 @@
 include: !include "base.yaml"
 #########################################################
 ########### NBS - PIPELINE CONFIGURATION FILE ###########
-########### 02b - ENCODER MVP                 ###########
+########### 02b - ENCODER MVP (S3)            ###########
 #########################################################
 ###### Author: Maria Inmaculada Santamaria-Valenzuela   #
 ###### Date: 08-2023                                    #
@@ -24,9 +24,9 @@ configuration:
     n_epoch: 200
     mask:
       # Mask future samplesx
-      future: false
+      future: true
       # True: mask stateful samples, False: mask individual time steps
-      stateful: true
+      stateful: false
       # (only for multivariate ts) mask all variables at once
       sync: false
     mvp:

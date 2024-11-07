@@ -1,7 +1,7 @@
 include: !include "base.yaml"
 #########################################################
 ########### NBS - PIPELINE CONFIGURATION FILE ###########
-########### 02b - ENCODER MVP (titlABP)       ###########
+########### 02b - ENCODER MVP (S3)            ###########
 #########################################################
 ###### Author: Maria Inmaculada Santamaria-Valenzuela   #
 ###### Date: 08-2023                                    #
@@ -21,7 +21,7 @@ configuration:
   specifications:
     batch_size: 32
     # Number of epochs to train for
-    n_epoch: 50
+    n_epoch: 200
     mask:
       # Mask future samplesx
       future: false

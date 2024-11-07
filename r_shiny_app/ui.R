@@ -111,6 +111,7 @@ shinyUI(fluidPage(
       sliderInput("prj_min_dist", "Projections min_dist:", min = 0.0001, max = 1, value = 0.1),
       #sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2^32-1, value = 1234),
       sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2000, value = 1234),
+      numericInput("prj_random_state_text", "Enter Projections random_state", value = 0, min = 0, max = 1000000, step = 1),
       ################
       radioButtons("cpu_flag", "Use: ", c("GPU", "CPU"), selected = "GPU", inline = T),
       radioButtons("dr_method", "Projection method:", c("UMAP", "TSNE", "PCA", "PCA_UMAP"), selected="PCA_UMAP", inline=T),

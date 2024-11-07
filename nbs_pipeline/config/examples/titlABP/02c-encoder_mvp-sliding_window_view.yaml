@@ -1,7 +1,7 @@
 include: !include "base.yaml"
 #########################################################
 ########### NBS - PIPELINE CONFIGURATION FILE ###########
-########### 02b - ENCODER MVP (titlABP)       ###########
+########### 02b - ENCODER MVP                 ###########
 #########################################################
 ###### Author: Maria Inmaculada Santamaria-Valenzuela   #
 ###### Date: 08-2023                                    #
@@ -21,19 +21,19 @@ configuration:
   specifications:
     batch_size: 32
     # Number of epochs to train for
-    n_epoch: 50
+    n_epoch: 200
     mask:
       # Mask future samplesx
-      future: false
+      future: true
       # True: mask stateful samples, False: mask individual time steps
-      stateful: true
+      stateful: false
       # (only for multivariate ts) mask all variables at once
       sync: false
     mvp:
-      ws1: 200
-      ws2: &wlen 220
+      ws1: 32
+      ws2: &wlen 96
       # probability of masking in MVP
-      r: 0.5
+      r: 0.4
       valid_size: 0.2
       normalize:
         by_sample: false

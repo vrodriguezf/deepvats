@@ -175,14 +175,16 @@ shinyServer(function(input, output, session) {
     )
 
     ############ WLEN TEXT ############
+    wlen_min <- reactiveVal(0)
+    wlen_max <- reactiveVal(0)
     observe({
         req(input$wlen_text > 0)
         if (input$wlen != input$wlen_text) {
             # Si se ingresa un valor en wlen_text menor que el mínimo o mayor que el máximo del slider, ajustamos el slider
             if (input$wlen_text < input$wlen || input$wlen_text > input$wlen) {
                 updateSliderInput(session, "wlen", 
-                    min = min(input$wlen_text, input$wlen), 
-                    max = max(input$wlen_text, input$wlen), 
+                    min = min(input$wlen_text, wlen_min()), 
+                    max = max(input$wlen_text, wlen_max()), 
                     value = input$wlen_text)
                 }
         }
@@ -193,6 +195,24 @@ shinyServer(function(input, output, session) {
             req(input$wlen_text > 0)
             allow_update_len(TRUE)
         })
+
+    random_state_min <- reactiveVal(0)
+    random_state_max <- reactiveVal(0)
+    observe({
+        req(input$prj_random_state_text > 0)
+        if (input$prjs_random_state != input$prj_random_state_text) {
+            if (input$prjs_random_state < input$prjs_random_state || input$prjs_random_state_text > input$prjs_random_state) {
+                prjs_random_state_min(min(input$prjs_random_state, prjs_random_state_min()))
+                prjs_random_state_max(max(input$prjs_random_state_text, prjs_random_state_max()))
+                updateSliderInput(session, "prjs_random_state", 
+                    min = prjs_random_state_min(), 
+                    max = prjs_random_state_max(), 
+                    value = input$wlen_text
+                    )
+                }
+        }
+    })
+   
     ####### --- wlen text ---  ########
 
 
@@ -200,19 +220,19 @@ shinyServer(function(input, output, session) {
         enc_ar = isolate(enc_ar())
          log_print(paste0("observeEvent restore wlen stride | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ),  debug_group = 'generic')
             
-            wmin <- enc_ar$metadata$mvp_ws[1]
-            wmax <- enc_ar$metadata$mvp_ws[2]
+            wlen_min(enc_ar$metadata$mvp_ws[1])
+            wlen_max(enc_ar$metadata$mvp_ws[2])
             wlen <- enc_ar$metadata$w
             
             log_print(
                 paste0(
                     "observeEvent restore wlen stride | update wlen | Update slider input (", 
-                    wmin, ", ", wmax, " ) -> ", wlen 
+                    wlen_min(), ", ", wlen_max(), " ) -> ", wlen 
                 ),  debug_group = 'generic')
             
             updateSliderInput(session = session, inputId = "wlen",
-                min = wmin,
-                max = wmax,
+                min = wlen_min(),
+                max = wlen_max(),
                 value = wlen
             )
             
@@ -1451,7 +1471,7 @@ tcl_1 = Sys.time()
                 colour_palette <- brewer.pal(num_labels, "Set1")
             } else {
                 # Más de 9 clusters, usa colores aleatorios vibrantes
-                colour_palette <- distinctColorPalette(num_labels, palette = "vibrant")
+                colour_palette <- distinctColorPalette(num_labels)
             }
 
         } else {
@@ -1628,8 +1648,11 @@ tcl_1 = Sys.time()
                 count = 0
                 for(ts_idxs in reduced_window_list) {
                     count = count + 1
+                    print(paste0("idxs", ts_idxs))
                     start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
                     end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
+                    print(paste0("start_event_date", start_event_date))
+                    print(paste0("end_event_date", end_event_date))
                     ts_plt <- ts_plt %>% dyShading(
                         from = start_event_date,
                         to = end_event_date,

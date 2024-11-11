@@ -8,7 +8,7 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_t
            'random_windows', 'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
            'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
            'fine_tune_moment_train_loop_step_', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
-           'fine_tune_moment_']
+           'fine_tune_moment_ensure_windowed_dataset', 'fine_tune_moment_']
 
 # %% ../nbs/encoder.ipynb 2
 from .memory import *
@@ -973,9 +973,9 @@ def get_enc_embs_set_stride_set_batch_size(
 # %% ../nbs/encoder.ipynb 34
 def random_windows(
     X : List [ List [ List [ float ]]], 
-    n_windows = None, 
-    percent = 0.2, 
-    verbose = 0,
+    n_windows   = None, 
+    percent     = None, 
+    verbose     = 0,
     #- Printing options for debugging
     print_to_path   : bool          = False,
     print_path      : str           = "~/data/logs/logs.txt",
@@ -988,11 +988,14 @@ def random_windows(
     - n_windows random windows from the array, if n_windows is given.
     - ceil(percent*len(X)) random windows otherwise
     """
-    n_windows = int(min(X.shape[0], n_windows) if n_windows is not None else np.ceil(percent*X.shape[0]))
-    if verbose > 0: print_flush(f"Random windows | n_windows: {n_windows}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    random_indices = np.random.randint(0, int(X.shape[0]), n_windows)
-    windows = X[ random_indices ]
-    windows = torch.from_numpy(windows)
+    if n_windows is None and percent is None:
+        windows = torch.from_numpy(X)
+    else: 
+        n_windows = int(min(X.shape[0], n_windows) if n_windows is not None else np.ceil(percent*X.shape[0]))
+        if verbose > 0: print_flush(f"Random windows | n_windows: {n_windows}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        random_indices = np.random.randint(0, int(X.shape[0]), n_windows)
+        windows = X[ random_indices ]
+        windows = torch.from_numpy(windows)
     if verbose > 0: print_flush(f"windows ~ {windows.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return windows
 
@@ -1217,7 +1220,7 @@ def fine_tune_moment_train_loop_step_(
     batch, 
     batch_masks,
     criterion                               = torch.nn.MSELoss, 
-    optimizer                               = torch.optim.Adam, 
+    optimizer                               = torch.optim.AdamW, 
     lr                              : float = 1e-4, 
     lr_scheduler_flag               : bool  = False, 
     lr_scheduler_name               : str   = "linear",
@@ -1300,32 +1303,42 @@ def fine_tune_moment_train_(
     dl_train: DataLoader,
     ds_train,
     batch_size : int,
-    num_epochs : int = 1,
-    criterion = torch.nn.MSELoss, 
-    optimizer = torch.optim.Adam, 
-    lr = 1e-4, 
-    lr_scheduler_flag = False, 
-    lr_scheduler_name = "linear",
-    lr_scheduler_num_warmup_steps = 0,
-    cpu = False,
-    verbose = 0,
-    print_to_path   : bool  = False,
-    print_path      : str   = "~/data/logs/logs.txt",
-    print_mode      : str   = 'a',
+    num_epochs : int                = 1,
+    criterion                       = torch.nn.MSELoss, 
+    optimizer                       = None, 
+    lr                              = 5e-5,  #1 e -4
+    lr_scheduler_flag               = False, 
+    lr_scheduler_name               = "linear",
+    lr_scheduler_num_warmup_steps   = 100,
+    cpu                             = False,
+    verbose                         = 0,
+    print_to_path   : bool          = False,
+    print_path      : str           = "~/data/logs/logs.txt",
+    print_mode      : str           = 'a',
 ):
     # Select device
     device = "cpu" if cpu else torch.cuda.current_device()
     # Optimizer and learning rate scheduler
-    optimizer = torch.optim.Adam(enc_learn.parameters(), lr)
+    if optimizer is None: 
+        optimizer = torch.optim.AdamW(enc_learn.parameters(), lr)
     num_training_steps = num_epochs * len(dl_train)
     losses = []
     if lr_scheduler_flag:
-        lr_scheduler = get_scheduler(
-            name = lr_scheduler_name,
-            optimizer = optimizer,
-            num_warmup_steps = lr_scheduler_num_warmup_steps,
-            num_training_steps = num_training_steps
-        )
+        match lr_scheduler_name:
+            case "OneCycleLR": 
+                lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                    optimizer           = optimizer,
+                    max_lr              = 0.05,
+                    epochs              = num_epochs,
+                    steps_per_epoch     = len(dl_train)
+                )
+            case _:
+                lr_scheduler = get_scheduler(
+                    name                = lr_scheduler_name,
+                    optimizer           = optimizer,
+                    num_warmup_steps    = lr_scheduler_num_warmup_steps,
+                    num_training_steps  = num_training_steps
+                )
         
     # Training loop
     if verbose > 1: print_flush("fine_tune_moment_train_ | Training loop", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
@@ -1380,10 +1393,13 @@ def fine_tune_moment_train_(
                     print_mode                      = 'a'
                 )
             try: 
-                losses.append(loss.item())
+                if verbose > 0: print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+                if isinstance(loss, int):
+                    losses.append(loss)    
+                else:
+                    losses.append(loss.item())
+                    loss.backward()
                 optimizer.zero_grad()  
-                loss.backward()
-                # Optimize
                 optimizer.step()
             except Exception as e: 
                 print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
@@ -1427,7 +1443,7 @@ def fine_tune_moment_single_(
     eval_post                       : bool          = True,
     criterion                       : _Loss         = torch.nn.MSELoss, 
     optimizer                                       = torch.optim.Adam, 
-    lr                              : float         =  1e-4, 
+    lr                              : float         =  5e-5, # 1e-4
     lr_scheduler_flag               : bool          = False, 
     lr_scheduler_name               : str           = "linear",
     lr_scheduler_num_warmup_steps   : int           = 0,
@@ -1447,8 +1463,8 @@ def fine_tune_moment_single_(
         timer = Time()
     if verbose > 0: print_flush("fine_tune_moment_single | Prepare the dataset", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose )
     # Prepare the dataset
-    train_split_index = min(X.shape[0], n_windows) if n_windows is not None else np.ceil(training_percent * X.shape[0])
-    eval_split_index = min(X.shape[0], n_windows) if n_windows is not None else np.ceil(validation_percent * X.shape[0])
+    train_split_index = min(X.shape[0], np.ceil(training_percent * n_windows)) if n_windows is not None else np.ceil(training_percent * X.shape[0])
+    eval_split_index = min(X.shape[0], np.ceil(validation_percent * n_windows)) if n_windows is not None else np.ceil(validation_percent * X.shape[0])
     train_split_index = int(train_split_index)
     eval_split_index = int(eval_split_index)
     if shot: 
@@ -1498,12 +1514,12 @@ def fine_tune_moment_single_(
                 ds_train = ds_train,
                 batch_size = batch_size,
                 num_epochs = num_epochs,
-                criterion = torch.nn.MSELoss, 
-                optimizer = torch.optim.Adam, 
-                lr = 1e-4, 
-                lr_scheduler_flag = False, 
-                lr_scheduler_name = "linear",
-                lr_scheduler_num_warmup_steps = 0,
+                criterion = criterion, 
+                optimizer = optimizer, 
+                lr = lr, 
+                lr_scheduler_flag = lr_scheduler_flag, 
+                lr_scheduler_name = lr_scheduler_name,
+                lr_scheduler_num_warmup_steps = lr_scheduler_num_warmup_steps,
                 cpu = cpu,
                 verbose = verbose-1,
                 print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
@@ -1541,6 +1557,52 @@ def fine_tune_moment_single_(
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2
 
 # %% ../nbs/encoder.ipynb 47
+def fine_tune_moment_ensure_windowed_dataset(
+    X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
+    stride                          : int           = 1,
+    window_sizes                    : List [int]    = None,
+    n_window_sizes                  : int           = 1,
+    window_sizes_offset             : int           = 0.05,
+    windows_min_distance            : int           = 1,
+    full_dataset                    : bool          = False,
+    #- Printing options for debugging
+    print_to_path                   : bool          = False,
+    print_path                      : str           = "~/data/logs/logs.txt",
+    print_mode                      : str           = 'a',
+    verbose                         : int           = 0
+): 
+    dss = []
+    if isinstance(X, list):
+        X = np.array(X)
+        enc_input = pd.DataFrame(X)
+        dss.append(enc_input)
+    if ( isinstance(X,pd.DataFrame) or full_dataset): 
+        if verbose > 0: print_flush("fine_tune_moment_ | X not-windowed dataset", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        if window_sizes is None or n_window_sizes > len(window_sizes):
+            if verbose > 0: 
+                print_flush("fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences",  print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            # Select Fourier's dominant frequences
+            window_sizes_ = find_dominant_window_sizes_list(
+                X               = X, 
+                nsizes          = n_window_sizes, 
+                offset          = window_sizes_offset, 
+                min_distance    = windows_min_distance,
+                verbose         = verbose-1,
+                print_to_path   = print_to_path, print_path = print_path, print_mode = 'a'
+            )
+            window_sizes = window_sizes_ if window_sizes is None else list(set(window_sizes + window_sizes_))[:n_window_sizes]
+            if verbose > 0: 
+                print_flush(f"fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences | {window_sizes}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        if verbose > 0: print_flush("fine_tune_moment_ | Building the datasets", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        for w in window_sizes:
+            enc_input, _ = SlidingWindow(window_len = w, stride = stride, get_y=[])(X)
+            dss.append(enc_input)
+    else: 
+        dss = [X]
+    return dss
+
+
+# %% ../nbs/encoder.ipynb 48
 def fine_tune_moment_(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     enc_learn                       : Learner, 
@@ -1551,7 +1613,7 @@ def fine_tune_moment_(
     verbose                         : int           = 0, 
     time_flag                       : bool          = False,
     n_windows                       : int           = None,
-    n_windows_percent               : float         = 0.2,
+    n_windows_percent               : float         = None,
     validation_percent              : float         = 0.2, 
     training_percent                : float         = 0.2,
     num_epochs                      : int           = 3,
@@ -1559,8 +1621,8 @@ def fine_tune_moment_(
     eval_pre                        : bool          = True,
     eval_post                       : bool          = True,
     criterion                       : _Loss         = torch.nn.MSELoss, 
-    optimizer                                       = torch.optim.Adam, 
-    lr                              : float         = 1e-4, 
+    optimizer                                       = None, 
+    lr                              : float         = 5e-5, #1e-4, 
     lr_scheduler_flag               : bool          = False, 
     lr_scheduler_name               : str           = "linear",
     lr_scheduler_num_warmup_steps   : int           = 0,
@@ -1582,34 +1644,21 @@ def fine_tune_moment_(
     t_shot = 0
     t_evals = []
     t_eval = 0
-    dss = []
-    if isinstance(X, list):
-        X = np.array(X)
-        pd.DataFrame(X)
-    if ( isinstance(X,pd.DataFrame) or full_dataset): 
-        if verbose > 0: print_flush("fine_tune_moment_ | X not-windowed dataset", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-        if window_sizes is None or n_window_sizes > len(window_sizes):
-            if verbose > 0: 
-                print_flush("fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences",  print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-            # Select Fourier's dominant frequences
-            window_sizes_ = find_dominant_window_sizes_list(
-                X       = X, 
-                nsizes  = n_window_sizes, 
-                offset  = window_sizes_offset, 
-                min_distance = windows_min_distance,
-                verbose = verbose-1,
-                print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
-            )
-            window_sizes = window_sizes_ if window_sizes is None else list(set(window_sizes + window_sizes_))[:n_window_sizes]
-            if verbose > 0: 
-                print_flush(f"fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences | {window_sizes}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-        if verbose > 0: print_flush("fine_tune_moment_ | Building the datasets", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-        for w in window_sizes:
-            enc_input, _ = SlidingWindow(window_len = w, stride = stride, get_y=[])(X)
-            dss.append(enc_input)
-    else: 
-        dss = [X]
-    if verbose > 0: print_flush(f"fine_tune_moment_ | Processing {len(dss)} datasets", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    dss = fine_tune_moment_ensure_windowed_dataset(X, stride, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, print_to_path, print_path, print_mode, verbose)
+    if verbose > 0: 
+        print_flush(
+            f"fine_tune_moment_ | Processing {len(dss)} datasets | First length : {dss[0].shape}", 
+            print_to_path = print_to_path, 
+            print_path = print_path, 
+            print_mode = 'a', 
+            verbose = verbose, 
+            print_time = print_to_path
+        )
+    
+    if optimizer is None: 
+        if verbose > 0: print_flush(f"fine_tune_moment_ | Setting up optimizer as AdamW", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        optimizer = torch.optim.AdamW(enc_learn.parameters(), lr=lr)
+    
     for enc_input in dss:
         if verbose > 0: print_flush(f"fine_tune_moment_ | Processing wlen {enc_input.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         ( 

@@ -822,50 +822,50 @@ shinyServer(function(input, output, session) {
         res
     })
 
-    fine_tune_kwargs <- reactive({
-        res <- list()
-        dataset <- isolate (X())
-        batch_size <- as.integer(input$ft_batch_size)
-        encoder <- input$encoder
-        percent <- input$ft_window_percent_value
-        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
-        if (grepl("moment", encoder, ignore.case = TRUE)) {
-            log_print("embs_kwargs | Moment")
-            res <- list(
-                batch_size = batch_size,
-                cpu = cpu_flag,
-                to_numpy = TRUE,
-                verbose = as.integer(2),
-                padd_step = input$padd_step, 
-                average_seq_dim = TRUE,
-                percent = percent
-            )
-        } else if (grepl("moirai", encoder, ignore.case = TRUE)) {
-            log_print("embs_kwargs | Moirai")
-#            size <- sub(".*moirai-(\\w+).*", "\\1", encoder)
-
-            res <- list(
-                cpu = cpu_flag,
-                to_numpy = TRUE,
-                batch_size = batch_size,
-                average_seq_dim = TRUE,
-                verbose = as.integer(2),
-                patch_size = as.integer(input$patch_size),
-                time = TRUE
-            )
-        } else {
-            log_print("embs_kwargs | Learner (neither Moment or Moirai)")
-            res <- list(
-               stride =  as.integer(1), #as.integer(input$stride),
-               cpu = cpu_flag,
-               to_numpy = TRUE,
-               batch_size = batch_size,
-               average_seq_dim = TRUE,
-               verbose = as.integer(1)
-           )
-        }
-        res
-    })
+    #fine_tune_kwargs <- reactive({
+    #    res <- list()
+    #    dataset <- isolate (X())
+    #    batch_size <- as.integer(input$ft_batch_size)
+    #    encoder <- input$encoder
+    #    percent <- input$ft_window_percent_value
+    #    cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
+    #    if (grepl("moment", encoder, ignore.case = TRUE)) {
+    #        log_print("embs_kwargs | Moment")
+    #        res <- list(
+    #            batch_size = batch_size,
+    #            cpu = cpu_flag,
+    #            to_numpy = TRUE,
+    #            verbose = as.integer(2),
+    #            padd_step = input$padd_step, 
+    #            average_seq_dim = TRUE,
+    #            percent = percent
+    #        )
+    #    } else if (grepl("moirai", encoder, ignore.case = TRUE)) {
+    #        log_print("embs_kwargs | Moirai")
+#   #         size <- sub(".*moirai-(\\w+).*", "\\1", encoder)
+#
+    #        res <- list(
+    #            cpu = cpu_flag,
+    #            to_numpy = TRUE,
+    #            batch_size = batch_size,
+    #            average_seq_dim = TRUE,
+    #            verbose = as.integer(2),
+    #            patch_size = as.integer(input$patch_size),
+    #            time = TRUE
+    #        )
+    #    } else {
+    #        log_print("embs_kwargs | Learner (neither Moment or Moirai)")
+    #        res <- list(
+    #           stride =  as.integer(1), #as.integer(input$stride),
+    #           cpu = cpu_flag,
+    #           to_numpy = TRUE,
+    #           batch_size = batch_size,
+    #           average_seq_dim = TRUE,
+    #           verbose = as.integer(1)
+    #       )
+    #    }
+    #    res
+    #})
 
     ####  CACHING EMBEDDINGS ####
     # TODO: Conseguir que funcione el cache, sigue recalculando todo
@@ -1066,6 +1066,23 @@ shinyServer(function(input, output, session) {
 #    result
 #})
 
+
+observeEvent(input$ft_dataset_option, {
+    if (input$ft_dataset_option == "use_ft_window_percent") {
+      # Set ft_num_windows to NULL and ensure ft_window_percent has its value
+      updateTextInput(session, "ft_num_windows", value = NULL)
+      updateTextInput(session, "ft_window_percent", value = input$ft_window_percent)
+    } else if (input$ft_dataset_option == "use_ft_num_windows") {
+      # Set ft_window_percent to NULL and ensure ft_num_windows has its value
+      updateTextInput(session, "ft_window_percent", value = NULL)
+      updateTextInput(session, "ft_num_windows", value = input$ft_num_windows)
+    } else if (input$ft_dataset_option == "full_dataset") {
+      # Set both ft_window_percent and ft_num_windows to 0
+      updateTextInput(session, "ft_window_percent", value = NULL)
+      updateTextInput(session, "ft_num_windows", value = NULL)
+    }
+  })
+
 observe({
     log_print("Observe event | Input fine tune | Play fine tune ... Waiting ...")
     req(play_fine_tune(), input$fine_tune)
@@ -1088,15 +1105,30 @@ observe({
             shot                            = TRUE,
             eval_pre                        = TRUE,
             eval_post                       = TRUE,
-            lr_scheduler_flag               = FALSE,
-            lr_scheduler_name               = "linear",
-            lr_scheduler_num_warmup_steps   = as.integer(0),
+            #criterion                       = NULL, #torch$nn$MSELoss,
+            #optimizer                       = NULL, #torch$optim$AdamW,
+            lr                              = as.numeric(0.00005),
+            lr_scheduler_flag               = TRUE,
+            lr_scheduler_name               = "OneCycleLR",
+            lr_scheduler_num_warmup_steps   = as.integer(1000),
             window_sizes                    = list(as.integer(input$wlen)),
             n_window_sizes                  = as.integer(input$ft_num_windows),
             window_sizes_offset             = as.numeric(0.05),
             windows_min_distance            = as.integer(input$ft_min_windows_distance),
-            full_dataset                    = TRUE
+            full_dataset                    = (input$ft_datset_option == "full_dataset")
         )
+
+
+        for (key in names(fine_tune_kwargs)) {
+            value <- fine_tune_kwargs[[key]]
+            if (is.numeric(value) && any(is.na(value))) {
+                log_print("Fine tune kwargs | NaN detected in:", key, "\n")
+            } else {
+                log_print("Fine tune kwargs | ", key, ": ", fine_tune_kwargs[[key]], "\n")
+            }
+        }
+
+
         showModal(modalDialog(
             title = "Processing...",
             "Please wait while the model is fine tuned.",

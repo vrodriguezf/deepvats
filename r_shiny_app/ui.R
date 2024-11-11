@@ -54,6 +54,12 @@ shinyUI(fluidPage(
             textInput("ft_min_windows_distance", "Minimum distance between windows sizes", value = 5),
             textInput("ft_num_windows", "Number of windows", value = 3),
             verbatimTextOutput("ft_output"),
+            selectInput("ft_dataset_option", "Choose dataset option", 
+            choices = list(
+              "use_ft_window_percent" = "Fine-tune using the window percent.",
+              "use_ft_num_windows" = "Fine-tune fixing the number of windows",
+              "use_full_dataset" = "Fine-tune using the full dataset"
+            )),
             actionButton("fine_tune_play", "Shot!", icon = shiny::icon("play"))
           )
         )

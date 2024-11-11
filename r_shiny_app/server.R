@@ -1309,12 +1309,34 @@ observe({
 
     allow_tsdf <- reactiveVal(TRUE)
 
-    observeEvent ( input$get_tsdf ,{
-        log_print(paste0("get_tsdf changed to: ", input$get_tsdf))
-        allow_tsdf( !allow_tsdf() )
-        tsdf <- tsdf()
-        log_print(paste0("allow_tsdf changed to: ", allow_tsdf()))
+    get_tsdf_prev <- reactiveVal(NULL)
+    preprocess_dataset_prev <- reactiveVal (NULL)
+
+    observeEvent ( input$get_tsdf, input$preprocess_dataset, {
+        if ( is.null(get_tsdf_prev()) ||  get_tsdf_prev() != input$get_tsdf ){
+            log_print(paste0("get_tsdf changed to: ", input$get_tsdf))
+            allow_tsdf( !allow_tsdf() )
+            tsdf <- tsdf()
+            log_print(paste0("allow_tsdf changed to: ", allow_tsdf()))
+            if ( is.null(preprocess_dataset_prev()) || preprocess_dataset_prev() != input$preprocess_dataset ) {
+                tsdf <- apply_preprocessing(
+                    dataset = dataset,
+                    task_type = input$task_type,
+                    methods = switch(
+                        input$task_type, 
+                        "point_outlier"     = input$smooth_methods_point,
+                        "sequence_outlier"  = input$smooth_methods_sequence,
+                        "segments"          = input$smooth_methods_segments,
+                        "trends"            = input$smooth_methods_trends
+                    )
+                )
+            }
+        }
+        tsdf 
     })
+
+
+    
 
 
     # Load and filter TimeSeries object from wandb
@@ -1384,7 +1406,12 @@ observe({
                 df
             })
             df
-        })
+    })
+
+    
+
+
+
     
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({

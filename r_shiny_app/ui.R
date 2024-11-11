@@ -36,6 +36,54 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       load_datasetUI("load_dataset1"),
+      checkboxInput("preprocess_dataset", "Preprocess Dataset", value = FALSE)
+      conditionalPanel(
+        condition = "input.preprocess_dataset == true",
+        selectInput(
+          "task_type", choices = list (
+            "Detect outlier points" = "point_outlier"
+            "Detect outlier sequences" = "sequence_outlier",
+            "Segmentate" = "segments",
+            "Detect trends" = "trends"
+          ), selected = NULL
+        ),
+        conditionalPanel(
+            condition = "input.task_type == 'point_outlier'",
+            checkboxGroupInput("smooth_methods_point", "Smoothing Options for Point Outliers",
+                               choices = list("StandardScaler" = "standard_scaler",
+                                              "EllipticEnvelope" = "elliptic_envelope",
+                                              "Median Filter" = "median_filter"),
+                               selected = NULL)
+        ),
+        
+        conditionalPanel(
+            condition = "input.task_type == 'sequence_outlier'",
+            checkboxGroupInput("smooth_methods_sequence", "Smoothing Options for Sequence Outliers",
+                               choices = list("DBSCAN" = "dbscan",
+                                              "IsolationForest" = "isolation_forest",
+                                              "Moving Average Filter" = "moving_average"),
+                               selected = NULL)
+        ),
+        
+        conditionalPanel(
+            condition = "input.task_type == 'segments'",
+            checkboxGroupInput("smooth_methods_segments", "Smoothing Options for Segments",
+                               choices = list("KMeans" = "kmeans",
+                                              "Moving Average Filter" = "moving_average",
+                                              "Wavelet Transform (Not Available)" = "wavelet_transform"),
+                               selected = NULL)
+        ),
+        
+        conditionalPanel(
+            condition = "input.task_type == 'trends'",
+            checkboxGroupInput("smooth_methods_trends", "Smoothing Options for Trends",
+                               choices = list("PCA" = "pca",
+                                              "Exponential Smoothing" = "exp_smoothing",
+                                              "Linear Regression on Window" = "linear_regression"),
+                               selected = NULL)
+        )
+      )
+
       hr(),
       select_datasetUI("datasetModule"),
       fluidRow(

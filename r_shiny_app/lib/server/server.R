@@ -107,3 +107,94 @@ get_window_indices_ <- function(
  #
  #
  #}
+
+
+apply_preprocessing_point_outlier <- function ( dataset, methods, wlen){
+    if ("standard_scaler" %in% methods) {
+        scaler <- sklearn$preprocessing$StandardScaler()
+        dataset <- scaler$fit_transform(dataset)
+    }
+    if ("elliptic_envelope" %in% methods) {
+        contamination <- 0.1 
+        envelope <- sklearn$covariance$EllipticEnvelope(contamination = contamination)
+        envelope_fit <- envelope$fit(dataset)
+        dataset <- dataset[envelope$predict(dataset) == 1, ]
+    }
+    if ("median_filter" %in% methods) {
+        kernel_size <- wlen  # window_len
+        dataset <- scipy$signal$medfilt(dataset, kernel_size)
+    }
+    return (dataset)
+}
+
+apply_preprocessing_sequence_outlier <- function ( dataset, methods, wlen ){
+    if ("dbscan" %in% methods) {
+            eps <- 0.5  
+            min_samples <- 5  
+            dbscan <- sklearn$cluster$DBSCAN(eps = eps, min_samples = min_samples)
+            labels <- dbscan$fit_predict(dataset)
+            dataset <- dataset[labels != -1, ]
+        }
+        if ("isolation_forest" %in% methods) {
+            contamination <- 0.1 
+            isolation_forest <- sklearn$ensemble$IsolationForest(contamination = contamination)
+            labels <- isolation_forest$fit_predict(dataset)
+            dataset <- dataset[labels == 1, ]
+        }
+        if ("moving_average" %in% methods) {
+            window_size <- wlen
+            dataset <- np$convolve(dataset, np$ones(window_size) / window_size, mode = "valid")
+        }
+
+    return (dataset)
+
+}
+
+apply_preprocessing_segments <- function ( dataset, methods, wlen ) {
+    if ("kmeans" %in% methods) {
+        n_clusters <- 3 
+        kmeans <- sklearn$cluster$KMeans(n_clusters = n_clusters)
+        dataset <- kmeans$fit_predict(dataset) 
+    }
+    if ("moving_average" %in% methods) {
+        window_size <- wlen 
+        dataset <- np$convolve(dataset, np$ones(window_size) / window_size, mode = "valid")
+    }
+    return (dataset)
+}
+
+apply_preprocessing_trends <- function (dataset, methods, wlen ) {
+    if ("pca" %in% methods) {
+        n_components <- 1  
+        pca <- sklearn$decomposition$PCA(n_components = n_components)
+        dataset <- pca$fit_transform(dataset)
+    }
+    if ("exp_smoothing" %in% methods) {
+        span <- 12  
+        dataset <- statsmodels$tsa$holtwinters$ExponentialSmoothing(dataset, trend = "add")$fit()$fittedvalues
+    }
+    if ("linear_regression" %in% methods) {
+        model <- sklearn$linear_model$LinearRegression()
+        window_size <- wlen 
+        dataset <- apply(sapply(1:(nrow(dataset) - window_size), function(i) {
+            window <- dataset[i:(i + window_size - 1), ]
+            model$fit(window, 1:window_size)$predict(window)
+        }), 2, mean)
+    }
+    return (dataset)
+}
+
+apply_preprocessing <- function ( dataset, task_type, methods, wlen  ){
+    if (not (is.null(methods) || length(methods) == 0)) {
+        if (task_type == "point_outlier") {
+            dataset <- apply_preprocessing_point_outlier(dataset, methods, wlen )
+        } else if (task_type == "sequence_outlier") {
+            dataset <-  apply_preprocessing_sequence_outlier ( dataset, methods, wlen )
+        } else if (task_type == "segments") {
+            dataset <- apply_preprocessing_sequence_outlier ( dataset, methods, wlen)
+        } else if (task_type == "trends") {
+            dataset <- apply_preprocessing_trends (dataset, methods, wlen )
+        }   
+    }
+    return(dataset)
+ }

@@ -32,6 +32,11 @@ library(htmlwidgets)
 library(randomcoloR)
 library(farver)
 
+# Cargar librerías de Python necesarias
+sklearn <- import("sklearn")
+statsmodels <- import("statsmodels.api")
+scipy <- import("scipy")
+
 #options(shiny.trace = TRUE, shiny.loglevel = "DEBUG", shiny.app_log_path = "app/shiny_logs_internal")
 
 torch <- reticulate::import("torch")

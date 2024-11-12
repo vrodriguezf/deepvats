@@ -36,16 +36,15 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       load_datasetUI("load_dataset1"),
-      checkboxInput("preprocess_dataset", "Preprocess Dataset", value = FALSE)
+      checkboxInput("preprocess_dataset", "Preprocess Dataset", value = FALSE),
       conditionalPanel(
         condition = "input.preprocess_dataset == true",
-        selectInput(
-          "task_type", choices = list (
-            "Detect outlier points" = "point_outlier"
-            "Detect outlier sequences" = "sequence_outlier",
-            "Segmentate" = "segments",
-            "Detect trends" = "trends"
-          ), selected = NULL
+        selectInput("task_type", "Select Task Type", choices = list (
+          "Detect outlier points" = "point_outlier",
+          "Detect outlier sequences" = "sequence_outlier",
+          "Segmentate" = "segments",
+          "Detect trends" = "trends"
+          ), selected = NULL)
         ),
         conditionalPanel(
             condition = "input.task_type == 'point_outlier'",
@@ -82,7 +81,7 @@ shinyUI(fluidPage(
                                               "Linear Regression on Window" = "linear_regression"),
                                selected = NULL)
         )
-      )
+      ),
 
       hr(),
       select_datasetUI("datasetModule"),

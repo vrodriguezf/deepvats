@@ -33,7 +33,7 @@ user_preferences:
     #alias: &alias 'outliers-3'
     #alias: &alias 'PulsusParadoxus-SP02'
     alias: &alias 'TitlABP'
-    algorithm: &alg 'mvp'
+    algorithm: &alg 'moment-small-embedding'
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 

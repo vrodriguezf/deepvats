@@ -7,8 +7,9 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_t
            'watch_gpu', 'get_enc_embs_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size',
            'random_windows', 'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
            'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
-           'fine_tune_moment_train_loop_step_', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
-           'fine_tune_moment_ensure_windowed_dataset', 'fine_tune_moment_']
+           'fine_tune_moment_train_loop_step_', 'setup_scheduler', 'fine_tune_moment_train_',
+           'prepare_train_and_eval_dataloaders', 'fine_tune_moment_single_', 'fine_tune_moment_ensure_windowed_dataset',
+           'fine_tune_moment_']
 
 # %% ../nbs/encoder.ipynb 2
 from .memory import *
@@ -30,6 +31,7 @@ from momentfm import MOMENTPipeline
 from gluonts.dataset.pandas import PandasDataset
 import time
 import einops
+import traceback
 
 # %% ../nbs/encoder.ipynb 8
 class DCAE_torch(Module):
@@ -284,6 +286,7 @@ def sure_eval_moment(
             if verbose > 0:
                 print_flush(f"sure_eval_moment | Trial {trial} | About to pad X (encoder input) | exception {e} | padd step: {padd_step}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                 print_flush(f"sure_eval_moment | Trial {trial} | y ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+                traceback.print_exc()
             if "tensor a" in str(e) and "tensor b" in str(e) and "dimension" in str(e):
                 match = re.search(r'tensor a \((\d+)\) must match the size of tensor b \((\d+)\) at non-singleton dimension (\d+)', str(e))
                 tensor_a_size = int(match.group(1))
@@ -337,7 +340,7 @@ def sure_eval_moment(
         if verbose > 0: print_flush(f"sure_eval_moment -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     y = y_copy
     if not cpu: y.to("cuda")
-    return output
+    return output, enc_learn
 
 # %% ../nbs/encoder.ipynb 18
 from fastai.learner import Learner
@@ -1220,6 +1223,7 @@ def fine_tune_moment_train_loop_step_(
     batch, 
     batch_masks,
     criterion                               = torch.nn.MSELoss, 
+    window_mask_percent             : float = 0.3,
     optimizer                               = torch.optim.AdamW, 
     lr                              : float = 1e-4, 
     lr_scheduler_flag               : bool  = False, 
@@ -1230,11 +1234,16 @@ def fine_tune_moment_train_loop_step_(
     print_to_path                   : bool  = False,
     print_path                      : str   = "~/data/logs/logs.txt",
     print_mode                      : str   = 'a',
-
+    use_moment_masks                : bool  = False,
+    mask_stateful                   : bool  = False,
+    mask_future                     : bool  = False,
+    mask_sync                       : bool  = False
 ): 
     device = torch.cuda.current_device() if not cpu else "cpu"
     bms = batch_masks
-    mask_generator = Masking(mask_ratio = 0.3)
+    if use_moment_masks:
+        mask_generator = Masking(mask_ratio = window_mask_percent)
+    
     if batch.shape[0] < batch_masks.shape[0]:  
         bms = batch_masks[:batch.shape[0]]
     if verbose > 1: 
@@ -1248,10 +1257,33 @@ def fine_tune_moment_train_loop_step_(
 
     if bms.shape[0] > batch.shape[0]: bms = bms[:batch.shape[0]]
 
-    mask = mask_generator.generate_mask(
-        x = batch,
-        input_mask = bms
-    )
+    if use_moment_masks:
+        mask = mask_generator.generate_mask(
+            x = batch,
+            input_mask = bms
+        )
+    else: 
+        if verbose > 0: 
+            print_flush(
+                f"fine_tune_moment_train_loop_step_ | Fine tune loop | window_mask_percent {window_mask_percent} | batch ~ {batch.shape}",
+                print_to_path=print_to_path, print_path=print_path,
+                print_mode = 'a', verbose = verbose
+            )
+        o = torch.zeros(batch.shape[0], batch.shape[2])
+        if mask_future:
+            mask = create_future_mask(
+                o       = o, 
+                r       = window_mask_percent, 
+                sync    = mask_sync
+            )
+        else:
+            mask = create_subsequence_mask(
+                o       = o,
+                r       = window_mask_percent, 
+                stateful= mask_stateful, 
+                sync    = mask_sync
+            )
+ 
 
     if mask.shape[0] < bms.shape[0]:  bms = batch_masks[:mask.shape[0]]
     if mask.shape[1]  < batch_masks.shape[1] :
@@ -1273,7 +1305,7 @@ def fine_tune_moment_train_loop_step_(
             f"fine_tune_moment_train_loop_step_ | sure_eval_moment | b{batch.device} | m{mask.device} | bm{bms.device}",
             print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose
         )
-    output = sure_eval_moment(
+    output, enc_learn = sure_eval_moment(
         enc_learn = enc_learn, 
         cpu = cpu,
         verbose = verbose, 
@@ -1295,34 +1327,18 @@ def fine_tune_moment_train_loop_step_(
         loss = 0
     else: 
         loss = fine_tune_moment_compute_loss(batch, output, criterion, verbose = verbose, input_mask = bms, mask = mask, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
-    return loss
+    return loss, enc_learn
 
 # %% ../nbs/encoder.ipynb 44
-def fine_tune_moment_train_(
-    enc_learn : Learner, 
-    dl_train: DataLoader,
-    ds_train,
-    batch_size : int,
-    num_epochs : int                = 1,
-    criterion                       = torch.nn.MSELoss, 
-    optimizer                       = None, 
-    lr                              = 5e-5,  #1 e -4
-    lr_scheduler_flag               = False, 
-    lr_scheduler_name               = "linear",
-    lr_scheduler_num_warmup_steps   = 100,
-    cpu                             = False,
-    verbose                         = 0,
-    print_to_path   : bool          = False,
-    print_path      : str           = "~/data/logs/logs.txt",
-    print_mode      : str           = 'a',
+def setup_scheduler(
+    dl_train                        : DataLoader,
+    lr_scheduler_flag               : bool= False,
+    lr_scheduler_name               : str = "",
+    optimizer                             = None,
+    num_epochs                      : int = 10,
+    lr_scheduler_num_warmup_steps   : int = 0,
+    num_training_steps              : int = 10
 ):
-    # Select device
-    device = "cpu" if cpu else torch.cuda.current_device()
-    # Optimizer and learning rate scheduler
-    if optimizer is None: 
-        optimizer = torch.optim.AdamW(enc_learn.parameters(), lr)
-    num_training_steps = num_epochs * len(dl_train)
-    losses = []
     if lr_scheduler_flag:
         match lr_scheduler_name:
             case "OneCycleLR": 
@@ -1339,6 +1355,42 @@ def fine_tune_moment_train_(
                     num_warmup_steps    = lr_scheduler_num_warmup_steps,
                     num_training_steps  = num_training_steps
                 )
+    return lr_scheduler
+def fine_tune_moment_train_(
+    enc_learn                       : Learner, 
+    dl_train                        : DataLoader,
+    ds_train                        : pd.DataFrame,
+    window_mask_percent             : float = 0.3,
+    batch_size                      : int   = 1,
+    num_epochs                      : int   = 1,
+    criterion                               = torch.nn.MSELoss, 
+    optimizer                               = None, 
+    lr                              : float = 5e-5,  #1 e -4
+    lr_scheduler_flag               : bool  = False, 
+    lr_scheduler_name               : str   = "linear",
+    lr_scheduler_num_warmup_steps   : int   = 1000,
+    cpu                             : bool  = False,
+    verbose                         : int   = 0,
+    print_to_path                   : bool  = False,
+    print_path                      : str   = "~/data/logs/logs.txt",
+    print_mode                      : str   = 'a',
+    use_moment_masks                : bool  = False,
+    mask_stateful                   : bool  = False,
+    mask_future                     : bool  = False,
+    mask_sync                       : bool  = False
+):
+    # Select device
+    device = "cpu" if cpu else torch.cuda.current_device()
+    # Optimizer and learning rate scheduler
+    if optimizer is None: 
+        optimizer = torch.optim.AdamW(enc_learn.parameters(), lr)
+    num_training_steps = num_epochs * len(dl_train)
+    losses = []
+    lr_scheduler = setup_scheduler(
+        dl_train=dl_train, lr_scheduler_flag=lr_scheduler_flag, lr_scheduler_name=lr_scheduler_name,
+        optimizer=optimizer, num_epochs = num_epochs, lr_scheduler_num_warmup_steps = lr_scheduler_num_warmup_steps, 
+        num_training_steps= num_training_steps
+    )
         
     # Training loop
     if verbose > 1: print_flush("fine_tune_moment_train_ | Training loop", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
@@ -1382,6 +1434,7 @@ def fine_tune_moment_train_(
                     enc_learn                       = enc_learn,
                     batch                           = batch,
                     batch_masks                     = batch_masks, 
+                    window_mask_percent             = window_mask_percent,
                     criterion                       = criterion,
                     optimizer                       = optimizer,
                     lr                              = lr,
@@ -1390,7 +1443,11 @@ def fine_tune_moment_train_(
                     cpu                             = cpu,
                     verbose                         = verbose,
                     print_to_path                   = print_to_path,
-                    print_mode                      = 'a'
+                    print_mode                      = 'a',
+                    use_moment_masks                = use_moment_masks,
+                    mask_stateful                   = mask_stateful,
+                    mask_future                     = mask_future,
+                    mask_sync                       = mask_sync
                 )
             try: 
                 if verbose > 0: print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
@@ -1424,52 +1481,37 @@ from .utils import find_dominant_window_sizes_list
 from .config import show_attrdict
 
 # %% ../nbs/encoder.ipynb 46
-def fine_tune_moment_single_(
-    X                               : List [ List [ List [ float ]]],
-    enc_learn                       : Learner, 
-    stride                          : int           = 1,      
-    batch_size                      : int           = 32,
-    cpu                             : bool          = False,
-    to_numpy                        : bool          = True, 
-    verbose                         : int           = 0, 
-    time_flag                       : bool          = False,
-    n_windows                       : int           = None,
-    n_windows_percent               : float         = 0.2,
-    validation_percent              : float         = 0.2, 
-    training_percent                : float         = 0.2,
-    num_epochs                      : int           = 3,
-    shot                            : bool          = True,
-    eval_pre                        : bool          = True,
-    eval_post                       : bool          = True,
-    criterion                       : _Loss         = torch.nn.MSELoss, 
-    optimizer                                       = torch.optim.Adam, 
-    lr                              : float         =  5e-5, # 1e-4
-    lr_scheduler_flag               : bool          = False, 
-    lr_scheduler_name               : str           = "linear",
-    lr_scheduler_num_warmup_steps   : int           = 0,
-    print_to_path                   : bool          = False,
-    print_path                      : str           = "~/data/logs/logs.txt",
-    print_mode                      : str           = 'a'
+def prepare_train_and_eval_dataloaders(
+    X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
+    batch_size          : int,
+    n_windows           : int   = None,
+    n_windows_percent   : int   = None,
+    training_percent    : int   = 0.4,
+    validation_percent  : int   = 0.3,
+    shot                : bool  = False,
+    eval_pre            : bool  = False,
+    eval_post           : bool  = False,
+    #- Printing options for debugging
+    print_to_path       : bool  = False,
+    print_path          : str   = "~/data/logs/logs.txt",
+    print_mode          : str   = 'a',
+    verbose             : int   = 0
 ):
-    if verbose > 0: print_flush("--> fine_tune_moment_single", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose )
-    t_shot = 0
-    t_eval_1 = 0
-    t_eval_2 = 0
-    losses = []
-    eval_results_pre = ""
-    eval_results_post = ""
-
-    if time_flag:
-        timer = Time()
-    if verbose > 0: print_flush("fine_tune_moment_single | Prepare the dataset", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose )
-    # Prepare the dataset
-    train_split_index = min(X.shape[0], np.ceil(training_percent * n_windows)) if n_windows is not None else np.ceil(training_percent * X.shape[0])
-    eval_split_index = min(X.shape[0], np.ceil(validation_percent * n_windows)) if n_windows is not None else np.ceil(validation_percent * X.shape[0])
+    dl_eval  = None
+    ds_train = None,
+    dl_train = None
+    if n_windows is None and n_windows_percent is None:
+        train_split_index = min(X.shape[0], np.ceil(training_percent * X.shape[0]))
+        eval_split_index = min(X.shape[0], np.ceil(validation_percent * X.shape[0]))
+    else:
+        train_split_index = min(X.shape[0], np.ceil(training_percent * n_windows)) if n_windows is not None else np.ceil(training_percent * n_windows_percent * X.shape[0])
+        eval_split_index = min(X.shape[0], np.ceil(validation_percent * n_windows)) if n_windows is not None else np.ceil(validation_percent * n_windows_percent * X.shape[0])
+    
     train_split_index = int(train_split_index)
     eval_split_index = int(eval_split_index)
     if shot: 
         if verbose > 0: 
-            print_flush(f"fine_tune_moment_single | Selecting ds train | {train_split_index} windows", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            print_flush(f"fine_tune_moment_single | Selecting ds train | {train_split_index} windows", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
         ds_train = X[:train_split_index]
     if eval_pre or eval_post: 
         if verbose > 0: 
@@ -1489,6 +1531,58 @@ def fine_tune_moment_single_(
         if verbose > 0: 
             print_flush("fine_tune_moment_single | Validation DataLoader", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
+    return dl_eval, dl_train, ds_train
+
+def fine_tune_moment_single_(
+    X                               : List [ List [ List [ float ]]],
+    enc_learn                       : Learner, 
+    stride                          : int           = 1,      
+    batch_size                      : int           = 32,
+    cpu                             : bool          = False,
+    to_numpy                        : bool          = True, 
+    verbose                         : int           = 0, 
+    time_flag                       : bool          = False,
+    n_windows                       : int           = None,
+    n_windows_percent               : float         = None,
+    validation_percent              : float         = 0.2, 
+    training_percent                : float         = 0.2,
+    window_mask_percent             : float         = 0.3,
+    num_epochs                      : int           = 3,
+    shot                            : bool          = True,
+    eval_pre                        : bool          = True,
+    eval_post                       : bool          = True,
+    criterion                       : _Loss         = torch.nn.MSELoss, 
+    optimizer                                       = torch.optim.Adam, 
+    lr                              : float         =  5e-5, # 1e-4
+    lr_scheduler_flag               : bool          = False, 
+    lr_scheduler_name               : str           = "linear",
+    lr_scheduler_num_warmup_steps   : int           = 0,
+    print_to_path                   : bool          = False,
+    print_path                      : str           = "~/data/logs/logs.txt",
+    print_mode                      : str           = 'a',
+    use_moment_masks                : bool          = False,
+    mask_stateful                   : bool          = False,
+    mask_future                     : bool          = False,
+    mask_sync                       : bool          = False
+):
+    if verbose > 0: print_flush("--> fine_tune_moment_single", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose )
+    t_shot = 0
+    t_eval_1 = 0
+    t_eval_2 = 0
+    losses = []
+    eval_results_pre = ""
+    eval_results_post = ""
+
+    if time_flag:
+        timer = Time()
+    if verbose > 0: print_flush("fine_tune_moment_single | Prepare the dataset", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose )
+    # Prepare the dataset
+    dl_eval, dl_train, ds_train = prepare_train_and_eval_dataloaders(
+        X = X, batch_size=batch_size, n_windows = n_windows, n_windows_percent=n_windows_percent,
+        training_percent=training_percent, validation_percent=validation_percent, 
+        shot = shot, eval_pre = eval_pre, eval_post=eval_post,
+        print_to_path=print_to_path, print_path=print_path, print_mode='a', verbose=verbose
+    )
     if eval_pre:
         print_flush(f"fine_tune_moment_single | Eval Pre | wlen {X.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         if time_flag: timer.start()
@@ -1508,10 +1602,11 @@ def fine_tune_moment_single_(
         print_flush(f"fine_tune_moment_single | Train | wlen {X.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         try:
             if time_flag: timer.start()
-            losses = fine_tune_moment_train_(
+            losses, enc_learn = fine_tune_moment_train_(
                 enc_learn = enc_learn,
                 dl_train = dl_train,
                 ds_train = ds_train,
+                window_mask_percent = window_mask_percent,
                 batch_size = batch_size,
                 num_epochs = num_epochs,
                 criterion = criterion, 
@@ -1522,7 +1617,11 @@ def fine_tune_moment_single_(
                 lr_scheduler_num_warmup_steps = lr_scheduler_num_warmup_steps,
                 cpu = cpu,
                 verbose = verbose-1,
-                print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+                print_to_path = print_to_path, print_path = print_path, print_mode = 'a',
+                use_moment_masks= use_moment_masks,
+                mask_stateful=mask_stateful,
+                mask_future=mask_future,
+                mask_sync=mask_sync
             )
             if time_flag:
                 timer.end()
@@ -1530,6 +1629,7 @@ def fine_tune_moment_single_(
                 if verbose > 0: timer.show(verbose = verbose, print_to_path = print_to_path, print_mode = 'a')
         except Exception as e:
             print_flush(f"fine_tune_moment_single | Train | Window {X.shape[2]} not valid | {e}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            traceback.print_exc()
     if eval_post:    
         print_flush(f"fine_tune_moment_single | Eval Post | wlen {X.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         if time_flag: timer.start()
@@ -1554,7 +1654,7 @@ def fine_tune_moment_single_(
                     print_flush(f"Eval post: ", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                     show_attrdict(eval_results_post, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
     if verbose > 0: print_flush("fine_tune_moment_single -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2
+    return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, enc_learn
 
 # %% ../nbs/encoder.ipynb 47
 def fine_tune_moment_ensure_windowed_dataset(
@@ -1616,6 +1716,7 @@ def fine_tune_moment_(
     n_windows_percent               : float         = None,
     validation_percent              : float         = 0.2, 
     training_percent                : float         = 0.2,
+    window_mask_percent             : float         = 0.3,
     num_epochs                      : int           = 3,
     shot                            : bool          = True,
     eval_pre                        : bool          = True,
@@ -1634,7 +1735,11 @@ def fine_tune_moment_(
     #- Printing options for debugging
     print_to_path                   : bool          = False,
     print_path                      : str           = "~/data/logs/logs.txt",
-    print_mode                      : str           = 'a'
+    print_mode                      : str           = 'a',
+    use_moment_masks                : bool          = False,
+    mask_stateful                   : bool          = False,
+    mask_future                     : bool          = False,
+    mask_sync                       : bool          = False
 ):   
     if verbose > 0: print_flush("--> fine_tune_moment_", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     lossess = []
@@ -1662,7 +1767,7 @@ def fine_tune_moment_(
     for enc_input in dss:
         if verbose > 0: print_flush(f"fine_tune_moment_ | Processing wlen {enc_input.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
         ( 
-            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2
+            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, enc_learn
         ) =  fine_tune_moment_single_(
             X                               = enc_input, 
             enc_learn                       = enc_learn,
@@ -1676,6 +1781,7 @@ def fine_tune_moment_(
             n_windows_percent               = n_windows_percent,
             validation_percent              = validation_percent,
             training_percent                = training_percent,
+            window_mask_percent             = window_mask_percent,
             num_epochs                      = num_epochs,
             shot                            = shot,
             eval_pre                        = eval_pre,
@@ -1686,7 +1792,11 @@ def fine_tune_moment_(
             lr_scheduler_flag               = lr_scheduler_flag,
             lr_scheduler_name               = lr_scheduler_name,
             lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps,
-            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+            print_to_path = print_to_path, print_path = print_path, print_mode = 'a',
+            use_moment_masks                = use_moment_masks,
+            mask_stateful                   = mask_stateful,
+            mask_future                     = mask_future,
+            mask_sync                       = mask_sync
         )
         
         lossess.append(losses)
@@ -1698,6 +1808,6 @@ def fine_tune_moment_(
         eval_pre = False
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
 
     

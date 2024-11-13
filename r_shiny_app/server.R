@@ -695,7 +695,8 @@ shinyServer(function(input, output, session) {
     )
    
    # Encoder
-    enc <- eventReactive(
+    enc <- reactiveVal(NULL)
+    enc_comp <- eventReactive(
         enc_ar(), 
     {
         req(input$dataset, input$encoder)
@@ -705,7 +706,7 @@ shinyServer(function(input, output, session) {
         encoder_artifact_dir <- ""
         encoder_filename <- encoder_artifact$metadata$ref$hash
         default_path <- file.path(DEFAULT_PATH_WANDB_ARTIFACTS, encoder_filename)
-        enc <- NULL
+        enc(NULL)
 
         print(paste0("eventReactive enc | load encoder | Check if the encoder file exists: ", default_path))
 
@@ -713,7 +714,7 @@ shinyServer(function(input, output, session) {
             print(paste0("eventReactive enc | load encoder ", encoder_filename ," | --> Load from binary file "))
             # --- Load from binary file --- #
             encoder_read_option <- "Load from binary file"
-            enc <- py_load_object(default_path)
+            enc(py_load_object(default_path))
 
         } else { # If the encoder file has not been found in the default path
             # --- Download from W&B and load from binary file --- #
@@ -762,8 +763,8 @@ shinyServer(function(input, output, session) {
                 copy.mode   = TRUE
             )
             # Load from binary file
-            enc <- py_load_object(default_path)
-            if (is.null(enc)) {
+            enc (py_load_object(default_path))
+            if (is.null(enc())) {
                 stop("Encoder null after loading from the binary file. Something went wrong.")
             }
         } # End of else 
@@ -774,7 +775,7 @@ shinyServer(function(input, output, session) {
             input$stride, 
             "-->"
         )); flush.console()})
-        enc
+        enc()
     })
 
    
@@ -888,7 +889,7 @@ shinyServer(function(input, output, session) {
             stride    = input$stride,
             fine_tune = input$fine_tune
         )
-        req(tsdf(), X(), enc(), enc_input_ready(), allow_update_embs())
+        req(tsdf_comp(), X(), enc_comp(), enc_input_ready(), allow_update_embs())
         print(paste0("|| Embs || --> embs (before req) | get embeddings | enc_input_ready ", enc_input_ready()," | play " , play()))
         if (is.null(cached_embeddings()) || ! identical(current_inputs, last_inputs())){
             shinyjs::enable("embs_comp")
@@ -952,7 +953,7 @@ shinyServer(function(input, output, session) {
         log_print(paste0("|| embs_comp || get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
         log_print(paste0("|| embs_comp || get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
         specific_kwargs <- embs_kwargs()
-        enc_l <- enc()
+        enc_l <- req(enc())
         kwargs_common <- list(
             X                   = enc_input,
             enc_learn           = enc_l,
@@ -1085,7 +1086,7 @@ observeEvent(input$ft_dataset_option, {
 
 observe({
     log_print("Observe event | Input fine tune | Play fine tune ... Waiting ...")
-    req(play_fine_tune(), input$fine_tune)
+    req(play_fine_tune(), input$fine_tune, enc_comp())
     log_print("Observe event | Input fine tune | Play fine tune")
 
     if (grepl("moment", input$encoder, ignore.case = TRUE)) {
@@ -1095,10 +1096,11 @@ observe({
             stride                          = as.integer(1),
             batch_size                      = as.integer(input$ft_batch_size),
             cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
-            to_numpy                        = FALSE,
+            to_numpy                        = TRUE,
             verbose                         = as.integer(1),
             time_flag                       = TRUE,
             n_windows_percent               = as.numeric(input$ft_window_percent),
+            window_mask_percent             = as.numeric(input$ft_mask_window_percent),
             training_percent                = as.numeric(input$ft_training_percent),
             validation_percent              = as.numeric(input$ft_validation_percent),
             num_epochs                      = as.integer(input$ft_num_epochs),
@@ -1115,7 +1117,10 @@ observe({
             n_window_sizes                  = as.integer(input$ft_num_windows),
             window_sizes_offset             = as.numeric(0.05),
             windows_min_distance            = as.integer(input$ft_min_windows_distance),
-            full_dataset                    = (input$ft_datset_option == "full_dataset")
+            full_dataset                    = (input$ft_datset_option == "full_dataset"),
+            mask_stateful                   = input$ft_mask_stateful,
+            mask_future                     = input$ft_mask_future,
+            mask_sync                       = input$ft_sync
         )
 
 
@@ -1150,6 +1155,7 @@ observe({
         t_shot <- result[[5]]
         t_evals <- result[[6]]
         t_eval <- result[[7]]
+        enc(result[[8]])
         diff = t_end - t_init
         diff_secs = diff
         diff_mins = diff / 60
@@ -1309,38 +1315,9 @@ observe({
 
     allow_tsdf <- reactiveVal(TRUE)
 
-    get_tsdf_prev <- reactiveVal(NULL)
-    preprocess_dataset_prev <- reactiveVal (NULL)
-
-    observeEvent ( input$get_tsdf, input$preprocess_dataset, {
-        if ( is.null(get_tsdf_prev()) ||  get_tsdf_prev() != input$get_tsdf ){
-            log_print(paste0("get_tsdf changed to: ", input$get_tsdf))
-            allow_tsdf( !allow_tsdf() )
-            tsdf <- tsdf()
-            log_print(paste0("allow_tsdf changed to: ", allow_tsdf()))
-            if ( is.null(preprocess_dataset_prev()) || preprocess_dataset_prev() != input$preprocess_dataset ) {
-                tsdf <- apply_preprocessing(
-                    dataset = dataset,
-                    task_type = input$task_type,
-                    methods = switch(
-                        input$task_type, 
-                        "point_outlier"     = input$smooth_methods_point,
-                        "sequence_outlier"  = input$smooth_methods_sequence,
-                        "segments"          = input$smooth_methods_segments,
-                        "trends"            = input$smooth_methods_trends
-                    )
-                )
-            }
-        }
-        tsdf 
-    })
-
-
-    
-
-
     # Load and filter TimeSeries object from wandb
-    tsdf <- reactive(
+    tsdf <- reactiveVal(NULL)
+    tsdf_comp <- reactive(
         {
             req(input$encoder, ts_ar())
             log_print(paste0("--> Reactive tsdf"))
@@ -1405,14 +1382,40 @@ observe({
                 log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds | df ~ ", dim(df)));flush.console()
                 df
             })
-            df
+            tsdf(df)
     })
 
-    
+    get_tsdf_prev           <- reactiveVal(NULL)
+    preprocess_dataset_prev <- reactiveVal (NULL)
 
-
-
-    
+    #observeEvent ( input$get_tsdf, input$preprocess_dataset, {
+    observe({
+        req(tsdf_comp(), input$get_tsdf, input$preprocess_dataset)
+        if ( is.null(get_tsdf_prev()) ||  get_tsdf_prev() != input$get_tsdf ){
+            log_print(paste0("get_tsdf changed to: ", input$get_tsdf))
+            allow_tsdf( !allow_tsdf() )
+            log_print(paste0("allow_tsdf changed to: ", allow_tsdf()))
+            if ( 
+                is.null(preprocess_dataset_prev()) || 
+                preprocess_dataset_prev() != input$preprocess_dataset 
+            ) {
+                tsdf(
+                    apply_preprocessing(
+                        dataset = dataset,
+                        task_type = input$task_type,
+                        methods = switch(
+                            input$task_type, 
+                            "point_outlier"     = input$smooth_methods_point,
+                            "sequence_outlier"  = input$smooth_methods_sequence,
+                            "segments"          = input$smooth_methods_segments,
+                            "trends"            = input$smooth_methods_trends
+                        )
+                    )
+                )
+            }
+        }
+    })
+   
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
         #window_indices = get_window_indices(embedding_indices, input$wlen, input$stride)
@@ -1895,10 +1898,9 @@ tcl_1 = Sys.time()
             #log_print(paste0("TS indices per embedding idx: ", indices_per_embedding))
             projections_idxs <- indices_per_embedding %>% map_lgl(~ selected_ts_idx %in% .)
             log_print(paste0("prjs_ ~ ", indices_per_embedding))
-            prjs_$highlight <- projections_idxs
-            
-            
-
+            if (length(projections_idxs) > 0){
+                prjs_$highlight <- projections_idxs
+            }
         } else {
             prjs_$highlight = FALSE
         }

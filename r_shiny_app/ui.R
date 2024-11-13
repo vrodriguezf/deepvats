@@ -44,43 +44,56 @@ shinyUI(fluidPage(
           "Detect outlier sequences" = "sequence_outlier",
           "Segmentate" = "segments",
           "Detect trends" = "trends"
-          ), selected = NULL)
+          ), 
+          selected = NULL
         ),
         conditionalPanel(
-            condition = "input.task_type == 'point_outlier'",
-            checkboxGroupInput("smooth_methods_point", "Smoothing Options for Point Outliers",
-                               choices = list("StandardScaler" = "standard_scaler",
-                                              "EllipticEnvelope" = "elliptic_envelope",
-                                              "Median Filter" = "median_filter"),
-                               selected = NULL)
-        ),
-        
+          condition = "input.task_type == 'point_outlier'",
+          checkboxGroupInput("smooth_methods_point", "Smoothing Options for Point Outliers",
+          choices = list(
+            "StandardScaler" = "standard_scaler",
+            "EllipticEnvelope" = "elliptic_envelope",
+            "Median Filter" = "median_filter"
+            ),
+            selected = NULL
+          )
+        ),  
         conditionalPanel(
-            condition = "input.task_type == 'sequence_outlier'",
-            checkboxGroupInput("smooth_methods_sequence", "Smoothing Options for Sequence Outliers",
-                               choices = list("DBSCAN" = "dbscan",
-                                              "IsolationForest" = "isolation_forest",
-                                              "Moving Average Filter" = "moving_average"),
-                               selected = NULL)
-        ),
-        
-        conditionalPanel(
-            condition = "input.task_type == 'segments'",
-            checkboxGroupInput("smooth_methods_segments", "Smoothing Options for Segments",
-                               choices = list("KMeans" = "kmeans",
-                                              "Moving Average Filter" = "moving_average",
-                                              "Wavelet Transform (Not Available)" = "wavelet_transform"),
-                               selected = NULL)
-        ),
-        
-        conditionalPanel(
-            condition = "input.task_type == 'trends'",
-            checkboxGroupInput("smooth_methods_trends", "Smoothing Options for Trends",
-                               choices = list("PCA" = "pca",
-                                              "Exponential Smoothing" = "exp_smoothing",
-                                              "Linear Regression on Window" = "linear_regression"),
-                               selected = NULL)
+        condition = "input.task_type == 'sequence_outlier'",
+        checkboxGroupInput(
+          "smooth_methods_sequence", 
+          "Smoothing Options for Sequence Outliers",
+          choices = list(
+            "DBSCAN"                = "dbscan",
+            "IsolationForest"       = "isolation_forest",
+            "Moving Average Filter" = "moving_average"),
+            selected                = NULL
         )
+        ),
+        conditionalPanel(
+        condition = "input.task_type == 'segments'",
+        checkboxGroupInput(
+          "smooth_methods_segments", "Smoothing Options for Segments",
+          choices = list(
+            "KMeans"                            = "kmeans",
+            "Moving Average Filter"             = "moving_average",
+            "Wavelet Transform (Not Available)" = "wavelet_transform"
+          ),
+          selected = NULL
+        )
+        ),
+        conditionalPanel(
+          condition = "input.task_type == 'trends'",
+          checkboxGroupInput(
+            "smooth_methods_trends", "Smoothing Options for Trends",
+            choices = list(
+              "PCA"                         = "pca",
+              "Exponential Smoothing"       = "exp_smoothing",
+              "Linear Regression on Window" = "linear_regression"
+              ),
+              selected = NULL
+            )
+          )
       ),
 
       hr(),
@@ -93,6 +106,7 @@ shinyUI(fluidPage(
             condition = "input.fine_tune == true",
             textInput("ft_batch_size", "Batch Size", value = 32),
             textOutput("ft_batch_size_value"),
+            textInput("ft_mask_window_percent", "Percentage of windows/dataset to use for the training", value = 0.75), # mask
             textInput("ft_window_percent", "Maskared windows percent", value = 0.75), # mask
             textOutput("ft_window_percent_value"),
             textInput("ft_training_percent", "Training windows percent", value = 0.1),
@@ -107,6 +121,11 @@ shinyUI(fluidPage(
               "use_ft_num_windows" = "Fine-tune fixing the number of windows",
               "use_full_dataset" = "Fine-tune using the full dataset"
             )),
+            choices = list(
+              "ft_mask_future"   = "Choose if you want to mask future timestamps.",
+              "ft_mask_stateful" = "Choose if you want to mask past timestamps",
+              "ft_sync"          = "*Todo* Choose if you want to sync masking in all time series variables"
+            ),
             actionButton("fine_tune_play", "Shot!", icon = shiny::icon("play"))
           )
         )

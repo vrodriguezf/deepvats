@@ -337,9 +337,11 @@ def sure_eval_moment(
                 if verbose > 0: 
                     print_flush("Not the usual error. No padding, just fail", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                 if not continue_if_fail: raise
-        if verbose > 0: print_flush(f"sure_eval_moment -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        #if verbose > 0: print_flush(f"sure_eval_moment | output {output.__class__} | enc_learn {enc_learn.__class__} -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        if verbose > 0: print_flush(f"sure_eval_moment | output {output.__class__} -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     y = y_copy
     if not cpu: y.to("cuda")
+    
     return output, enc_learn
 
 # %% ../nbs/encoder.ipynb 18
@@ -1129,7 +1131,7 @@ def fine_tune_moment_eval_step_(
 
 ):
     with torch.no_grad():
-        output = sure_eval_moment(
+        output, enc_learn = sure_eval_moment(
             enc_learn = enc_learn, 
             cpu = cpu,
             verbose = verbose,                     
@@ -1219,7 +1221,7 @@ def fine_tune_moment_eval_(
 
 # %% ../nbs/encoder.ipynb 43
 def fine_tune_moment_train_loop_step_(
-    enc_learn: Learner,
+    enc_learn,
     batch, 
     batch_masks,
     criterion                               = torch.nn.MSELoss, 
@@ -1256,34 +1258,43 @@ def fine_tune_moment_train_loop_step_(
     bms     = bms.to(device) 
 
     if bms.shape[0] > batch.shape[0]: bms = bms[:batch.shape[0]]
-
+    if verbose > 0: 
+        print_flush(
+            f"fine_tune_moment_train_loop_step_ | Fine tune loop | window_mask_percent {window_mask_percent} | batch ~ {batch.shape}",
+            print_to_path=print_to_path, print_path=print_path,
+            print_mode = 'a', verbose = verbose
+        )
     if use_moment_masks:
         mask = mask_generator.generate_mask(
             x = batch,
             input_mask = bms
         )
     else: 
+        o   = torch.zeros(batch.shape[0], batch.shape[2])
         if verbose > 0: 
             print_flush(
-                f"fine_tune_moment_train_loop_step_ | Fine tune loop | window_mask_percent {window_mask_percent} | batch ~ {batch.shape}",
+                f"fine_tune_moment_train_loop_step_ | Fine tune loop | o ~ {o.shape}",
                 print_to_path=print_to_path, print_path=print_path,
                 print_mode = 'a', verbose = verbose
             )
-        o = torch.zeros(batch.shape[0], batch.shape[2])
         if mask_future:
             mask = create_future_mask(
                 o       = o, 
                 r       = window_mask_percent, 
                 sync    = mask_sync
-            )
+            )[0,:,:].int() # As there is only 1 variable/variables are flattened, an extra dim is created by the masking function
         else:
             mask = create_subsequence_mask(
                 o       = o,
-                r       = window_mask_percent, 
-                stateful= mask_stateful, 
+                r       = window_mask_percent,
+                stateful= mask_stateful,
                 sync    = mask_sync
+            )[0,:,:].int() # As there is only 1 variable/variables are flattened, an extra dim is created by the masking function
+        if verbose > 0:
+            print_flush(
+                f"fine_tune_moment_train_loop_step_ | Fine tune loop | Before shape adjustment | batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}",
+                print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose
             )
- 
 
     if mask.shape[0] < bms.shape[0]:  bms = batch_masks[:mask.shape[0]]
     if mask.shape[1]  < batch_masks.shape[1] :
@@ -1292,6 +1303,7 @@ def fine_tune_moment_train_loop_step_(
     batch = batch.to(device)
     mask = mask.to(device)
     bms = bms.to(device)
+    #print_flush(f"fine_tune_moment_train_loop_step_ | Enc_learn Before sure_eval_moment {enc_learn.__class__}")
     enc_learn = enc_learn.to(device)
     if verbose > 1: 
         print_flush(
@@ -1318,6 +1330,7 @@ def fine_tune_moment_train_loop_step_(
         print_to_path = print_to_path, print_path = print_path, print_mode = 'a',
         continue_if_fail = True
     )
+    #print_flush(f"fine_tune_moment_train_loop_step_ | Enc_learn After sure_eval_moment {enc_learn.__class__}")
     # Compute output loss
     if output is None:
         print_flush(
@@ -1327,6 +1340,7 @@ def fine_tune_moment_train_loop_step_(
         loss = 0
     else: 
         loss = fine_tune_moment_compute_loss(batch, output, criterion, verbose = verbose, input_mask = bms, mask = mask, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
+        #print_flush(f"fine_tune_moment_train_loop_step_ | Enc_learn After compute loss {enc_learn.__class__} | -->")
     return loss, enc_learn
 
 # %% ../nbs/encoder.ipynb 44
@@ -1400,7 +1414,7 @@ def fine_tune_moment_train_(
         (batch_size, window_size), 
         device = device
     ).long()
-    if verbose > 1: print_flush(f"fine_tune_moment_train | Fine tune loop | print_to_path {print_to_path}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)     
+    if verbose > 1: print_flush(f"fine_tune_moment_train | Fine tune loop | print_to_path {print_to_path} | batch_masks~{batch_masks}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)     
     #if print_to_path:
     #    pf = os.path.expanduser(print_path + "_progress")
     #    with open (pf, "w") as f:
@@ -1429,8 +1443,10 @@ def fine_tune_moment_train_(
     if verbose > 0: print_flush(f"fine_tune_moment_train | num_epochs {num_epochs} | n_batches {len(dl_train)}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     for epoch in range(num_epochs):
         for i, batch in enumerate(dl_train):
-            if verbose > 0: print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
-            loss = fine_tune_moment_train_loop_step_(
+            if verbose > 0: 
+                #print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Before loop step | Enc_learn {enc_learn.__class__}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path, print_both = False)
+                print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Before loop step", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path, print_both = False)
+            loss, enc_learn = fine_tune_moment_train_loop_step_(
                     enc_learn                       = enc_learn,
                     batch                           = batch,
                     batch_masks                     = batch_masks, 
@@ -1450,7 +1466,11 @@ def fine_tune_moment_train_(
                     mask_sync                       = mask_sync
                 )
             try: 
-                if verbose > 0: print_flush(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+                if verbose > 0: print_flush(
+                    #f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward | After loop step | Enc_learn {enc_learn.__class__}", 
+                    f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward | After loop step ", 
+                    print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path, print_both = False
+                )
                 if isinstance(loss, int):
                     losses.append(loss)    
                 else:
@@ -1466,13 +1486,20 @@ def fine_tune_moment_train_(
                     losses.append(np.nan)
                 optimizer.zero_grad()
                 optimizer.step()
-            
+            #if verbose > 0: 
+                #print_flush(
+                #    f"fine_tune_moment_train | batch {i} | After losses | Enc_learn {enc_learn.__class__}", 
+                #    print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path, print_both = False
+                #)
                 
             
             if lr_scheduler_flag: lr_scheduler.step()
             progress_bar.update(1)
     progress_bar.close()
-    return losses
+    if verbose > 0:
+        #print_flush(f"fine_tune_moment_train | enc_learn {enc_learn.__class__} | -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+        print_flush(f"fine_tune_moment_train | -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+    return losses, enc_learn
 
 # %% ../nbs/encoder.ipynb 45
 from torch.nn.modules.loss import _Loss

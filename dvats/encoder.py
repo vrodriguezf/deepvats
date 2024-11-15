@@ -1230,7 +1230,7 @@ def fine_tune_moment_train_loop_step_(
     lr                              : float = 1e-4, 
     lr_scheduler_flag               : bool  = False, 
     lr_scheduler_name               : str   = "linear",
-    lr_scheduler_num_warmup_steps   : int   = 0,
+    lr_scheduler_num_warmup_steps   : int   = None,
     cpu                             : bool  = False,
     verbose                         : int   = 0,
     print_to_path                   : bool  = False,
@@ -1273,7 +1273,7 @@ def fine_tune_moment_train_loop_step_(
         o   = torch.zeros(batch.shape[0], batch.shape[2])
         if verbose > 0: 
             print_flush(
-                f"fine_tune_moment_train_loop_step_ | Fine tune loop | o ~ {o.shape}",
+                f"fine_tune_moment_train_loop_step_ | Fine tune loop | o ~ {o.shape} | stateful = {mask_stateful} | sync = {mask_sync} | r = {window_mask_percent}",
                 print_to_path=print_to_path, print_path=print_path,
                 print_mode = 'a', verbose = verbose
             )
@@ -1350,15 +1350,21 @@ def setup_scheduler(
     lr_scheduler_name               : str = "",
     optimizer                             = None,
     num_epochs                      : int = 10,
-    lr_scheduler_num_warmup_steps   : int = 0,
-    num_training_steps              : int = 10
+    lr_scheduler_num_warmup_steps   : int = None,
+    num_training_steps              : int = None,
+    lr_scheduler_perc_warmup_steps  : int = 0.02,
+    lr_scheduler_max_lr             : float = None,
+    lr                              : float = 1e-4
 ):
+    num_training_steps = num_epochs * len(dl_train) if num_training_steps is None else num_training_steps
+    lr_scheduler_num_warmup_steps = lr_scheduler_perc_warmup_steps*num_training_steps
+    lr_scheduler_max_lr = 5 - 10 * lr if lr_scheduler_max_lr is None else lr_scheduler_max_lr
     if lr_scheduler_flag:
         match lr_scheduler_name:
             case "OneCycleLR": 
                 lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(
                     optimizer           = optimizer,
-                    max_lr              = 0.05,
+                    max_lr              = lr_scheduler_max_lr,
                     epochs              = num_epochs,
                     steps_per_epoch     = len(dl_train)
                 )
@@ -1382,7 +1388,7 @@ def fine_tune_moment_train_(
     lr                              : float = 5e-5,  #1 e -4
     lr_scheduler_flag               : bool  = False, 
     lr_scheduler_name               : str   = "linear",
-    lr_scheduler_num_warmup_steps   : int   = 1000,
+    lr_scheduler_num_warmup_steps   : int   = None,
     cpu                             : bool  = False,
     verbose                         : int   = 0,
     print_to_path                   : bool  = False,
@@ -1400,11 +1406,14 @@ def fine_tune_moment_train_(
         optimizer = torch.optim.AdamW(enc_learn.parameters(), lr)
     num_training_steps = num_epochs * len(dl_train)
     losses = []
-    lr_scheduler = setup_scheduler(
-        dl_train=dl_train, lr_scheduler_flag=lr_scheduler_flag, lr_scheduler_name=lr_scheduler_name,
-        optimizer=optimizer, num_epochs = num_epochs, lr_scheduler_num_warmup_steps = lr_scheduler_num_warmup_steps, 
-        num_training_steps= num_training_steps
-    )
+    if lr_scheduler_flag:
+        lr_scheduler = setup_scheduler(
+            dl_train=dl_train, lr_scheduler_flag=lr_scheduler_flag, lr_scheduler_name=lr_scheduler_name,
+            optimizer=optimizer, num_epochs = num_epochs, lr_scheduler_num_warmup_steps = lr_scheduler_num_warmup_steps, 
+            num_training_steps= num_training_steps, lr = lr
+        )
+    else:
+        lr_scheduler = None
         
     # Training loop
     if verbose > 1: print_flush("fine_tune_moment_train_ | Training loop", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
@@ -1753,7 +1762,7 @@ def fine_tune_moment_(
     lr                              : float         = 5e-5, #1e-4, 
     lr_scheduler_flag               : bool          = False, 
     lr_scheduler_name               : str           = "linear",
-    lr_scheduler_num_warmup_steps   : int           = 0,
+    lr_scheduler_num_warmup_steps   : int           = None,
     window_sizes                    : List [int]    = None,
     n_window_sizes                  : int           = 1,
     window_sizes_offset             : int           = 0.05,

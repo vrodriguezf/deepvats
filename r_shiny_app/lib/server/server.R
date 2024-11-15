@@ -107,7 +107,42 @@ get_window_indices_ <- function(
  #
  #
  #}
-
+#########################
+##### PREPROCESSING #####
+#########################
+moving_average <- function(dataset, wlen) {
+    log_print("--> moving average")
+    window_size <- wlen
+    timeindex <- dataset$timeindex
+    log_print(paste0("Before data_to_process ", names(dataset)))
+    data_to_process <- dataset[, !(names(dataset) %in% "timeindex")]
+    log_print(paste0("Data to process: ", colnames(data_to_process)))
+    # Initialise an empty data.frame for the processed data
+    nrows <- nrow(dataset)
+    ncols <- ncol(data_to_process)
+    log_print(paste0("Rows ", nrows))
+    log_print(paste0("Cols ", ncols))
+    processed_data <- as.data.frame(matrix(NA, nrow = nrow(dataset), ncol = ncol(data_to_process)))
+    colnames(processed_data) <- colnames(data_to_process)
+    log_print("Before moving average loop")
+    # Apply the moving average to the selected columns
+    for (col_name in colnames(data_to_process)) {
+        log_print(paste0("Col ", col_name))
+        col <- data_to_process[[col_name]]
+        smoothed <- np$convolve(col, np$ones(window_size) / window_size, mode = "valid")
+        
+        # Fill the rows processed with the convolution result
+        processed_data[[col_name]][1:(length(smoothed))] <- smoothed
+        
+        # Fill the remaining rows with the original values
+        processed_data[[col_name]][(length(smoothed) + 1):nrow(dataset)] <- col[(length(smoothed) + 1):nrow(dataset)]
+    }
+    log_print("Rebuilding dataset")
+    # Reconstruct the final dataset with the timeindex column and processed data
+    dataset <- cbind(timeindex = timeindex, processed_data)
+    log_print("moving average -->")
+    return(dataset)
+}
 
 apply_preprocessing_point_outlier <- function ( dataset, methods, wlen){
     if ("standard_scaler" %in% methods) {
@@ -152,13 +187,14 @@ apply_preprocessing_sequence_outlier <- function ( dataset, methods, wlen ){
 
 apply_preprocessing_segments <- function ( dataset, methods, wlen ) {
     if ("kmeans" %in% methods) {
+        log_print("Apply preprocessing | Segmentation | Kmeans")
         n_clusters <- 3 
         kmeans <- sklearn$cluster$KMeans(n_clusters = n_clusters)
         dataset <- kmeans$fit_predict(dataset) 
     }
     if ("moving_average" %in% methods) {
-        window_size <- wlen 
-        dataset <- np$convolve(dataset, np$ones(window_size) / window_size, mode = "valid")
+        log_print("Apply preprocessing | Segmentation | Moving average")
+        dataset <- moving_average( dataset, wlen )
     }
     return (dataset)
 }
@@ -185,16 +221,19 @@ apply_preprocessing_trends <- function (dataset, methods, wlen ) {
 }
 
 apply_preprocessing <- function ( dataset, task_type, methods, wlen  ){
-    if (not (is.null(methods) || length(methods) == 0)) {
+    log_print("--> Apply preprocessing")
+    if (! (is.null(methods) || length(methods) == 0)) {
         if (task_type == "point_outlier") {
             dataset <- apply_preprocessing_point_outlier(dataset, methods, wlen )
         } else if (task_type == "sequence_outlier") {
             dataset <-  apply_preprocessing_sequence_outlier ( dataset, methods, wlen )
         } else if (task_type == "segments") {
-            dataset <- apply_preprocessing_sequence_outlier ( dataset, methods, wlen)
+            log_print("Apply preprocessing | Segmentation")
+            dataset <- apply_preprocessing_segments ( dataset, methods, wlen)
         } else if (task_type == "trends") {
             dataset <- apply_preprocessing_trends (dataset, methods, wlen )
         }   
     }
+    log_print("Apply preprocessing -->")
     return(dataset)
  }

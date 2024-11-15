@@ -60,9 +60,11 @@ shinyServer(function(input, output, session) {
     update_play_pause_button <- function() {
         if (play()) {
             updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
-            } else {
-                updateActionButton(session, "play_pause", label = "Run!", icon = shiny::icon("play"))
-            }
+            allow_tsdf(TRUE)
+        } else {
+            updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
+            allow_tsdf(FALSE)
+        }
     }
 
     play_fine_tune <- reactiveVal(FALSE)
@@ -1109,20 +1111,20 @@ observe({
             eval_post                       = TRUE,
             #criterion                       = NULL, #torch$nn$MSELoss,
             #optimizer                       = NULL, #torch$optim$AdamW,
-            lr                              = as.numeric(0.00005),
-            lr_scheduler_flag               = TRUE,
+            #lr                              = as.numeric(0.00005),
+            lr                              = as.numeric(0.001),
+            lr_scheduler_flag               = FALSE, 
             lr_scheduler_name               = "OneCycleLR",
-            lr_scheduler_num_warmup_steps   = as.integer(1000),
+            lr_scheduler_num_warmup_steps   = NULL,
             window_sizes                    = list(as.integer(input$wlen)),
             n_window_sizes                  = as.integer(input$ft_num_windows),
             window_sizes_offset             = as.numeric(0.05),
             windows_min_distance            = as.integer(input$ft_min_windows_distance),
             full_dataset                    = (input$ft_datset_option == "full_dataset"),
-            mask_stateful                   = input$ft_mask_stateful,
-            mask_future                     = input$ft_mask_future,
-            mask_sync                       = input$ft_sync
+            mask_stateful                   = ("ft_mask_stateful" %in% input$masking_options),
+            mask_future                     = ("ft_mask_future" %in% input$masking_options),
+            mask_sync                       = ("ft_sync" %in% input$masking_options)
         )
-
 
         for (key in names(fine_tune_kwargs)) {
             value <- fine_tune_kwargs[[key]]
@@ -1313,7 +1315,7 @@ observe({
         return(unlist(result))
     }
 
-    allow_tsdf <- reactiveVal(TRUE)
+    allow_tsdf <- reactiveVal(FALSE)
 
     # Load and filter TimeSeries object from wandb
     tsdf <- reactiveVal(NULL)
@@ -1385,31 +1387,32 @@ observe({
             tsdf(df)
     })
 
-    get_tsdf_prev           <- reactiveVal(NULL)
-    preprocess_dataset_prev <- reactiveVal (NULL)
+    get_tsdf_prev <- reactiveVal(NULL)
+    preprocess_dataset_prev <- reactiveVal (FALSE)
 
     #observeEvent ( input$get_tsdf, input$preprocess_dataset, {
     observe({
-        req(tsdf_comp(), input$get_tsdf, input$preprocess_dataset)
+        req(input$get_tsdf, input$preprocess_dataset)
         if ( is.null(get_tsdf_prev()) ||  get_tsdf_prev() != input$get_tsdf ){
             log_print(paste0("get_tsdf changed to: ", input$get_tsdf))
-            allow_tsdf( !allow_tsdf() )
-            log_print(paste0("allow_tsdf changed to: ", allow_tsdf()))
+            #allow_tsdf( !allow_tsdf() )
+            #log_print(paste0("allow_tsdf changed to: ", allow_tsdf()))
             if ( 
-                is.null(preprocess_dataset_prev()) || 
-                preprocess_dataset_prev() != input$preprocess_dataset 
+                preprocess_dataset_prev() != input$preprocess_dataset
             ) {
+                log_print(paste0("Preprocess dataset"))
                 tsdf(
                     apply_preprocessing(
-                        dataset = dataset,
-                        task_type = input$task_type,
-                        methods = switch(
+                        dataset     = tsdf(),
+                        task_type   = input$task_type,
+                        methods     = switch(
                             input$task_type, 
                             "point_outlier"     = input$smooth_methods_point,
                             "sequence_outlier"  = input$smooth_methods_sequence,
                             "segments"          = input$smooth_methods_segments,
                             "trends"            = input$smooth_methods_trends
-                        )
+                        ),
+                        wlen        = input$wlen
                     )
                 )
             }

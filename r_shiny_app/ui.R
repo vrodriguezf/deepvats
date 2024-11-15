@@ -121,10 +121,14 @@ shinyUI(fluidPage(
               "use_ft_num_windows" = "Fine-tune fixing the number of windows",
               "use_full_dataset" = "Fine-tune using the full dataset"
             )),
-            choices = list(
-              "ft_mask_future"   = "Choose if you want to mask future timestamps.",
-              "ft_mask_stateful" = "Choose if you want to mask past timestamps",
-              "ft_sync"          = "*Todo* Choose if you want to sync masking in all time series variables"
+            checkboxGroupInput(
+              inputId = "masking_options",
+              label = "Select tsai masking options:",
+              choices = list(
+                "ft_mask_future"   = "Choose if you want to mask future timestamps.",
+                "ft_mask_stateful" = "Choose if you want to mask past timestamps",
+                "ft_sync"          = "*Todo* Choose if you want to sync masking in all time series variables"
+              ),
             ),
             actionButton("fine_tune_play", "Shot!", icon = shiny::icon("play"))
           )
@@ -179,7 +183,7 @@ shinyUI(fluidPage(
       #             min = 0, max = 0, value = 0, step = 1, ticks = FALSE),
       #uiOutput("points_prj_controls"),
       #### TODO: Check. Added for debugging solar 4_secs
-      sliderInput("prj_n_neighbors", "Projections n_neighbors:", min = 1, max = 50, value = 15),
+      sliderInput("prj_n_neighbors", "Projection  s n_neighbors:", min = 1, max = 50, value = 15),
       sliderInput("prj_min_dist", "Projections min_dist:", min = 0.0001, max = 1, value = 0.1),
       #sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2^32-1, value = 1234),
       sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2000, value = 1234),

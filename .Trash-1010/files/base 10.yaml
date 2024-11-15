@@ -2,7 +2,7 @@
 ########### NBS - PIPELINE CONFIGURATION FILE ###########
 #########################################################
 ###### Author: Maria Inmaculada Santamaria-Valenzuela   #
-###### Date: 08-2023                                    #
+###### Date: 08-2023    (titlABP)                       #
 #########################################################
 
 ##########################
@@ -21,23 +21,19 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     #folder: &path '~/data/'
-    folder: &path '~/data/synthetic_data/'
+    folder: &path '~/data/'
     #fname: &fname 'synthetic_outliers(III)'
-    fname: &fname 'synthetic_segmentation(I)'
+    fname: &fname "Semantic_Segmentation_TiltABP"
     #fname: &fname 'PulsusParadoxusSP02_30_10000' #'exoplanets' #"Insect_one_million"
     ftype: &ftype '.csv'
-    cols: &cols [13]
-    freq: &freq '1m'
+    cols: &cols [0]
+    freq: &freq '1s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
     #alias: &alias 'outliers-3'
     #alias: &alias 'PulsusParadoxus-SP02'
-    alias: &alias 'S1'
-    #algorithm: &alg 'mvp'
-    #algorithm: &alg 'moirai-small'
-    #algorithm: &alg 'moment-large-embedding'
+    alias: &alias 'TitlABP'
     algorithm: &alg 'moment-small-embedding'
-    #algorithm: &alg 'moment-small-reconstruction'
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 
@@ -80,9 +76,9 @@ data:
     range_training: null
     range_testing: null
     # Resampling frequency (null for no resampling)
-    resampling_freq: '15T'
+    resampling_freq: nll
     # Starting date (in format yyyy-mm-dd) (set to null for default start date)
-    start_date: '2022-03-01'
+    start_date: null
     # Ratio of test set, only if range_training and range_testing are null
     # Set to null for no test set (offline mode, all training)
     test_split: null

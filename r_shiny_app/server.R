@@ -732,47 +732,73 @@ embedding_ids <- reactive({
     bp <- selected_points()[2]
   })
 
-  #filtered_window_indices <- reactive({
-  #      req(length(embedding_ids() > 0))
-  #      embedding_indices <- embedding_ids()
-         #window_indices = get_window_indices(embedding_indices, input$wlen, input$stride)
-  #      ts_indices <- tsidxs_per_embedding_idx()
-  #      unique(unlist(ts_indices[embedding_indices]))
-  #  })
+   filtered_window_indices <- reactive({
+        req(length(embedding_ids() > 0))
+        embedding_indices <- embedding_ids()
+        #window_indices = get_window_indices(embedding_indices, input$wlen, input$stride)
+        ts_indices <- tsidxs_per_embedding_idx()
+        print("-------->")
+        print(embedding_indices)
+        print("-------->")
+        print(unlist(embedding_indices))
+        print("-------->")
+        print(unlist(ts_indices[unlist(embedding_indices)]))
+        print("-------->")
+        unlist(ts_indices[unlist(embedding_indices)])
+    })
+
   
-window_list <- reactive({
+    window_list <- reactive({
         print("--> window_list")
         on.exit(print("window_list -->"))
         # Get the window indices
-        #window_indices <- filtered_window_indices()
+        window_indices <- filtered_window_indices()
         # Put all the indices in one list and remove duplicates
-        #unlist_window_indices =  filtered_window_indices()
-         window_indices = get_window_indices(embedding_ids(), input$wlen, input$stride)
-        # Put all the indices in one list and remove duplicates
-         unlist_window_indices = unique(unlist(window_indices))
+        unlist_window_indices = filtered_window_indices()
         print(paste0("Window indices: ", unlist_window_indices))
         # Calculate a vector of differences to detect idx where a new window should be created
         diff_vector <- diff(unlist_window_indices,1)
+        print(paste0("diff_vector: ", diff_vector))
         # Take indexes where the difference is greater than one (that represent a change of window)
         idx_window_limits <- which(diff_vector!=1)
+        print(paste0("idx_window_limits 1: ", idx_window_limits))
         # Include the first and last index to have a whole set of indexes.
         idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
+         print(paste0("idx_window_limits 2: ", idx_window_limits))
         # Create a reduced window list
         reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
+        print(paste0("reduced_window_list: ", reduced_window_list))
         # Populate the first element of the list with the idx of the first window.
         reduced_window_list[[1]] = c(
             tsdf()$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
             tsdf()$timeindex[unlist_window_indices[idx_window_limits[2]]]
         )
+        print(paste0("reduced_window_list: ", reduced_window_list))
         # Populate the rest of the list
         if (length(idx_window_limits) > 2) {
-            for (i in 2:(length(idx_window_limits)-1)){
-                reduced_window_list[[i]]<- c(
-                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i]+1]],
-                    isolate(tsdf())$timeindex[unlist_window_indices[idx_window_limits[i+1]]]
-               )
-            }
+          for (i in 2:(length(idx_window_limits)-1)) {
+              start_idx <- idx_window_limits[i] + 1
+              end_idx <- idx_window_limits[i + 1]
+              print(paste0("Iteracion: ", i, "Start index: ", start_idx, ", End index: ", end_idx))
+              
+              # Verifica que los índices estén dentro del rango de `unlist_window_indices`
+              if (start_idx <= length(unlist_window_indices) && end_idx <= length(unlist_window_indices)) {
+                  reduced_window_list[[i]] <- c(
+                      start_time <- isolate(tsdf())$timeindex[unlist_window_indices[start_idx]],
+                      end_time <- isolate(tsdf())$timeindex[unlist_window_indices[end_idx]]
+                  )
+                  if (!is.null(start_time) && !is.null(end_time)) {
+                    reduced_window_list[[i]] <- c(start_time, end_time)
+                    print(paste0("reduced_window_list[", i, "]: c(", start_time, ", ", end_time, ")"))
+                  } else {
+                    print(paste0("Iteracion ", i, ": start_time o end_time es NULL"))
+                  } 
+              } else {
+                  print("Index out of bounds detected!")
+              }
+          }
         }
+
         reduced_window_list
     })
   
@@ -782,44 +808,82 @@ window_list <- reactive({
     on.exit({print("ts_plot -->"); flush.console()})
     
     req(tsdf(), ts_variables, input$wlen != 0, input$stride)
-    
+    print(tail(tsdf()))
     ts_plt <- ts_plot_base()   
     
     print("ts_plot | bp")
-    #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)
-    
+    #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)ç
+    print(nrow(tsdf()))
+    print( window_list()[1])
+    #reduced_window_list <- window_list()[1]
+    reduced_window_list <- window_list()
+    print(paste0("ts_plot | reduced_window_list = ", reduced_window_list))
     #if (!is.data.frame(bp)) {bp = bp_}
     print("ts_plot | embedings idxs ")
     embedding_idxs <- embedding_ids()
+    print(embedding_idxs)
     # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
     print("ts_plot | Before if")
     if ((length(embedding_idxs) != 0) & isTRUE(input$plot_windows)) {
-      reduced_window_list <- req(window_list())
-      print(paste0("ts_plot | reduced_window_list[1] = ", reduced_window_list[1]))
-      start_indices <- min(sapply(reduced_window_list, function(x) x[1]))
-      end_indices <- max(sapply(reduced_window_list, function(x) x[2]))
+      #reduced_window_list <- req(window_list())
+      print("reduce windowlist")
+      print(reduced_window_list[1])
+      print(length(reduced_window_list))
       
+      print("start ids")
+      # Paso 1: Extraer los primeros elementos
+      start_indices <- as.POSIXct(min(sapply(reduced_window_list, `[[`, 1)), origin = "1970-01-01", tz = "UTC")
+      print(start_indices)
+      print("end ids")
+      # Paso 2: Extraer los segundos elementos
+      end_indices <- as.POSIXct(max(sapply(reduced_window_list, `[[`, 2)), origin = "1970-01-01", tz = "UTC")
+      print(end_indices)
+      print("start ids 2")
+      # Paso 3: Calcular el mínimo de los primeros elementos
+      start_indices <- min(start_indices)
+      print("end ids 2")
+      # Paso 4: Calcular el máximo de los segundos elementos
+      end_indices <- max(end_indices)
+      print(start_indices)
+      print(end_indices)
+      start_indices <- which(tsdf()$timeindex == start_indices)
+      end_indices <- which(tsdf()$timeindex == end_indices)
+
+      #start_indices <- min(sapply(reduced_window_list, function(x) x[1]))
+      #end_indices <- max(sapply(reduced_window_list, function(x) x[2]))
+      
+      print(paste0("start_indices ->", start_indices))
+      print(paste0("end_indices ->", end_indices))
+
       view_size <- end_indices - start_indices + 1
       max_size <- 10000
       
-      start_date <- isolate(tsdf())$timeindex[start_indices]
-      end_date <- isolate(tsdf())$timeindex[end_indices]
+      print(paste0("start_date ->", tsdf()$timeindex[start_indices]))
+      print(paste0("end_date ->", tsdf()$timeindex[end_indices]))
+      #print(paste0(tsdf()))
+      #print(X())
+
+      start_date <- tsdf()$timeindex[start_indices]
+      end_date <- tsdf()$timeindex[end_indices]
       
+
       print(paste0("ts_plot | reduced_window_list (", start_date, end_date, ")", "view size ", view_size, "max size ", max_size))
       
       if (view_size > max_size) {
-        end_date <- isolate(tsdf())$timeindex[start_indices + max_size - 1]
+        end_date <- tsdf()$timeindex[start_indices + max_size - 1]
         #range_color = "#FF0000" # Red
       } 
       
       range_color <- "#CCEBD6" # Original
-      
+      print(paste0("reduced_window_list", reduced_window_list))
       # Plot the windows
       count <- 0
       for (ts_idxs in reduced_window_list) {
         count <- count + 1
-        start_event_date <- isolate(tsdf())$timeindex[head(ts_idxs, 1)]
-        end_event_date <- isolate(tsdf())$timeindex[tail(ts_idxs, 1)]
+        start_event_date <- head(as.POSIXct(sapply(ts_idxs, `[[`, 1), origin = "1970-01-01", tz = "UTC"), 1)
+        end_event_date <- tail(as.POSIXct(sapply(ts_idxs, `[[`, 1), origin = "1970-01-01", tz = "UTC"), 1)
+        print(paste0("start_event_date", head(as.POSIXct(sapply(ts_idxs, `[[`, 1), origin = "1970-01-01", tz = "UTC"), 1)))
+        print(paste0("end_event_date", end_event_date))
         ts_plt <- ts_plt %>% dyShading(
           from = start_event_date,
           to = end_event_date,
@@ -1156,7 +1220,7 @@ window_list <- reactive({
         textOutput("file_path_text"),
         tags$hr(),
         h4("Configuration"),
-        numericInput("cols_input", "Calls:", value = 5, min = 0),
+        numericInput("cols_input", "Column:", value = 5, min = 0),
         numericInput("freq_input", "Frequency:", value = 10, min = 1),
         numericInput("n_epoch_input", "Epochs:", value = 100, min = 1),
         numericInput("ws1_input", "Window:", value = 10, min = 1),
@@ -1339,7 +1403,7 @@ window_list <- reactive({
       
       new_ftype <- paste("ftype: &ftype \'.", file_extension, "\'", sep = "")
       yaml_content <- gsub("ftype: &ftype \'.*\'", new_ftype, yaml_content)
-      
+
       new_cols <- paste("cols: &cols [", input$cols_input, "]", sep = "")
       new_freq <- paste("freq: &freq '", input$freq_input, "h'", sep = "")
       

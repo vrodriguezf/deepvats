@@ -21,9 +21,9 @@ user_preferences:
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
     folder: &path '~/data/'
-    fname: &fname "toy"
+    fname: &fname "Semantic_Segmentation_TiltABP"
     ftype: &ftype '.csv'
-    cols: &cols []
+    cols: &cols [1]
     freq: &freq '10h'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
@@ -69,7 +69,7 @@ data:
     range_training: null
     range_testing: null
     # Resampling frequency (null for no resampling)
-    resampling_freq: null
+    resampling_freq: null #'15T' #'20T'
     # Starting date (in format yyyy-mm-dd) (set to null for default start date)
     start_date: null
     # Ratio of test set, only if range_training and range_testing are null

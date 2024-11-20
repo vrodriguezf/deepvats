@@ -4,7 +4,7 @@
 __all__ = ['print_flush', 'generate_TS_df', 'normalize_columns', 'remove_constant_columns', 'ReferenceArtifact', 'PrintLayer',
            'get_wandb_artifacts', 'get_pickle_artifact', 'exec_with_feather', 'py_function',
            'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'funcname', 'update_patch',
-           'styled_print_flush', 'show_sequence', 'plot_with_dots', 'Interpolator', 'PAATransformer', 'DownsampleError',
+           'styled_print', 'show_sequence', 'plot_with_dots', 'Interpolator', 'PAATransformer', 'DownsampleError',
            'DivisorsError', 'divisors', 'downsample_propose_crop_', 'downsample',
            'find_dominant_window_sizes_list_single_old', 'select_separated_sizes',
            'find_dominant_window_sizes_list_single', 'group_similar_sizes', 'find_dominant_window_sizes_list']
@@ -299,7 +299,7 @@ def update_patch(self, obj):
 from IPython.display import display, HTML
 
 # %% ../nbs/utils.ipynb 62
-def styled_print_flush(text, color='black', size='16px', weight='normal'):
+def styled_print(text, color='black', size='16px', weight='normal'):
     html_text = f"<span style='color: {color}; font-size: {size}; font-weight: {weight};'>{text}</span>"
     display(HTML(html_text))
 

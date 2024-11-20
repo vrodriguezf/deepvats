@@ -202,16 +202,45 @@ shinyServer(function(input, output, session) {
     random_state_max <- reactiveVal(0)
     observe({
         req(input$prj_random_state_text > 0)
-        if (input$prjs_random_state != input$prj_random_state_text) {
-            if (input$prjs_random_state < input$prjs_random_state || input$prjs_random_state_text > input$prjs_random_state) {
-                prjs_random_state_min(min(input$prjs_random_state, prjs_random_state_min()))
-                prjs_random_state_max(max(input$prjs_random_state_text, prjs_random_state_max()))
-                updateSliderInput(session, "prjs_random_state", 
-                    min = prjs_random_state_min(), 
-                    max = prjs_random_state_max(), 
-                    value = input$wlen_text
-                    )
-                }
+        if (input$prj_random_state_text != input$prj_random_state_text) {
+            prjs_random_state_min(min(input$prjs_random_state, prjs_random_state_min()))
+            prjs_random_state_max(max(input$prjs_random_state_text, prjs_random_state_max()))
+            updateSliderInput(session, "prjs_random_state", 
+                min = prjs_random_state_min(), 
+                max = prjs_random_state_max(), 
+                value = input$prjs_random_state_text
+            )
+        }
+    })
+
+
+    pca_random_state_min <- reactiveVal(0)
+    pca_random_state_max <- reactiveVal(0)
+    observe({
+        req(input$pca_random_state_text > 0)
+        if (input$pca_random_state != input$pca_random_state_text) {
+            pca_random_state_min(min(input$pca_random_state, pca_random_state_min()))
+            pca_random_state_max(max(input$pca_random_state_text, pca_random_state_max()))
+            updateSliderInput(session, "prjs_random_state", 
+                min = pca_random_state_min(), 
+                max = pca_random_state_max(), 
+                value = input$pca_random_state_text
+                )
+        }
+    })
+
+    tsne_random_state_min <- reactiveVal(0)
+    tsne_random_state_max <- reactiveVal(0)
+    observe({
+        req(input$tsne_random_state_text > 0)
+        if (input$tsne_random_state != input$tsne_random_state_text) {
+            tsne_random_state_min(min(input$tsne_random_state, tsne_random_state_min()))
+            tsne_random_state_max(max(input$tsne_random_state_text, tsne_random_state_max()))
+            updateSliderInput(session, "prjs_random_state", 
+                min = tsne_random_state_min(), 
+                max = tsne_random_state_max(), 
+                value = input$tsne_random_state_text
+                )
         }
     })
    
@@ -460,6 +489,10 @@ shinyServer(function(input, output, session) {
         enc_input_ready(FALSE)
     })
 
+
+    observeEvent(input$compute_projection, {
+        projections()
+    })
 
     ###############
     #  REACTIVES  #
@@ -1178,47 +1211,59 @@ observe({
 
 
 
+umap_kwargs <- reactive({
+    dict(
+        random_state = as.integer(input$prj_random_state), 
+        n_neighbors = input$prj_n_neighbors,
+        min_dist = input$prj_min_dist
+    )
+})
 
+pca_kwargs <- reactive({
+    dict(
+        random_state = as.integer(input$pca_random_state),
+        n_components = as.integer(input$pca_n_components)
+    )
+})
 
- prj_object_cpu <- reactive({
-        embs = req(embs(), input$dr_method)
-        embs = embs[complete.cases(embs),]
-        log_print("--> prj_object")
-        log_print("--> prj_object | UMAP params")
-        
-        res = switch( input$dr_method,
-            UMAP = dvats$get_UMAP_prjs(
-                input_data  = embs, 
-                cpu         = TRUE, 
-                verbose     = as.integer(1),
-                n_neighbors = as.integer(input$prj_n_neighbors),
-                min_dist    = input$prj_min_dist, 
-                random_state= as.integer(input$prj_random_state)
-            ),
-            TSNE = dvats$get_TSNE_prjs(
-                X = embs, 
-                cpu = TRUE, 
-                random_state=as.integer(input$prj_random_state)
-            ),
-            PCA = dvats$get_PCA_prjs(
-                X = embs, 
-                cpu = TRUE, 
-                random_state=as.integer(input$prj_random_state),
-                n_components = 2
-            ),
-            PCA_UMAP = dvats$get_PCA_UMAP_prjs(
-                input_data  = embs, 
-                cpu         = TRUE, 
-                pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
-                umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
-            )
+prj_object_cpu <- reactive({
+    embs = req(embs(), input$dr_method)
+    embs = embs[complete.cases(embs),]
+    log_print("--> prj_object")
+    
+    res = switch( input$dr_method,
+        UMAP = dvats$get_UMAP_prjs(
+            input_data  = embs, 
+            cpu         = TRUE, 
+            verbose     = as.integer(0),
+            n_neighbors = as.integer(input$prj_n_neighbors),
+            min_dist    = input$prj_min_dist, 
+            random_state= as.integer(input$prj_random_state)
+        ),
+        TSNE = dvats$get_TSNE_prjs(
+            X = embs, 
+            cpu = TRUE, 
+            random_state=as.integer(input$tsne_random_state)
+        ),
+        PCA = dvats$get_PCA_prjs(
+            X = embs, 
+            cpu = TRUE, 
+            n_components = as.integer(input$pca_n_components),
+            random_state = as.integer(input$pca_random_state),
+        ),
+        PCA_UMAP = dvats$get_PCA_UMAP_prjs(
+            input_data  = embs, 
+            cpu         = TRUE, 
+            pca         = pca_kwargs(),
+            umap_kwargs = umap_kwargs()
         )
-      res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
-      colnames(res) = c("xcoord", "ycoord")
-      on.exit({log_print(" prj_object -->"); flush.console()})
-      flush.console()
-      res
-    })
+    )
+    res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
+    colnames(res) = c("xcoord", "ycoord")
+    on.exit({log_print(" prj_object -->"); flush.console()})
+    flush.console()
+    res
+})
 
     prj_object <- reactive({
         req(embs(), input$dr_method)
@@ -1885,11 +1930,12 @@ tcl_1 = Sys.time()
             input$encoder,
             input$wlen != 0,
             input$stride != 0,
-            tsdf_ready()
+            tsdf_ready(),
+            projections()
         )
         log_print("--> Projections_plot")
         t_pp_0 <- Sys.time()
-        prjs_ <- req(projections())
+        prjs_ <- projections()
          
         log_print("projections_plot | Prepare column highlights")
         # Prepare the column highlight to color data

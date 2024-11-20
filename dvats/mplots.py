@@ -15,6 +15,8 @@ __all__ = ['octave', 'eamonn_drive_mplots', 'configure_octave', 'euclidean_dista
 import dvats.load as load
 import dvats.memory as mem
 import dvats.utils as ut
+from aeon.segmentation._clasp import find_dominant_window_sizes
+
 
 # %% ../nbs/mplots.ipynb 6
 ## -- Matrix profile
@@ -756,7 +758,7 @@ class DistanceProfile:
             self.dominant_lens = [self.subsequence_len]
         else:
             if verbose > 0: print(f"Computing {nlens} dominant lens")
-            self.dominant_lens = find_dominant_window_sizes_list(
+            self.dominant_lens = ut.find_dominant_window_sizes_list(
                 self.data,
                 nsizes      = nlens,
                 offset      = offset,

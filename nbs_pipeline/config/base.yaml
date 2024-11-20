@@ -13,31 +13,22 @@ user_preferences:
   # Whether to use or not wandb for experiment tracking
   use_wandb: &use_wandb true
   wdb:
-    user: &wdb_user mi-santamaria
+    user: &wdb_user 'mi-santamaria'
     project_name: &wdb_project deepvats
     version: &wdb_version 'latest' 
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode: &wdb_mode 'online'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
-    #folder: &path '~/data/'
-    folder: &path '~/data/synthetic_data/'
-    #fname: &fname 'synthetic_outliers(III)'
-    fname: &fname 'synthetic_segmentation(I)'
-    #fname: &fname 'PulsusParadoxusSP02_30_10000' #'exoplanets' #"Insect_one_million"
+    folder: &path '~/data/'
+    fname: &fname 'PulsusParadoxusSP02_30_10000' #'exoplanets' #"Insect_one_million"
     ftype: &ftype '.csv'
-    cols: &cols [13]
-    freq: &freq '1m'
+    cols: &cols [0]
+    freq: &freq '1s'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    #alias: &alias 'outliers-3'
-    #alias: &alias 'PulsusParadoxus-SP02'
-    alias: &alias 'S1'
-    #algorithm: &alg 'mvp'
-    #algorithm: &alg 'moirai-small'
-    #algorithm: &alg 'moment-large-embedding'
-    algorithm: &alg 'moment-small-embedding'
-    #algorithm: &alg 'moment-small-reconstruction'
+    alias: &alias 'PulsusParadoxus-SP02'
+    algorithm: &alg 'mvp'
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 
@@ -55,9 +46,9 @@ data:
     # Put here the idxs of the columns of interest ([] for all)
     cols: *cols
     # CSV file config ({} if this setting is not required)
-    csv_config: {}
+    #csv_config: {}
     #For files with no header
-    #csv_config: {'header': null}
+    csv_config: {'header': null}
     # Frequency offset used to set the date index (null to omit it) [Example pd.offsets.MonthEnd(0)]
     date_offset: null
     # Default date format (only for .tsf files)
@@ -80,9 +71,9 @@ data:
     range_training: null
     range_testing: null
     # Resampling frequency (null for no resampling)
-    resampling_freq: '15T'
+    resampling_freq: null
     # Starting date (in format yyyy-mm-dd) (set to null for default start date)
-    start_date: '2022-03-01'
+    start_date: null
     # Ratio of test set, only if range_training and range_testing are null
     # Set to null for no test set (offline mode, all training)
     test_split: null

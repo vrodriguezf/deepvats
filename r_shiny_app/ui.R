@@ -182,15 +182,79 @@ shinyUI(fluidPage(
       # sliderInput("points_emb", "Select range of points to plot in the projections", 
       #             min = 0, max = 0, value = 0, step = 1, ticks = FALSE),
       #uiOutput("points_prj_controls"),
-      #### TODO: Check. Added for debugging solar 4_secs
-      sliderInput("prj_n_neighbors", "Projection  s n_neighbors:", min = 1, max = 50, value = 15),
-      sliderInput("prj_min_dist", "Projections min_dist:", min = 0.0001, max = 1, value = 0.1),
-      #sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2^32-1, value = 1234),
-      sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2000, value = 1234),
-      numericInput("prj_random_state_text", "Enter Projections random_state", value = 0, min = 0, max = 1000000, step = 1),
       ################
       radioButtons("cpu_flag", "Use: ", c("GPU", "CPU"), selected = "GPU", inline = T),
       radioButtons("dr_method", "Projection method:", c("UMAP", "TSNE", "PCA", "PCA_UMAP"), selected="PCA_UMAP", inline=T),
+      conditionalPanel(
+        condition = "input.dr_method == 'UMAP' || input.dr_method == 'PCA_UMAP'",
+        div(
+          class = "panel panel-default",
+          div(
+            class = "panel-heading",
+            style = "cursor: pointer;",
+            `data-toggle` = "collapse",
+            `data-target` = "#umapOptionsPanel",
+            div("UMAP projection options", 
+               span(class = "caret") # Arrow
+            ) 
+          ),
+          div(
+            id = "umapOptionsPanel",
+            class = "panel-collapse collapse",
+            sliderInput("prj_n_neighbors", "Projection  s n_neighbors:", min = 1, max = 50, value = 15),
+            sliderInput("prj_min_dist", "Projections min_dist:", min = 0.0001, max = 1, value = 0.1),
+            sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2000, value = 1234),
+            numericInput("prj_random_state_text", "Enter Projections random_state", value = 0, min = 0, max = 1000000, step = 1),
+          )
+        )
+      ),
+      conditionalPanel(
+        condition = "input.dr_method == 'PCA' || input.dr_method == 'PCA_UMAP'",
+        div(
+          class = "panel panel-default",
+          div(
+            class = "panel-heading",
+            style = "cursor: pointer;",
+            `data-toggle` = "collapse",
+            `data-target` = "#pcaOptionsPanel",
+            div("PCA projection options", 
+               span(class = "caret") # Arrow
+            ) 
+          ),
+          div(
+            id = "pcaOptionsPanel",
+            class = "panel-collapse collapse",
+            sliderInput("pca_n_components", "PCA n_components:", min = 1, max = 100, value = 1),
+            sliderInput("pca_random_state", "PCA random_state:", min = 0, max = 2000, value = 1234),
+            numericInput("pca_random_state_text", "Enter PCA random_state", value = 0, min = 0, max = 1000000, step = 1),
+          )
+        )
+      ),
+      conditionalPanel(
+        condition = "input.dr_method == 'TSNE'",
+        div(
+          class = "panel panel-default",
+          div(
+            class = "panel-heading",
+            style = "cursor: pointer;",
+            `data-toggle` = "collapse",
+            `data-target` = "#tsneOptionsPanel",
+            div("TSNE projection options", 
+               span(class = "caret") # Arrow
+            ) 
+          ),
+          div(
+            id = "tsneOptionsPanel",
+            class = "panel-collapse collapse",
+            sliderInput("tsne_random_state", "PCA random_state:", min = 0, max = 2000, value = 1234),
+            numericInput("tsne_random_state_text", "Enter TSNE random_state", value = 0, min = 0, max = 1000000, step = 1),
+          )
+        )
+      ),
+      actionBttn( #TODO: controlar el cómputo de proyecciones por separado de obtener los embedding
+        inputId = "compute_projection", label = "Compute and show projection", 
+        style = "bordered", color = "primary", size = "sm", block = TRUE
+      ),
       br(),
       radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
                    choices = c("No clusters" = "no_clusters",
@@ -203,17 +267,35 @@ shinyUI(fluidPage(
       #     textOutput("clusters_labels_ar_desc")
       # ),
       conditionalPanel(
-          condition = "input.clustering_options == 'calculate_clusters'",
-        selectInput("metric_hdbscan", label = "Metric", choices = DEFAULT_VALUES$metric_hdbscan),
-        sliderInput("min_cluster_size_hdbscan", label = "min_cluster_size_hdbscan", 
-                    value = DEFAULT_VALUES$min_cluster_size_hdbscan, min=0, max=200, step = 1),
-        sliderInput("min_samples_hdbscan", label = "min_samples_hdbscan", 
-                    value = DEFAULT_VALUES$min_samples_hdbscan, min=0, max=50, step = 1),
-        sliderInput("cluster_selection_epsilon_hdbscan", label = "cluster_selection_epsilon", 
-                    value = DEFAULT_VALUES$cluster_selection_epsilon_hdbscan, min=0, max=5, step = 0.01),
-        actionBttn(inputId = "calculate_clusters", label = "Calculate and show clusters", style = "bordered",
-                   color = "primary", size = "sm", block = TRUE)
-      )
+        condition = "input.clustering_options == 'calculate_clusters'",
+        div(
+          class = "panel panel-default",
+          div(
+            class = "panel-heading",
+            style = "cursor: pointer;",
+            `data-toggle` = "collapse",
+            `data-target` = "#clusteringOptionsPanel",
+            div("Clustering Options", 
+               span(class = "caret") # Arrow
+            ) 
+          ),
+          div(
+            id = "clusteringOptionsPanel",
+            class = "panel-collapse collapse",
+          
+              selectInput("metric_hdbscan", label = "Metric", choices = DEFAULT_VALUES$metric_hdbscan),
+              sliderInput("min_cluster_size_hdbscan", label = "min_cluster_size_hdbscan", 
+                        value = DEFAULT_VALUES$min_cluster_size_hdbscan, min=0, max=200, step = 1),
+              sliderInput("min_samples_hdbscan", label = "min_samples_hdbscan", 
+                        value = DEFAULT_VALUES$min_samples_hdbscan, min=0, max=50, step = 1),
+              sliderInput("cluster_selection_epsilon_hdbscan", label = "cluster_selection_epsilon", 
+                        value = DEFAULT_VALUES$cluster_selection_epsilon_hdbscan, min=0, max=5, step = 0.01)
+          )
+        ),
+        actionBttn(
+          inputId = "calculate_clusters", label = "Calculate and show clusters", 
+          style = "bordered", color = "primary", size = "sm", block = TRUE)
+      )   
     ),
     # Show a plot of the generated distribution
     mainPanel(

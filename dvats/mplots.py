@@ -224,7 +224,8 @@ def plot_subsequence(
     TA_label        : bool = False,
     title_size      : int = 16,
     legend_size     : int = None,
-    plot_format     : str = "svg"
+    plot_format     : str = "svg",
+    plot_resolution : int = 1
 ) -> None:
     # Convert parameters to lists if they are scalars
     if not isinstance(sequence_i, list):
@@ -323,7 +324,7 @@ def plot_subsequence(
         if plot_name == "":
             plot_name = 'highlighted_subsequences'
         plot_path = os.path.join(plot_path, plot_name + "."+ plot_format)
-        plt.savefig(plot_path, format = plot_format)
+        plt.savefig(plot_path, format = plot_format, dpi = 100*plot_resolution)
 
     plt.show()
 

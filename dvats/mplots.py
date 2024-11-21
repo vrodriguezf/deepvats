@@ -2,13 +2,15 @@
 
 # %% auto 0
 __all__ = ['octave', 'eamonn_drive_mplots', 'configure_octave', 'euclidean_distance', 'z_normalize',
-           'z_normalized_euclidean_distance', 'show_subsequence', 'plot_subsequence', 'GD_Mat', 'MatlabMatrix',
-           'plot_subsequences_aux', 'plot_subsequences', 'plot_dataFrame', 'plot_dataFrame_compareSubsequences',
-           'df_plot_colored_variables', 'plot_df_with_intervals_and_colors', 'make_symmetric_', 'check_symmetric',
-           'moving_mean', 'sum_of_squared_differences', 'get_precomputes', 'convert_non_finite_to_zero',
-           'distance_matrix', 'DistanceProfile', 'DistanceMatrix', 'plot_motif', 'plot_motif_separated',
-           'MatrixProfile', 'downsample', 'matrix_profile', 'compute', 'MatrixProfiles', 'ensure_valid_limits',
-           'zoom_index', 'restore_index', 'threshold_interval', 'MatrixProfilePlot', 'MatrixProfilePlotCached']
+           'z_normalized_euclidean_distance', 'show_subsequence', 'plot_subsequences_prepare_parameters',
+           'plot_subsequences_generate_title', 'plot_subsequences_full_series', 'plot_subsequences_subsequences',
+           'plot_subsequences_configure_legend', 'plot_subsequence', 'GD_Mat', 'MatlabMatrix', 'plot_subsequences_aux',
+           'plot_subsequences', 'plot_dataFrame', 'plot_dataFrame_compareSubsequences', 'df_plot_colored_variables',
+           'plot_df_with_intervals_and_colors', 'make_symmetric_', 'check_symmetric', 'moving_mean',
+           'sum_of_squared_differences', 'get_precomputes', 'convert_non_finite_to_zero', 'distance_matrix',
+           'DistanceProfile', 'DistanceMatrix', 'plot_motif', 'plot_motif_separated', 'MatrixProfile', 'downsample',
+           'matrix_profile', 'compute', 'MatrixProfiles', 'ensure_valid_limits', 'zoom_index', 'restore_index',
+           'threshold_interval', 'MatrixProfilePlot', 'MatrixProfilePlotCached']
 
 # %% ../nbs/mplots.ipynb 4
 ## -- Deepvats
@@ -198,36 +200,26 @@ def show_subsequence(
 import matplotlib.pyplot as plt
 import os
 from typing import List, Union
-import numpy as np
 import dvats.utils as ut
 
-def plot_subsequence(
-    TA              : List[float] = None,
+def plot_subsequences_prepare_parameters(
     sequence_i      : Union[int, List[int]] = 0,
     subsequence_len : Union[int, List[int]] = 1,
-    color           : Union[str, List[str]] = 'blue',  # Compatibility for color
-    dots            : bool = True,
-    dots_color      : str = 'red',  # British spelling avoided
-    label           : bool = False,
-    sequence_flag   : bool = True,
-    hide_rows       : bool = True,
-    hide_columns    : bool = False,
-    save_plot       : bool = False,
-    plot_path       : str = "./",
-    plot_name       : str = "",
-    verbose         : int = 0,
-    resalt          : Union[bool, List[bool]] = False,  # Compatibility with lists for highlighting
-    TA_name         : str = "Time series",
-    title           : str = None,
-    TA_color        : str = "Grey",
-    TA_alpha        : float = 0.7,
-    TA_label        : bool = False,
-    title_size      : int = 16,
-    legend_size     : int = None,
-    plot_format     : str = "svg",
-    plot_resolution : int = 1
-) -> None:
-    # Convert parameters to lists if they are scalars
+    resalt          : Union[bool, List[bool]] = False,
+    color           : Union[str, List[str]] = 'blue'
+) -> tuple:
+    """
+    Ensures input parameters are lists and consistent in length.
+
+    Args:
+        sequence_i (Union[int, List[int]]): Indices for the start of subsequences.
+        subsequence_len (Union[int, List[int]]): Lengths of subsequences.
+        resalt (Union[bool, List[bool]]): Flags for highlighting subsequences.
+        color (Union[str, List[str]]): Colors for each subsequence.
+
+    Returns:
+        tuple: Prepared parameters as lists.
+    """
     if not isinstance(sequence_i, list):
         sequence_i = [sequence_i]
     if not isinstance(subsequence_len, list):
@@ -236,99 +228,238 @@ def plot_subsequence(
         resalt = [resalt] * len(sequence_i)
     if not isinstance(color, list):
         color = [color] * len(sequence_i)
-    sequences_info = [f"Subsequence {sequence_i[i]}_{subsequence_len[i]} | [{sequence_i[i]}:{sequence_i[i] + subsequence_len[i]}]" for i in range(len(sequence_i))]
+    return sequence_i, subsequence_len, resalt, color
 
-    if ( title is None ):
-        if len( sequence_i ) > 1:
+def plot_subsequences_generate_title(
+    sequence_i      : List[int] = None,
+    subsequence_len : List[int] = None,
+    TA_name         : str       = "Time series",
+    title           : str       = None
+) -> str:
+    """
+    Generates the plot title based on input parameters.
+
+    Args:
+        sequence_i (List[int]): Indices for the start of subsequences.
+        subsequence_len (List[int]): Lengths of subsequences.
+        TA_name (str): Name of the time series.
+        title (str): Custom title.
+
+    Returns:
+        str: Generated title.
+    """
+    sequences_info = [
+        f"Subsequence {sequence_i[i]}_{subsequence_len[i]} | [{sequence_i[i]}:{sequence_i[i] + subsequence_len[i]}]"
+        for i in range(len(sequence_i))
+    ]
+    if title is None:
+        if len(sequence_i) > 1:
             title = f"{TA_name} subsequences"
         else:
             title = f"{TA_name} | {sequences_info[0]}"
-    
-    # Sort subsequences by start indices
-    subsequences = sorted(zip(sequence_i, subsequence_len, resalt, color), key=lambda x: x[0])
+    return title
 
-    # Configure figure size
-    n = len(TA)
-    x_coords = range(n)
-    fig_height_in = 0.59 + 2
-    fig, axs = plt.subplots(1, 1, figsize=(12, fig_height_in), sharex=True)
+def plot_subsequences_full_series(
+    axs       : plt.Axes,
+    x_coords  : range,
+    TA        : List[float],
+    TA_color  : str   = "Grey",
+    TA_alpha  : float = 0.7,
+    TA_label  : bool  = False,
+    TA_name   : str   = "Time series"
+) -> None:
+    """
+    Plots the full time series.
 
-    # Plot the full series
+    Args:
+        axs (matplotlib.axes): Axes object to plot on.
+        x_coords (range): X coordinates for the series.
+        TA (List[float]): Time series values.
+        TA_color (str): Color for the full series.
+        TA_alpha (float): Alpha value for the series.
+        TA_label (bool): Whether to label the series.
+        TA_name (str): Name of the time series.
+    """
     if TA_label:
         axs.plot(
             x_coords, TA, 
-            label=TA_name, 
-            color=TA_color,  # Main series less prominent
-            alpha=TA_alpha
+            label = TA_name, 
+            color = TA_color,
+            alpha = TA_alpha
         )
     else:
         axs.plot(
             x_coords, TA, 
-            color=TA_color,  # Main series less prominent
-            alpha=TA_alpha
+            color = TA_color,
+            alpha = TA_alpha
         )
 
-    # Plot each subsequence
+def plot_subsequences_subsequences(
+    axs            : plt.Axes,
+    subsequences   : list,
+    x_coords       : range,
+    TA             : List[float],
+    verbose        : int        = 0,
+    sequence_i     : List[int]  = None,
+    sequences_info : List[str]  = None
+) -> None:
+    """
+    Plots subsequences on the axes.
+
+    Args:
+        axs (matplotlib.axes): Axes object to plot on.
+        subsequences (list): List of tuples containing subsequence info.
+        x_coords (range): X coordinates for the series.
+        TA (List[float]): Time series values.
+        verbose (int): Verbosity level.
+        sequence_i (List[int]): Indices for the start of subsequences.
+        sequences_info (List[str]): List of subsequence descriptions.
+    """
     for idx, (i, length, highlight, col) in enumerate(subsequences):
         start_idx = i
-        end_idx = i + length
-        if verbose > 1: ut.print_flush(f"Subsequence {idx} | {len(sequence_i)} | {len(sequences_info)}")
-        s_label="Subsequence" if len(sequence_i) == 1 else sequences_info[idx]
-        if verbose > 1: ut.print_flush(f"Subsequence {idx} | {s_label}")
-        # Highlight or standard drawing
+        end_idx   = i + length
+        if verbose > 1:
+            ut.print_flush(f"Subsequence {idx} | {len(sequence_i)} | {len(sequences_info)}")
+        s_label = sequences_info[idx]
+        if verbose > 1:
+            ut.print_flush(f"Subsequence {idx} | {s_label}")
         if highlight:
-            # Draw transparent border around the line
             axs.plot(
                 x_coords[start_idx:end_idx], TA[start_idx:end_idx],
-                color=col,
-                linewidth=6,  # Thick line for the border
-                alpha=0.2,    # Transparency for the border
-                solid_capstyle='round'
+                color     = col,
+                linewidth = 6,
+                alpha     = 0.2,
+                solid_capstyle = 'round'
             )
-            # Draw main subsequence line
             axs.plot(
                 x_coords[start_idx:end_idx], TA[start_idx:end_idx],
-                color=col,
-                linewidth=2.5,  # Medium thickness
-                label=s_label
+                color     = col,
+                linewidth = 2.5,
+                label     = s_label
             )
         else:
-            # Standard subsequence
             axs.plot(
                 x_coords[start_idx:end_idx], TA[start_idx:end_idx],
-                color=col,
-                label=s_label
+                color = col,
+                label = s_label
             )
 
-    # Add points if enabled
-    if dots:
-        axs.scatter(x_coords, TA, color=dots_color)
-        if label:
-            for i, length, _, _ in subsequences:
-                subsequence_x = x_coords[i:i + length]
-                subsequence_y = TA[i:i + length]
-                for x, y in zip(subsequence_x, subsequence_y):
-                    axs.text(
-                        x, y + 0.3, f'{y:.2f}', 
-                        color=dots_color, fontsize=8, ha='center', va='bottom'
-                    )
+def plot_subsequences_configure_legend(
+    axs         : plt.Axes,
+    legend_loc  : str  = None,
+    legend_size : int  = None,
+    anchor_pos  : Tuple [ float, float ] = None
+) -> None:
+    """
+    Configures the legend position and size.
 
-    # Configure the title
+    Args:
+        axs (matplotlib.axes): Axes object to configure legend.
+        legend_loc (str): Legend location.
+        legend_size (int): Font size for the legend.
+    """
+    if anchor_pos is None:
+        anchor_positions = {
+            'upper left'   : (1.2, 1),
+            'upper right'  : (1.2, 1),
+            'lower left'   : (1.2, 0),
+            'lower right'  : (1.2, 0),
+            'center left'  : (1.2, 0.5),
+            'center right' : (1.2, 0.5),
+            'upper center' : (0.5, 1.25),
+            'lower center' : (0.5, -0.3),
+            'center'       : (0.5, 0.5)
+        }
+        bbox = anchor_positions.get(legend_loc, (1.2, 1))
+    else:
+        bbox = anchor_pos
+        
+    axs.legend(
+        fontsize       = legend_size,
+        loc            = legend_loc,
+        bbox_to_anchor = bbox,
+        borderaxespad  = 0.,
+        frameon        = True
+    )
+
+def plot_subsequence(
+    TA              : List[float],
+    sequence_i      : Union[int, List[int]] = 0,
+    subsequence_len : Union[int, List[int]] = 1,
+    color           : Union[str, List[str]] = 'blue',
+    dots            : bool = True,
+    dots_color      : str = 'red',
+    label           : bool = False,
+    sequence_flag   : bool = True,
+    hide_rows       : bool = True,
+    hide_columns    : bool = False,
+    save_plot       : bool = False,
+    plot_path       : str = "./",
+    plot_name       : str = "",
+    verbose         : int = 0,
+    resalt          : Union[bool, List[bool]] = False,
+    TA_name         : str = "Time series",
+    title           : str = None,
+    TA_color        : str = "Grey",
+    TA_alpha        : float = 0.7,
+    TA_label        : bool = False,
+    title_size      : int = 16,
+    legend_size     : int = None,
+    plot_format     : str = "svg",
+    plot_resolution : int = 1,
+    legend_loc      : str = None,
+    fig_size        : Tuple [ float, float ] = (12, 2.59),
+    anchor_pos      : Tuple [ float, float ] = None,
+    anchor_right    : float = None,
+    anchor_left     : float = None,
+    anchor_bottom   : float = None,
+    anchor_top      : float = None
+) -> None:
+    
+    """
+    Plots a time series with highlighted subsequences.
+    """
+    sequence_i, subsequence_len, resalt, color = plot_subsequences_prepare_parameters(
+        sequence_i, subsequence_len, resalt, color
+    )
+    title = plot_subsequences_generate_title(sequence_i, subsequence_len, TA_name, title)
+    sequences_info = [
+        f"Subsequence {sequence_i[i]}_{subsequence_len[i]} | [{sequence_i[i]}:{sequence_i[i] + subsequence_len[i]}]"
+        for i in range(len(sequence_i))
+    ]
+    subsequences = sorted(zip(sequence_i, subsequence_len, resalt, color), key=lambda x: x[0])
+
+    n         = len(TA)
+    x_coords  = range(n)
+    fig, axs  = plt.subplots(1, 1, figsize = fig_size, sharex=True)
+
+    plot_subsequences_full_series(axs, x_coords, TA, TA_color, TA_alpha, TA_label, TA_name)
+    plot_subsequences_subsequences(axs, subsequences, x_coords, TA, verbose, sequence_i, sequences_info)
     axs.set_title(title, fontsize=title_size)
-    axs.legend(fontsize=legend_size)
-    plt.tight_layout()
 
-    # Save plot if enabled
+    if legend_loc is None:
+        axs.legend(fontsize=legend_size)
+    else:
+        plot_subsequences_configure_legend(axs, legend_loc, legend_size, anchor_pos)
+
+    if anchor_pos:
+        anchor_left = anchor_left if anchor_left is not None else 0.1 if anchor_right is None else 1-anchor_right
+        anchor_right = anchor_right if anchor_right is not None else 0.9 if anchor_left is None else 1-anchor_left
+        anchor_bottom = anchor_bottom if anchor_bottom is not None else 0.1 if anchor_top is None else 1-anchor_top
+        anchor_top = anchor_top if anchor_top is not None else 0.9 if anchor_bottom is None else 1- anchor_bottom
+        plt.subplots_adjust(right=anchor_right, left = anchor_left, bottom = anchor_bottom, top = anchor_top)  # Ajusta el margen derecho si la leyenda está fuera
+    else:
+        plt.tight_layout()  # Usa ajuste automático si no hay una leyenda externa
+
     if save_plot:
         plot_path = os.path.expanduser(plot_path)
         if plot_name == "":
             plot_name = 'highlighted_subsequences'
-        plot_path = os.path.join(plot_path, plot_name + "."+ plot_format)
-        plt.savefig(plot_path, format = plot_format, dpi = 100*plot_resolution)
+        plot_path = os.path.join(plot_path, plot_name + "." + plot_format)
+        plt.savefig(plot_path, format=plot_format, dpi=100 * plot_resolution, bbox_inches = "tight")
 
     plt.show()
 
-    # Show additional sequence details if enabled
     if sequence_flag:
         for i, length, _, _ in subsequences:
             show_sequence([TA[i:i + length]], hide_rows, hide_columns)
@@ -495,7 +626,7 @@ def plot_subsequences(
     reference_i         : int,
     subsequence_len     : int, 
     distances           : List [ float ], 
-    fig_size            : Tuple[int, int]   = (12, 10),
+    fig_size            : Tuple[float, float]   = (12, 2.59+2),
     verbose             : int               = 0
 ) -> None:
     n = len(TA)
@@ -1536,7 +1667,12 @@ class MatrixProfile:
         plot_ts     : bool              = True,
         ts_title    : str               = 'Time Series',
         mp_title    : str               = 'Matrix Profile',
-        verbose     : int               = 0
+        verbose     : int               = 0,
+        save_plot       : bool = False,
+        plot_path       : str = "./",
+        plot_name       : str = "",
+        plot_format     : str = "svg",
+        plot_resolution : int = 1,
     ):
         n           = len(self.data)
         x_coords    = range(n)
@@ -1591,6 +1727,13 @@ class MatrixProfile:
             ax3.set_ylabel('Value - Zoom')
             plt.tight_layout()
             plt.show()
+        
+        if save_plot:
+            plot_path = os.path.expanduser(plot_path)
+            if plot_name == "":
+                plot_name = 'MPlot'
+            plot_path = os.path.join(plot_path, plot_name + "." + plot_format)
+        plt.savefig(plot_path, format=plot_format, dpi=100 * plot_resolution, bbox_inches = "tight")
         
     def plot_interactive(
         self        : 'MatrixProfile', 
@@ -2924,8 +3067,8 @@ class MatrixProfilePlot:
         
         info = f"({r_start}:{r_max}, {c_start}:{c_end}) | th({th_min}, {th_max}) | include({include_min}, {include_max} | subsequence_len = {self.subsequence_len} | TA_paa_factor = {self.data_paa_factor} (Horizontal) | TB_paa_factor = {self.data_b_paa_factor} (Vertical)"
         mssg = "Boolean"+info if gray_color else info
-        
-        self.dm_plot.set_title(mssg)
+        if self.dm_plot.title is None:
+            self.dm_plot.set_title(mssg)
         """
         if self.plot_as_matlab:
             heatmap = self.dm_plot.imshow(
@@ -3001,7 +3144,12 @@ class MatrixProfilePlot:
         include_min     : bool              = False,
         include_max     : bool              = False,
         gray_color      : bool              = True,
-        verbose         : int               = 0
+        verbose         : int               = 0,
+        save_plot       : bool = False,
+        plot_path       : str = "./",
+        plot_name       : str = "",
+        plot_format     : str = "svg",
+        plot_resolution : int = 1
     ):
         
         r_min, r_max, c_min, c_max = self.plot_base(
@@ -3052,7 +3200,8 @@ class MatrixProfilePlot:
             n_r = n_r, n_c = n_c, 
             figsize = figsize,
             plot_mp_flag = plot_mp_flag,
-            MPlot_title = MPlot_title, MPlot_xlabel = MPlot_xlabel, 
+            MPlot_title = MPlot_title, 
+            MPlot_xlabel = MPlot_xlabel, 
             MPlot_ylabel = MPlot_ylabel,
             less_labels=less_labels,
             verbose = verbose -1
@@ -3102,6 +3251,15 @@ class MatrixProfilePlot:
         
         #--- Layout & show
         self.graph.tight_layout()
+        
+        
+        if save_plot:
+            plot_path = os.path.expanduser(plot_path)
+            if verbose > 0: ut.print_flush(f"Saving {plot_name} to {plot_path}")
+            if plot_name == "":
+                plot_name = 'highlighted_subsequences'
+            plot_path = os.path.join(plot_path, plot_name + "." + plot_format)
+            plt.savefig(plot_path, format=plot_format, dpi=100 * plot_resolution, bbox_inches = "tight")
         if show_flag:
             plt.show()
         return plt

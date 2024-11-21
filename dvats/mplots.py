@@ -222,7 +222,9 @@ def plot_subsequence(
     TA_color        : str = "Grey",
     TA_alpha        : float = 0.7,
     TA_label        : bool = False,
-    legend_size     : int = None
+    title_size      : int = 16,
+    legend_size     : int = None,
+    plot_format     : str = "svg"
 ) -> None:
     # Convert parameters to lists if they are scalars
     if not isinstance(sequence_i, list):
@@ -233,7 +235,7 @@ def plot_subsequence(
         resalt = [resalt] * len(sequence_i)
     if not isinstance(color, list):
         color = [color] * len(sequence_i)
-    sequences_info = [f"subsequence {sequence_i[i]}_{subsequence_len[i]} | [{sequence_i[i]}:{sequence_i[i] + subsequence_len[i]}]" for i in range(len(sequence_i))]
+    sequences_info = [f"Subsequence {sequence_i[i]}_{subsequence_len[i]} | [{sequence_i[i]}:{sequence_i[i] + subsequence_len[i]}]" for i in range(len(sequence_i))]
 
     if ( title is None ):
         if len( sequence_i ) > 1:
@@ -311,7 +313,7 @@ def plot_subsequence(
                     )
 
     # Configure the title
-    axs.set_title(title, fontsize=16)
+    axs.set_title(title, fontsize=title_size)
     axs.legend(fontsize=legend_size)
     plt.tight_layout()
 
@@ -320,8 +322,8 @@ def plot_subsequence(
         plot_path = os.path.expanduser(plot_path)
         if plot_name == "":
             plot_name = 'highlighted_subsequences'
-        plot_path = os.path.join(plot_path, plot_name + '.png')
-        plt.savefig(plot_path)
+        plot_path = os.path.join(plot_path, plot_name + "."+ plot_format)
+        plt.savefig(plot_path, format = plot_format)
 
     plt.show()
 

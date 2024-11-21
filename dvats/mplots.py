@@ -195,58 +195,101 @@ def show_subsequence(
         )
 
 # %% ../nbs/mplots.ipynb 27
-def plot_subsequence(
-    TA              : List [ float ]    = None,
-    sequence_i      : int               = 0,
-    subsequence_len : int               = 1,
-    sequence_color    : str             = 'blue',
-    subsequence_color : str             = 'green',
-    dots            : bool              = True,
-    dots_color      : str               = 'red',
-    label           : bool              = False,
-    sequence_flag   : bool              = True,
-    hide_rows       : bool              = True,
-    hide_columns    : bool              = False,
-    save_plot       : bool              = False,
-    plot_path       : str               = "./",
-    plot_name       : str               = "",
-    verbose         : int               = 0
-) -> None:
+import matplotlib.pyplot as plt
+import os
+from typing import List
 
+#| export
+def plot_subsequence(
+    TA              : List[float] = None,
+    sequence_i      : int = 0,
+    subsequence_len : int = 1,
+    sequence_color  : str = 'blue',
+    subsequence_color : str = 'green',
+    dots            : bool = True,
+    dots_color      : str = 'red',
+    label           : bool = False,
+    sequence_flag   : bool = True,
+    hide_rows       : bool = True,
+    hide_columns    : bool = False,
+    save_plot       : bool = False,
+    plot_path       : str = "./",
+    plot_name       : str = "",
+    verbose         : int = 0,
+    resalt          : bool = False  # Nuevo flag para resaltar subsecuencia
+) -> None:
     n = len(TA)
     x_coords = range(n)
 
-
-    fig_height_in = 0.59  + 2
+    # Configurar tamaño de figura
+    fig_height_in = 0.59 + 2
     fig, axs = plt.subplots(1, 1, figsize=(12, fig_height_in), sharex=True)
 
+    # Modo resaltado
+    if resalt:
+        # Dibujar la serie completa con transparencia
+        axs.plot(
+            x_coords, TA, 
+            label='TA', 
+            color=sequence_color, 
+            alpha=0.3  # Transparencia para el fondo
+        )
 
-    axs.plot(x_coords, TA, label='TA', color = sequence_color)
-    i = sequence_i
-    axs.plot(
-        x_coords[i:i+subsequence_len], TA[i:i+subsequence_len],
-        color=subsequence_color,
-        label='Subsequence' if i == 0 else ""
-      )
-    axs.legend()
-    #axs.set_title('Subsequence_' + str(i) +"_"+str(subsequence_len))
-    axs.set_title('Subsequence_' + str(i) +"_"+str(subsequence_len), fontsize=20)
+        # Resaltar la subsecuencia con un trazo más grueso
+        i = sequence_i
+        axs.plot(
+            x_coords[i:i+subsequence_len], TA[i:i+subsequence_len],
+            color=subsequence_color,
+            linewidth=2.5,  # Línea más gruesa
+            label='Subsequence' if i == 0 else ""
+        )
+
+        # Añadir sombreado bajo la subsecuencia
+        axs.fill_between(
+            x_coords[i:i+subsequence_len], TA[i:i+subsequence_len],
+            color=subsequence_color, alpha=0.2
+        )
+    else:
+        # Modo estándar (como antes)
+        axs.plot(x_coords, TA, label='TA', color=sequence_color)
+        i = sequence_i
+        axs.plot(
+            x_coords[i:i+subsequence_len], TA[i:i+subsequence_len],
+            color=subsequence_color,
+            label='Subsequence' if i == 0 else ""
+        )
+
+    # Añadir puntos si está activado
     if dots:
-      plt.scatter(x_coords, TA, color=dots_color)
-      if label:
-        subsequence_x = x_coords[sequence_i:sequence_i + subsequence_len]
-        subsequence_y = TA[sequence_i:sequence_i + subsequence_len]
-        for x, y in zip(subsequence_x, subsequence_y):
-            axs.text(x, y+0.3, f'{y:.2f}', color=dots_color, fontsize=8, ha='center', va='bottom')  # Añade el valor sobre el punto
+        axs.scatter(x_coords, TA, color=dots_color)
+        if label:
+            subsequence_x = x_coords[sequence_i:sequence_i + subsequence_len]
+            subsequence_y = TA[sequence_i:sequence_i + subsequence_len]
+            for x, y in zip(subsequence_x, subsequence_y):
+                axs.text(
+                    x, y + 0.3, f'{y:.2f}', 
+                    color=dots_color, fontsize=8, ha='center', va='bottom'
+                )
+
+    # Configurar el título del gráfico
+    axs.set_title('Subsequence_' + str(sequence_i) + "_" + str(subsequence_len), fontsize=20)
+    axs.legend()
     plt.tight_layout()
+
+    # Guardar gráfico si está habilitado
     if save_plot:
         plot_path = os.path.expanduser(plot_path)
-        if (plot_name == ""):
-            plot_name = 'subsequence_'+str(i) + "_"+str(subsequence_len)
+        if plot_name == "":
+            plot_name = 'subsequence_' + str(sequence_i) + "_" + str(subsequence_len)
         plot_path = os.path.join(plot_path, plot_name + '.png')
         plt.savefig(plot_path)
+
     plt.show()
-    if sequence_flag : show_sequence([TA[sequence_i:sequence_i + subsequence_len]], hide_rows, hide_columns)
+
+    # Mostrar detalles si está habilitado
+    if sequence_flag:
+        show_sequence([TA[sequence_i:sequence_i + subsequence_len]], hide_rows, hide_columns)
+
 
 # %% ../nbs/mplots.ipynb 30
 class GD_Mat:

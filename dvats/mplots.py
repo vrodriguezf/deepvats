@@ -197,17 +197,17 @@ def show_subsequence(
 # %% ../nbs/mplots.ipynb 27
 import matplotlib.pyplot as plt
 import os
-from typing import List
+from typing import List, Union
+import numpy as np
+import dvats.utils as ut
 
-#| export
 def plot_subsequence(
     TA              : List[float] = None,
-    sequence_i      : int = 0,
-    subsequence_len : int = 1,
-    sequence_color  : str = 'blue',
-    subsequence_color : str = 'green',
+    sequence_i      : Union[int, List[int]] = 0,
+    subsequence_len : Union[int, List[int]] = 1,
+    color           : Union[str, List[str]] = 'blue',  # Compatibility for color
     dots            : bool = True,
-    dots_color      : str = 'red',
+    dots_color      : str = 'red',  # British spelling avoided
     label           : bool = False,
     sequence_flag   : bool = True,
     hide_rows       : bool = True,
@@ -216,82 +216,122 @@ def plot_subsequence(
     plot_path       : str = "./",
     plot_name       : str = "",
     verbose         : int = 0,
-    resalt          : bool = False  # Nuevo flag para resaltar subsecuencia
+    resalt          : Union[bool, List[bool]] = False,  # Compatibility with lists for highlighting
+    TA_name         : str = "Time series",
+    title           : str = None,
+    TA_color        : str = "Grey",
+    TA_alpha        : float = 0.7,
+    TA_label        : bool = False,
+    legend_size     : int = None
 ) -> None:
+    # Convert parameters to lists if they are scalars
+    if not isinstance(sequence_i, list):
+        sequence_i = [sequence_i]
+    if not isinstance(subsequence_len, list):
+        subsequence_len = [subsequence_len] * len(sequence_i)
+    if not isinstance(resalt, list):
+        resalt = [resalt] * len(sequence_i)
+    if not isinstance(color, list):
+        color = [color] * len(sequence_i)
+    sequences_info = [f"subsequence {sequence_i[i]}_{subsequence_len[i]} | [{sequence_i[i]}:{sequence_i[i] + subsequence_len[i]}]" for i in range(len(sequence_i))]
+
+    if ( title is None ):
+        if len( sequence_i ) > 1:
+            title = f"{TA_name} subsequences"
+        else:
+            title = f"{TA_name} | {sequences_info[0]}"
+    
+    # Sort subsequences by start indices
+    subsequences = sorted(zip(sequence_i, subsequence_len, resalt, color), key=lambda x: x[0])
+
+    # Configure figure size
     n = len(TA)
     x_coords = range(n)
-
-    # Configurar tamaño de figura
     fig_height_in = 0.59 + 2
     fig, axs = plt.subplots(1, 1, figsize=(12, fig_height_in), sharex=True)
 
-    # Modo resaltado
-    if resalt:
-        # Dibujar la serie completa con transparencia
+    # Plot the full series
+    if TA_label:
         axs.plot(
             x_coords, TA, 
-            label='TA', 
-            color=sequence_color, 
-            alpha=0.3  # Transparencia para el fondo
-        )
-
-        # Resaltar la subsecuencia con un trazo más grueso
-        i = sequence_i
-        axs.plot(
-            x_coords[i:i+subsequence_len], TA[i:i+subsequence_len],
-            color=subsequence_color,
-            linewidth=2.5,  # Línea más gruesa
-            label='Subsequence' if i == 0 else ""
-        )
-
-        # Añadir sombreado bajo la subsecuencia
-        axs.fill_between(
-            x_coords[i:i+subsequence_len], TA[i:i+subsequence_len],
-            color=subsequence_color, alpha=0.2
+            label=TA_name, 
+            color=TA_color,  # Main series less prominent
+            alpha=TA_alpha
         )
     else:
-        # Modo estándar (como antes)
-        axs.plot(x_coords, TA, label='TA', color=sequence_color)
-        i = sequence_i
         axs.plot(
-            x_coords[i:i+subsequence_len], TA[i:i+subsequence_len],
-            color=subsequence_color,
-            label='Subsequence' if i == 0 else ""
+            x_coords, TA, 
+            color=TA_color,  # Main series less prominent
+            alpha=TA_alpha
         )
 
-    # Añadir puntos si está activado
+    # Plot each subsequence
+    for idx, (i, length, highlight, col) in enumerate(subsequences):
+        start_idx = i
+        end_idx = i + length
+        if verbose > 1: ut.print_flush(f"Subsequence {idx} | {len(sequence_i)} | {len(sequences_info)}")
+        s_label="Subsequence" if len(sequence_i) == 1 else sequences_info[idx]
+        if verbose > 1: ut.print_flush(f"Subsequence {idx} | {s_label}")
+        # Highlight or standard drawing
+        if highlight:
+            # Draw transparent border around the line
+            axs.plot(
+                x_coords[start_idx:end_idx], TA[start_idx:end_idx],
+                color=col,
+                linewidth=6,  # Thick line for the border
+                alpha=0.2,    # Transparency for the border
+                solid_capstyle='round'
+            )
+            # Draw main subsequence line
+            axs.plot(
+                x_coords[start_idx:end_idx], TA[start_idx:end_idx],
+                color=col,
+                linewidth=2.5,  # Medium thickness
+                label=s_label
+            )
+        else:
+            # Standard subsequence
+            axs.plot(
+                x_coords[start_idx:end_idx], TA[start_idx:end_idx],
+                color=col,
+                label=s_label
+            )
+
+    # Add points if enabled
     if dots:
         axs.scatter(x_coords, TA, color=dots_color)
         if label:
-            subsequence_x = x_coords[sequence_i:sequence_i + subsequence_len]
-            subsequence_y = TA[sequence_i:sequence_i + subsequence_len]
-            for x, y in zip(subsequence_x, subsequence_y):
-                axs.text(
-                    x, y + 0.3, f'{y:.2f}', 
-                    color=dots_color, fontsize=8, ha='center', va='bottom'
-                )
+            for i, length, _, _ in subsequences:
+                subsequence_x = x_coords[i:i + length]
+                subsequence_y = TA[i:i + length]
+                for x, y in zip(subsequence_x, subsequence_y):
+                    axs.text(
+                        x, y + 0.3, f'{y:.2f}', 
+                        color=dots_color, fontsize=8, ha='center', va='bottom'
+                    )
 
-    # Configurar el título del gráfico
-    axs.set_title('Subsequence_' + str(sequence_i) + "_" + str(subsequence_len), fontsize=20)
-    axs.legend()
+    # Configure the title
+    axs.set_title(title, fontsize=16)
+    axs.legend(fontsize=legend_size)
     plt.tight_layout()
 
-    # Guardar gráfico si está habilitado
+    # Save plot if enabled
     if save_plot:
         plot_path = os.path.expanduser(plot_path)
         if plot_name == "":
-            plot_name = 'subsequence_' + str(sequence_i) + "_" + str(subsequence_len)
+            plot_name = 'highlighted_subsequences'
         plot_path = os.path.join(plot_path, plot_name + '.png')
         plt.savefig(plot_path)
 
     plt.show()
 
-    # Mostrar detalles si está habilitado
+    # Show additional sequence details if enabled
     if sequence_flag:
-        show_sequence([TA[sequence_i:sequence_i + subsequence_len]], hide_rows, hide_columns)
+        for i, length, _, _ in subsequences:
+            show_sequence([TA[i:i + length]], hide_rows, hide_columns)
 
 
-# %% ../nbs/mplots.ipynb 30
+# %% ../nbs/mplots.ipynb 33
 class GD_Mat:
     def __init__(self, id,  name, data_path = '~/data'):
         self.id                 = id #GD id
@@ -331,7 +371,7 @@ class GD_Mat:
         str +=f"\nnum_mats: {self.num_mats}"
         return str
 
-# %% ../nbs/mplots.ipynb 31
+# %% ../nbs/mplots.ipynb 34
 @dataclass
 class MatlabMatrix: 
     #File name
@@ -427,7 +467,7 @@ class MatlabMatrix:
             self.data = np.concatenate((start, out0, stop))
             return self.data
 
-# %% ../nbs/mplots.ipynb 37
+# %% ../nbs/mplots.ipynb 40
 def plot_subsequences_aux(
     ax              : plt.Axes, 
     x_coords        : List[ int ],  
@@ -501,7 +541,7 @@ def plot_subsequences(
     buttons = widgets.HBox([prev_button, next_button])
     display(buttons)
 
-# %% ../nbs/mplots.ipynb 38
+# %% ../nbs/mplots.ipynb 41
 def plot_dataFrame(title, df, vars = [], interval = 10000):
     if len(vars) > 0:
         num_vars = len(df.columns)
@@ -539,7 +579,7 @@ def plot_dataFrame(title, df, vars = [], interval = 10000):
         plt.show()
     else: raise ValueError("No variable proposed for plotting")
 
-# %% ../nbs/mplots.ipynb 39
+# %% ../nbs/mplots.ipynb 42
 def plot_dataFrame_compareSubsequences(
     title, df, var, subsequence_len, seq1_init, seq2_init, 
     title_fontsize = '30',
@@ -566,7 +606,7 @@ def plot_dataFrame_compareSubsequences(
     plt.show()
     
 
-# %% ../nbs/mplots.ipynb 41
+# %% ../nbs/mplots.ipynb 44
 def df_plot_colored_variables(df):
     # Show time series plot
     fig, ax = plt.subplots(1, figsize=(15,5), )
@@ -579,7 +619,7 @@ def df_plot_colored_variables(df):
     plt.legend()
     display(plt.show())
 
-# %% ../nbs/mplots.ipynb 42
+# %% ../nbs/mplots.ipynb 45
 def plot_df_with_intervals_and_colors(title, df, interval=10000):
     num_variables = len(df.columns)
     num_intervals = len(df) // interval + 1  # Calcula el número necesario de intervalos/subplots
@@ -610,7 +650,7 @@ def plot_df_with_intervals_and_colors(title, df, interval=10000):
     plt.tight_layout()
     plt.show()
 
-# %% ../nbs/mplots.ipynb 44
+# %% ../nbs/mplots.ipynb 47
 def make_symmetric_(
         mat : List [ float ]
     ) -> None:
@@ -629,7 +669,7 @@ def check_symmetric(
     return sym
 
 
-# %% ../nbs/mplots.ipynb 47
+# %% ../nbs/mplots.ipynb 50
 def moving_mean(a, w):
   result = np.zeros((len(a) - w + 1,))
   p = a[0]
@@ -769,7 +809,7 @@ def distance_matrix(a,b,w, minlag = None):
 
     return out
 
-# %% ../nbs/mplots.ipynb 49
+# %% ../nbs/mplots.ipynb 52
 @dataclass
 class DistanceProfile:
     """ Vector of distances between each subsequence in TA and a reference sequence TB"""
@@ -959,7 +999,7 @@ class DistanceProfile:
         plt.tight_layout()
         plt.show()
 
-# %% ../nbs/mplots.ipynb 57
+# %% ../nbs/mplots.ipynb 60
 @dataclass
 class DistanceMatrix: 
     """ Similarity matrix """
@@ -1374,7 +1414,7 @@ class DistanceMatrix:
         self.shape = self.distances.shape
         return self.distances    
 
-# %% ../nbs/mplots.ipynb 61
+# %% ../nbs/mplots.ipynb 64
 def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, padding = 1000, m = 1, mp = None):
     fig, axs = plt.subplots(2, sharex = True, gridspec_kw={'hspace': 0})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='30')
@@ -1400,7 +1440,7 @@ def plot_motif(df, motif_idx, nearest_neighbor_idx, variable_name, title, paddin
     axs[1].plot(mp)
     plt.show()
 
-# %% ../nbs/mplots.ipynb 62
+# %% ../nbs/mplots.ipynb 65
 def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name="", title="", padding=1000, m=1, mp=None):
     fig, axs = plt.subplots(4, sharex=False, figsize=( 12, 5), gridspec_kw={'hspace': 0.5})
     plt.suptitle('Motif (Pattern) Discovery', fontsize='20')
@@ -1439,7 +1479,7 @@ def plot_motif_separated(df, motif_idx=0, nearest_neighbor_idx=0, variable_name=
 
     plt.show()
 
-# %% ../nbs/mplots.ipynb 65
+# %% ../nbs/mplots.ipynb 68
 @dataclass
 class MatrixProfile:
     """ Class for better usability of Matrix Profile inside deepVATS"""
@@ -1790,7 +1830,7 @@ class MatrixProfile:
     def __str__(self):
         return f"MP: {self.distances}\nIds: {self.index}\nIds_left: {self.index_left}\nIds_right: {self.index_right}\nComputation_time: {self.computation_time}\nsubsequence_len: {self.subsequence_len}\nmethod: {self.method}"
 
-# %% ../nbs/mplots.ipynb 67
+# %% ../nbs/mplots.ipynb 70
 def downsample(
     self             : MatrixProfile,
     downsample_flag  : bool                         = False,
@@ -2034,10 +2074,10 @@ def matrix_profile(
             print("matrix profile -->")
     return mp, index, index_left, index_right, duration
 
-# %% ../nbs/mplots.ipynb 68
+# %% ../nbs/mplots.ipynb 71
 MatrixProfile.matrix_profile = matrix_profile
 
-# %% ../nbs/mplots.ipynb 69
+# %% ../nbs/mplots.ipynb 72
 def compute(
     self            : MatrixProfile,
     method          : str                           = 'naive', 
@@ -2099,7 +2139,7 @@ def compute(
     return self.distances
 MatrixProfile.compute = compute
 
-# %% ../nbs/mplots.ipynb 81
+# %% ../nbs/mplots.ipynb 84
 @dataclass
 class MatrixProfiles:
     matrix_profiles : List[ MatrixProfile ] = field( default_factory=list )
@@ -2238,7 +2278,7 @@ class MatrixProfiles:
         plt.show()
 
 
-# %% ../nbs/mplots.ipynb 99
+# %% ../nbs/mplots.ipynb 102
 def ensure_valid_limits(
     total_len       : int,
     subsequence_len : int, # divisor
@@ -2281,7 +2321,7 @@ def restore_index(
 
 
 
-# %% ../nbs/mplots.ipynb 101
+# %% ../nbs/mplots.ipynb 104
 def threshold_interval(
     data            : List [ List [ float ] ],
     threshold_min   : float,
@@ -2326,7 +2366,7 @@ def threshold_interval(
                 if (verbose > 2): print(result)
     return result
 
-# %% ../nbs/mplots.ipynb 103
+# %% ../nbs/mplots.ipynb 106
 @dataclass
 class MatrixProfilePlot:
     """ Time series similarity matrix plot """
@@ -3169,7 +3209,7 @@ class MatrixProfilePlot:
         return plt
         """
 
-# %% ../nbs/mplots.ipynb 108
+# %% ../nbs/mplots.ipynb 111
 @dataclass 
 class MatrixProfilePlotCached:
     """ Specific clase for using cached interactive plots for MPlots """
@@ -3470,7 +3510,7 @@ class MatrixProfilePlotCached:
         fig.savefig(outfile, bbox_inches='tight')
         plt.close(fig)
 
-# %% ../nbs/mplots.ipynb 112
+# %% ../nbs/mplots.ipynb 115
 eamonn_drive_mplots = {
     'insects0': {
         'id': '1qq1z2mVRd7PzDqX0TDAwY7BcWVjnXUfQ',

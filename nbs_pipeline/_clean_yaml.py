@@ -44,15 +44,17 @@ def copy_and_verify_yaml(wdb_user, wdb_project, example, verbose=0):
                 # Replace `user` and `project_name` lines directly in place in the destination
                 search_and_replace_line_in_file(
                     dst_file, 
-                    "user: &wdb_user", 
-                    f"user: &wdb_user {wdb_user}", 
-                    verbose
+                    search_key = "user: &wdb_user", 
+                    prefix =  "&wdb_user ",
+                    replacement_value = f"{wdb_user}", 
+                    verbose = verbose
                 )
                 search_and_replace_line_in_file(
                     dst_file, 
-                    "project_name: &wdb_project", 
-                    f"project_name: &wdb_project {wdb_project}", 
-                    verbose
+                    search_key = "project_name: &wdb_project", 
+                    prefix = "&wdb_project ",
+                    replacement_value = f"{wdb_project}", 
+                    verbose = verbose
                 )
 
 
@@ -94,26 +96,29 @@ def clean_all_examples(wdb_user, wdb_project, verbose=0):
                     # Replace `user` and `project_name` lines directly in place
                     search_and_replace_line_in_file(
                         yaml_path, 
-                        "user: &wdb_user", 
-                        f"user: &wdb_user {wdb_user}", 
-                        verbose
+                        search_key = "user: &wdb_user", 
+                        prefix =  "&wdb_user ",
+                        replacement_value = f"{wdb_user}", 
+                        verbose = verbose
                     )
                     search_and_replace_line_in_file(
                         yaml_path, 
                         "project_name: &wdb_project", 
-                        f"project_name: &wdb_project {wdb_project}", 
-                        verbose
+                        prefix =  "&wdb_project ",
+                        replacement_value  = f"{wdb_project}", 
+                        verbose = verbose
                     )
 
 
-def search_and_replace_line_in_file(file_path, search_key, replacement_value, verbose=0):
+def search_and_replace_line_in_file(file_path, search_key, replacement_value, prefix="", verbose=0):
     """
-    Replaces the value after ':' for a specific key in the file, preserving indentation.
+    Replaces the value after a specific key in the file, preserving indentation and allowing for custom prefixes.
 
     Parameters:
         file_path (str): The path to the file to be modified.
         search_key (str): The key to search for at the start of a line.
-        replacement_value (str): The new value to replace the existing value after ':'.
+        replacement_value (str): The new value to replace the existing value.
+        prefix (str): The prefix to add before the replacement value (e.g., "&wdb_user ").
         verbose (int): Controls the verbosity of the output (0 = none, 1 = main flow, 2 = detailed, 3 = debug).
 
     Returns:
@@ -126,11 +131,11 @@ def search_and_replace_line_in_file(file_path, search_key, replacement_value, ve
     with open(file_path, 'w') as file:
         for line in lines:
             if line.strip().startswith(search_key):
-                # Preserve the indentation and replace only the value after ':'
+                # Preserve the indentation and replace only the value after the key
                 parts = line.split(":", 1)
                 if len(parts) > 1:
                     indentation = parts[0]
-                    new_line = f"{indentation}: {replacement_value}\n"
+                    new_line = f"{indentation}: {prefix}{replacement_value}\n"
                     if verbose > 1:
                         print_flush(f"Replacing line: {line.strip()} -> {new_line.strip()} in {file_path}")
                     file.write(new_line)

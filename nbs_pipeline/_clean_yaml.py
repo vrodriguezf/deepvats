@@ -106,14 +106,14 @@ def clean_all_examples(wdb_user, wdb_project, verbose=0):
                     )
 
 
-def search_and_replace_line_in_file(file_path, search_key, replacement_line, verbose=0):
+def search_and_replace_line_in_file(file_path, search_key, replacement_value, verbose=0):
     """
-    Replaces an entire line in the file if it starts with a specific search key.
+    Replaces the value after ':' for a specific key in the file, preserving indentation.
 
     Parameters:
         file_path (str): The path to the file to be modified.
         search_key (str): The key to search for at the start of a line.
-        replacement_line (str): The full line to replace the matching line with.
+        replacement_value (str): The new value to replace the existing value after ':'.
         verbose (int): Controls the verbosity of the output (0 = none, 1 = main flow, 2 = detailed, 3 = debug).
 
     Returns:
@@ -125,14 +125,18 @@ def search_and_replace_line_in_file(file_path, search_key, replacement_line, ver
 
     with open(file_path, 'w') as file:
         for line in lines:
-            # Check if the line starts with the search key
             if line.strip().startswith(search_key):
-                if verbose > 1:
-                    print_flush(f"Replacing line: {line.strip()} -> {replacement_line.strip()} in {file_path}")
-                file.write(replacement_line + '\n')
-                modified = True
-            else:
-                file.write(line)
+                # Preserve the indentation and replace only the value after ':'
+                parts = line.split(":", 1)
+                if len(parts) > 1:
+                    indentation = parts[0]
+                    new_line = f"{indentation}: {replacement_value}\n"
+                    if verbose > 1:
+                        print_flush(f"Replacing line: {line.strip()} -> {new_line.strip()} in {file_path}")
+                    file.write(new_line)
+                    modified = True
+                    continue
+            file.write(line)
 
     if not modified and verbose > 2:
         print_flush(f"No match for key '{search_key}' in {file_path}")

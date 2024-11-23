@@ -1,0 +1,30 @@
+include: !include "base.yaml"
+
+#########################################################
+########### NBS - PIPELINE CONFIGURATION FILE ###########
+########### 03 - EMBEDDINGS                   ###########
+#########################################################
+###### Author: Maria Inmaculada Santamaria-Valenzuela   #
+###### Date: 08-2023                                    #
+#########################################################
+
+###################
+# 03 - Embeddings #
+###################
+job_type: &emb 'embeddings'
+configuration:  
+  # Whether to group this run in a wandb group
+  wandb: 
+    group: *emb
+    use: *use_wandb
+    entity: *wdb_user
+    project: *wdb_project
+  encoder:
+    artifacts: 
+      train: 
+        enc_prefix: !join [ *wdb_user, '/', *wdb_project, '/', *alg]
+      # If none, the validation set used to train enc is used
+      valid: null
+  specifications:
+    input_ar: null
+    cpu: false

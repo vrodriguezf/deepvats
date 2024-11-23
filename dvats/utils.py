@@ -346,7 +346,9 @@ def plot_with_dots(
     dots                    : bool           = True,
     figsize                 : Tuple[int, int]= (10, 6),
     plot_path               : str            = "./",
-    plot_name               : str            = ""
+    plot_name               : str            = "",
+    plot_format             : str            = "svg",
+    plot_resolution         : int            = 1
   ) -> None:
     if sequence_flag and show_sequence_before: 
         show_sequence([time_series], hide_rows, hide_columns)
@@ -369,8 +371,8 @@ def plot_with_dots(
         plot_path = os.path.expanduser(plot_path)
         if plot_name == "":
             plot_name = title
-        plot_path = os.path.join(plot_path, plot_name + ".png")
-        plt.savefig(plot_path)
+        plot_path = os.path.join(plot_path, f'{plot_name}.{plot_format}')
+        plt.savefig(plot_path, format = plot_format)
     plt.show()
     if sequence_flag and not show_sequence_before:
         show_sequence([time_series], hide_rows, hide_columns)

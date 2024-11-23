@@ -41,7 +41,7 @@ configuration:
       #ws2: &wlen 100 #Solar_4_seconds
       #Pulsus Paradoxus
       ws1: 15
-      ws2: &wlen 100
+      ws2: 100
       #ws1: 7 #sunspot
       #ws2: &wlen 365 #sunspot
       #ws1: 10 #toy

@@ -3517,7 +3517,10 @@ class MatrixProfilePlotCached:
         subsequence_len : Optional [ int ] = None, 
         filename        : str   = "cached_matrix_plot.png",
         ensure_symetric : bool  = False,
-        verbose         : int   = 0
+        verbose         : int   = 0,
+        plot_format     : str   = 'svg',
+        save_plot       : bool  = True,
+        plot_resolution : int   = 1
     ) : 
         if self.data_b is None:
             self.data_b = np.copy(self.data)
@@ -3634,8 +3637,8 @@ class MatrixProfilePlotCached:
         self.ax4.callbacks.connect('ylim_changed', on_xlims_change)
         self.ax4.callbacks.connect('xlim_changed', on_ylims_change)
         plt.show()
-        if self.filename is not None:
-            self.fig.savefig(filename, bbox_inches='tight')
+        if save_plot and self.filename is not None:
+            plt.savefig(filename, format=plot_format, dpi=100 * plot_resolution, bbox_inches = "tight")
         return self.fig
     
     def plot_matrix(
@@ -3644,7 +3647,11 @@ class MatrixProfilePlotCached:
         arr, 
         n, 
         scale_factor, 
-        outfile
+        outfile,
+        plot_format     : str   = 'svg',
+        save_plot       : bool  = True,
+        plot_resolution : int   = 1,
+        show_plot       : bool = False
     ):
         #Auxiliar, para testear, por eso no son las globales (entiendo)
         plt.tight_layout()
@@ -3668,7 +3675,9 @@ class MatrixProfilePlotCached:
         ax3.set_ylim(ymin=0, ymax=n)
         ax3.invert_yaxis()
         ax3.invert_xaxis()
-        fig.savefig(outfile, bbox_inches='tight')
+        if save_plot and self.filename is not None:
+            plt.savefig(filename, format=plot_format, dpi=100 * plot_resolution, bbox_inches = "tight")
+        if show_plot: plt.show()
         plt.close(fig)
 
 # %% ../nbs/mplots.ipynb 115

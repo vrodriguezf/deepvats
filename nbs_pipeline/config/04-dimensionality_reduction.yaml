@@ -31,5 +31,3 @@ configuration:
       n_neighbors: 15
       min_dist: 0.1
       random_state: 1234
-      metric: 'euclidean'
-      cpu_flag: False

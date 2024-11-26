@@ -53,7 +53,7 @@ from IPython.display import display, clear_output
 
 
 from copy import deepcopy
-plt.style.use('https://raw.githubusercontent.com/TDAmeritrade/stumpy/main/docs/stumpy.mplstyle')
+#plt.style.use('https://raw.githubusercontent.com/TDAmeritrade/stumpy/main/docs/stumpy.mplstyle')
 
 from concurrent.futures import ThreadPoolExecutor
 

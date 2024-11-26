@@ -76,7 +76,7 @@ data:
     range_training: null
     range_testing: null
     # Resampling frequency (null for no resampling)
-    resampling_freq: nll
+    resampling_freq: null
     # Starting date (in format yyyy-mm-dd) (set to null for default start date)
     start_date: null
     # Ratio of test set, only if range_training and range_testing are null

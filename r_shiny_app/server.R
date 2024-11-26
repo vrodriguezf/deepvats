@@ -992,7 +992,7 @@ shinyServer(function(input, output, session) {
         kwargs_common <- list(
             X                   = enc_input,
             enc_learn           = enc_l,
-            verbose             = as.integer(1)
+            verbose             = as.integer(2)
         )
         kwargs <- c(kwargs_common, list(stride = as.integer(input$stride)), specific_kwargs)
         

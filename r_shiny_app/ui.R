@@ -59,28 +59,46 @@ shinyUI(fluidPage(
           )
         ),  
         conditionalPanel(
-        condition = "input.task_type == 'sequence_outlier'",
-        checkboxGroupInput(
-          "smooth_methods_sequence", 
-          "Smoothing Options for Sequence Outliers",
-          choices = list(
-            "DBSCAN"                = "dbscan",
-            "IsolationForest"       = "isolation_forest",
-            "Moving Average Filter" = "moving_average"),
+          condition = "input.task_type == 'sequence_outlier'",
+          checkboxGroupInput(
+            "smooth_methods_sequence", 
+            "Smoothing Options for Sequence Outliers",
+            choices = list(
+              "DBSCAN"                = "dbscan",
+              "IsolationForest"       = "isolation_forest",
+              "Moving Average Filter" = "moving_average",
+              "Range Normalization"   = "range_normalization"
+            ),
             selected                = NULL
-        )
+          )
+          conditionalPanel(
+            condition = "'range_normalization' in input.smooth_methods_sequence",
+            sliderInput("so_range_normalization_sections", "Select number of sections - 0 for using size", min = 1, max = 1, value =0 , step = 1),
+            sliderInput("so_range_normalization_sections_size", "Select sections size (range)- 0 for using n. sections", min = 1, max = 1, value =0 , step = 1)
+            textInput("so_text_rns", "Set Minimum Value:", value = 1),
+            textInput("so_text_rnsz", "Set Maximum Value:", value = 1),
+
+          )
         ),
         conditionalPanel(
-        condition = "input.task_type == 'segments'",
-        checkboxGroupInput(
-          "smooth_methods_segments", "Smoothing Options for Segments",
-          choices = list(
-            "KMeans"                            = "kmeans",
-            "Moving Average Filter"             = "moving_average",
-            "Wavelet Transform (Not Available)" = "wavelet_transform"
-          ),
-          selected = NULL
-        )
+          condition = "input.task_type == 'segments'",
+          checkboxGroupInput(
+            "smooth_methods_segments", "Smoothing Options for Segments",
+            choices = list(
+              "KMeans"                            = "kmeans",
+              "Moving Average Filter"             = "moving_average",
+              "Wavelet Transform (Not Available)" = "wavelet_transform",
+              "Range Normalization"   = "range_normalization"
+            ),
+            selected = NULL
+          )
+          conditionalPanel(
+            condition = "'range_normalization' in input.smooth_methods_segments",
+            sliderInput("ss_range_normalization_sections", "Select number of sections - 0 for using size", min = 0, max = 1, value =0 , step = 1),
+            sliderInput("ss_range_normalization_sections_size", "Select sections size (range) - 0 for using n. sections", min = 0, max = 1, value =0 , step = 1)
+            textInput("ss_text_rns", "Set Minimum Value:", value = 1),
+            textInput("ss_text_rnsz", "Set Maximum Value:", value = 1),
+          )
         ),
         conditionalPanel(
           condition = "input.task_type == 'trends'",

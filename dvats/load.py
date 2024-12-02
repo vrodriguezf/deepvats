@@ -130,9 +130,15 @@ class TSArtifact(wandb.Artifact):
 
         # Normalization - Save the previous means and stds
         if normalize:
+            if (verbose > 1): 
+                print(f" From df ] Normalize df | Before  mean {np.mean(df.iloc[0])}")
+                print(f"[ From df ] Normalize df | Before std {np.std(df.iloc[0])}")
             obj.metadata['TS']['normalization'] = dict(means = df.describe().loc['mean'].to_dict(),
                                                        stds = df.describe().loc['std'].to_dict())
             df = normalize_columns(df)
+            if (verbose > 1): 
+                print(f"[ From df ] Normalize df | After mean {np.mean(df.iloc[0])}")
+                print(f"[ From df ] Normalize df | After std {np.std(df.iloc[0])}")
 
         # Hash and save
         hash_code = str(pd.util.hash_pandas_object(df).sum()) # str(hash(df.values.tobytes()))
@@ -145,7 +151,7 @@ class TSArtifact(wandb.Artifact):
 
         return obj
 
-# %% ../nbs/load.ipynb 14
+# %% ../nbs/load.ipynb 15
 @patch
 def to_df(self:wandb.apis.public.Artifact):
     "Download the files of a saved wandb artifact and process them as a single dataframe. The artifact must \
@@ -162,7 +168,7 @@ def to_df(self:wandb.apis.public.Artifact):
     else:
         print("ERROR: Only from_df method is allowed yet")
 
-# %% ../nbs/load.ipynb 16
+# %% ../nbs/load.ipynb 17
 @patch
 def to_tsartifact(self:wandb.apis.public.Artifact):
     "Cast an artifact as a TS artifact. The artifact must have been created from one of the \
@@ -174,7 +180,7 @@ def to_tsartifact(self:wandb.apis.public.Artifact):
                       description=self.description,
                       metadata=self.metadata)
 
-# %% ../nbs/load.ipynb 18
+# %% ../nbs/load.ipynb 19
 @delegates(pd.to_datetime)
 def infer_or_inject_freq(df, injected_freq='1s', start_date=None, verbose = 0, **kwargs):
     """
@@ -213,7 +219,7 @@ def infer_or_inject_freq(df, injected_freq='1s', start_date=None, verbose = 0, *
         df.index.freq = inferred_freq
     return df
 
-# %% ../nbs/load.ipynb 21
+# %% ../nbs/load.ipynb 22
 import requests
 import zipfile
 from pathlib import Path
@@ -282,7 +288,7 @@ def unzip_mat(all_one, zip_path, extract_path, case = '', verbose = 0):
         if verbose > 0: print("unzip_path -->")
 
 
-# %% ../nbs/load.ipynb 25
+# %% ../nbs/load.ipynb 26
 import scipy.io
 import pandas as pd
 
@@ -319,7 +325,7 @@ def mat2csv(mat_file_path, csv_file_folder = '~/data/', verbose = 0):
 
 
 
-# %% ../nbs/load.ipynb 28
+# %% ../nbs/load.ipynb 29
 import requests
 import zipfile
 from pathlib import Path

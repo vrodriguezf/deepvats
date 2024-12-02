@@ -14,7 +14,7 @@ user_preferences:
   use_wandb: &use_wandb true
   wdb:
     user: &wdb_user mi-santamaria
-    project_name: &wdb_project deepvats
+    project_name: &wdb_project deepvats    
     version: &wdb_version '0'
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode: &wdb_mode 'online'
@@ -27,10 +27,11 @@ user_preferences:
     freq: &freq '1W'
   artifact:
     # Alias of the artifact resulting of this run. null will create one automatically
-    #alias: &alias 'outliers-3'
-    #alias: &alias 'PulsusParadoxus-SP02'
-    alias: &alias 'gtrends_kohl-normalized'
-    algorithm: &alg 'mvp'
+    #alias: &alias 'gtrends_kohls'
+    #alias: &alias 'gtrends_kohls-detrended'
+    #alias: &alias 'gtrends_kohls-denoised'
+    alias: &alias 'gtrends_khols-normalized_yearly'
+    algorithm: &alg "zeroshot-moment-small-embedding"
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 
@@ -67,7 +68,8 @@ data:
       # Default value used for missing values (only if missing_values_technique is not null)
       constant: null
     # To normalize the data
-    normalize_training: True
+    #normalize_training: True
+    normalize_training: False
     # Training and Testing ranges. They can be lists with values to be included 
     # (of the same type as the index) or dictionaries that include the keys 'start', 'end' and 'freq'.
     range_training: null

@@ -176,6 +176,51 @@ shinyServer(function(input, output, session) {
         }
     )
 
+    sections_count <- reactiveVal(0)
+    sections_size <- reactiveVal(0)
+  
+    observe({
+        req(tsdf())
+        max_rows <- nrow(tsdf())
+        updateSliderInput(session, "so_range_normalization_sections", max = max_rows)
+        updateSliderInput(session, "so_range_normalization_sections_size", max = max_rows)
+        updateSliderInput(session, "ss_range_normalization_sections", max = max_rows)
+        updateSliderInput(session, "ss_range_normalization_sections_size", max = max_rows)
+    })
+
+    observeEvent(input$so_text_rns, {
+        req(tsdf())  # Asegúrate de que tsdf() no sea NULL
+        text <- as.integer(input$so_text_rns)  # Convierte el input a entero
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {  # Verifica que el valor sea válido
+            updateSliderInput(session, "so_range_normalization_sections", value = text)
+        }
+        sections_count(text)
+    })
+    observeEvent(input$so_text_rnsz, {
+        req(tsdf())  # Asegúrate de que tsdf() no sea NULL
+        text <- as.integer(input$so_text_rnsz)  # Convierte el input a entero
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {  # Verifica que el valor sea válido
+            updateSliderInput(session, "so_range_normalization_sections_size", value = text)
+        }
+        sections_size(text)
+    })
+    observeEvent(input$ss_text_rns, {
+        req(tsdf())  # Asegúrate de que tsdf() no sea NULL
+        text <- as.integer(input$ss_text_rns)  # Convierte el input a entero
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {  # Verifica que el valor sea válido
+            updateSliderInput(session, "ss_range_normalization_sections", value = text)
+        }
+        sections_count(text)
+    })
+    observeEvent(input$ss_text_rnsz, {
+        req(tsdf())  # Asegúrate de que tsdf() no sea NULL
+        text <- as.integer(input$ss_text_rnsz)  # Convierte el input a entero
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {  # Verifica que el valor sea válido
+            updateSliderInput(session, "ss_range_normalization_sections_size", value = text)
+        }
+        sections_size(text)
+    })
+
     ############ WLEN TEXT ############
     wlen_min <- reactiveVal(0)
     wlen_max <- reactiveVal(0)
@@ -594,6 +639,7 @@ shinyServer(function(input, output, session) {
     ts_ar <- eventReactive(
         input$dataset, 
         {
+        log_print(paste0("eventReactive ts_ar || Before req | Dataset ", input$dataset))
         req(input$dataset)
         tsdf_ready(FALSE)
         enc_input_ready(FALSE)
@@ -734,6 +780,7 @@ shinyServer(function(input, output, session) {
     enc_comp <- eventReactive(
         enc_ar(), 
     {
+        log_print(paste0("eventReactive enc_comp || Before req || dataset ", input$dataset, " | encoder | ", input$encoder ))
         req(input$dataset, input$encoder)
         log_print("--> eventReactive enc | load encoder ")
         encoder_artifact <- enc_ar()
@@ -743,7 +790,7 @@ shinyServer(function(input, output, session) {
         default_path <- file.path(DEFAULT_PATH_WANDB_ARTIFACTS, encoder_filename)
         enc(NULL)
 
-        print(paste0("eventReactive enc | load encoder | Check if the encoder file exists: ", default_path))
+        print(paste0("eventReactive enc | load encoder | Chec   k if the encoder file exists: ", default_path))
 
         if (file.exists(default_path)) {
             print(paste0("eventReactive enc | load encoder ", encoder_filename ," | --> Load from binary file "))
@@ -824,35 +871,34 @@ shinyServer(function(input, output, session) {
         if (grepl("moment", encoder, ignore.case = TRUE)) {
             log_print("embs_kwargs | Moment")
             res <- list(
-                batch_size = batch_size,
-                cpu = cpu_flag,
-                to_numpy = TRUE,
-                verbose = as.integer(1),
-                padd_step = input$padd_step, 
+                batch_size      = batch_size,
+                cpu             = cpu_flag,
+                to_numpy        = TRUE,
+                verbose         = as.integer(1),
+                padd_step       = input$padd_step, 
                 average_seq_dim = TRUE
             )
         } else if (grepl("moirai", encoder, ignore.case = TRUE)) {
             log_print("embs_kwargs | Moirai")
-#            size <- sub(".*moirai-(\\w+).*", "\\1", encoder)
-
+            size <- sub(".*moirai-(\\w+).*", "\\1", encoder)
             res <- list(
-                cpu = cpu_flag,
-                to_numpy = TRUE,
-                batch_size = batch_size,
+                cpu             = cpu_flag,
+                to_numpy        = TRUE,
+                batch_size      = batch_size,
                 average_seq_dim = TRUE,
-                verbose = as.integer(2),
-                patch_size = as.integer(input$patch_size),
-                time = TRUE
+                verbose         = as.integer(2),
+                patch_size      = as.integer(input$patch_size),
+                time            = TRUE
             )
         } else {
             log_print("embs_kwargs | Learner (neither Moment or Moirai)")
             res <- list(
-               stride = as.integer(1),
-               cpu = cpu_flag,
-               to_numpy = TRUE,
-               batch_size = batch_size,
-               average_seq_dim = TRUE,
-               verbose = as.integer(1)
+               stride           = as.integer(1),
+               cpu              = cpu_flag,
+               to_numpy         = TRUE,
+               batch_size       = batch_size,
+               average_seq_dim  = TRUE,
+               verbose          = as.integer(1)
            )
         }
         res
@@ -924,8 +970,14 @@ shinyServer(function(input, output, session) {
             stride    = input$stride,
             fine_tune = input$fine_tune
         )
+        log_print(paste0(
+            "|| Embs || Before req enc_input_ready ", enc_input_ready(),
+            " | play ", play(),
+            " | allow_update_embs ", allow_update_embs(),
+            " | X | ", ifelse(is.null(X()), "NULL", "NOT NULL")
+        ))
         req(tsdf_comp(), X(), enc_comp(), enc_input_ready(), allow_update_embs())
-        print(paste0("|| Embs || --> embs (before req) | get embeddings | enc_input_ready ", enc_input_ready()," | play " , play()))
+        log_print("|| Embs || --> embs")
         if (is.null(cached_embeddings()) || ! identical(current_inputs, last_inputs())){
             shinyjs::enable("embs_comp")
             if (is.null(cached_embeddings())){
@@ -1029,7 +1081,7 @@ shinyServer(function(input, output, session) {
         )
         X <- NULL
         gc(verbose=as.integer(1))
-        on.exit({log_print("|| embs_comp || get embeddings -->"); flush.console()})
+        on.exit({log_print("|| embs_comp || get embeddings | ", dim(result) , " -->"); flush.console()})
         log_print("...Cleaning GPU")
         rm(enc_l, enc_input)
         log_print(paste0("Cleaning GPU... || ", dim(result)))
@@ -1227,9 +1279,10 @@ pca_kwargs <- reactive({
 })
 
 prj_object_cpu <- reactive({
+    log_print("prj_object_cpu || Before compute embs")
     embs = req(embs(), input$dr_method)
     embs = embs[complete.cases(embs),]
-    log_print("--> prj_object")
+    log_print("--> prj_object_cpu")
     
     res = switch( input$dr_method,
         UMAP = dvats$get_UMAP_prjs(
@@ -1266,6 +1319,7 @@ prj_object_cpu <- reactive({
 })
 
     prj_object <- reactive({
+        log_print(paste0("prj_object || Before compute embs ||", input$dr_method))
         req(embs(), input$dr_method)
         log_print("--> prj_object")
         t_prj_0 = Sys.time()
@@ -1366,6 +1420,7 @@ prj_object_cpu <- reactive({
     tsdf <- reactiveVal(NULL)
     tsdf_comp <- reactive(
         {
+            log_print(paste0("tsdf_comp || before req | Input encoder ", input$encoder))
             req(input$encoder, ts_ar())
             log_print(paste0("--> Reactive tsdf"))
             req(allow_tsdf())
@@ -1457,7 +1512,9 @@ prj_object_cpu <- reactive({
                             "segments"          = input$smooth_methods_segments,
                             "trends"            = input$smooth_methods_trends
                         ),
-                        wlen        = input$wlen
+                        wlen                    = input$wlen,
+                        sections                = sections_count(),
+                        sections_size           = sections_size()
                     )
                 )
             }
@@ -1474,14 +1531,14 @@ prj_object_cpu <- reactive({
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-        log_print("--> Projections")
+        log_print("--> projections")
         req(input$dr_method)
         #prjs <- req(prj_object()) %>% slice(input$points_emb[[1]]:input$points_emb[[2]])
-        log_print("Projections | before prjs")
+        log_print("projections || before prjs")
         prjs <- req(prj_object())
         req(input$dataset, input$encoder, input$wlen, input$stride)
-        log_print("Projections | before switch")
-        log_print("Calculate clusters | before")
+        log_print("projections || before switch")
+        log_print("projections || Compute clusters ")
         tcl_0 = Sys.time()
         switch(clustering_options$selected,
             precomputed_clusters = {

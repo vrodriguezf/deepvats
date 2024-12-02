@@ -148,16 +148,18 @@ moving_average <- function(dataset, wlen) {
 range_normalization <- function(
     df, ncol, sections = 2, section_size = NULL, epsilon = 1e-8
 ) {
+    log_print("--> range_normalization ||")
+    
     # Copia del DataFrame
     df_ <- df 
-    ncols <- dim(df)[2]  # Número de columnas
-    
+    ncols <- ncol(df)  # Número de columnas
+    log_print(paste0("range_normalization || ncol ", ncol, " ncols ", ncols))
     if (ncols >= ncol) {  # Verifica si el índice de columna es válido
         series <- df_[[ncol]]  # Extrae la columna
         
         # Validación inicial: ambos valores no pueden ser inválidos simultáneamente
         if ((is.null(section_size) || section_size <= 0) && (is.null(sections) || sections <= 0)) {
-            stop("Error: Both 'sections' and 'section_size' cannot be NULL or <= 0 simultaneously.")
+            stop(paste0("Error: Both 'sections' ", sections, "  and 'section_size' ", sections_size, " cannot be NULL or <= 0 simultaneously."))
         }
         
         # Si section_size es NULL o 0, calcularlo usando sections
@@ -170,13 +172,15 @@ range_normalization <- function(
             sections <- ceiling(length(series) / section_size)
         }
         
+        log_print(paste0("range_normalization || num sections ", sections, " section size ", section_size))
+
         normalized <- numeric(length(series))  # Vector para valores normalizados
         
         for (i in seq_len(sections)) {
             # Definir los límites de la sección
             section_start <- (i - 1) * section_size + 1
             section_end <- if (i < sections) i * section_size else length(series)
-            
+            log_print(paste0("range_normalization || Section ", i, " start ", section_start, " end ", section_end))
             # Extraer la sección
             section <- series[section_start:section_end]
             
@@ -184,15 +188,16 @@ range_normalization <- function(
             min_val <- min(section)
             max_val <- max(section)
             
+            log_print(paste0("range_normalization || min_val ", min_val, " max_val ", max_val))
             # Normalización
             normalized[section_start:section_end] <- (section - min_val) / (max_val - min_val + epsilon)
+            }
+            
+            # Reemplazar la columna con los valores normalizados
+            df_[[ncol]] <- normalized
         }
-        
-        # Reemplazar la columna con los valores normalizados
-        df_[[ncol]] <- normalized
-    }
-    
-    return(df_)
+        log_print("range_normalization -->")
+        return(df_)
 }
 
 
@@ -220,9 +225,11 @@ apply_preprocessing_sequence_outlier <- function (
     methods, 
     wlen            = 1,
     sections        = 2,
-    sections_size   = 0
+    section_size    = 0
 ){
+    log_print("--> apply_preprocessing_sequence_outlier")
     if ("dbscan" %in% methods) {
+            log_print(paste0("apply_preprocessing_sequence_outlier || dbscan"))
             eps <- 0.5  
             min_samples <- 5  
             dbscan <- sklearn$cluster$DBSCAN(eps = eps, min_samples = min_samples)
@@ -230,30 +237,38 @@ apply_preprocessing_sequence_outlier <- function (
             dataset <- dataset[labels != -1, ]
         }
         if ("isolation_forest" %in% methods) {
+            log_print(paste0("apply_preprocessing_sequence_outlier || isolation forest"))
             contamination <- 0.1 
             isolation_forest <- sklearn$ensemble$IsolationForest(contamination = contamination)
             labels <- isolation_forest$fit_predict(dataset)
             dataset <- dataset[labels == 1, ]
         }
         if ("moving_average" %in% methods) {
+            log_print(paste0("apply_preprocessing_sequence_outlier || Moving average"))
             window_size <- wlen
             dataset <- np$convolve(dataset, np$ones(window_size) / window_size, mode = "valid")
         }
         if ( "range_normalization" %in% methods ){
-            for ( col in dims(dataset)[[1]] ){
-                if ( section_size <= 0 ){
+            log_print(paste0("apply_preprocessing_sequence_outlier || Range normalization"))   
+            if ( section_size <= 0 ){
                     section_size <- NULL
-                }
+            }
+            if ("timeindex" %in% names(dataset)) {
+                timeindex_col <- which(names(dataset) == "timeindex")
+            } else {
+                timeindex_col <- NULL
+            }
+            for (col in setdiff(seq_len(ncol(dataset)), timeindex_col)) {
                 dataset <- range_normalization(
-                    dataset, 
-                    col, 
+                    df              = dataset, 
+                    ncol            = col, 
                     sections        = sections, 
                     section_size    = section_size, 
                     epsilon         = 1e-8
                 )
             }
         }
-
+    log_print("apply_preprocessing_sequence_outlier -->")
     return (dataset)
 
 }
@@ -263,7 +278,7 @@ apply_preprocessing_segments <- function (
     methods, 
     wlen            = 1,
     sections        = 2,
-    sections_size   = 0
+    section_size   = 0
 ){
     if ("kmeans" %in% methods) {
         log_print("Apply preprocessing | Segmentation | Kmeans")
@@ -276,13 +291,18 @@ apply_preprocessing_segments <- function (
         dataset <- moving_average( dataset, wlen )
     }
     if ( "range_normalization" %in% methods ){
-        for ( col in dims(dataset)[[1]] ){
-            if ( section_size <= 0 ){
-                section_size <- NULL
-            }
+        if ( section_size <= 0 ){
+            section_size <- NULL
+        }
+        if ("timeindex" %in% names(dataset)) {
+            timeindex_col <- which(names(dataset) == "timeindex")
+        } else {
+            timeindex_col <- NULL
+        }
+        for (col in setdiff(seq_len(ncol(dataset)), timeindex_col)) {
             dataset <- range_normalization(
-                dataset, 
-                col, 
+                df              = dataset, 
+                ncol            = col, 
                 sections        = sections, 
                 section_size    = section_size, 
                 epsilon         = 1e-8
@@ -319,17 +339,17 @@ apply_preprocessing <- function (
     methods, 
     wlen            = 1,
     sections        = 2,
-    sections_size   = 0
+    section_size   = 0
 ){
     log_print("--> Apply preprocessing")
     if (! (is.null(methods) || length(methods) == 0)) {
         if (task_type == "point_outlier") {
             dataset <- apply_preprocessing_point_outlier(dataset, methods, wlen )
         } else if (task_type == "sequence_outlier") {
-            dataset <-  apply_preprocessing_sequence_outlier ( dataset, methods, wlen )
+            dataset <-  apply_preprocessing_sequence_outlier ( dataset, methods, wlen, sections, section_size )
         } else if (task_type == "segments") {
             log_print("Apply preprocessing | Segmentation")
-            dataset <- apply_preprocessing_segments ( dataset, methods, wlen)
+            dataset <- apply_preprocessing_segments ( dataset, methods, wlen, sections, section_size)
         } else if (task_type == "trends") {
             dataset <- apply_preprocessing_trends (dataset, methods, wlen )
         }   

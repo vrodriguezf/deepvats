@@ -82,14 +82,13 @@ shinyServer(function(input, output, session) {
         update_play_fine_tune_button()
     })
 
-
     observeEvent(input$play_pause, {
         log_print("--> observeEvent play_pause_button", debug_group = 'button')
         play(!play())
         update_play_pause_button()
         on.exit({log_print(paste0("observeEvent play_pause_button | Run ", play(), "-->"), debug_group='button'); flush.console()})
     })
-    
+
     observeEvent(input$cuda, {
         log_print("--> Cleanning cuda objects", debug_group = 'button')
         torch$cuda$empty_cache()
@@ -1490,15 +1489,25 @@ prj_object_cpu <- reactive({
     get_tsdf_prev <- reactiveVal(NULL)
     preprocess_dataset_prev <- reactiveVal (FALSE)
 
+    preprocess_play_flag <- reactiveVal(FALSE)
+    
+    observeEvent(input$preprocess_play, {
+        preprocess_play_flag(!preprocess_play_flag())
+        log_print(paste0( " ||| Preprocess dataset ||| Change to ", preprocess_play_flag()))
+    })
+
     #observeEvent ( input$get_tsdf, input$preprocess_dataset, {
     observe({
-        req(input$get_tsdf, input$preprocess_dataset)
+        req( preprocess_play_flag() ) 
+        #req( input$get_tsdf, ( input$preprocess_dataset || preprocess_play_flag() ) )
+        log_print("--> About to preprocess dataset")
         if ( is.null(get_tsdf_prev()) ||  get_tsdf_prev() != input$get_tsdf ){
             log_print(paste0("get_tsdf changed to: ", input$get_tsdf))
             #allow_tsdf( !allow_tsdf() )
             #log_print(paste0("allow_tsdf changed to: ", allow_tsdf()))
             if ( 
-                preprocess_dataset_prev() != input$preprocess_dataset
+                ( preprocess_dataset_prev() != input$preprocess_dataset ) || 
+                ( preprocess_play_flag() )
             ) {
                 log_print(paste0("Preprocess dataset"))
                 tsdf(
@@ -1514,7 +1523,7 @@ prj_object_cpu <- reactive({
                         ),
                         wlen                    = input$wlen,
                         sections                = sections_count(),
-                        sections_size           = sections_size()
+                        section_size            = sections_size()
                     )
                 )
             }

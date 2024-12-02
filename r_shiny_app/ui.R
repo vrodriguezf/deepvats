@@ -37,6 +37,7 @@ shinyUI(fluidPage(
     sidebarPanel(
       load_datasetUI("load_dataset1"),
       checkboxInput("preprocess_dataset", "Preprocess Dataset", value = FALSE),
+      actionButton("preprocess_play", "Preprocess", icon = shiny::icon("play")),
       conditionalPanel(
         condition = "input.preprocess_dataset == true",
         selectInput("task_type", "Select Task Type", choices = list (
@@ -70,14 +71,13 @@ shinyUI(fluidPage(
               "Range Normalization"   = "range_normalization"
             ),
             selected                = NULL
-          )
+          ),
           conditionalPanel(
-            condition = "'range_normalization' in input.smooth_methods_sequence",
-            sliderInput("so_range_normalization_sections", "Select number of sections - 0 for using size", min = 1, max = 1, value =0 , step = 1),
-            sliderInput("so_range_normalization_sections_size", "Select sections size (range)- 0 for using n. sections", min = 1, max = 1, value =0 , step = 1)
-            textInput("so_text_rns", "Set Minimum Value:", value = 1),
-            textInput("so_text_rnsz", "Set Maximum Value:", value = 1),
-
+            condition = "input.smooth_methods_sequence.includes('range_normalization')",
+            sliderInput("so_range_normalization_sections", "Select number of sections - 0 for using size", min = 0, max = 1, value =0 , step = 1),
+            sliderInput("so_range_normalization_sections_size", "Select sections size (range)- 0 for using n. sections", min = 0, max = 1, value =0 , step = 1),
+            textInput("so_text_rns", "Set number of sections:", value = 1),
+            textInput("so_text_rnsz", "Set section size:", value = 1)
           )
         ),
         conditionalPanel(
@@ -88,16 +88,16 @@ shinyUI(fluidPage(
               "KMeans"                            = "kmeans",
               "Moving Average Filter"             = "moving_average",
               "Wavelet Transform (Not Available)" = "wavelet_transform",
-              "Range Normalization"   = "range_normalization"
+              "Range Normalization"               = "range_normalization"
             ),
             selected = NULL
-          )
+          ),
           conditionalPanel(
-            condition = "'range_normalization' in input.smooth_methods_segments",
+            condition = "input.smooth_methods_segments.includes('range_normalization')",
             sliderInput("ss_range_normalization_sections", "Select number of sections - 0 for using size", min = 0, max = 1, value =0 , step = 1),
-            sliderInput("ss_range_normalization_sections_size", "Select sections size (range) - 0 for using n. sections", min = 0, max = 1, value =0 , step = 1)
-            textInput("ss_text_rns", "Set Minimum Value:", value = 1),
-            textInput("ss_text_rnsz", "Set Maximum Value:", value = 1),
+            sliderInput("ss_range_normalization_sections_size", "Select sections size (range) - 0 for using n. sections", min = 0, max = 1, value =0 , step = 1),
+            textInput("ss_text_rns", "Set number of section:", value = 1),
+            textInput("ss_text_rnsz", "Set section size:", value = 1)
           )
         ),
         conditionalPanel(
@@ -146,7 +146,7 @@ shinyUI(fluidPage(
                 "ft_mask_future"   = "Choose if you want to mask future timestamps.",
                 "ft_mask_stateful" = "Choose if you want to mask past timestamps",
                 "ft_sync"          = "*Todo* Choose if you want to sync masking in all time series variables"
-              ),
+              )
             ),
             actionButton("fine_tune_play", "Shot!", icon = shiny::icon("play"))
           )

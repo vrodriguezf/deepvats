@@ -427,6 +427,31 @@ shinyServer(function(input, output, session) {
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
     }
 
+    # Update ts_variables reactive value when time series variable selection changes
+    observeEvent(input$select_variables, {
+        ts_variables$selected <- input$select_variables
+    })
+    
+    
+    # Observe to check/uncheck all variables
+    observeEvent(input$selectall,{
+        send_log("Select all variables_start", session)
+        req(tsdf)
+        ts_variables$selected <- names(tsdf())
+        if(input$selectall %%2 == 0){
+            updateCheckboxGroupInput(session = session, 
+                                     inputId = "select_variables",
+                                     choices = ts_variables$selected, 
+                                     selected = ts_variables$selected)
+        } else {
+            updateCheckboxGroupInput(session = session, 
+                                     inputId = "select_variables",
+                                     choices = ts_variables$selected, 
+                                     selected = NULL)
+        }
+        send_log("Select all variables_end", session)
+    })
+
 
     # Update interface config
     observeEvent(ts_variables, {
@@ -516,32 +541,6 @@ shinyServer(function(input, output, session) {
             config_style$point_size <- NULL
         }
         send_log("Update prj graph_end", session)
-    })
-    
-    
-    # Update ts_variables reactive value when time series variable selection changes
-    observeEvent(input$select_variables, {
-        ts_variables$selected <- input$select_variables
-    })
-    
-    
-    # Observe to check/uncheck all variables
-    observeEvent(input$selectall,{
-        send_log("Select all variables_start", session)
-        req(tsdf)
-        ts_variables$selected <- names(tsdf())
-        if(input$selectall %%2 == 0){
-            updateCheckboxGroupInput(session = session, 
-                                     inputId = "select_variables",
-                                     choices = ts_variables$selected, 
-                                     selected = ts_variables$selected)
-        } else {
-            updateCheckboxGroupInput(session = session, 
-                                     inputId = "select_variables",
-                                     choices = ts_variables$selected, 
-                                     selected = NULL)
-        }
-        send_log("Select all variables_end", session)
     })
 
     #observeEvent(list(input$dataset, input$stide, input$wlen, input$patch_size), {

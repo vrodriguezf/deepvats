@@ -1,4 +1,5 @@
 source("./lib/server/preprocessing.R")
+source("./lib/server/utils.R")
 # Function for parallel timeindex conversion
 parallel_posfix <- function(df) {
     chunk_size = 100000
@@ -116,12 +117,18 @@ concat_preprocessed <- function(
     ts_variables_selected
 ){
     log_print("concat preprocessed ||", debug_group = 'force')
-    dataset_ <- dataset
+    dataset_combined <- dataset
     if (!is.null(dataset_preprocesssed)) {
         log_print("concat preprocessed || Concat", debug_group = 'force')
-        dataset_preprocesssed_ <- dataset_preprocesssed %>% select(ts_variables_selected, - "timeindex")
-        dataset_ <- bind_cols(dataset, dataset_preprocesssed_)
+        dataset_combined <- concat_datasets(
+            dataset1 = dataset,
+            dataset2 = dataset_preprocessed,
+            vars_dataset1 = colnames(dataset),
+            vars_dataset2 = ts_variables_selected,
+            suffix1 = "",
+            suffix2 = "_preprocessed"
+        )
         log_print(paste0("concat preprocessed --> || colnames ", colnames(dataset_)), debug_group = 'force')
     }
-    return(dataset_)
+    return(dataset_combined)
 }

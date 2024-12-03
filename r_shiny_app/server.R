@@ -58,6 +58,71 @@ shinyServer(function(input, output, session) {
         complete        = NULL,
         selected        = NULL
     )
+    
+    ## -- Dataset
+    # DataFrame
+    tsdf                    <- reactiveVal(NULL)
+    tsdf_preprocessed       <- reactiveVal(NULL)
+    # Enc input
+    X                       <- reactiveVal(NULL)
+
+    ## -- Flags
+    # DataFrame
+    allow_tsdf              <- reactiveVal(FALSE)
+    get_tsdf_prev           <- reactiveVal(NULL)
+    tsdf_ready              <- reactiveVal(FALSE)
+    tsdf_ready_preprocessed <- reactiveVal(FALSE)
+    # Encoder
+    enc                     <- reactiveVal(NULL)
+    # Embeddings
+    cached_embeddings       <- reactiveVal(NULL)
+    last_inputs             <- reactiveVal(
+        list (
+            dataset = NULL,
+            encoder = NULL,
+            wlen    = NULL,
+            stride  = NULL,
+            fine_tune = NULL
+        )
+    )
+    # Preprocess
+    preprocess_dataset_prev <- reactiveVal(FALSE)
+    preprocess_play_flag    <- reactiveVal(FALSE)
+    # Logs
+    update_trigger          <- reactiveVal(FALSE)
+    temp_log                <- data.frame(
+        timestamp           = character(),
+        function_           = character(),
+        cpu_flag            = logical(),
+        dr_method           = character(),
+        clustering_options  = character(),
+        zoom                = logical(),
+        time                = numeric(),
+        mssg                = character(),
+        stringsAsFactors    = FALSE
+    )
+    # MPlot
+    mplot_start_computation <- reactiveVal(FALSE)
+    mplot_compute_allow     <- reactiveVal(TRUE)
+    # Application reactiveness
+    play                    <- reactiveVal(FALSE)
+    play_fine_tune          <- reactiveVal(FALSE)
+    enc_input_ready         <- reactiveVal(FALSE)
+    allow_update_len        <- reactiveVal(TRUE)
+    allow_update_embs       <- reactiveVal(FALSE)
+    # Application options
+    wlen_min                <- reactiveVal(0)
+    wlen_max                <- reactiveVal(0)
+    sections_count          <- reactiveVal(0)
+    sections_size           <- reactiveVal(0)
+    random_state_min        <- reactiveVal(0)
+    random_state_max        <- reactiveVal(0)
+    pca_random_state_min    <- reactiveVal(0)
+    pca_random_state_max    <- reactiveVal(0)
+    tsne_random_state_min   <- reactiveVal(0)
+    tsne_random_state_max   <- reactiveVal(0)
+    
+    
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
@@ -73,7 +138,6 @@ shinyServer(function(input, output, session) {
         }
     }
 
-    play_fine_tune <- reactiveVal(FALSE)
     update_play_fine_tune_button <- function() {
         log_print(paste0("--> Updating play_fine_tune ", play_fine_tune()), debug_group = 'button')
         play_fine_tune(!play_fine_tune())
@@ -119,8 +183,6 @@ shinyServer(function(input, output, session) {
         }, 
         label = "input_dataset"
     )
-    
-    mplot_compute_allow <- reactiveVal(TRUE)
 
     select_datasetServer(encs_l, mplot_compute_allow, input, output, session)
     
@@ -180,9 +242,6 @@ shinyServer(function(input, output, session) {
             })
         }
     )
-
-    sections_count <- reactiveVal(0)
-    sections_size <- reactiveVal(0)
   
     observe({
         req(tsdf())
@@ -227,8 +286,6 @@ shinyServer(function(input, output, session) {
     })
 
     ############ WLEN TEXT ############
-    wlen_min <- reactiveVal(0)
-    wlen_max <- reactiveVal(0)
     observe({
         req(input$wlen_text > 0)
         if (input$wlen != input$wlen_text) {
@@ -248,8 +305,6 @@ shinyServer(function(input, output, session) {
             allow_update_len(TRUE)
         })
 
-    random_state_min <- reactiveVal(0)
-    random_state_max <- reactiveVal(0)
     observe({
         req(input$prj_random_state_text > 0)
         if (input$prj_random_state_text != input$prj_random_state_text) {
@@ -263,9 +318,6 @@ shinyServer(function(input, output, session) {
         }
     })
 
-
-    pca_random_state_min <- reactiveVal(0)
-    pca_random_state_max <- reactiveVal(0)
     observe({
         req(input$pca_random_state_text > 0)
         if (input$pca_random_state != input$pca_random_state_text) {
@@ -279,8 +331,6 @@ shinyServer(function(input, output, session) {
         }
     })
 
-    tsne_random_state_min <- reactiveVal(0)
-    tsne_random_state_max <- reactiveVal(0)
     observe({
         req(input$tsne_random_state_text > 0)
         if (input$tsne_random_state != input$tsne_random_state_text) {
@@ -345,16 +395,6 @@ shinyServer(function(input, output, session) {
         stride
     })
         
-    # Reactive value for ensuring correct dataset
-    tsdf_ready <- reactiveVal(FALSE)
-    tsdf_ready_preprocessed <- reactiveVal(FALSE)
-    # Reactive value for ensuring correct encoder input
-    enc_input_ready <- reactiveVal(FALSE)
-    allow_update_len <- reactiveVal(TRUE)
-    allow_update_embs <- reactiveVal(FALSE)
-
-    play <- reactiveVal(FALSE)
-
     observeEvent(input$play_embs, {
         allow_update_embs(!allow_update_embs())
         shinyjs::js$checkEnabled("embs")
@@ -365,7 +405,6 @@ shinyServer(function(input, output, session) {
             shinyjs::enable("embs")
         }
     })
-
 
     observeEvent(input$wlen, {
         req(input$wlen)
@@ -410,9 +449,10 @@ shinyServer(function(input, output, session) {
     })
     
     # Update time series variables
-    observeEvent(tsdf(), tsdf_preprocesssed()){
+    observeEvent(tsdf(), tsdf_preprocesssed(), {
         log_print("--> observeEvent tsdf | update select variables",  debug_group = 'main')
         on.exit({log_print("--> observeEvent tsdf | update select variables -->",  debug_group = 'main'); flush.console()})
+        req(tsdf(), tsdf_preprocessed())
         ts_variables$original       = names(tsdf())[names(tsdf()) != "timeindex"]
         if (input$preprocess_dataset){
             req(tsdf_preprocessed())
@@ -425,7 +465,7 @@ shinyServer(function(input, output, session) {
         ts_variables$selected       = ts_variables$complete
         
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
-    }
+    })
 
     # Update ts_variables reactive value when time series variable selection changes
     observeEvent(input$select_variables, {
@@ -443,7 +483,6 @@ shinyServer(function(input, output, session) {
             ts_variables$complete
         } else { NULL }
     })
-
 
     # Update interface config when ts_variables changes
     observeEvent(ts_variables, {
@@ -551,8 +590,6 @@ shinyServer(function(input, output, session) {
     ###############
     #  REACTIVES  #
     ###############
-
-    X <- reactiveVal()
     
     observe({
         log_print(
@@ -665,38 +702,6 @@ shinyServer(function(input, output, session) {
         ar
     }, label = "ts_ar")
 
-
-    temp_log <- data.frame(
-        timestamp           = character(),
-        function_           = character(),
-        cpu_flag            = logical(),
-        dr_method           = character(),
-        clustering_options  = character(),
-        zoom                = logical(),
-        time                = numeric(),
-        mssg                = character(),
-        stringsAsFactors    = FALSE
-    )
-
-
-    log_df <- reactiveVal(
-        data.frame( 
-            timestamp           = character(),
-            dataset             = character(),
-            encoder             = character(),
-            execution_id        = numeric(),
-            function_           = character(),
-            cpu_flag            = character(),
-            dr_method           = character(),
-            clustering_options  = character(),
-            zoom                = logical(),
-            point_alpha         = numeric(),
-            show_lines          = logical(),
-            mssg                = character(),
-            time                = numeric()
-        )
-    )
-
     observe({
         if (nrow(temp_log) > 0) {
             new_record <- cbind(
@@ -792,7 +797,6 @@ shinyServer(function(input, output, session) {
     )
    
    # Encoder
-    enc <- reactiveVal(NULL)
     enc_comp <- eventReactive(
         enc_ar(), 
     {
@@ -966,18 +970,6 @@ shinyServer(function(input, output, session) {
     #})
 
     ####  CACHING EMBEDDINGS ####
-    # TODO: Conseguir que funcione el cache, sigue recalculando todo
-
-    cached_embeddings <- reactiveVal(NULL)
-    last_inputs <- reactiveVal(
-        list (
-            dataset = NULL,
-            encoder = NULL,
-            wlen    = NULL,
-            stride  = NULL,
-            fine_tune = NULL
-        )
-    )
     embs <- reactive({
         current_inputs <- list(
             dataset   = input$dataset,
@@ -1438,11 +1430,9 @@ prj_object_cpu <- reactive({
         return(unlist(result))
     }
 
-    allow_tsdf <- reactiveVal(FALSE)
+    
 
     # Load and filter TimeSeries object from wandb
-    tsdf <- reactiveVal(NULL)
-    tsdf_preprocessed <- reactiveVal(NULL)
 
     tsdf_comp <- reactive(
         {
@@ -1512,12 +1502,7 @@ prj_object_cpu <- reactive({
             })
             tsdf_preprocessed(NULL)
             tsdf(df)
-    })
-
-    get_tsdf_prev <- reactiveVal(NULL)
-    preprocess_dataset_prev <- reactiveVal (FALSE)
-
-    preprocess_play_flag <- reactiveVal(FALSE)
+    })  
     
     observeEvent(input$preprocess_play, {
         preprocess_play_flag(!preprocess_play_flag())
@@ -2219,8 +2204,7 @@ tcl_1 = Sys.time()
             )
         } 
     })
-    
-    update_trigger <- reactiveVal(FALSE)
+
     observeEvent(input$update_logs, {
         update_trigger = !update_trigger
     })
@@ -2254,9 +2238,6 @@ tcl_1 = Sys.time()
         }
     )
     
-    
-    mplot_start_computation <- reactiveVal(FALSE)
-
     observeEvent(input$tabs, {
       if (input$tabs == "MPlot") {
             mplot_start_computation(TRUE)

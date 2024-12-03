@@ -53,8 +53,10 @@ shinyServer(function(input, output, session) {
     
     # Reactive value created to store time series selected variables
     ts_variables <- reactiveValues(
-        original = NULL,
-        selected = NULL
+        original        = NULL,
+        preprocessed    = NULL,
+        complete        = NULL,
+        selected        = NULL
     )
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
@@ -408,12 +410,19 @@ shinyServer(function(input, output, session) {
     })
     
     # Update selected time series variables and update interface config
-    observeEvent(tsdf(), {
+    observeEvent(tsdf(), tsdf_preprocessed(){
         log_print("--> observeEvent tsdf | update select variables",  debug_group = 'main')
         on.exit({log_print("--> observeEvent tsdf | update select variables -->",  debug_group = 'main'); flush.console()})
-        
-        ts_variables$original = names(tsdf())[names(tsdf()) != "timeindex"]
-        ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
+        ts_variables$original       = names(tsdf())[names(tsdf()) != "timeindex"]
+        if (input$preprocess_dataset){
+            req(tsdf_preprocessed())
+            ts_variables$preprocessed   = names(tsdf_preprocessed())[names(tsdf_preprocessed()) != "timeindex"]
+            ts_variables$complete       = c(ts_variables$original, ts_variables$preprocessed)
+        } else {
+            ts_variables$preprocessed   = NULL
+            ts_variables$complete       = ts_variables$original
+        }
+        ts_variables$selected       = ts_variables$complete
         
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         
@@ -1709,7 +1718,6 @@ tcl_1 = Sys.time()
         tsdf_ <- tsdf() %>% select(ts_variables$original, - "timeindex")
         if (input$preprocess_dataset){
             tsdf_ <- concat_preprocessed(tsdf_, tsdf_preprocessed(), ts_variables$original)
-            ts_variables$selected <- colnames(tsdf_)
         }
         log_print(paste0("ts_plot_base | colnames | ", ts_variables$selected))
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)

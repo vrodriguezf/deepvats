@@ -116,6 +116,7 @@ concat_preprocessed <- function(
     ts_variables_selected
 ){
     log_print("concat preprocessed ||", debug_group = 'force')
+    dataset_ <- dataset
     if (!is.null(dataset_preprocesssed)) {
         log_print("concat preprocessed || Concat", debug_group = 'force')
         dataset_preprocesssed_ <- dataset_preprocesssed %>%

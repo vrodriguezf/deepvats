@@ -468,18 +468,18 @@ shinyServer(function(input, output, session) {
     # Update time series variables
     observe({
         req(tsdf())
-        log_print("--> observe update select variables || Tsdf modified ",  debug_group = 'main')
+        log_print("--> observe update ts variables || Tsdf modified ",  debug_group = 'main')
         if ( input$preprocess_dataset ) { 
             log_print(" waiting for preprocessed time series ",  debug_group = 'main')
             req(tsdf_preprocessed() )
-            log_print(" observe update select variables || Tsdf preprocessed ",  debug_group = 'main')
+            log_print(" observe update ts variables || Tsdf preprocessed ",  debug_group = 'main')
         } 
         
-        on.exit({log_print("observe update select variables ||  update select variables -->",  debug_group = 'main'); flush.console()})
+        on.exit({log_print("observe update ts variables ||  update select variables -->",  debug_group = 'main'); flush.console()})
         ts_variables$original       = names(tsdf())[names(tsdf()) != "timeindex"]
         if (input$preprocess_dataset){
             req(tsdf_preprocessed())
-            ts_variables$preprocessed   = names(tsdf_preprocessed())[names(tsdf_preprocessed()) != "timeindex"]
+            ts_variables$preprocessed   = names(tsdf_preprocessed())[names(tsdf_preprocessed()) != "timeindex_preprocessed"]
             ts_variables$complete       = c(ts_variables$original, ts_variables$preprocessed)
         } else {
             ts_variables$preprocessed   = NULL
@@ -487,7 +487,7 @@ shinyServer(function(input, output, session) {
         }
         ts_variables$selected       = ts_variables$complete
         
-        log_print(paste0(" observe update select variables || select variables ", ts_variables$selected))
+        log_print(paste0(" observe update ts variables || select variables ", ts_variables$selected, " -->"))
     })
 
     # Update ts_variables reactive value when time series variable selection changes
@@ -508,7 +508,7 @@ shinyServer(function(input, output, session) {
     })
 
     # Update interface config when ts_variables changes
-    observeEvent(ts_variables, {
+    observeEvent(ts_variables$selected, {
         log_print("--> observeEvent tsdf | update select variables choices",  debug_group = 'main')
         on.exit({log_print("--> observeEvent tsdf | update select variables choices -->",  debug_group = 'main'); flush.console()})
         updateCheckboxGroupInput(

@@ -119,9 +119,7 @@ concat_preprocessed <- function(
     dataset_ <- dataset
     if (!is.null(dataset_preprocesssed)) {
         log_print("concat preprocessed || Concat", debug_group = 'force')
-        dataset_preprocesssed_ <- dataset_preprocesssed %>%
-            select(ts_variables_selected, - "timeindex") %>%
-            rename_with(~ paste0(., "_preprocessed")) #Sufix
+        dataset_preprocesssed_ <- dataset_preprocesssed %>% select(ts_variables_selected, - "timeindex")
         dataset_ <- bind_cols(dataset, dataset_preprocesssed_)
         log_print(paste0("concat preprocessed --> || colnames ", colnames(dataset_)), debug_group = 'force')
     }

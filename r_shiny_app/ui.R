@@ -191,7 +191,7 @@ shinyUI(fluidPage(
         condition = "input.encoder.indexOf('moment') != -1",
         numericInput(
           "padd_step", "Enter padding step size in case of error", 
-          value = 2, 
+          value = 10, 
           min = 2, 
           max = 1000000, 
           step = 1

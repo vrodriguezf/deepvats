@@ -52,7 +52,10 @@ shinyServer(function(input, output, session) {
     )
     
     # Reactive value created to store time series selected variables
-    ts_variables <- reactiveValues(selected = NULL)
+    ts_variables <- reactiveValues(
+        original = NULL,
+        selected = NULL
+    )
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
@@ -61,6 +64,7 @@ shinyServer(function(input, output, session) {
         if (play()) {
             updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
             allow_tsdf(TRUE)
+            tsdf_comp()
         } else {
             updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
             allow_tsdf(FALSE)
@@ -341,6 +345,7 @@ shinyServer(function(input, output, session) {
         
     # Reactive value for ensuring correct dataset
     tsdf_ready <- reactiveVal(FALSE)
+    tsdf_ready_preprocessed <- reactiveVal(FALSE)
     # Reactive value for ensuring correct encoder input
     enc_input_ready <- reactiveVal(FALSE)
     allow_update_len <- reactiveVal(TRUE)
@@ -404,10 +409,10 @@ shinyServer(function(input, output, session) {
     
     # Update selected time series variables and update interface config
     observeEvent(tsdf(), {
-        req(allow_tsdf() == TRUE)
         log_print("--> observeEvent tsdf | update select variables",  debug_group = 'main')
         on.exit({log_print("--> observeEvent tsdf | update select variables -->",  debug_group = 'main'); flush.console()})
         
+        ts_variables$original = names(tsdf())[names(tsdf()) != "timeindex"]
         ts_variables$selected = names(tsdf())[names(tsdf()) != "timeindex"]
         
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
@@ -551,17 +556,24 @@ shinyServer(function(input, output, session) {
             " | stride ", input$stride
         ))
         req(
-            tsdf_ready, 
+            tsdf_ready(), 
             input$wlen != 0, 
             input$stride != 0
         )
         log_print("--> Reactive X | Update Sliding Window")
-        log_print(paste0("reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"))
+        log_print(
+            paste0(
+                "reactive X | wlen ", input$wlen, 
+                " | stride ", input$stride, 
+                " | tsdf_ready() ", tsdf_ready(), 
+                " | Let's prepare data"
+            )
+        )
         log_print("reactive X | SWV")
         t_x_0 <- Sys.time()
         if (
             ! enc_input_ready()
-        ) { 
+        ) {     
             req(play())
             print("Enc input | Update X")
             print("Enc input | --> ReactiveVal X | Update Sliding Window")
@@ -973,9 +985,12 @@ shinyServer(function(input, output, session) {
             "|| Embs || Before req enc_input_ready ", enc_input_ready(),
             " | play ", play(),
             " | allow_update_embs ", allow_update_embs(),
-            " | X | ", ifelse(is.null(X()), "NULL", "NOT NULL")
+            " | X | ", ifelse(is.null(X()), "NULL", "NOT NULL"),
+            " | enc | ", ifelse(is.null(enc()), "NULL", "NOT NULL"),
+            " | tsdf | ", ifelse(is.null(tsdf()), "NULL", "NOT NULL")
         ))
-        req(tsdf_comp(), X(), enc_comp(), enc_input_ready(), allow_update_embs())
+        enc_comp()
+        req(tsdf(), X(), enc(), enc_input_ready(), allow_update_embs())
         log_print("|| Embs || --> embs")
         if (is.null(cached_embeddings()) || ! identical(current_inputs, last_inputs())){
             shinyjs::enable("embs_comp")
@@ -1172,12 +1187,17 @@ observeEvent(input$ft_dataset_option, {
 
 observe({
     log_print("Observe event | Input fine tune | Play fine tune ... Waiting ...")
-    req(play_fine_tune(), input$fine_tune, enc_comp())
+    req(play_fine_tune(), input$fine_tune)
+    req(enc())
     log_print("Observe event | Input fine tune | Play fine tune")
-
+    df <- if (is.null(isolate(tsdf_preprocessed()))) {
+        isolate(tsdf())
+        } else {
+            isolate(tsdf_preprocessed())
+        }
     if (grepl("moment", input$encoder, ignore.case = TRUE)) {
         fine_tune_kwargs <- list(
-            X                               = isolate(tsdf()) %>% select(-timeindex),
+            X                               = df,
             enc_learn                       = isolate(enc()),
             stride                          = as.integer(1),
             batch_size                      = as.integer(input$ft_batch_size),
@@ -1417,6 +1437,8 @@ prj_object_cpu <- reactive({
 
     # Load and filter TimeSeries object from wandb
     tsdf <- reactiveVal(NULL)
+    tsdf_preprocessed <- reactiveVal(NULL)
+
     tsdf_comp <- reactive(
         {
             log_print(paste0("tsdf_comp || before req | Input encoder ", input$encoder))
@@ -1483,6 +1505,7 @@ prj_object_cpu <- reactive({
                 log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds | df ~ ", dim(df)));flush.console()
                 df
             })
+            tsdf_preprocessed(NULL)
             tsdf(df)
     })
 
@@ -1498,7 +1521,7 @@ prj_object_cpu <- reactive({
 
     #observeEvent ( input$get_tsdf, input$preprocess_dataset, {
     observe({
-        req( preprocess_play_flag() ) 
+        req( preprocess_play_flag(), tsdf()) 
         #req( input$get_tsdf, ( input$preprocess_dataset || preprocess_play_flag() ) )
         log_print("--> About to preprocess dataset")
         if ( is.null(get_tsdf_prev()) ||  get_tsdf_prev() != input$get_tsdf ){
@@ -1510,7 +1533,7 @@ prj_object_cpu <- reactive({
                 ( preprocess_play_flag() )
             ) {
                 log_print(paste0("Preprocess dataset"))
-                tsdf(
+                tsdf_ready_preprocessed(
                     apply_preprocessing(
                         dataset     = tsdf(),
                         task_type   = input$task_type,
@@ -1526,6 +1549,7 @@ prj_object_cpu <- reactive({
                         section_size            = sections_size()
                     )
                 )
+                tsdf_ready_preprocessed(TRUE)
             }
         }
     })
@@ -1671,15 +1695,22 @@ tcl_1 = Sys.time()
         on.exit({print(paste0("end_date --> ", ed)); flush.console()})
         ed
     })
+
     ts_plot_base <- reactive({
         log_print("--> ts_plot_base")
         on.exit({log_print("ts_plot_base -->"); flush.console()})
+        req(tsdf())
         start_date =isolate(start_date())
         end_date = isolate(end_date())
         log_print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_ts_plot_0 <- Sys.time()
         #tsdf_ <- isolate(tsdf()) %>% select(isolate(ts_variables$selected), - "timeindex")
-        tsdf_ <- tsdf() %>% select(ts_variables$selected, - "timeindex")
+        tsdf_ <- tsdf() %>% select(ts_variables$original, - "timeindex")
+        if (input$preprocess_dataset){
+            tsdf_ <- concat_preprocessed(tsdf_, tsdf_preprocessed(), ts_variables$original)
+            ts_variables$selected <- colnames(tsdf_)
+        }
+        log_print(paste0("ts_plot_base | colnames | ", ts_variables$selected))
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
         t_ts_plot_1 <- Sys.time()
         log_print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_1-t_ts_plot_0)) 
@@ -1776,31 +1807,31 @@ tcl_1 = Sys.time()
 
     # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
-        log_print("--> ts_plot | Before req 1")
+        log_print("--> ts_plot | Before req 1", debug_group = 'force')
         t_tsp_0 = Sys.time()
-        on.exit({log_print("ts_plot -->"); flush.console()})
-        print(paste0("ts_plot | Before req 2 | tsdf_ready ", tsdf_ready()))
+        on.exit({log_print("ts_plot -->", debug_group = 'force'); flush.console()})
+        print(paste0("ts_plot | Before req 2 | tsdf_ready ", tsdf_ready()), debug_group = 'force')
         req(tsdf(), ts_variables, input$wlen != 0, input$stride, tsdf_ready())
 
         ts_plt = ts_plot_base() 
 
-        log_print("ts_plot | bp")
+        log_print("ts_plot | bp", debug_group = 'force')
         #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)
         
         #if (!is.data.frame(bp)) {bp = bp_}
-        log_print("ts_plot | embedings idxs ")
+        log_print("ts_plot | embedings idxs ", debug_group = 'force')
         embedding_idxs = embedding_ids()
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
-        log_print("ts_plot | Before if")
+        log_print("ts_plot | Before if", debug_group = 'force')
         if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
             reduced_window_list = req(window_list())
             #log_print(paste0("ts_plot | Selected projections ", reduced_window_list[1]), TRUE, LOG_PATH, LOG_HEADER)
             start_indices = min(sapply(reduced_window_list, function(x) x[1]))
             end_indices = max(sapply(reduced_window_list, function(x) x[2]))
 
-            log_print(paste0("|| ts_plot || Reduced ", reduced_window_list))
-            log_print(paste0("|| ts_plot || sd_id ", start_indices))
-            log_print(paste0("|| ts_plot || ed_id ", end_indices))
+            log_print(paste0("|| ts_plot || Reduced ", reduced_window_list), debug_group = 'force')
+            log_print(paste0("|| ts_plot || sd_id ", start_indices), debug_group = 'force')
+            log_print(paste0("|| ts_plot || ed_id ", end_indices), debug_group = 'force')
 
             if (!is.na(start_indices) && !is.na(end_indices)) {
                 view_size = end_indices-start_indices+1
@@ -2107,12 +2138,12 @@ tcl_1 = Sys.time()
     output$ts_plot_dygraph <- renderDygraph(
         {
             req (
-                tsdf(), 
+                tsdf(),
                 input$encoder,
                 input$wlen != 0, 
                 input$stride != 0
             )
-            log_print("**** ts_plot dygraph ****")
+            log_print("**** ts_plot_dygraph ****")
             tspd_0 = Sys.time()
             ts_plot <- req(ts_plot())
             #ts_plot %>% dyAxis("x", axisLabelFormatter = format_time_with_index) %>% JS(js_plot_with_id)

@@ -1567,7 +1567,6 @@ prj_object_cpu <- reactive({
                 ( preprocess_play_flag() )
             ) {
                 log_print(paste0("Preprocess dataset"))
-                tsdf_ready_preprocessed(FALSE)
                 tsdf_preprocessed(
                     apply_preprocessing(
                         dataset     = tsdf(),

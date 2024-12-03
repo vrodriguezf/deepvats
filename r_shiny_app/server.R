@@ -101,6 +101,23 @@ shinyServer(function(input, output, session) {
         mssg                = character(),
         stringsAsFactors    = FALSE
     )
+    log_df <- reactiveVal(
+        data.frame( 
+            timestamp           = character(),
+            dataset             = character(),
+            encoder             = character(),
+            execution_id        = numeric(),
+            function_           = character(),
+            cpu_flag            = character(),
+            dr_method           = character(),
+            clustering_options  = character(),
+            zoom                = logical(),
+            point_alpha         = numeric(),
+            show_lines          = logical(),
+            mssg                = character(),
+            time                = numeric()
+        )
+    )
     # MPlot
     mplot_start_computation <- reactiveVal(FALSE)
     mplot_compute_allow     <- reactiveVal(TRUE)
@@ -449,10 +466,10 @@ shinyServer(function(input, output, session) {
     })
     
     # Update time series variables
-    observeEvent(tsdf(), tsdf_preprocesssed(), {
+    observe({
+        req(tsdf(), ( ! input$preprocess_dataset || tsdf_preprocessed() ) )
         log_print("--> observeEvent tsdf | update select variables",  debug_group = 'main')
         on.exit({log_print("--> observeEvent tsdf | update select variables -->",  debug_group = 'main'); flush.console()})
-        req(tsdf(), tsdf_preprocessed())
         ts_variables$original       = names(tsdf())[names(tsdf()) != "timeindex"]
         if (input$preprocess_dataset){
             req(tsdf_preprocessed())

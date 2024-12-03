@@ -726,7 +726,7 @@ shinyServer(function(input, output, session) {
             updateCheckboxInput(
                 session = session,
                 inputId = "preprocess_dataset",
-                value   = False
+                value   = FALSE
             )
             ar
         }, 

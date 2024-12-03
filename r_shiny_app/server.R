@@ -432,28 +432,27 @@ shinyServer(function(input, output, session) {
         ts_variables$selected <- input$select_variables
     })
     
-    
     # Observe to check/uncheck all variables
     observeEvent(input$selectall,{
         send_log("Select all variables_start", session)
-        req(tsdf)
-        ts_variables$selected <- names(tsdf())
-        if(input$selectall %%2 == 0){
-            updateCheckboxGroupInput(session = session, 
-                                     inputId = "select_variables",
-                                     choices = ts_variables$selected, 
-                                     selected = ts_variables$selected)
-        } else {
-            updateCheckboxGroupInput(session = session, 
-                                     inputId = "select_variables",
-                                     choices = ts_variables$selected, 
-                                     selected = NULL)
-        }
-        send_log("Select all variables_end", session)
+        on.exit({send_log("Select all variables_end", session)})
+        
+        if ( input$preprocess_dataset ) { req(ts_variables$preprocessed) }
+        req(ts_variables$complete)
+        ts_variables$selected <- if (input$selectall %% 2 == 0){
+            ts_variables$complete
+        } else { NULL }
+        
+        updateCheckboxGroupInput(
+            session    = session, 
+            inputId    = "select_variables",
+            choices    = ts_variables$complete, 
+            selected   = ts_variables$selected
+        )
     })
 
 
-    # Update interface config
+    # Update interface config when ts_variables changes
     observeEvent(ts_variables, {
         log_print("--> observeEvent tsdf | update select variables choices",  debug_group = 'main')
         on.exit({log_print("--> observeEvent tsdf | update select variables choices -->",  debug_group = 'main'); flush.console()})

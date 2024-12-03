@@ -38,16 +38,22 @@ log_add <- function(
 }
 
 get_execution_id <- function(file) {
-  if (file.exists(file)) {
-    df = feather::read_feather(file)
-    if (!all(c("id", "timestamp") %in% colnames(df))) {
-      stop("Wrong Execution ID feather file")
+  tryCatch({
+    if (file.exists(file)) {
+      df = feather::read_feather(file)
+      if (!all(c("id", "timestamp") %in% colnames(df))) {
+        stop("Wrong Execution ID feather file")
+      }
+        id = max(as.numeric(df$id)) + 1
+    } else {
+      id = 1
+      df = data.frame(id = numeric(0), timestamp = character(0))
     }
-      id = max(as.numeric(df$id)) + 1
-  } else {
+  }, error = function(e) {
+    log_print(paste0("get_execution_id || Error checking logfile: ", e$message), debug_group = "error")
     id = 1
     df = data.frame(id = numeric(0), timestamp = character(0))
-  }
+  })
   timestamp = format(Sys.time(), "%d/%m/%y %H:%M:%S")
   record = data.frame(id = id, timestamp=timestamp)
   df = rbind(df, record)

@@ -25,7 +25,8 @@ DEBUG_GROUPS<- list (
   'time'    = 8,
   'matrix'  = 9,
   'tmi'     = 10,
-  'force'   = -1
+  'force'   = -1,
+  'error'   = -1
 )
 
 log_print <- function(

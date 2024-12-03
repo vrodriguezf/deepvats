@@ -99,26 +99,14 @@ get_window_indices_ <- function(
     res
 }
 
-
- #compute_embeddings(
- #    tsdf,
- #    X,
- #    enc_l,
- #    enc_input_ready
- #){
- #
- #
- #}
-
-
 concat_preprocessed <- function(
     dataset,
-    dataset_preprocesssed,
+    dataset_preprocessed,
     ts_variables_selected
 ){
     log_print("concat preprocessed ||", debug_group = 'force')
     dataset_combined <- dataset
-    if (!is.null(dataset_preprocesssed)) {
+    if (!is.null(dataset_preprocessed)) {
         log_print("concat preprocessed || Concat", debug_group = 'force')
         dataset_combined <- concat_datasets(
             dataset1 = dataset,
@@ -128,7 +116,7 @@ concat_preprocessed <- function(
             suffix1 = "",
             suffix2 = "_preprocessed"
         )
-        log_print(paste0("concat preprocessed --> || colnames ", colnames(dataset_)), debug_group = 'force')
+        log_print(paste0("concat preprocessed --> || colnames ", colnames(dataset_combined)), debug_group = 'force')
     }
     return(dataset_combined)
 }

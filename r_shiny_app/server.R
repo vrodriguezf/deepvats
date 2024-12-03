@@ -1729,7 +1729,7 @@ tcl_1 = Sys.time()
         #tsdf_ <- isolate(tsdf()) %>% select(isolate(ts_variables$selected), - "timeindex")
         tsdf_ <- tsdf() %>% select(ts_variables$original, - "timeindex")
         if (input$preprocess_dataset){
-            tsdf_ <- concat_preprocessed(tsdf_, tsdf_preprocessed(), ts_variables$original)
+            tsdf_ <- concat_preprocessed(tsdf_, tsdf_preprocessed(), ts_variables$preprocessed)
         }
         log_print(paste0("ts_plot_base | colnames | ", ts_variables$selected))
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)

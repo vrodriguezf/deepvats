@@ -442,13 +442,6 @@ shinyServer(function(input, output, session) {
         ts_variables$selected <- if (input$selectall %% 2 == 0){
             ts_variables$complete
         } else { NULL }
-        
-        updateCheckboxGroupInput(
-            session    = session, 
-            inputId    = "select_variables",
-            choices    = ts_variables$complete, 
-            selected   = ts_variables$selected
-        )
     })
 
 

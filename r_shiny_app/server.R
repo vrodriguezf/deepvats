@@ -467,9 +467,15 @@ shinyServer(function(input, output, session) {
     
     # Update time series variables
     observe({
-        req(tsdf(), ( ! input$preprocess_dataset || tsdf_preprocessed() ) )
-        log_print("--> observeEvent tsdf | update select variables",  debug_group = 'main')
-        on.exit({log_print("--> observeEvent tsdf | update select variables -->",  debug_group = 'main'); flush.console()})
+        req(tsdf())
+        log_print("--> observe update select variables || Tsdf modified ",  debug_group = 'main')
+        if ( input$preprocess_dataset ) { 
+            log_print(" waiting for preprocessed time series ",  debug_group = 'main')
+            req(tsdf_preprocessed() )
+            log_print(" observe update select variables || Tsdf preprocessed ",  debug_group = 'main')
+        } 
+        
+        on.exit({log_print("observe update select variables ||  update select variables -->",  debug_group = 'main'); flush.console()})
         ts_variables$original       = names(tsdf())[names(tsdf()) != "timeindex"]
         if (input$preprocess_dataset){
             req(tsdf_preprocessed())
@@ -481,7 +487,7 @@ shinyServer(function(input, output, session) {
         }
         ts_variables$selected       = ts_variables$complete
         
-        log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
+        log_print(paste0(" observe update select variables || select variables ", ts_variables$selected))
     })
 
     # Update ts_variables reactive value when time series variable selection changes
@@ -709,15 +715,23 @@ shinyServer(function(input, output, session) {
     ts_ar <- eventReactive(
         input$dataset, 
         {
-        log_print(paste0("eventReactive ts_ar || Before req | Dataset ", input$dataset))
-        req(input$dataset)
-        tsdf_ready(FALSE)
-        enc_input_ready(FALSE)
-        log_print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset, "-->"))
-        ar <- api$artifact(input$dataset, type='dataset')
-        on.exit({log_print("eventReactive ts_ar -->"); flush.console()})
-        ar
-    }, label = "ts_ar")
+            #log_print(paste0("eventReactive ts_ar || Before req | Dataset ", input$dataset))
+            on.exit({log_print("eventReactive ts_ar -->"); flush.console()})
+            req(input$dataset)
+            tsdf_ready(FALSE)
+            enc_input_ready(FALSE)
+            log_print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset))
+            ar <- api$artifact(input$dataset, type='dataset')
+            # -- Reset preprocess option for avoiding reactiveness errors
+            updateCheckboxInput(
+                session = session,
+                inputId = "preprocess_dataset",
+                value   = False
+            )
+            ar
+        }, 
+        label = "ts_ar"
+    )
 
     observe({
         if (nrow(temp_log) > 0) {

@@ -13,7 +13,7 @@ header <-"r_shiny_app_logs"
 id_file <- file.path(data_path, header, "execution_id")
 
 ### Debug variables
-DEBUG_LEVEL <- 0 # Logged Group >= DEBUG_LEVEL
+DEBUG_LEVEL <- 1 # Logged Group >= DEBUG_LEVEL
 FILE_FLAG   <- FALSE
 LOG_PATH    <- ""
 LOG_HEADER  <- ""
@@ -26,7 +26,8 @@ DEBUG_GROUPS<- list (
   'matrix'  = 9,
   'tmi'     = 10,
   'force'   = -1,
-  'error'   = -1
+  'error'   = -1,
+  'debug'   = 11
 )
 
 log_print <- function(

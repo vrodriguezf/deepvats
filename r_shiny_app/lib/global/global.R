@@ -97,8 +97,8 @@ get_window_indices = function(idxs, w, s) {
 dyUnzoom <-function(dygraph) {
   dyPlugin(
     dygraph = dygraph,
-    name = "Unzoom",
-    path = system.file("plugins/unzoom.js", package = "dygraphs")
+    name    = "Unzoom",
+    path    = system.file("plugins/unzoom.js", package = "dygraphs")
   )
 }
 

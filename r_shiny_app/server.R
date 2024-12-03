@@ -467,31 +467,39 @@ shinyServer(function(input, output, session) {
     
     # Update time series variables
     observe({
-        req(tsdf())
-        log_print("--> observe update ts variables || Tsdf modified ",  debug_group = 'main')
-        if ( input$preprocess_dataset ) { 
-            log_print(" waiting for preprocessed time series ",  debug_group = 'main')
-            req(tsdf_preprocessed() )
-            log_print(" observe update ts variables || Tsdf preprocessed ",  debug_group = 'main')
-        } 
-        
-        on.exit({log_print("observe update ts variables ||  update select variables -->",  debug_group = 'main'); flush.console()})
-        ts_variables$original       = names(tsdf())[names(tsdf()) != "timeindex"]
-        if (input$preprocess_dataset){
-            req(tsdf_preprocessed())
-            ts_variables$preprocessed   = names(tsdf_preprocessed())[names(tsdf_preprocessed()) != "timeindex_preprocessed"]
-            ts_variables$complete       = c(ts_variables$original, ts_variables$preprocessed)
-        } else {
-            ts_variables$preprocessed   = NULL
-            ts_variables$complete       = ts_variables$original
+        req(tsdf_ready(), !input$preprocess_dataset)
+        log_print("--> observe update ts variables (1) || Tsdf modified ",  debug_group = 'main')
+        on.exit(log_print(paste0(" observe update ts variables (1) || select variables (",length(ts_variables$selected),"): ", paste(ts_variables$selected, concat = ', '), " -->"), debug_group = 'main'))
+        if ( is.null(ts_variables$original) ){
+            ts_variables$original <- names(isolate(tsdf()))[names(isolate(tsdf())) != "timeindex"]
+            ts_variables$complete <- ts_variables$original
         }
-        ts_variables$selected       = ts_variables$complete
-        
-        log_print(paste0(" observe update ts variables || select variables ", ts_variables$selected, " -->"))
+        if ( is.null(ts_variables$selected) ) { 
+            ts_variables$selected <- ts_variables$complete
+        }
+    })
+
+    # Update time series variables (when preprocessed)
+    observe({
+        req(tsdf_ready_preprocessed())
+        log_print(" observe update ts variables (2) || Tsdf preprocessed ",  debug_group = 'main')
+        on.exit(log_print(paste0(" observe update ts variables (2) || select variables (",length(ts_variables$selected),"): ", paste(ts_variables$selected, concat = ', '), " -->"), debug_group = 'main'))
+        if (is.null(ts_variables$preprocessed)){
+            ts_variables$preprocessed   <- names(isolate(tsdf_preprocessed()))[names(isolate(tsdf_preprocessed())) != "timeindex_preprocessed"]
+            ts_variables$complete       <- c(ts_variables$original, ts_variables$preprocessed)
+        } else {
+            ts_variables$preprocessed   <- NULL
+            ts_variables$complete       <- ts_variables$original
+        }
+        if ( is.null(ts_variables$selected) ) { 
+            ts_variables$selected <- ts_variables$complete
+        }  
     })
 
     # Update ts_variables reactive value when time series variable selection changes
     observeEvent(input$select_variables, {
+        log_print("--> input$select_variables mod || update ts_variables$selected",  debug_group = 'main')
+        on.exit({log_print("input$select_variables mod || update ts_variables$selected -->",  debug_group = 'main'); flush.console()})
         ts_variables$selected <- input$select_variables
     })
     
@@ -505,6 +513,7 @@ shinyServer(function(input, output, session) {
         ts_variables$selected <- if (input$selectall %% 2 == 0){
             ts_variables$complete
         } else { NULL }
+
     })
 
     # Update interface config when ts_variables changes
@@ -1015,10 +1024,10 @@ shinyServer(function(input, output, session) {
             " | allow_update_embs ", allow_update_embs(),
             " | X | ", ifelse(is.null(X()), "NULL", "NOT NULL"),
             " | enc | ", ifelse(is.null(enc()), "NULL", "NOT NULL"),
-            " | tsdf | ", ifelse(is.null(tsdf()), "NULL", "NOT NULL")
+            " | tsdf_ready | ", tsdf_ready()
         ))
         enc_comp()
-        req(tsdf(), X(), enc(), enc_input_ready(), allow_update_embs())
+        req(tsdf_ready(), X(), enc(), enc_input_ready(), allow_update_embs())
         log_print("|| Embs || --> embs")
         if (is.null(cached_embeddings()) || ! identical(current_inputs, last_inputs())){
             shinyjs::enable("embs_comp")
@@ -1467,6 +1476,8 @@ prj_object_cpu <- reactive({
 
     tsdf_comp <- reactive(
         {
+            tsdf_ready(FALSE)
+            tsdf_ready_preprocessed(FALSE)
             log_print(paste0("tsdf_comp || before req | Input encoder ", input$encoder))
             req(input$encoder, ts_ar())
             log_print(paste0("--> Reactive tsdf"))
@@ -1532,6 +1543,8 @@ prj_object_cpu <- reactive({
                 df
             })
             tsdf_preprocessed(NULL)
+            ts_variables$original <- NULL # Neccessary for correct reactiveness
+            ts_variables$selected <- NULL # Neccessary for correct reactiveness
             tsdf(df)
     })  
     
@@ -1542,7 +1555,7 @@ prj_object_cpu <- reactive({
 
     #observeEvent ( input$get_tsdf, input$preprocess_dataset, {
     observe({
-        req( preprocess_play_flag(), tsdf()) 
+        req( preprocess_play_flag(), tsdf_ready()) 
         #req( input$get_tsdf, ( input$preprocess_dataset || preprocess_play_flag() ) )
         log_print("--> About to preprocess dataset")
         if ( is.null(get_tsdf_prev()) ||  get_tsdf_prev() != input$get_tsdf ){
@@ -1571,6 +1584,7 @@ prj_object_cpu <- reactive({
                         section_size            = sections_size()
                     )
                 )
+                ts_variables$preprocessed = NULL # Neccesary for correct reactiveness
                 tsdf_ready_preprocessed(TRUE)
             }
         }
@@ -1729,9 +1743,23 @@ tcl_1 = Sys.time()
         #tsdf_ <- isolate(tsdf()) %>% select(isolate(ts_variables$selected), - "timeindex")
         tsdf_ <- tsdf() %>% select(ts_variables$original, - "timeindex")
         if (input$preprocess_dataset){
-            tsdf_ <- concat_preprocessed(tsdf_, tsdf_preprocessed(), ts_variables$preprocessed)
+            req(tsdf_ready_preprocessed())
+            tsdf_ <- tryCatch({
+                concat_preprocessed(
+                    dataset = tsdf_,
+                    dataset_preprocessed = tsdf_preprocessed(),
+                    ts_variables_selected = ts_variables$preprocessed
+                )
+            }, error = function(e) {
+                log_print(
+                    paste0("Error in concat_preprocessed: ", e$message), 
+                    debug_group = 'debug'
+                    )
+                NULL
+            })
         }
-        log_print(paste0("ts_plot_base | colnames | ", ts_variables$selected))
+        log_print(paste0("ts_plot_base | colnames | ", paste(colnames(tsdf_), collapse = ', ')))
+        req(tsdf_)
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
         t_ts_plot_1 <- Sys.time()
         log_print(paste0("ts_plot_base | tsdf_xts time", t_ts_plot_1-t_ts_plot_0)) 
@@ -1750,7 +1778,7 @@ tcl_1 = Sys.time()
         ts_plt = dygraph(
             tsdf_xts,
             width="100%", height = "400px"
-        ) %>% 
+        ) %>%
         dyRangeSelector(c(start_date, end_date)) %>% 
         dyHighlight(hideOnMouseOut = TRUE) %>%
         dyOptions(labelsUTC = FALSE  ) %>%
@@ -1764,6 +1792,7 @@ tcl_1 = Sys.time()
                 .dygraph-legend > span.highlight { display: inline; }"
             )
         ) 
+        
 
     })
 

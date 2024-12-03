@@ -100,21 +100,21 @@ get_window_indices_ <- function(
 }
 
 concat_preprocessed <- function(
-    dataset,
-    dataset_preprocessed,
-    ts_variables_selected
+    dataset                 = NULL,
+    dataset_preprocessed    = NULL,
+    ts_variables_selected   = NULL
 ){
-    log_print("concat preprocessed ||", debug_group = 'force')
+    log_print("--> concat preprocessed", debug_group = 'force')
     dataset_combined <- dataset
-    if (!is.null(dataset_preprocessed)) {
+    if (!is.null(dataset_preprocessed) && ! is.null(dataset)) {
         log_print("concat preprocessed || Concat", debug_group = 'force')
         dataset_combined <- concat_datasets(
-            dataset1 = dataset,
-            dataset2 = dataset_preprocessed,
-            vars_dataset1 = colnames(dataset),
-            vars_dataset2 = ts_variables_selected,
-            suffix1 = "",
-            suffix2 = "_preprocessed"
+            dataset1        = dataset,
+            dataset2        = dataset_preprocessed,
+            vars_dataset1   = NULL,
+            vars_dataset2   = ts_variables_selected,
+            suffix1         = NULL,
+            suffix2         = "_preprocessed"
         )
         log_print(paste0("concat preprocessed --> || colnames ", colnames(dataset_combined)), debug_group = 'force')
     }

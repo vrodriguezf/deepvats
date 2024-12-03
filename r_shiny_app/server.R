@@ -409,8 +409,8 @@ shinyServer(function(input, output, session) {
         )
     })
     
-    # Update selected time series variables and update interface config
-    observeEvent(tsdf(), tsdf_preprocessed(){
+    # Update time series variables
+    observeEvent(tsdf(), tsdf_preprocesssed()){
         log_print("--> observeEvent tsdf | update select variables",  debug_group = 'main')
         on.exit({log_print("--> observeEvent tsdf | update select variables -->",  debug_group = 'main'); flush.console()})
         ts_variables$original       = names(tsdf())[names(tsdf()) != "timeindex"]
@@ -425,14 +425,19 @@ shinyServer(function(input, output, session) {
         ts_variables$selected       = ts_variables$complete
         
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
-        
+    }
+
+
+    # Update interface config
+    observeEvent(ts_variables, {
+        log_print("--> observeEvent tsdf | update select variables choices",  debug_group = 'main')
+        on.exit({log_print("--> observeEvent tsdf | update select variables choices -->",  debug_group = 'main'); flush.console()})
         updateCheckboxGroupInput(
             session     = session,
             inputId     = "select_variables",
             choices     = ts_variables$complete,
             selected    = ts_variables$selected
         )
-
     }, label = "select_variables")
        
     # Update precomputed_clusters reactive value when the input changes

@@ -427,10 +427,10 @@ shinyServer(function(input, output, session) {
         log_print(paste0("observeEvent tsdf | select variables ", ts_variables$selected))
         
         updateCheckboxGroupInput(
-            session = session,
-            inputId = "select_variables",
-            choices = ts_variables$selected,
-            selected = ts_variables$selected
+            session     = session,
+            inputId     = "select_variables",
+            choices     = ts_variables$complete,
+            selected    = ts_variables$selected
         )
 
     }, label = "select_variables")

@@ -76,7 +76,7 @@ shinyServer(function(input, output, session) {
     enc                     <- reactiveVal(NULL)
     # Embeddings
     cached_embeddings       <- reactiveVal(NULL)
-    last_inputs             <- reactiveVal(
+    embs_params             <- reactiveVal(
         list (
             dataset = NULL,
             encoder = NULL,
@@ -1011,7 +1011,7 @@ shinyServer(function(input, output, session) {
 
     ####  CACHING EMBEDDINGS ####
     embs <- reactive({
-        current_inputs <- list(
+        embs_params_current <- list(
             dataset   = input$dataset,
             encoder   = input$encoder,
             wlen      = input$wlen,
@@ -1029,30 +1029,15 @@ shinyServer(function(input, output, session) {
         enc_comp()
         req(tsdf_ready(), X(), enc(), enc_input_ready(), allow_update_embs())
         log_print("|| Embs || --> embs")
-        if (is.null(cached_embeddings()) || ! identical(current_inputs, last_inputs())){
-            shinyjs::enable("embs_comp")
-            if (is.null(cached_embeddings())){
-                log_print("|| Embs || First embedding computation, skipping cache", debug_group = 'force')
-            } else {
-                log_print("|| Embs || At least param changed", debug_group='main')
-                different_params <- names(current_inputs)[
-                    sapply(names(current_inputs), 
-                    function(name) !identical(current_inputs[[name]], last_inputs()[[name]]))
-                ]
-                for (param in different_params) {
-                    old_value <- last_inputs()[[param]]
-                    new_value <- current_inputs[[param]]
-                    log_print(sprintf("|| Embs || | %-10s | Old: %-20s | New: %-20s |", param, old_value, new_value), debug_group = 'force')
-                }   
-            }
+        compute_flag <- reactiveVal_compute_or_cached(cached_embeddings, embs_params(),embs_params_current,"embs_comp")
+        if ( compute_flag ){
             res <- embs_comp()
             cached_embeddings(res)
             shinyjs::disable("embs_comp")
         } else {
-            log_print("|| Embs || Use cached", debug_group = 'force')
-            last_inputs(current_inputs)
             res <- cached_embeddings()
         }
+        embs_params(embs_params_current)
         log_print(paste0("|| Embs || res ~", dim(res)), debug_group = 'force')
         res
     })
@@ -1539,12 +1524,12 @@ prj_object_cpu <- reactive({
                 )
                 flush.console()
                 tsdf_ready(TRUE)
+                tsdf_preprocessed(NULL)
+                ts_variables$original <- NULL # Neccessary for correct reactiveness
+                ts_variables$selected <- NULL # Neccessary for correct reactiveness
                 log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds | df ~ ", dim(df)));flush.console()
                 df
             })
-            tsdf_preprocessed(NULL)
-            ts_variables$original <- NULL # Neccessary for correct reactiveness
-            ts_variables$selected <- NULL # Neccessary for correct reactiveness
             tsdf(df)
     })  
     
@@ -1553,7 +1538,7 @@ prj_object_cpu <- reactive({
         log_print(paste0( " ||| Preprocess dataset ||| Change to ", preprocess_play_flag()))
     })
 
-    #observeEvent ( input$get_tsdf, input$preprocess_dataset, {
+    
     observe({
         req( preprocess_play_flag(), tsdf_ready()) 
         #req( input$get_tsdf, ( input$preprocess_dataset || preprocess_play_flag() ) )

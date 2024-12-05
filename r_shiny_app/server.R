@@ -471,7 +471,7 @@ shinyServer(function(input, output, session) {
     
     # Update time series variables
     observe({
-        req(tsdf_ready())
+        req(tsdf())
         log_print("--> observe update ts variables (1) || Tsdf modified",  debug_group = 'main')
         on.exit(log_print(paste0(" observe update ts variables (1) || ts variables ", ts_variables_str(ts_variables), " -->"), debug_group = 'main'))
         ts_variables <<- tsdf_variables_no_preprocess(tsdf(), NULL)

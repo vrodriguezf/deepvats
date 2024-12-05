@@ -1790,31 +1790,16 @@ tcl_1 = Sys.time()
     })
 
     ts_plot_base <- reactive({
+        req(tsdf_ready(), input$select_variables)
         log_print("--> ts_plot_base")
         on.exit({log_print("ts_plot_base -->"); flush.console()})
-        req(tsdf_ready())
-        start_date =start_date()
-        end_date = end_date()
+        start_date  = start_date()
+        end_date    = end_date()
         log_print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_ts_plot_0 <- Sys.time()
         tsdf_ <- tsdf_concatenated()
-        #if (input$preprocess_dataset && tsdf_ready_preprocessed()){
-        #    log_print(paste0("ts_plot_base | Concat preprocessed "), debug_group = 'force')
-        #    req(tsdf_preprocessed())
-        #    log_print(paste0("ts_plot_base | Before | Colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'force')
-        #    tsdf_ <- concat_preprocessed(
-        #        dataset                 = tsdf_,
-        #        dataset_preprocessed    = tsdf_preprocessed(),
-        #        ts_variables_selected   = ts_variables$selected
-        #    )
-        #    # Update ts variables list
-        #    log_print(paste0(" ts_plot_base | tsdf preprocessed || ts variables ", ts_variables_str(ts_variables)), debug_group = 'main')
-        #    log_print(paste0(" ts_plot_base | tsdf preprocessed || colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'main')
-        #    ts_variables <<- tsdf_variables_preprocess(tsdf(), tsdf_preprocessed())
-        #} else {
-        #    log_print(paste0("ts_plot_base | Not concatenating preprocessed | preprocess? ", input$preprocess_dataset, " | Ready? ", tsdf_ready_preprocessed()), debug_group = 'force')
-        #}
         log_print(paste0("ts_plot_base | colnames before select | ", paste(colnames(tsdf_), collapse = ', ')))
+        log_print(paste0("ts_plot_base | ts_variables before select | ", ts_variables_str(ts_variables)))
         tsdf_ <- tsdf_ %>% select(ts_variables$selected, - "timeindex")
         log_print(paste0("ts_plot_base | colnames | ", paste(colnames(tsdf_), collapse = ', ')))
         req(tsdf_)
@@ -1858,8 +1843,14 @@ tcl_1 = Sys.time()
         req(prj_object())
         log_print("--> embedding idx")
         on.exit({log_print("embedding idx -->");})
-        bp = brushedPoints(prj_object(), input$projections_brush, allRows = TRUE) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
-        bp %>% rownames_to_column("index") %>% dplyr::filter(selected_ == TRUE) %>% pull(index) %>% as.integer
+        bp = brushedPoints(
+            prj_object(), 
+            input$projections_brush, 
+            allRows = TRUE
+        ) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
+        bp  %>% rownames_to_column("index") %>% 
+            dplyr::filter(selected_ == TRUE) %>% 
+            pull(index) %>% as.integer
     })
 
     
@@ -1908,14 +1899,14 @@ tcl_1 = Sys.time()
         reduced_window_list
     })
     
-
     # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
         log_print(paste0("--> ts_plot | Before req 1 | wlen ", input$wlen, " | tsdf ready?", tsdf_ready()), debug_group = 'force')
+        req(input$select_variables, input$wlen != 0, input$stride, tsdf_ready())
         t_tsp_0 = Sys.time()
         on.exit({log_print("ts_plot -->", debug_group = 'force'); flush.console()})
         print(paste0("ts_plot | Before req 2 | tsdf_ready ", tsdf_ready()), debug_group = 'force')
-        #req(input$wlen != 0, input$stride, tsdf_ready())
+        
         log_print(paste0(" ts_plot || ts variables Before ts_plot_base ", ts_variables_str(ts_variables), " -->"), debug_group = 'main')
         ts_plt = ts_plot_base() 
 
@@ -1992,6 +1983,16 @@ tcl_1 = Sys.time()
             } else {
                 log_print(paste0("-- Error obtaining selected projection points start_id ", start_indices, "| end_id ", end_indices))
             }
+        } else { 
+            log_print(
+                paste0(
+                    "ts_plot | Else | embedding_idxs~", 
+                    length(embedding_idxs), 
+                    " | plot windows ?", 
+                    input$plot_windows 
+                ),
+                debug_group = 'debug'
+            )
         }
         t_tsp_1 = Sys.time()
         log_print(paste0("ts plot | Execution time: ", t_tsp_1 - t_tsp_0))
@@ -2244,7 +2245,7 @@ tcl_1 = Sys.time()
         {
             req (
                 input$encoder,
-                input$wlen != 0, 
+                input$wlen   != 0, 
                 input$stride != 0,
                 tsdf(),
                 input$select_variables

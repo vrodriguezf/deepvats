@@ -54,6 +54,7 @@ log_print <- function(
             }
         }
     }
+    flush.console()
 }
 
 log_add <- function(

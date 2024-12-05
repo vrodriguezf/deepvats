@@ -412,7 +412,7 @@ shinyServer(function(input, output, session) {
 
 
     observeEvent(input$restore_wlen_stride, {
-        enc_ar = isolate(enc_ar())
+        enc_ar = enc_ar()
          log_print(paste0("observeEvent restore wlen stride | update wlen | enc_ar$metadata$mvp_ws ", enc_ar$metadata$mvp_ws ),  debug_group = 'generic')
             
             wlen_min(enc_ar$metadata$mvp_ws[1])
@@ -743,12 +743,12 @@ shinyServer(function(input, output, session) {
         t_sliding_window_view = t_x_1 - t_x_0
         log_print(paste0("reactive X | SWV: ", t_sliding_window_view, " secs "), TRUE, LOG_PATH, LOG_HEADER)
         temp_log <<- log_add(
-            log_mssg            = isolate(temp_log), 
+            log_mssg            = temp_log, 
             function_           = "Reactive X | SWV",
-            cpu_flag            = isolate(input$cpu_flag),
-            dr_method           = isolate(input$dr_method),
-            clustering_options  = isolate(input$clustering_options),
-            zoom                = isolate(input$zoom_btn),
+            cpu_flag            = input$cpu_flag,
+            dr_method           = input$dr_method,
+            clustering_options  = input$clustering_options,
+            zoom                = input$zoom_btn,
             time                = t_sliding_window_view,
             mssg                = "Compute Sliding Window View"
         )
@@ -783,6 +783,10 @@ shinyServer(function(input, output, session) {
                 inputId = "preprocess_dataset",
                 value   = FALSE
             )
+            # -- Reset play button
+            play(FALSE)
+            allow_tsdf(FALSE)
+            updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
             ar
         }, 
         label = "ts_ar"
@@ -791,11 +795,11 @@ shinyServer(function(input, output, session) {
     observe({
         if (nrow(temp_log) > 0) {
             new_record <- cbind(
-                execution_id = execution_id, 
-                dataset = isolate(ts_ar()$name),
-                encoder = ifelse(is.null(isolate(input$encoder)), " ", input$encoder),
-                show_lines = isolate(input$show_lines),
-                point_alpha = isolate(input$point_alpha),
+                execution_id= execution_id, 
+                dataset     = ts_ar()$name,
+                encoder     = ifelse(is.null(input$encoder), " ", input$encoder),
+                show_lines  = input$show_lines,
+                point_alpha = input$point_alpha,
                 temp_log
             )
             log_df(rbind(new_record, log_df()))
@@ -972,7 +976,7 @@ shinyServer(function(input, output, session) {
 
     embs_kwargs <- reactive({
         res <- list()
-        dataset <- isolate (X())
+        dataset <- X()
         batch_size <- as.integer(dim(dataset)[1])
         encoder <- input$encoder
         cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
@@ -1011,51 +1015,6 @@ shinyServer(function(input, output, session) {
         }
         res
     })
-
-    #fine_tune_kwargs <- reactive({
-    #    res <- list()
-    #    dataset <- isolate (X())
-    #    batch_size <- as.integer(input$ft_batch_size)
-    #    encoder <- input$encoder
-    #    percent <- input$ft_window_percent_value
-    #    cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
-    #    if (grepl("moment", encoder, ignore.case = TRUE)) {
-    #        log_print("embs_kwargs | Moment")
-    #        res <- list(
-    #            batch_size = batch_size,
-    #            cpu = cpu_flag,
-    #            to_numpy = TRUE,
-    #            verbose = as.integer(2),
-    #            padd_step = input$padd_step, 
-    #            average_seq_dim = TRUE,
-    #            percent = percent
-    #        )
-    #    } else if (grepl("moirai", encoder, ignore.case = TRUE)) {
-    #        log_print("embs_kwargs | Moirai")
-#   #         size <- sub(".*moirai-(\\w+).*", "\\1", encoder)
-#
-    #        res <- list(
-    #            cpu = cpu_flag,
-    #            to_numpy = TRUE,
-    #            batch_size = batch_size,
-    #            average_seq_dim = TRUE,
-    #            verbose = as.integer(2),
-    #            patch_size = as.integer(input$patch_size),
-    #            time = TRUE
-    #        )
-    #    } else {
-    #        log_print("embs_kwargs | Learner (neither Moment or Moirai)")
-    #        res <- list(
-    #           stride =  as.integer(1), #as.integer(input$stride),
-    #           cpu = cpu_flag,
-    #           to_numpy = TRUE,
-    #           batch_size = batch_size,
-    #           average_seq_dim = TRUE,
-    #           verbose = as.integer(1)
-    #       )
-    #    }
-    #    res
-    #})
 
     ####  CACHING EMBEDDINGS ####
     embs <- reactive({
@@ -1155,10 +1114,10 @@ shinyServer(function(input, output, session) {
         temp_log <<- log_add(
             log_mssg            = temp_log, 
             function_           = "Embeddings",
-            cpu_flag            = isolate(input$cpu_flag),
-            dr_method           = isolate(input$dr_method),
-            clustering_options  = isolate(input$clustering_options),
-            zoom                = isolate(input$zoom_btn),
+            cpu_flag            = input$cpu_flag,
+            dr_method           = input$dr_method,
+            clustering_options  = input$clustering_options,
+            zoom                = input$zoom_btn,
             time                = diff, 
             mssg                = "Get encoder embeddings"
         )
@@ -1259,15 +1218,15 @@ observe({
     req(play_fine_tune(), input$fine_tune)
     req(enc())
     log_print("Observe event | Input fine tune | Play fine tune")
-    df <- if (is.null(isolate(tsdf_preprocessed()))) {
-        isolate(tsdf())
-        } else {
-            isolate(tsdf_preprocessed())
-        }
+    df <- if (is.null(tsdf_preprocessed())) {
+        tsdf()
+    } else {
+        tsdf_preprocessed()
+    }
     if (grepl("moment", input$encoder, ignore.case = TRUE)) {
         fine_tune_kwargs <- list(
             X                               = df,
-            enc_learn                       = isolate(enc()),
+            enc_learn                       = enc(),
             stride                          = as.integer(1),
             batch_size                      = as.integer(input$ft_batch_size),
             cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
@@ -1460,10 +1419,10 @@ prj_object_cpu <- reactive({
         ); temp_log <<- log_add(
             log_mssg            = temp_log,
             function_           = "PRJ Object",
-            cpu_flag            = isolate(input$cpu_flag),
-            dr_method           = isolate(input$dr_method),
-            clustering_options  = isolate(input$clustering_options),
-            zoom                = isolate(input$zoom_btn),
+            cpu_flag            = input$cpu_flag,
+            dr_method           = input$dr_method,
+            clustering_options  = input$clustering_options,
+            zoom                = input$zoom_btn,
             time                =  t_prj_1-t_prj_0, 
             mssg                = paste0("Compute projections | prj ~", dim(res)) 
         ); flush.console()
@@ -1507,8 +1466,6 @@ prj_object_cpu <- reactive({
 
     tsdf_comp <- reactive(
         {            
-            log_print(paste0("Before tsdf comp | ! ready ", ! tsdf_ready(), " allow ", allow_tsdf()))
-            req(!tsdf_ready(), allow_tsdf())
             if ( input$preprocess_dataset ) { tsdf_ready_preprocessed(FALSE) }
             log_print(paste0("tsdf_comp || before req | Input encoder ", input$encoder))
             req(input$encoder, ts_ar())
@@ -1561,10 +1518,10 @@ prj_object_cpu <- reactive({
                 temp_log <<- log_add(
                     log_mssg            = temp_log, 
                     function_           = "TSDF | Load dataset | Read feather",
-                    cpu_flag            = isolate(input$cpu_flag),
-                    dr_method           = isolate(input$dr_method),
-                    clustering_options  = isolate(input$clustering_options),
-                    zoom                = isolate(input$zoom_btn),
+                    cpu_flag            = input$cpu_flag,
+                    dr_method           = input$dr_method,
+                    clustering_options  = input$clustering_options,
+                    zoom                = input$zoom_btn,
                     time                = t_1-t_0, 
                     mssg                = "Read feather"
                 )
@@ -1725,7 +1682,7 @@ tcl_1 = Sys.time()
                 temp_log <<- log_add(
                     log_mssg                = temp_log, 
                     function_               = "Projections | Hdbscan",
-                    cpu_flag                = isolate(input$cpu_flag),
+                    cpu_flag                = input$cpu_flag,
                     dr_method               = input$dr_method,
                     clustering_options      = input$clustering_options,
                     zoom                    = input$zoom,
@@ -1805,7 +1762,7 @@ tcl_1 = Sys.time()
     })
     
     observe({
-        req(preprocess_play_flag(), tsdf_ready_preprocessed())
+        req(preprocess_play_flag(), tsdf_ready_preprocessed(), tsdf())
         tsdf_ <- tsdf()
         log_print(paste0("ts_concatenated | colnames before concat | ", paste(colnames(tsdf_), collapse = ', ')))
         log_print(paste0("ts_concatenated || ts variables Before concat ", ts_variables_str(ts_variables)), debug_group = 'main')
@@ -1827,7 +1784,7 @@ tcl_1 = Sys.time()
     })
 
     observe({
-        req(! preprocess_play_flag(), tsdf_ready())
+        req(! preprocess_play_flag(), tsdf_ready(), tsdf())
         tsdf_preprocessed(NULL)
         tsdf_concatenated(tsdf())
     })
@@ -1836,8 +1793,8 @@ tcl_1 = Sys.time()
         log_print("--> ts_plot_base")
         on.exit({log_print("ts_plot_base -->"); flush.console()})
         req(tsdf_ready())
-        start_date =isolate(start_date())
-        end_date = isolate(end_date())
+        start_date =start_date()
+        end_date = end_date()
         log_print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_ts_plot_0 <- Sys.time()
         tsdf_ <- tsdf_concatenated()
@@ -1858,7 +1815,7 @@ tcl_1 = Sys.time()
         #    log_print(paste0("ts_plot_base | Not concatenating preprocessed | preprocess? ", input$preprocess_dataset, " | Ready? ", tsdf_ready_preprocessed()), debug_group = 'force')
         #}
         log_print(paste0("ts_plot_base | colnames before select | ", paste(colnames(tsdf_), collapse = ', ')))
-        tsdf_ <- tsdf_ %>% select(isolate(ts_variables$selected), - "timeindex")
+        tsdf_ <- tsdf_ %>% select(ts_variables$selected, - "timeindex")
         log_print(paste0("ts_plot_base | colnames | ", paste(colnames(tsdf_), collapse = ', ')))
         req(tsdf_)
         tsdf_xts <- xts(tsdf_, order.by = tsdf()$timeindex)
@@ -1867,10 +1824,10 @@ tcl_1 = Sys.time()
         temp_log <<- log_add(
           log_mssg            = temp_log, 
           function_           = "Reactive X | SWV",
-          cpu_flag            = isolate(input$cpu_flag),
-          dr_method           = isolate(input$dr_method),
-          clustering_options  = isolate(input$clustering_options),
-          zoom                = isolate(input$zoom_btn),
+          cpu_flag            = input$cpu_flag,
+          dr_method           = input$dr_method,
+          clustering_options  = input$clustering_options,
+          zoom                = input$zoom_btn,
           time                = t_ts_plot_1-t_ts_plot_0,
           mssg                = "tsdf_xts"
         )
@@ -1910,7 +1867,7 @@ tcl_1 = Sys.time()
     
     filtered_window_indices <- reactive({
         req(length(embedding_ids()) > 0)
-        embedding_indices <- isolate(embedding_ids())
+        embedding_indices <- embedding_ids()
         window_indices <- get_window_indices_(embedding_indices, input$wlen, input$stride, LOG_PATH, LOG_HEADER)
         window_indices
     })
@@ -1958,7 +1915,7 @@ tcl_1 = Sys.time()
         t_tsp_0 = Sys.time()
         on.exit({log_print("ts_plot -->", debug_group = 'force'); flush.console()})
         print(paste0("ts_plot | Before req 2 | tsdf_ready ", tsdf_ready()), debug_group = 'force')
-        req(input$wlen != 0, input$stride, tsdf_ready())
+        #req(input$wlen != 0, input$stride, tsdf_ready())
         log_print(paste0(" ts_plot || ts variables Before ts_plot_base ", ts_variables_str(ts_variables), " -->"), debug_group = 'main')
         ts_plt = ts_plot_base() 
 
@@ -2188,7 +2145,7 @@ tcl_1 = Sys.time()
             log_print("Selected ts time points" , TRUE, LOG_PATH, LOG_HEADER)
             selected_ts_idx <- which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
             ##### ---- AQUI --- #### #indices_per_embedding <- tsidxs_per_embedding_idx()
-            indices_per_embedding <- get_window_indices(isolate(embedding_ids()), input$wlen, input$stride)
+            indices_per_embedding <- get_window_indices(embedding_ids(), input$wlen, input$stride)
             #log_print(paste0("TS indices per embedding idx: ", indices_per_embedding))
             projections_idxs <- indices_per_embedding %>% map_lgl(~ selected_ts_idx %in% .)
             log_print(paste0("prjs_ ~ ", indices_per_embedding))
@@ -2229,7 +2186,7 @@ tcl_1 = Sys.time()
         temp_log <<- log_add(
             log_mssg                = temp_log, 
             function_               = "Projections Plot",
-            cpu_flag                = isolate(input$cpu_flag),
+            cpu_flag                = input$cpu_flag,
             dr_method               = input$dr_method,
             clustering_options      = input$clustering_options,
             zoom                    = input$zoom_btn,
@@ -2335,10 +2292,10 @@ tcl_1 = Sys.time()
             temp_log <<- log_add(
                 log_mssg                = temp_log,
                 function_               = paste0("JS Plot Render ", plot_id),
-                cpu_flag                = isolate(input$cpu_flag),
-                dr_method               = isolate(input$dr_method),
-                clustering_options      = isolate(input$clustering_options),
-                zoom                    = isolate(input$zoom_btn),
+                cpu_flag                = input$cpu_flag,
+                dr_method               = input$dr_method,
+                clustering_options      = input$clustering_options,
+                zoom                    = input$zoom_btn,
                 time                    = last_time/1000,   
                 mssg                    = paste0(plot_id, " renderization time (secs)")
             )

@@ -143,8 +143,7 @@ shinyServer(function(input, output, session) {
     pca_random_state_max    <- reactiveVal(0)
     tsne_random_state_min   <- reactiveVal(0)
     tsne_random_state_max   <- reactiveVal(0)
-    
-    
+    # ts_plot    
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
@@ -542,6 +541,7 @@ shinyServer(function(input, output, session) {
     
     # Observe to check/uncheck all variables
     observeEvent(input$selectall,{
+        ts_vars_selected_mod(TRUE)
         send_log("Select all variables_start", session)
         on.exit({send_log("Select all variables_end", session)})
         log_print("--> observe selectall")
@@ -1609,63 +1609,57 @@ prj_object_cpu <- reactive({
         on.exit( 
             log_print(paste0("|| preprocess dataset || ts_variables ", ts_variables_str(ts_variables) ," --> "))
         )
-        if ( ! (tsdf_ready_preprocessed()) || is.null( tsdf_preprocessed() )) {
-            log_print(paste0("|| Preprocess dataset || input preprocess ", input$preprocess_dataset, " play_flag ", preprocess_play_flag()))
-            on.exit(log_print(paste0("|| Preprocess dataset ", paste(colnames(tsdf_preprocessed), collapse = ', '," --> "))))
-            params_current <- list(
-                dataset   = input$dataset,
-                wlen      = input$wlen,
-                stride    = input$stride,
-                type      = input$task_type,
-                methods1  = input$methods_point,
-                methods2  = input$methods_sequence,
-                methods3  = input$methods_segments,
-                methods4  = input$methods_trends
-            )
-            compute_flag <- reactiveVal_compute_or_cached(
-                object                  = tsdf_preprocessed, 
-                params_prev             = tsdf_preprocessed_params(),
-                params_now              = params_current,
-                compute_function_name   = "tsdf_preprocessed"
-            )
-            log_print(paste0("|| Preprocess dataset || Compute flag ", compute_flag))
-            if(compute_flag){
-                log_print(
-                    paste0(
-                        "|| Preprocess dataset || Apply preprocessing | Colnames ", 
-                        paste(colnames(tsdf()), collapse = ', '),
-                        " | sections ", 
-                        sections_count(),
-                        " | sections size ",
-                        sections_size()
-                    )
+        log_print(paste0("|| Preprocess dataset || input preprocess ", input$preprocess_dataset, " play_flag ", preprocess_play_flag()))
+        on.exit(log_print(paste0("|| Preprocess dataset ", paste(colnames(tsdf_preprocessed), collapse = ', '," --> "))))
+        params_current <- list(
+            dataset   = input$dataset,
+            wlen      = input$wlen,
+            stride    = input$stride,
+            type      = input$task_type,
+            methods1  = input$methods_point,
+            methods2  = input$methods_sequence,
+            methods3  = input$methods_segments,
+            methods4  = input$methods_trends
+        )
+        compute_flag <- reactiveVal_compute_or_cached(
+            object                  = tsdf_preprocessed, 
+            params_prev             = tsdf_preprocessed_params(),
+            params_now              = params_current,
+            compute_function_name   = "tsdf_preprocessed"
+        )
+        log_print(paste0("|| Preprocess dataset || Compute flag ", compute_flag))
+        if(compute_flag){
+            log_print(
+                paste0(
+                    "|| Preprocess dataset || Apply preprocessing | Colnames ", 
+                    paste(colnames(tsdf()), collapse = ', '),
+                    " | sections ", 
+                    sections_count(),
+                    " | sections size ",
+                    sections_size()
                 )
-                shinyjs::enable(apply_preprocessing)
-                tsdf_preprocessed(
-                    apply_preprocessing(
-                        dataset     = tsdf(),
-                        task_type   = input$task_type,
-                        methods     = switch(
-                            input$task_type, 
-                            "point_outlier"     = input$methods_point,
-                            "sequence_outlier"  = input$methods_sequence,
-                            "segments"          = input$methods_segments,
-                            "trends"            = input$methods_trends,
-                        ),
-                        wlen                    = input$wlen,
-                        sections                = sections_count(),
-                        section_size            = sections_size()
-                    )
+            )
+            tsdf_preprocessed(
+                apply_preprocessing(
+                    dataset     = tsdf(),
+                    task_type   = input$task_type,
+                    methods     = switch(
+                        input$task_type, 
+                        "point_outlier"     = input$methods_point,
+                        "sequence_outlier"  = input$methods_sequence,
+                        "segments"          = input$methods_segments,
+                        "trends"            = input$methods_trends,
+                    ),
+                    wlen                    = input$wlen,
+                    sections                = sections_count(),
+                    section_size            = sections_size()
                 )
-                shinyjs::disable(apply_preprocessing)
-                tsdf_preprocessed_params(params_current)
-                # Confirm update
-                tsdf_ready_preprocessed(TRUE)
-            } else {
-                    log_print(paste0("|| Preprocess dataset || Use cached values "))
-                }
+            )
+            tsdf_preprocessed_params(params_current)
+            # Confirm update
+            tsdf_ready_preprocessed(TRUE)
         } else {
-            log_print(paste0("|| Preprocess dataset || Already preprocesed? ", tsdf_ready_preprocessed(), " null? ", is.null(tsdf_preprocessed())))
+            log_print(paste0("|| Preprocess dataset || Use cached values "))
         }
     })
    
@@ -1809,25 +1803,27 @@ tcl_1 = Sys.time()
         on.exit({print(paste0("end_date --> ", ed)); flush.console()})
         ed
     })
+    
     observe({
         req(preprocess_play_flag(), tsdf_ready_preprocessed())
         tsdf_ <- tsdf()
-        log_print(paste0("ts_plot_base | colnames before concat | ", paste(colnames(tsdf_), collapse = ', ')))
-        log_print(paste0(" ts_plot_base || ts variables Before concat ", ts_variables_str(ts_variables)), debug_group = 'main')
-        log_print(paste0("ts_plot_base | Concat preprocessed "), debug_group = 'force')
+        log_print(paste0("ts_concatenated | colnames before concat | ", paste(colnames(tsdf_), collapse = ', ')))
+        log_print(paste0("ts_concatenated || ts variables Before concat ", ts_variables_str(ts_variables)), debug_group = 'main')
+        log_print(paste0("ts_concatenated | Concat preprocessed "), debug_group = 'force')
         req(tsdf_preprocessed())
-        log_print(paste0("ts_plot_base | Before | Colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'force')
+        log_print(paste0("ts_concatenated | Before | Colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'force')
         tsdf_ <- concat_preprocessed(
             dataset                 = tsdf(),
             dataset_preprocessed    = tsdf_preprocessed(),
             ts_variables_selected   = NULL
         )
         # Update ts variables list
-        log_print(paste0(" ts_plot_base | tsdf preprocessed || ts variables ", ts_variables_str(ts_variables)), debug_group = 'main')
-        log_print(paste0(" ts_plot_base | tsdf preprocessed || colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'main')
+        log_print(paste0("ts_concatenated | tsdf preprocessed || ts variables ", ts_variables_str(ts_variables)), debug_group = 'main')
+        log_print(paste0("ts_concatenated | tsdf preprocessed || colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'main')
         ts_variables <<- tsdf_variables_preprocess(tsdf(), tsdf_preprocessed())
+        ts_vars_selected_mod(TRUE)
         tsdf_concatenated(tsdf_)
-        log_print(paste0(" ts_plot_base | ts variables || ts variables After concat: ", ts_variables_str(ts_variables)), debug_group = 'main')
+        log_print(paste0("ts_concatenated | ts variables || ts variables After concat: ", ts_variables_str(ts_variables)), debug_group = 'main')
     })
 
     observe({
@@ -1958,7 +1954,7 @@ tcl_1 = Sys.time()
 
     # Generate timeseries data for dygraph dygraph
     ts_plot <- reactive({
-        log_print("--> ts_plot | Before req 1", debug_group = 'force')
+        log_print(paste0("--> ts_plot | Before req 1 | wlen ", input$wlen, " | tsdf ready?", tsdf_ready()), debug_group = 'force')
         t_tsp_0 = Sys.time()
         on.exit({log_print("ts_plot -->", debug_group = 'force'); flush.console()})
         print(paste0("ts_plot | Before req 2 | tsdf_ready ", tsdf_ready()), debug_group = 'force')
@@ -2293,7 +2289,8 @@ tcl_1 = Sys.time()
                 input$encoder,
                 input$wlen != 0, 
                 input$stride != 0,
-                tsdf_ready()
+                tsdf(),
+                input$select_variables
             )
             log_print("**** ts_plot_dygraph ****")
             tspd_0 = Sys.time()

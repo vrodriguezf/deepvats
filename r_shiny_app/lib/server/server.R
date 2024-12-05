@@ -106,7 +106,7 @@ concat_preprocessed <- function(
 ){
     log_print("--> concat preprocessed", debug_group = 'force')
     dataset_combined <- dataset
-    on.exit(log_print(paste0("concat preprocessed --> || colnames ", colnames(dataset_combined)), debug_group = 'force'))
+    on.exit(log_print(paste0("concat preprocessed --> || colnames ", paste(colnames(dataset_combined), collapse = ', ')), debug_group = 'force'))
     if (!is.null(dataset_preprocessed) && ! is.null(dataset)) {
         log_print("concat preprocessed || Concat", debug_group = 'force')
         dataset_combined <- concat_datasets(
@@ -119,6 +119,7 @@ concat_preprocessed <- function(
         )
         
     }
+
     return(dataset_combined)
 }
 

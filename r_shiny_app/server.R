@@ -63,6 +63,7 @@ shinyServer(function(input, output, session) {
     # DataFrame
     tsdf                    <- reactiveVal(NULL)
     tsdf_preprocessed       <- reactiveVal(NULL)
+    tsdf_concatenated       <- reactiveVal(NULL)
     tsdf_preprocessed_params<- reactiveVal(NULL)
     # Enc input
     X                       <- reactiveVal(NULL)
@@ -71,10 +72,11 @@ shinyServer(function(input, output, session) {
     # DataFrame
     allow_tsdf              <- reactiveVal(FALSE)
     get_tsdf_prev           <- reactiveVal(NULL)
+    tsdf_comp_flag          <- reactiveVal(FALSE)
     tsdf_ready              <- reactiveVal(FALSE)
     tsdf_ready_preprocessed <- reactiveVal(FALSE)
     # Variates
-    ts_vars_ready           <- reactiveVal(FALSE)
+    ts_vars_selected_mod    <- reactiveVal(FALSE)
     # Encoder
     enc                     <- reactiveVal(NULL)
     # Embeddings
@@ -150,8 +152,9 @@ shinyServer(function(input, output, session) {
     update_play_pause_button <- function() {
         if (play()) {
             updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
-            tsdf_ready(FALSE)
             allow_tsdf(TRUE)
+            tsdf_ready(FALSE)
+            tsdf_comp_flag(FALSE)
             tsdf_comp()
         } else {
             updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
@@ -273,34 +276,75 @@ shinyServer(function(input, output, session) {
         updateSliderInput(session, "ss_range_normalization_sections_size", max = max_rows)
     })
 
-    observeEvent(input$so_text_rns, {
-        req(tsdf())  # Asegúrate de que tsdf() no sea NULL
+    observe({
+        req(input$so_text_rns, tsdf_ready())  # Asegúrate de que tsdf() no sea NULL
+        log_print("observe so_sections_count", debug_group = 'debug')
         text <- as.integer(input$so_text_rns)  # Convierte el input a entero
         if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {  # Verifica que el valor sea válido
             updateSliderInput(session, "so_range_normalization_sections", value = text)
         }
         sections_count(text)
     })
-    observeEvent(input$so_text_rnsz, {
-        req(tsdf())  # Asegúrate de que tsdf() no sea NULL
-        text <- as.integer(input$so_text_rnsz)  # Convierte el input a entero
-        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {  # Verifica que el valor sea válido
+    observe({
+        req(input$so_text_rnsz, tsdf_ready())  
+        log_print("observe so_sections_size", debug_group = 'debug')
+        text <- as.integer(input$so_text_rnsz)
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) { 
             updateSliderInput(session, "so_range_normalization_sections_size", value = text)
         }
         sections_size(text)
     })
-    observeEvent(input$ss_text_rns, {
-        req(tsdf())  # Asegúrate de que tsdf() no sea NULL
-        text <- as.integer(input$ss_text_rns)  # Convierte el input a entero
-        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {  # Verifica que el valor sea válido
+    observe({
+        req(tsdf_ready(), input$ss_text_rns)  
+        log_print("observe ss_sections_count", debug_group = 'debug')
+        text <- as.integer(input$ss_text_rns) 
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) { 
             updateSliderInput(session, "ss_range_normalization_sections", value = text)
         }
         sections_count(text)
     })
-    observeEvent(input$ss_text_rnsz, {
-        req(tsdf())  # Asegúrate de que tsdf() no sea NULL
-        text <- as.integer(input$ss_text_rnsz)  # Convierte el input a entero
+    observe({
+        req(tsdf_ready(), input$ss_text_rnsz)  
+        log_print("observe ss_sections_size", debug_group = 'debug')
+        text <- as.integer(input$ss_text_rnsz)
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {
+            updateSliderInput(session, "ss_range_normalization_sections_size", value = text)
+        }
+        sections_size(text)
+    })
+
+     observe({
+        req(input$so_range_normalization_sections, tsdf_ready())  # Asegúrate de que tsdf() no sea NULL
+        log_print("observe so_sections_count", debug_group = 'debug')
+        text <- as.integer(input$so_range_normalization_sections)  # Convierte el input a entero
         if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {  # Verifica que el valor sea válido
+            updateSliderInput(session, "so_range_normalization_sections", value = text)
+        }
+        sections_count(text)
+    })
+    observe({
+        req(input$so_range_normalization_sections_size, tsdf_ready())  
+        log_print("observe so_sections_size", debug_group = 'debug')
+        text <- as.integer(input$so_range_normalization_sections_size)
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) { 
+            updateSliderInput(session, "so_range_normalization_sections_size", value = text)
+        }
+        sections_size(text)
+    })
+    observe({
+        req(tsdf_ready(), input$ss_range_normalization_sections)  
+        log_print("observe ss_sections_count", debug_group = 'debug')
+        text <- as.integer(input$ss_range_normalization_sections) 
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) { 
+            updateSliderInput(session, "ss_range_normalization_sections", value = text)
+        }
+        sections_count(text)
+    })
+    observe({
+        req(tsdf_ready(), input$ss_range_normalization_sections_size)  
+        log_print("observe ss_sections_size", debug_group = 'debug')
+        text <- as.integer(input$ss_range_normalization_sections_size)
+        if (!is.na(text) && text > 0 && text <= nrow(tsdf())) {
             updateSliderInput(session, "ss_range_normalization_sections_size", value = text)
         }
         sections_size(text)
@@ -417,6 +461,7 @@ shinyServer(function(input, output, session) {
     })
         
     observeEvent(input$play_embs, {
+        on.exit( log_print("Play embs || Changes to",  debug_group = 'main') )
         allow_update_embs(!allow_update_embs())
         shinyjs::js$checkEnabled("embs")
         req(input$embs_enabled)
@@ -471,11 +516,12 @@ shinyServer(function(input, output, session) {
     
     # Update time series variables
     observe({
-        req(tsdf())
+        req(tsdf_comp_flag(), play(), ts_ar())
         log_print("--> observe update ts variables (1) || Tsdf modified",  debug_group = 'main')
         on.exit(log_print(paste0(" observe update ts variables (1) || ts variables ", ts_variables_str(ts_variables), " -->"), debug_group = 'main'))
         ts_variables <<- tsdf_variables_no_preprocess(tsdf(), NULL)
         tsdf_ready(TRUE)
+        ts_vars_selected_mod(TRUE)
     })
 
     observe({
@@ -484,6 +530,7 @@ shinyServer(function(input, output, session) {
         on.exit(log_print(paste0(" observe update ts variables (3) || ts variables ", ts_variables_str(ts_variables), " -->"), debug_group = 'main'))
         ts_variables <<- tsdf_variables_no_preprocess(tsdf(), ts_variables)
         tsdf_ready(TRUE)
+        ts_vars_selected_mod(TRUE)
     })
 
     # Update ts_variables reactive value when time series variable selection changes
@@ -497,25 +544,27 @@ shinyServer(function(input, output, session) {
     observeEvent(input$selectall,{
         send_log("Select all variables_start", session)
         on.exit({send_log("Select all variables_end", session)})
-        
+        log_print("--> observe selectall")
         if ( input$preprocess_dataset ) { req(ts_variables$preprocessed) }
         req(ts_variables$complete)
         ts_variables$selected <<- if (input$selectall %% 2 == 0){
             ts_variables$complete
         } else { NULL }
-
+        log_print(paste0( "observe selectall | ts_variables: ", ts_variables_str(ts_variables), "-->"), debug_level = "debug")
     })
 
     # Update interface config when ts_variables changes
-    observeEvent(ts_variables$selected, {
-        log_print("--> observeEvent tsdf | update select variables choices",  debug_group = 'main')
-        on.exit({log_print("--> observeEvent tsdf | update select variables choices -->",  debug_group = 'main'); flush.console()})
+    observe({
+        req(ts_vars_selected_mod())
+        log_print("--> observeEvent ts_variables selected | update select variables choices",  debug_group = 'main')
+        on.exit({log_print(paste0("observeEvent ts_variables selected | update select variables choices | ts_variables:",ts_variables_str(ts_variables)," -->"),debug_group = 'main'); flush.console()})
         updateCheckboxGroupInput(
             session     = session,
             inputId     = "select_variables",
             choices     = ts_variables$complete,
             selected    = ts_variables$selected
         )
+        ts_vars_selected_mod(FALSE)
     }, label = "select_variables")
        
     # Update precomputed_clusters reactive value when the input changes
@@ -617,9 +666,7 @@ shinyServer(function(input, output, session) {
         log_print(
             paste0("--> Reactive X | Before req | tsdf_ready ", 
             tsdf_ready(), 
-            " | ts_vars ready ",
-            #ts_vars_ready(),
-            ! is.null(ts_variables$complete), " ",
+            " | ts_vars ",
             ts_variables_str(ts_variables),
             " | wlen ", input$wlen, 
             " | stride ", input$stride
@@ -836,9 +883,11 @@ shinyServer(function(input, output, session) {
     )
    
    # Encoder
-    enc_comp <- eventReactive(
-        enc_ar(), 
-    {
+    #enc_comp <- eventReactive(
+        #enc_ar(), 
+    #{
+    observe({
+        req(enc_ar(), tsdf_ready())
         log_print(paste0("eventReactive enc_comp || Before req || dataset ", input$dataset, " | encoder | ", input$encoder ))
         req(input$dataset, input$encoder)
         log_print("--> eventReactive enc | load encoder ")
@@ -849,7 +898,7 @@ shinyServer(function(input, output, session) {
         default_path <- file.path(DEFAULT_PATH_WANDB_ARTIFACTS, encoder_filename)
         enc(NULL)
 
-        print(paste0("eventReactive enc | load encoder | Chec   k if the encoder file exists: ", default_path))
+        print(paste0("eventReactive enc | load encoder | Check if the encoder file exists: ", default_path))
 
         if (file.exists(default_path)) {
             print(paste0("eventReactive enc | load encoder ", encoder_filename ," | --> Load from binary file "))
@@ -1017,15 +1066,15 @@ shinyServer(function(input, output, session) {
             stride    = input$stride,
             fine_tune = input$fine_tune
         )
-        #log_print(paste0(
-        #    "|| Embs || Before req enc_input_ready ", enc_input_ready(),
-        #    " | play ", play(),
-        #    " | allow_update_embs ", allow_update_embs(),
-        #    " | X | ", ifelse(is.null(X()), "NULL", "NOT NULL"),
-        #    " | enc | ", ifelse(is.null(enc()), "NULL", "NOT NULL"),
-        #    " | tsdf_ready | ", tsdf_ready()
-        #))
-        req(tsdf_ready(), X(), req(enc()), enc_input_ready(), allow_update_embs())
+        log_print(paste0(
+            "|| Embs || Before req enc_input_ready ", enc_input_ready(),
+            " | play ", play(),
+            " | allow_update_embs ", allow_update_embs(),
+            " | X | ", ifelse(is.null(X()), "NULL", "NOT NULL"),
+            " | enc | ", ifelse(is.null(enc()), "NULL", "NOT NULL"),
+            " | tsdf_ready | ", tsdf_ready()
+        ))
+        req(tsdf_ready(), X(), enc(), enc_input_ready(), allow_update_embs())
         log_print("|| Embs || --> embs")
         compute_flag <- reactiveVal_compute_or_cached(cached_embeddings, embs_params(),embs_params_current,"embs_comp")
         if ( compute_flag ){
@@ -1457,13 +1506,13 @@ prj_object_cpu <- reactive({
     # Load and filter TimeSeries object from wandb
 
     tsdf_comp <- reactive(
-        {
-            tsdf_ready(FALSE)
+        {            
+            log_print(paste0("Before tsdf comp | ! ready ", ! tsdf_ready(), " allow ", allow_tsdf()))
+            req(!tsdf_ready(), allow_tsdf())
             if ( input$preprocess_dataset ) { tsdf_ready_preprocessed(FALSE) }
             log_print(paste0("tsdf_comp || before req | Input encoder ", input$encoder))
             req(input$encoder, ts_ar())
             log_print(paste0("--> Reactive tsdf"))
-            req(allow_tsdf())
             log_print("--> Reactive tsdf | allow_tsdf ")
             ts_ar = ts_ar()
             log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar()))
@@ -1523,11 +1572,11 @@ prj_object_cpu <- reactive({
                 #tsdf_ready(TRUE)
                 tsdf_preprocessed(NULL)
                 tsdf_ready_preprocessed(FALSE)
-                
+                tsdf_comp_flag(TRUE)
                 log_print(paste0("Reactive tsdf | Execution time: ", t_1 - t_0, " seconds | df ~ ", dim(df)));flush.console()
                 df
             })
-            
+            tsdf_comp_flag(TRUE)
             #ts_variables <<- tsdf_variables_no_preprocess(df, NULL)
             tsdf(df)
             log_print(paste0( "Reactive tsdf | ts_variables ", ts_variables_str(ts_variables), " ready? ", ! is.null(ts_variables$complete) ))
@@ -1581,7 +1630,16 @@ prj_object_cpu <- reactive({
             )
             log_print(paste0("|| Preprocess dataset || Compute flag ", compute_flag))
             if(compute_flag){
-                log_print(paste0("|| Preprocess dataset || Apply preprocessing "))
+                log_print(
+                    paste0(
+                        "|| Preprocess dataset || Apply preprocessing | Colnames ", 
+                        paste(colnames(tsdf()), collapse = ', '),
+                        " | sections ", 
+                        sections_count(),
+                        " | sections size ",
+                        sections_size()
+                    )
+                )
                 shinyjs::enable(apply_preprocessing)
                 tsdf_preprocessed(
                     apply_preprocessing(
@@ -1751,6 +1809,32 @@ tcl_1 = Sys.time()
         on.exit({print(paste0("end_date --> ", ed)); flush.console()})
         ed
     })
+    observe({
+        req(preprocess_play_flag(), tsdf_ready_preprocessed())
+        tsdf_ <- tsdf()
+        log_print(paste0("ts_plot_base | colnames before concat | ", paste(colnames(tsdf_), collapse = ', ')))
+        log_print(paste0(" ts_plot_base || ts variables Before concat ", ts_variables_str(ts_variables)), debug_group = 'main')
+        log_print(paste0("ts_plot_base | Concat preprocessed "), debug_group = 'force')
+        req(tsdf_preprocessed())
+        log_print(paste0("ts_plot_base | Before | Colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'force')
+        tsdf_ <- concat_preprocessed(
+            dataset                 = tsdf(),
+            dataset_preprocessed    = tsdf_preprocessed(),
+            ts_variables_selected   = NULL
+        )
+        # Update ts variables list
+        log_print(paste0(" ts_plot_base | tsdf preprocessed || ts variables ", ts_variables_str(ts_variables)), debug_group = 'main')
+        log_print(paste0(" ts_plot_base | tsdf preprocessed || colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'main')
+        ts_variables <<- tsdf_variables_preprocess(tsdf(), tsdf_preprocessed())
+        tsdf_concatenated(tsdf_)
+        log_print(paste0(" ts_plot_base | ts variables || ts variables After concat: ", ts_variables_str(ts_variables)), debug_group = 'main')
+    })
+
+    observe({
+        req(! preprocess_play_flag(), tsdf_ready())
+        tsdf_preprocessed(NULL)
+        tsdf_concatenated(tsdf())
+    })
 
     ts_plot_base <- reactive({
         log_print("--> ts_plot_base")
@@ -1760,25 +1844,23 @@ tcl_1 = Sys.time()
         end_date = isolate(end_date())
         log_print(paste0("ts_plot_base | start_date: ", start_date, " end_date: ", end_date))
         t_ts_plot_0 <- Sys.time()
-        tsdf_ <- isolate(tsdf()) 
-        log_print(paste0("ts_plot_base | colnames before concat | ", paste(colnames(tsdf_), collapse = ', ')))
-        log_print(paste0(" ts_plot_base || ts variables Before concat ", ts_variables_str(ts_variables)), debug_group = 'main')
-        if (input$preprocess_dataset && tsdf_ready_preprocessed()){
-            log_print(paste0("ts_plot_base | Concat preprocessed "), debug_group = 'force')
-            req(tsdf_preprocessed())
-            log_print(paste0("ts_plot_base | Before | Colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'force')
-            tsdf_ <- concat_preprocessed(
-                dataset                 = tsdf_,
-                dataset_preprocessed    = tsdf_preprocessed(),
-                ts_variables_selected   = ts_variables$selected
-            ) %>% select(isolate(ts_variables$selected), - "timeindex_preprocessed")
-            # Update ts variables list
-            log_print(paste0(" ts_plot_base | tsdf preprocessed || ts variables ", ts_variables_str(ts_variables)), debug_group = 'main')
-            ts_variables <<- tsdf_variables_preprocess(tsdf(), tsdf_preprocessed(), ts_variables)
-        } else {
-            log_print(paste0("ts_plot_base | Not concatenating preprocessed | preprocess? ", input$preprocess_dataset, " | Ready? ", tsdf_ready_preprocessed()), debug_group = 'force')
-        }
-        log_print(paste0(" ts_plot_base | ts variables || ts variables After concat", ts_variables_str(ts_variables)), debug_group = 'main')
+        tsdf_ <- tsdf_concatenated()
+        #if (input$preprocess_dataset && tsdf_ready_preprocessed()){
+        #    log_print(paste0("ts_plot_base | Concat preprocessed "), debug_group = 'force')
+        #    req(tsdf_preprocessed())
+        #    log_print(paste0("ts_plot_base | Before | Colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'force')
+        #    tsdf_ <- concat_preprocessed(
+        #        dataset                 = tsdf_,
+        #        dataset_preprocessed    = tsdf_preprocessed(),
+        #        ts_variables_selected   = ts_variables$selected
+        #    )
+        #    # Update ts variables list
+        #    log_print(paste0(" ts_plot_base | tsdf preprocessed || ts variables ", ts_variables_str(ts_variables)), debug_group = 'main')
+        #    log_print(paste0(" ts_plot_base | tsdf preprocessed || colnames ", paste(colnames(tsdf_), collapse = ', ')), debug_group = 'main')
+        #    ts_variables <<- tsdf_variables_preprocess(tsdf(), tsdf_preprocessed())
+        #} else {
+        #    log_print(paste0("ts_plot_base | Not concatenating preprocessed | preprocess? ", input$preprocess_dataset, " | Ready? ", tsdf_ready_preprocessed()), debug_group = 'force')
+        #}
         log_print(paste0("ts_plot_base | colnames before select | ", paste(colnames(tsdf_), collapse = ', ')))
         tsdf_ <- tsdf_ %>% select(isolate(ts_variables$selected), - "timeindex")
         log_print(paste0("ts_plot_base | colnames | ", paste(colnames(tsdf_), collapse = ', ')))

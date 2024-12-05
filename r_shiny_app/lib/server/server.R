@@ -106,6 +106,7 @@ concat_preprocessed <- function(
 ){
     log_print("--> concat preprocessed", debug_group = 'force')
     dataset_combined <- dataset
+    on.exit(log_print(paste0("concat preprocessed --> || colnames ", colnames(dataset_combined)), debug_group = 'force'))
     if (!is.null(dataset_preprocessed) && ! is.null(dataset)) {
         log_print("concat preprocessed || Concat", debug_group = 'force')
         dataset_combined <- concat_datasets(
@@ -116,7 +117,7 @@ concat_preprocessed <- function(
             suffix1         = NULL,
             suffix2         = "_preprocessed"
         )
-        log_print(paste0("concat preprocessed --> || colnames ", colnames(dataset_combined)), debug_group = 'force')
+        
     }
     return(dataset_combined)
 }
@@ -129,13 +130,14 @@ reactiveVal_compute_or_cached <- function(
 ){
     compute_flag <- FALSE
     header <- paste0("|| reactiveVal_compute_or_cached || ", compute_function_name, " || ")
+    log_print(paste0("-->", header), debug_group = 'force')
     if ( is.null( object() ) || ! identical( params_prev, params_now ) ) {
         shinyjs::enable(compute_function_name)
         if ( is.null( object() )){
             log_print(paste0(header, "First embedding computation, skipping cache"), debug_group = 'force')
             compute_flag <- TRUE
         } else {
-            log_print(paste0(header, "At least 1 param changed"), debug_group = 'main')
+            log_print(paste0(header, "At least 1 param changed"), debug_group = 'force')
             different_params <- names(params_now)[
                 sapply(
                     names(params_now), 
@@ -150,7 +152,7 @@ reactiveVal_compute_or_cached <- function(
         }
         shinyjs::disable(compute_function_name)
     } else {
-        log_print(paste0(header, " Use cached "), debug_group = 'force')
+        log_print(paste0(header, " Use cached || null? ", is.null( object() ), " || compute? || ", compute_flag, " -->" ), debug_group = 'force')
     }
     return ( compute_flag )
 }

@@ -50,7 +50,7 @@ shinyUI(fluidPage(
         ),
         conditionalPanel(
           condition = "input.task_type == 'point_outlier'",
-          checkboxGroupInput("smooth_methods_point", "Smoothing Options for Point Outliers",
+          checkboxGroupInput("methods_point", "Smoothing Options for Point Outliers",
           choices = list(
             "StandardScaler" = "standard_scaler",
             "EllipticEnvelope" = "elliptic_envelope",
@@ -62,7 +62,7 @@ shinyUI(fluidPage(
         conditionalPanel(
           condition = "input.task_type == 'sequence_outlier'",
           checkboxGroupInput(
-            "smooth_methods_sequence", 
+            "methods_sequence", 
             "Smoothing Options for Sequence Outliers",
             choices = list(
               "DBSCAN"                = "dbscan",
@@ -73,7 +73,7 @@ shinyUI(fluidPage(
             selected                = NULL
           ),
           conditionalPanel(
-            condition = "input.smooth_methods_sequence.includes('range_normalization')",
+            condition = "input.methods_sequence.includes('range_normalization')",
             sliderInput("so_range_normalization_sections", "Select number of sections - 0 for using size", min = 0, max = 1, value =0 , step = 1),
             sliderInput("so_range_normalization_sections_size", "Select sections size (range)- 0 for using n. sections", min = 0, max = 1, value =0 , step = 1),
             textInput("so_text_rns", "Set number of sections:", value = 1),
@@ -83,7 +83,7 @@ shinyUI(fluidPage(
         conditionalPanel(
           condition = "input.task_type == 'segments'",
           checkboxGroupInput(
-            "smooth_methods_segments", "Smoothing Options for Segments",
+            "methods_segments", "Smoothing Options for Segments",
             choices = list(
               "KMeans"                            = "kmeans",
               "Moving Average Filter"             = "moving_average",
@@ -93,7 +93,7 @@ shinyUI(fluidPage(
             selected = NULL
           ),
           conditionalPanel(
-            condition = "input.smooth_methods_segments.includes('range_normalization')",
+            condition = "input.methods_segments.includes('range_normalization')",
             sliderInput("ss_range_normalization_sections", "Select number of sections - 0 for using size", min = 0, max = 1, value =0 , step = 1),
             sliderInput("ss_range_normalization_sections_size", "Select sections size (range) - 0 for using n. sections", min = 0, max = 1, value =0 , step = 1),
             textInput("ss_text_rns", "Set number of section:", value = 1),
@@ -103,7 +103,7 @@ shinyUI(fluidPage(
         conditionalPanel(
           condition = "input.task_type == 'trends'",
           checkboxGroupInput(
-            "smooth_methods_trends", "Smoothing Options for Trends",
+            "methods_trends", "Smoothing Options for Trends",
             choices = list(
               "PCA"                         = "pca",
               "Exponential Smoothing"       = "exp_smoothing",

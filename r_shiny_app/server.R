@@ -2347,40 +2347,5 @@ tcl_1 = Sys.time()
         complete        = NULL,
         selected        = NULL
     )
-    observe({
-        # Log the current state
-        current_ts_variables <- reactiveValuesToList(ts_variables)
-
-        # Check if any element of ts_variables has been modified
-        if (!identical(previous_ts_variables, current_ts_variables)) {
-            # Print changes and traceback
-            diff <- list(
-                original     = setdiff(current_ts_variables$original, previous_ts_variables$original),
-                preprocessed = setdiff(current_ts_variables$preprocessed, previous_ts_variables$preprocessed),
-                complete     = setdiff(current_ts_variables$complete, previous_ts_variables$complete),
-                selected     = setdiff(current_ts_variables$selected, previous_ts_variables$selected)
-            )
-
-            message <- paste0(
-                "ts_variables modified:\n",
-                "Original diff: ", paste(diff$original, collapse = ", "), "\n",
-                "Preprocessed diff: ", paste(diff$preprocessed, collapse = ", "), "\n",
-                "Complete diff: ", paste(diff$complete, collapse = ", "), "\n",
-                "Selected diff: ", paste(diff$selected, collapse = ", ")
-            )
-
-            cat("Modification detected in ts_variables:\n")
-            cat(message, "\n")
-            cat("Traceback:\n")
-
-            # Trigger traceback and log it
-            traceback()
-        }
-        previous_ts_variables <<- current_ts_variables
-
-    })
-
-
-
 })
 

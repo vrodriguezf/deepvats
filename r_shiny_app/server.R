@@ -852,23 +852,7 @@ shinyServer(function(input, output, session) {
         list_used_arts
         on.exit({print("reactive ts_ar_config -->"); flush.console()})
     })
-    
-    # selected_embs_ar = eventReactive(input$embs_ar, {
-    #   embs_l[[input$embs_ar]]
-    # })
-    
-    # embeddings object. Get it from local if it is there, otherwise download
-    # embs = reactive({
-    #   selected_embs_ar = req(selected_embs_ar())
-    #   log_print("embs")
-    #   fname = file.path(DEFAULT_PATH_WANDB_ARTIFACTS, 
-    #                     selected_embs_ar$metadata$ref$hash)
-    #   if (file.exists(fname))
-    #     py_load_object(filename = fname)
-    #   else
-    #     selected_embs_ar$to_obj()
-    # })
-    
+
     # Get encoder artifact
     enc_ar <- eventReactive(
         input$encoder, 
@@ -971,8 +955,6 @@ shinyServer(function(input, output, session) {
         )); flush.console()})
         enc()
     })
-
-   
 
     embs_kwargs <- reactive({
         res <- list()
@@ -1130,240 +1112,177 @@ shinyServer(function(input, output, session) {
         result
     }) 
 
-
-#enc = py_load_object(
-#    os.path.join(
-#        DEFAULT_PATH_WANDB_ARTIFACTS, 
-#        hash
-#    )
-#)
-#embs_py_code <- "
-#import os
-#from dvats.all import get_enc_embs
-#from torch import cuda
-#from time import time
-#import pickle
-#
-#path = os.path.join(wandb_path, hash)
-#print(path)
-#with open(path, 'rb') as f:
-#    enc = pickle.load(f)
-#print('reactive embs | load encoder | Set batchsize')
-#enc.bs = batch_size
-#print('reactive embs | load encoder | Batchsize: ', enc.bs)
-#print('--> reactive embs | get embeddings | enc.bs ', enc.bs )
-#if cuda.is_available():
-#    print('CUDA devices: ', cuda.device_count())
-#else:
-#    print('CUDA NOT AVAILABLE')
-#t_init = time()
-#print(
-#    '--> reactive embs | get embeddings | Just about to get embedings. Device number: ', 
-#    cuda.current_device(), 
-#    ' Batch size: ', enc.bs
-#)
-#result = get_enc_embs(X = enc_input, enc_learn = enc, cpu = False)
-#t_end = time()
-#diff = t_end - t_init
-#diff_secs = diff
-#diff_mins = diff / 60
-#"   
-
-#embs = reactive({
-#    req(input$dataset, X())
-#    print("--> reactive embs | get embeddings -->")
-#    enc_ar <- req(enc_ar())
-#    dataset_logged_by = enc_ar$logged_by()
-#    batch_size = dataset_logged_by$config$batch_size
-#    hash <- enc_ar$metadata$ref$hash
-#    print(paste0("reactive embs | get embeddings | hash ", hash, " | logged_by_batch_size ", batch_size))
-#    py$wandb_path <- DEFAULT_PATH_WANDB_ARTIFACTS
-#    print(paste0("reactive embs | get embeddings | path ", py$wandb_path))
-#    py$hash <- hash
-#    print(paste0("reactive embs | get embeddings | hash ", py$hash))
-#    py$enc_input <- X()
-#    py$dataset_logged_by <- dataset_logged_by
-#    py$batch_size <- batch_size
-#    print(paste0("reactive embs | get embeddings | bs ", py$batch_size))
-#    print(reticulate::py_config())
-#    print(paste0("reactive embs | get embeddings | Enter embs_py code! ", embs_py_code))
-#    py_run_string(embs_py_code)
-#    print(paste0("reactive embs | get embeddings | Outside embs_py codee! ", embs_py_code))
-#    diff_secs <- py$diff_secs
-#    diff_mins <- py$diff_mins
-#    result <- py$result
-#    print(paste0("get_enc_embs total time", diff_secs, " secs thus ", diff_mins, " mins"))
-#    result
-#})
-
-
-observeEvent(input$ft_dataset_option, {
-    if (input$ft_dataset_option == "use_ft_window_percent") {
-      # Set ft_num_windows to NULL and ensure ft_window_percent has its value
-      updateTextInput(session, "ft_num_windows", value = NULL)
-      updateTextInput(session, "ft_window_percent", value = input$ft_window_percent)
-    } else if (input$ft_dataset_option == "use_ft_num_windows") {
-      # Set ft_window_percent to NULL and ensure ft_num_windows has its value
-      updateTextInput(session, "ft_window_percent", value = NULL)
-      updateTextInput(session, "ft_num_windows", value = input$ft_num_windows)
-    } else if (input$ft_dataset_option == "full_dataset") {
-      # Set both ft_window_percent and ft_num_windows to 0
-      updateTextInput(session, "ft_window_percent", value = NULL)
-      updateTextInput(session, "ft_num_windows", value = NULL)
-    }
-  })
-
-observe({
-    log_print("Observe event | Input fine tune | Play fine tune ... Waiting ...")
-    req(play_fine_tune(), input$fine_tune)
-    req(enc())
-    log_print("Observe event | Input fine tune | Play fine tune")
-    df <- if (is.null(tsdf_preprocessed())) {
-        tsdf()
-    } else {
-        tsdf_preprocessed()
-    }
-    if (grepl("moment", input$encoder, ignore.case = TRUE)) {
-        fine_tune_kwargs <- list(
-            X                               = df,
-            enc_learn                       = enc(),
-            stride                          = as.integer(1),
-            batch_size                      = as.integer(input$ft_batch_size),
-            cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
-            to_numpy                        = TRUE,
-            verbose                         = as.integer(1),
-            time_flag                       = TRUE,
-            n_windows_percent               = as.numeric(input$ft_window_percent),
-            window_mask_percent             = as.numeric(input$ft_mask_window_percent),
-            training_percent                = as.numeric(input$ft_training_percent),
-            validation_percent              = as.numeric(input$ft_validation_percent),
-            num_epochs                      = as.integer(input$ft_num_epochs),
-            shot                            = TRUE,
-            eval_pre                        = TRUE,
-            eval_post                       = TRUE,
-            #criterion                       = NULL, #torch$nn$MSELoss,
-            #optimizer                       = NULL, #torch$optim$AdamW,
-            #lr                              = as.numeric(0.00005),
-            lr                              = as.numeric(0.001),
-            lr_scheduler_flag               = FALSE, 
-            lr_scheduler_name               = "OneCycleLR",
-            lr_scheduler_num_warmup_steps   = NULL,
-            window_sizes                    = list(as.integer(input$wlen)),
-            n_window_sizes                  = as.integer(input$ft_num_windows),
-            window_sizes_offset             = as.numeric(0.05),
-            windows_min_distance            = as.integer(input$ft_min_windows_distance),
-            full_dataset                    = (input$ft_datset_option == "full_dataset"),
-            mask_stateful                   = ("ft_mask_stateful" %in% input$masking_options),
-            mask_future                     = ("ft_mask_future" %in% input$masking_options),
-            mask_sync                       = ("ft_sync" %in% input$masking_options)
-        )
-
-        for (key in names(fine_tune_kwargs)) {
-            value <- fine_tune_kwargs[[key]]
-            if (is.numeric(value) && any(is.na(value))) {
-                log_print("Fine tune kwargs | NaN detected in:", key, "\n")
-            } else {
-                log_print("Fine tune kwargs | ", key, ": ", fine_tune_kwargs[[key]], "\n")
-            }
+    observeEvent(input$ft_dataset_option, {
+        req(input$ft_dataset_option, input$ft_window_percent, input$ft_num_epochs)
+        if (input$ft_dataset_option == "use_ft_window_percent") {
+          # Set ft_num_windows to NULL and ensure ft_window_percent has its value
+          updateTextInput(session, "ft_num_windows", value = NULL)
+          updateTextInput(session, "ft_window_percent", value = input$ft_window_percent)
+        } else if (input$ft_dataset_option == "use_ft_num_windows") {
+          # Set ft_window_percent to NULL and ensure ft_num_windows has its value
+          updateTextInput(session, "ft_window_percent", value = NULL)
+          updateTextInput(session, "ft_num_windows", value = input$ft_num_windows)
+        } else if (input$ft_dataset_option == "full_dataset") {
+          # Set both ft_window_percent and ft_num_windows to 0
+          updateTextInput(session, "ft_window_percent", value = NULL)
+          updateTextInput(session, "ft_num_windows", value = NULL)
         }
+      })
+
+    observe({
+        log_print("Observe event | Input fine tune | Play fine tune ... Waiting ...")
+        req(play_fine_tune(), input$fine_tune)
+        req(enc())
+        log_print("Observe event | Input fine tune | Play fine tune")
+        df <- if (is.null(tsdf_preprocessed() || ! input$preprocess_dataset)) {tsdf()} else {tsdf_preprocessed()}
+        if (grepl("moment", input$encoder, ignore.case = TRUE)) {
+            fine_tune_kwargs <- list(
+                X                               = df,
+                enc_learn                       = enc(),
+                stride                          = as.integer(1),
+                batch_size                      = as.integer(input$ft_batch_size),
+                cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
+                to_numpy                        = TRUE,
+                verbose                         = as.integer(1),
+                time_flag                       = TRUE,
+                n_windows_percent               = as.numeric(input$ft_window_percent),
+                window_mask_percent             = as.numeric(input$ft_mask_window_percent),
+                training_percent                = as.numeric(input$ft_training_percent),
+                validation_percent              = as.numeric(input$ft_validation_percent),
+                num_epochs                      = as.integer(input$ft_num_epochs),
+                shot                            = TRUE,
+                eval_pre                        = TRUE,
+                eval_post                       = TRUE,
+                #criterion                       = NULL, #torch$nn$MSELoss,
+                #optimizer                       = NULL, #torch$optim$AdamW,
+                #lr                              = as.numeric(0.00005),
+                lr                              = as.numeric(0.001),
+                lr_scheduler_flag               = FALSE, 
+                lr_scheduler_name               = "OneCycleLR",
+                lr_scheduler_num_warmup_steps   = NULL,
+                window_sizes                    = list(as.integer(input$wlen)),
+                n_window_sizes                  = as.integer(input$ft_num_windows),
+                window_sizes_offset             = as.numeric(0.05),
+                windows_min_distance            = as.integer(input$ft_min_windows_distance),
+                full_dataset                    = (input$ft_datset_option == "full_dataset"),
+                mask_stateful                   = ("ft_mask_stateful" %in% input$masking_options),
+                mask_future                     = ("ft_mask_future" %in% input$masking_options),
+                mask_sync                       = ("ft_sync" %in% input$masking_options)
+            )
+
+            for (key in names(fine_tune_kwargs)) {
+                value <- fine_tune_kwargs[[key]]
+                if (is.numeric(value) && any(is.na(value))) {
+                    log_print("Fine tune kwargs | NaN detected in:", key, "\n")
+                } else {
+                    log_print("Fine tune kwargs | ", key, ": ", fine_tune_kwargs[[key]], "\n")
+                }
+            }
 
 
-        showModal(modalDialog(
-            title = "Processing...",
-            "Please wait while the model is fine tuned.",
-            uiOutput("dummyLoad") %>% shinycssloaders::withSpinner(
-                #type = 2,
-                #color = "#0275D8",
-                #color.background =  "#FFFFFF"
-            ),  
-            easyClose = FALSE,
-            footer = NULL
-        ))
-        # Ejecutar la operación de fine-tuning
-        t_init <- Sys.time()
-        result <- do.call(dvats$fine_tune_moment_, fine_tune_kwargs)
-        t_end <- Sys.time()
-        eval_results_pre <- result[[2]]
-        eval_results_post <- result[[3]]
-        t_shots <- result[[4]]
-        t_shot <- result[[5]]
-        t_evals <- result[[6]]
-        t_eval <- result[[7]]
-        enc(result[[8]])
-        diff = t_end - t_init
-        diff_secs = diff
-        diff_mins = diff / 60
-        log_print(paste0("Fine tune: ", diff_secs, " s | approx ", diff_mins, "min" ))
-        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ))
-        log_print(paste0("Fine tune Python total shot time: ", t_shot, "s" ))
-        log_print(paste0("Fine tune Python single eval steps time: ", t_shots, "s" ))
-        log_print(paste0("Fine tune Python total eval time: ", t_shot, "s" ))
-        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ))
-        log_print(paste0("Fine tune eval results pre-tune: ", eval_results_pre, "s" ))
-        log_print(paste0("Fine tune eval results post-tune: ", eval_results_post, "s" ))
-        update_play_fine_tune_button()
-        removeModal()
-    }
-})
+            showModal(modalDialog(
+                title = "Processing...",
+                "Please wait while the model is fine tuned.",
+                uiOutput("dummyLoad") %>% shinycssloaders::withSpinner(
+                    #type = 2,
+                    #color = "#0275D8",
+                    #color.background =  "#FFFFFF"
+                ),  
+                easyClose = FALSE,
+                footer = NULL
+            ))
+            # Ejecutar la operación de fine-tuning
+            t_init <- Sys.time()
+            result <- do.call(dvats$fine_tune_moment_, fine_tune_kwargs)
+            t_end <- Sys.time()
+            eval_results_pre <- result[[2]]
+            eval_results_post <- result[[3]]
+            t_shots <- result[[4]]
+            t_shot <- result[[5]]
+            t_evals <- result[[6]]
+            t_eval <- result[[7]]
+            enc(result[[8]])
+            diff = t_end - t_init
+            diff_secs = diff
+            diff_mins = diff / 60
+            log_print(paste0("Fine tune: ", diff_secs, " s | approx ", diff_mins, "min" ))
+            log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ))
+            log_print(paste0("Fine tune Python total shot time: ", t_shot, "s" ))
+            log_print(paste0("Fine tune Python single eval steps time: ", t_shots, "s" ))
+            log_print(paste0("Fine tune Python total eval time: ", t_shot, "s" ))
+            log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ))
+            log_print(paste0("Fine tune eval results pre-tune: ", eval_results_pre, "s" ))
+            log_print(paste0("Fine tune eval results post-tune: ", eval_results_post, "s" ))
+            update_play_fine_tune_button()
+            removeModal()
+        }
+    })
 
 
+    umap_kwargs <- reactive({
+        dict(
+            random_state = as.integer(input$prj_random_state), 
+            n_neighbors = input$prj_n_neighbors,
+            min_dist = input$prj_min_dist
+        )
+    })
 
+    pca_kwargs <- reactive({
+        dict(
+            random_state = as.integer(input$pca_random_state),
+            n_components = as.integer(input$pca_n_components)
+        )
+    })
 
+    #force_cpu <- reactiveVal(FALSE) --> Usar así si se vuelve a necesitar cómputo con cpu
+    #cpu_flag <- observe({
+        #req(input$cpu_flag, force_cpu())
+        #if (force_cpu()){ 
+    #        flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE) 
+    #    } else { flag = TRUE}
+    #    flag
+    cpu_flag <- observe({
+        req(input$cpu_flag)
+        ifelse(input$cpu_flag == "CPU", TRUE, FALSE) 
+    })
 
-umap_kwargs <- reactive({
-    dict(
-        random_state = as.integer(input$prj_random_state), 
-        n_neighbors = input$prj_n_neighbors,
-        min_dist = input$prj_min_dist
-    )
-})
-
-pca_kwargs <- reactive({
-    dict(
-        random_state = as.integer(input$pca_random_state),
-        n_components = as.integer(input$pca_n_components)
-    )
-})
-
-prj_object_cpu <- reactive({
-    log_print("prj_object_cpu || Before compute embs")
-    embs = req(embs(), input$dr_method)
-    embs = embs[complete.cases(embs),]
-    log_print("--> prj_object_cpu")
-    
-    res = switch( input$dr_method,
-        UMAP = dvats$get_UMAP_prjs(
-            input_data  = embs, 
-            cpu         = TRUE, 
-            verbose     = as.integer(0),
-            n_neighbors = as.integer(input$prj_n_neighbors),
+    prj_umap <- reactive({
+        req(cpu_flag(), input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
+        dvats$get_UMAP_prjs(
+            input_data  = embs_complete_cases(), 
+            cpu         = cpu_flag(), 
+            verbose     = as.integer(1),
+            n_neighbors = input$prj_n_neighbors, 
             min_dist    = input$prj_min_dist, 
             random_state= as.integer(input$prj_random_state)
         ),
-        TSNE = dvats$get_TSNE_prjs(
-            X = embs, 
-            cpu = TRUE, 
-            random_state=as.integer(input$tsne_random_state)
+    })
+    prj_tsne <- reactive({
+        req(cpu_flag(), embs_complete_cases(), input$prj_random_state)
+        dvats$get_TSNE_prjs(
+            X           = embs_complete_cases(), 
+            cpu         = cpu_flag(), 
+            random_state=as.integer(input$prj_random_state)
         ),
-        PCA = dvats$get_PCA_prjs(
-            X = embs, 
-            cpu = TRUE, 
-            n_components = as.integer(input$pca_n_components),
-            random_state = as.integer(input$pca_random_state),
+    })
+    prj_pca <- reactive({
+        req(embs_complete_cases(), cpu_flag(), input$prj_random_state)
+        dvats$get_PCA_prjs(
+            X           = embs_complete_cases(), 
+            cpu         = cpu_flag(), 
+            random_state= as.integer(input$prj_random_state)
         ),
-        PCA_UMAP = dvats$get_PCA_UMAP_prjs(
-            input_data  = embs, 
-            cpu         = TRUE, 
-            pca         = pca_kwargs(),
-            umap_kwargs = umap_kwargs()
+    })
+    prj_pca_umap <- reactive({
+        req(embs_complete_cases(), cpu_flag(), input$prj_random_state, input$prj_n_neighbors, input$prj_min_dist)
+        dvats$get_PCA_UMAP_prjs(
+            input_data  = embs_complete_cases(), 
+            cpu         = cpu_flag(), 
+            verbose     = as.integer(1),
+            pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
+            umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
         )
-    )
-    res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
-    colnames(res) = c("xcoord", "ycoord")
-    on.exit({log_print(" prj_object -->"); flush.console()})
-    flush.console()
-    res
-})
+    })
 
     embs_complete_cases <- reactive({
         req(embs())
@@ -1372,64 +1291,40 @@ prj_object_cpu <- reactive({
         embs <- embs[complete.cases(embs),]
     })
 
+    prj_object_comp <- reactive({
+        req( cpu_flag(), embs_complete_cases(), input$dr_method )
+        switch( input$dr_method,
+            UMAP = prj_umap()
+            TSNE = prj_tsne()
+            PCA  = prj_pca()
+            PCA_UMAP = prj_pca_umap()
+        )
+    })
+    
     prj_object <- reactive({
-        req(embs(), input$dr_method)
+        req(cpu_flag(), embs_complete_cases(), input$dr_method, req(prj_object_comp()))
         log_print("--> prj_object")
         t_prj_0 = Sys.time()
-        embs = req(embs_complete_cases())
         log_print("prj_object | Before switch ")    
-        cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
-        res = switch( input$dr_method,
-            UMAP = dvats$get_UMAP_prjs(
-                input_data  = embs, 
-                cpu         = cpu_flag, 
-                verbose     = as.integer(1),
-                n_neighbors = input$prj_n_neighbors, 
-                min_dist    = input$prj_min_dist, 
-                random_state= as.integer(input$prj_random_state)
-            ),
-            TSNE = dvats$get_TSNE_prjs(
-                X = embs, 
-                cpu=FALSE, 
-                random_state=as.integer(input$prj_random_state)
-            ),
-            PCA = dvats$get_PCA_prjs(
-                X = embs, 
-                cpu=FALSE, 
-                random_state=as.integer(input$prj_random_state)
-            ),
-            PCA_UMAP = dvats$get_PCA_UMAP_prjs(
-                input_data  = embs, 
-                cpu         = cpu_flag, 
-                verbose     = as.integer(1),
-                pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
-                umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
-            )
-        )
-      res = res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
-      colnames(res) = c("xcoord", "ycoord")
+        res <- prj_object_comp() %>% as.data.frame # TODO: This should be a matrix for improved efficiency
+        colnames(res) = c("xcoord", "ycoord")
             flush.console()
-      t_prj_1 = Sys.time()
-      on.exit({
-        log_print(
-            paste0(" prj_object | cpu_flag: ",
-            input$cpu_flag, " | ", input$dr_method, 
-            " | Execution time: ", t_prj_1-t_prj_0 , 
-            " seconds -->"
-            ), TRUE, LOG_PATH, LOG_HEADER
-        ); temp_log <<- log_add(
-            log_mssg            = temp_log,
-            function_           = "PRJ Object",
-            cpu_flag            = input$cpu_flag,
-            dr_method           = input$dr_method,
-            clustering_options  = input$clustering_options,
-            zoom                = input$zoom_btn,
-            time                =  t_prj_1-t_prj_0, 
-            mssg                = paste0("Compute projections | prj ~", dim(res)) 
-        ); flush.console()
-
-    })
-      res
+            t_prj_1 = Sys.time()
+            on.exit({
+                log_print(paste0(" prj_object | cpu_flag: ", input$cpu_flag, " | ", input$dr_method, " | Execution time: ", t_prj_1-t_prj_0 , " seconds -->"), TRUE, LOG_PATH, LOG_HEADER); 
+                temp_log <<- log_add(
+                    log_mssg            = temp_log,
+                    function_           = "PRJ Object",
+                    cpu_flag            = input$cpu_flag,
+                    dr_method           = input$dr_method,
+                    clustering_options  = input$clustering_options,
+                    zoom                = input$zoom_btn,
+                    time                =  t_prj_1-t_prj_0, 
+                    mssg                = paste0("Compute projections | prj ~", dim(res)) 
+                ); 
+                flush.console() 
+            })
+        res
     })
 
     
@@ -1461,10 +1356,7 @@ prj_object_cpu <- reactive({
         return(unlist(result))
     }
 
-    
-
     # Load and filter TimeSeries object from wandb
-
     tsdf_comp <- reactive(
         {            
             if ( input$preprocess_dataset ) { tsdf_ready_preprocessed(FALSE) }
@@ -1660,25 +1552,9 @@ score = 0
                 score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
                 }
                 log_print(paste0("Projections | Score ", score))
-                #if (score <= 0) {
-                #    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
-                #    prjs <- prj_object_cpu()
-                #    clusters = hdbscan$HDBSCAN(
-                #        min_cluster_size = as.integer(clusters_config$min_cluster_size_hdbscan),
-                #        min_samples = as.integer(clusters_config$min_samples_hdbscan),
-                #        cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
-                #        metric = clusters_config$metric_hdbscan
-                #    )$fit(prjs)
-#score = 0
- #                   unique_labels <- unique(clusters$labels_)
- #                   total_unique_labels <- length(unique_labels)
-  #                  if(total_unique_labels > 1){
-   #                 score = dvats$cluster_score(prjs, clusters$labels_, TRUE)
-    #                }
-                #    log_print(paste0("Projections | Repeat projections with CPU because of low quality clusters | score ", score))
-                #}
+    
                 prjs$cluster <- clusters$labels_
-tcl_1 = Sys.time()
+                tcl_1 = Sys.time()
                 log_print(paste0("Compute clusters | Execution time ", tcl_1 - tcl_0), TRUE, LOG_PATH, LOG_HEADER)
                 temp_log <<- log_add(
                     log_mssg                = temp_log, 

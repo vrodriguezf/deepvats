@@ -67,7 +67,10 @@ shinyServer(function(input, output, session) {
     tsdf_preprocessed_params<- reactiveVal(NULL)
     # Enc input
     X                       <- reactiveVal(NULL)
-
+    # Embeddings
+    embs                    <- reactiveVal(NULL)
+    embs_complete_cases     <- reactiveVal(NULL)
+    prjs                    <- reactiveVal(NULL)
     ## -- Flags
     # DataFrame
     allow_tsdf              <- reactiveVal(FALSE)
@@ -1002,7 +1005,7 @@ shinyServer(function(input, output, session) {
     })
 
     ####  CACHING EMBEDDINGS ####
-    embs <- reactive({
+    embs_comp_or_cached <- reactive({
         embs_params_current <- list(
             dataset   = input$dataset,
             encoder   = input$encoder,
@@ -1030,6 +1033,7 @@ shinyServer(function(input, output, session) {
         }
         embs_params(embs_params_current)
         log_print(paste0("|| Embs || res ~", dim(res)), debug_group = 'force')
+        embs(res)
         res
     })
     ###########################
@@ -1237,107 +1241,118 @@ shinyServer(function(input, output, session) {
         )
     })
 
+    embs_complete_cases_comp <- observe({
+        log_print(paste0(" || embs_complete_cases || before req || allow update? ", allow_update_embs()), debug_group = 'debug')
+        req(allow_update_embs(), input$encoder, tsdf_ready())
+        embs_comp_or_cached()
+        log_print(paste0("|| embs_complete_cases || Before complete cases embs ~", dim(embs())))
+        embs_complete_cases (embs()[complete.cases(embs()),])
+        log_print(paste0("|| embs_complete_cases || After complete cases embs ~", dim(embs_complete_cases())))
+    })
+    
     prj_umap <- reactive({
         req(cpu_flag(), input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
-        dvats$get_UMAP_prjs(
-            input_data  = embs_complete_cases(), 
-            cpu         = cpu_flag(), 
-            verbose     = as.integer(1),
-            n_neighbors = input$prj_n_neighbors, 
-            min_dist    = input$prj_min_dist, 
-            random_state= as.integer(input$prj_random_state)
+        prjs(
+            dvats$get_UMAP_prjs(
+                input_data  = embs_complete_cases(), 
+                cpu         = cpu_flag(), 
+                verbose     = as.integer(1),
+                n_neighbors = input$prj_n_neighbors, 
+                min_dist    = input$prj_min_dist, 
+                random_state= as.integer(input$prj_random_state)
+            )
         )
     })
     prj_tsne <- reactive({
         req(cpu_flag(), embs_complete_cases(), input$prj_random_state)
-        dvats$get_TSNE_prjs(
-            X           = embs_complete_cases(), 
-            cpu         = cpu_flag(), 
-            random_state=as.integer(input$prj_random_state)
+        prjs(
+            dvats$get_TSNE_prjs(
+                X           = embs_complete_cases(), 
+                cpu         = cpu_flag(), 
+                random_state=as.integer(input$prj_random_state)
+            )
         )
     })
     prj_pca <- reactive({
         req(embs_complete_cases(), cpu_flag(), input$prj_random_state)
-        dvats$get_PCA_prjs(
+        prjs(
+            dvats$get_PCA_prjs(
             X           = embs_complete_cases(), 
             cpu         = cpu_flag(), 
             random_state= as.integer(input$prj_random_state)
+            )
         )
     })
     prj_pca_umap <- reactive({
         req(embs_complete_cases(), cpu_flag(), input$prj_random_state, input$prj_n_neighbors, input$prj_min_dist)
-        dvats$get_PCA_UMAP_prjs(
-            input_data  = embs_complete_cases(), 
-            cpu         = cpu_flag(), 
-            verbose     = as.integer(1),
-            pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
-            umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
+        prjs(
+            dvats$get_PCA_UMAP_prjs(
+                input_data  = embs_complete_cases(), 
+                cpu         = cpu_flag(), 
+                verbose     = as.integer(1),
+                pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
+                umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
+            )
         )
     })
 
-    embs_complete_cases <- reactive({
-        req(embs(), allow_update_embs())
-        log_print(paste0("prj_object | Before complete cases embs ~", dim(embs)))
-        embs <- embs()
-        embs <- embs[complete.cases(embs),]
-    })
-
-    prj_object_comp <- reactive({
+    prjs_comp <- reactive({
+        log_print(paste0("|| prjs_comp || Before req || allow? ", allow_update_embs()), debug_group = 'debug')
         req( 
             cpu_flag(), 
             embs_complete_cases(), 
             input$dr_method,
             allow_update_embs()
         )
-        log_print("--> prj_object_comp", debug_group = 'debug')
+        log_print("--> prjs_comp", debug_group = 'debug')
         switch( 
             input$dr_method,
             UMAP = prj_umap(),
             TSNE = prj_tsne(),
-            PCA  = prj_pca(),
+            PCA  = prj_pca(),                
             PCA_UMAP = prj_pca_umap()
         )
-        log_print("prj_object_comp -->", debug_group = 'debug')
+        log_print("prjs_comp -->", debug_group = 'debug')
     })
     
     prj_object <- reactive({
-        log_print(
-            paste0(
-                "cpu_flag ", cpu_flag(),
-                "embs_complete null?", is.null(embs_complete_cases()),
-                "dr_method ", input$dr_method,
-                "prj_comp null? ", is.null(prj_comp()),
-                "allow_update_embs ", allow_update_embs()
-            )
-        )
+        log_print(paste0(
+            "|| prj_object || Before req ||",
+            " dr_method ", input$dr_method,
+            " cpu_flag ", cpu_flag(),
+            " tsdf_ready ", tsdf_ready(),
+            " prjs ", is.null(prjs())
+        ), debug_group = 'debug')
         req(
-            ( cpu_flag() || ! cpu_flag() ), 
             embs_complete_cases(), 
             input$dr_method, 
-            prj_object_comp(),
+            tsdf_ready(),
             allow_update_embs()
         )
         log_print("--> prj_object")
         t_prj_0 = Sys.time()
-        log_print("prj_object | Before switch ")    
-        res <- prj_object_comp() %>% as.data.frame # TODO: This should be a matrix for improved efficiency
+        log_print("prj_object | Before switch | is null prjs? ", is.null(prjs()))    
+        prjs_comp()
+        log_print("prj_object | After prjs_comp | is null prjs? ", is.null(prjs()))    
+        res <- prjs() %>% as.data.frame # TODO: This should be a matrix for improved efficiency
+        log_print("prj_object | About to put columns | null prjs? ", is.null(prjs()))    
         colnames(res) = c("xcoord", "ycoord")
-            flush.console()
-            t_prj_1 = Sys.time()
-            on.exit({
-                log_print(paste0(" prj_object | cpu_flag: ", input$cpu_flag, " | ", input$dr_method, " | Execution time: ", t_prj_1-t_prj_0 , " seconds -->"), TRUE, LOG_PATH, LOG_HEADER); 
-                temp_log <<- log_add(
-                    log_mssg            = temp_log,
-                    function_           = "PRJ Object",
-                    cpu_flag            = input$cpu_flag,
-                    dr_method           = input$dr_method,
-                    clustering_options  = input$clustering_options,
-                    zoom                = input$zoom_btn,
-                    time                =  t_prj_1-t_prj_0, 
-                    mssg                = paste0("Compute projections | prj ~", dim(res)) 
-                ); 
-                flush.console() 
-            })
+        flush.console()
+        t_prj_1 = Sys.time()
+        on.exit({
+            log_print(paste0(" prj_object | cpu_flag: ", input$cpu_flag, " | ", input$dr_method, " | Execution time: ", t_prj_1-t_prj_0 , " seconds -->"), TRUE, LOG_PATH, LOG_HEADER); 
+            temp_log <<- log_add(
+                log_mssg            = temp_log,
+                function_           = "PRJ Object",
+                cpu_flag            = input$cpu_flag,
+                dr_method           = input$dr_method,
+                clustering_options  = input$clustering_options,
+                zoom                = input$zoom_btn,
+                time                =  t_prj_1-t_prj_0, 
+                mssg                = paste0("Compute projections | prj ~", dim(res)) 
+            ); 
+            flush.console() 
+        })
         res
     })
 
@@ -1540,11 +1555,10 @@ shinyServer(function(input, output, session) {
         req(input$dr_method, tsdf_ready(), allow_update_embs())
         log_print("--> projections")
         log_print("projections || before prjs")
-        prjs <- req(prj_object())
-        req(input$dataset, input$encoder, input$wlen, input$stride)
+        prjs <- prjs()
         log_print("projections || before switch")
         log_print("projections || Compute clusters ")
-        tcl_0 = Sys.time()
+        tcl_0 = Sys.time() 
         switch(clustering_options$selected,
             precomputed_clusters = {
                filename <- req(selected_clusters_labels_ar())$metadata$ref$hash
@@ -1559,7 +1573,7 @@ shinyServer(function(input, output, session) {
                     cluster_selection_epsilon = clusters_config$cluster_selection_epsilon_hdbscan,
                     metric = clusters_config$metric_hdbscan
                 )$fit(prjs)
-score = 0
+                score = 0
                 unique_labels <- unique(clusters$labels_)
                 total_unique_labels <- length(unique_labels)
                 if(total_unique_labels > 1){
@@ -1582,33 +1596,12 @@ score = 0
                 )
                 prjs$cluster
              })
-        
         on.exit({log_print("Projections -->"); flush.console()})
-      prjs
+        prjs(prjs)
     })
 
-  
-    # Update the colour palette for the clusters
-    #update_palette <- reactive({
-    #    prjs <- req(projections())
-    #    if ("cluster" %in% names(prjs)) {
-    #        unique_labels <- unique(prjs$cluster)
-    #        log_print(unique_labels)
-    #        ## IF the value "-1" exists, assign the first element of mycolors to #000000, if not, assign the normal colorRampPalette
-    #        
-    #        if (as.integer(-1) %in% unique_labels) 
-    #            colour_palette <- 
-    #            #colour_palette <- append("#000000", colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels)-1))
-    #        else 
-    #            #colour_palette <- colorRampPalette(brewer.pal(12,"Paired"))(length(unique_labels))
-    #    }
-    #    else
-    #        colour_palette <- "red"
-    #    
-    #    colour_palette
-    #})
     update_palette <- reactive({
-        prjs <- req(projections())
+        prjs <- req(prjs())
         if ("cluster" %in% names(prjs)) {
             unique_labels <- unique(prjs$cluster)
             log_print(unique_labels)
@@ -1731,7 +1724,7 @@ score = 0
     })
 
     embedding_ids <- reactive({
-        req(prj_object())
+        prj_object()
         log_print("--> embedding idx")
         on.exit({log_print("embedding idx -->");})
         bp = brushedPoints(

@@ -75,6 +75,9 @@ shinyServer(function(input, output, session) {
     tsdf_comp_flag          <- reactiveVal(FALSE)
     tsdf_ready              <- reactiveVal(FALSE)
     tsdf_ready_preprocessed <- reactiveVal(FALSE)
+    # CPU
+    force_cpu   <- reactiveVal(FALSE)
+    cpu_flag    <- reactiveVal(FALSE)  
     # Variates
     ts_vars_selected_mod    <- reactiveVal(FALSE)
     # Encoder
@@ -460,14 +463,14 @@ shinyServer(function(input, output, session) {
     })
         
     observeEvent(input$play_embs, {
-        on.exit( log_print("Play embs || Changes to",  debug_group = 'main') )
+        on.exit( log_print(paste0("Play embs || Changes to ", allow_update_embs()),  debug_group = 'main') )
         allow_update_embs(!allow_update_embs())
-        shinyjs::js$checkEnabled("embs")
-        req(input$embs_enabled)
-        if (input$embs_enabled){
-            shinyjs::disable("embs")
-        } else {
+        if (allow_update_embs()){
+            log_print("play_embs || enable embs")
             shinyjs::enable("embs")
+        } else {
+            log_print("play_embs || disable embs")
+            shinyjs::disable("embs")
         }
     })
 
@@ -1032,35 +1035,28 @@ shinyServer(function(input, output, session) {
     ###########################
 
     embs_comp <- reactive({
+        req(allow_update_embs(), enc_input_ready(), tsdf(), X())
         print(paste0("|| embs_comp || --> embs_comp | enc_input_ready ", enc_input_ready()))
         print(paste0("tsdf ~ ", dim(tsdf())))
         print(paste0("X ~ ", dim(X())))
         log_print("|| embs_comp ||get embeddings")
         if (torch$cuda$is_available()){
-            log_print(paste0("CUDA devices: ", torch$cuda$device_count()))
-          } else {
+            log_print(paste0("CUDA devices: ", torch$cuda$device_count(), " | current_device: ", torch$cuda$current_device()))
+        } else {
+            force_cpu(TRUE)
             log_print("CUDA NOT AVAILABLE")
         }
         t_embs_0 <- Sys.time()
-        log_print(
-            paste0(
-                "reactive embs get embeddings | Just about to get embedings. Device number: ", 
-                torch$cuda$current_device() 
-            )
-        )
-        
-        log_print("|| embs_comp || get embeddings | Get batch size and dataset")
 
-        dataset_logged_by <- enc_ar()$logged_by()
-        bs = dataset_logged_by$config$batch_size
-        stride = input$stride 
-        
+        log_print("|| embs_comp || get embeddings | Get batch size and dataset")
+        dataset_logged_by   <- enc_ar()$logged_by()
+        bs                  <- dataset_logged_by$config$batch_size
+        stride              <- input$stride 
         print(paste0("|| embs_comp || get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs , " | stride: ", stride))
         print(paste0("|| embs_comp || get embeddings | Original stride: ", dataset_logged_by$config$stride))
         enc_input <- X()
         
         chunk_size = 10000000 #N*32
-        
         log_print(paste0("|| embs_comp || get embeddings (set stride set batch size) | Chunk_size ", chunk_size))
         log_print(paste0("|| embs_comp || get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"))
         specific_kwargs <- embs_kwargs()
@@ -1217,7 +1213,14 @@ shinyServer(function(input, output, session) {
             removeModal()
         }
     })
-
+  
+    observe({
+        req(input$cpu_flag, force_cpu())
+        if (force_cpu()){ 
+            flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE) 
+        } else { flag = TRUE }
+        flag
+    })
 
     umap_kwargs <- reactive({
         dict(
@@ -1234,18 +1237,6 @@ shinyServer(function(input, output, session) {
         )
     })
 
-    #force_cpu <- reactiveVal(FALSE) --> Usar así si se vuelve a necesitar cómputo con cpu
-    #cpu_flag <- observe({
-        #req(input$cpu_flag, force_cpu())
-        #if (force_cpu()){ 
-    #        flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE) 
-    #    } else { flag = TRUE}
-    #    flag
-    cpu_flag <- observe({
-        req(input$cpu_flag)
-        ifelse(input$cpu_flag == "CPU", TRUE, FALSE) 
-    })
-
     prj_umap <- reactive({
         req(cpu_flag(), input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
         dvats$get_UMAP_prjs(
@@ -1255,7 +1246,7 @@ shinyServer(function(input, output, session) {
             n_neighbors = input$prj_n_neighbors, 
             min_dist    = input$prj_min_dist, 
             random_state= as.integer(input$prj_random_state)
-        ),
+        )
     })
     prj_tsne <- reactive({
         req(cpu_flag(), embs_complete_cases(), input$prj_random_state)
@@ -1263,7 +1254,7 @@ shinyServer(function(input, output, session) {
             X           = embs_complete_cases(), 
             cpu         = cpu_flag(), 
             random_state=as.integer(input$prj_random_state)
-        ),
+        )
     })
     prj_pca <- reactive({
         req(embs_complete_cases(), cpu_flag(), input$prj_random_state)
@@ -1271,7 +1262,7 @@ shinyServer(function(input, output, session) {
             X           = embs_complete_cases(), 
             cpu         = cpu_flag(), 
             random_state= as.integer(input$prj_random_state)
-        ),
+        )
     })
     prj_pca_umap <- reactive({
         req(embs_complete_cases(), cpu_flag(), input$prj_random_state, input$prj_n_neighbors, input$prj_min_dist)
@@ -1285,24 +1276,47 @@ shinyServer(function(input, output, session) {
     })
 
     embs_complete_cases <- reactive({
-        req(embs())
+        req(embs(), allow_update_embs())
         log_print(paste0("prj_object | Before complete cases embs ~", dim(embs)))
         embs <- embs()
         embs <- embs[complete.cases(embs),]
     })
 
     prj_object_comp <- reactive({
-        req( cpu_flag(), embs_complete_cases(), input$dr_method )
-        switch( input$dr_method,
-            UMAP = prj_umap()
-            TSNE = prj_tsne()
-            PCA  = prj_pca()
+        req( 
+            cpu_flag(), 
+            embs_complete_cases(), 
+            input$dr_method,
+            allow_update_embs()
+        )
+        log_print("--> prj_object_comp", debug_group = 'debug')
+        switch( 
+            input$dr_method,
+            UMAP = prj_umap(),
+            TSNE = prj_tsne(),
+            PCA  = prj_pca(),
             PCA_UMAP = prj_pca_umap()
         )
+        log_print("prj_object_comp -->", debug_group = 'debug')
     })
     
     prj_object <- reactive({
-        req(cpu_flag(), embs_complete_cases(), input$dr_method, req(prj_object_comp()))
+        log_print(
+            paste0(
+                "cpu_flag ", cpu_flag(),
+                "embs_complete null?", is.null(embs_complete_cases()),
+                "dr_method ", input$dr_method,
+                "prj_comp null? ", is.null(prj_comp()),
+                "allow_update_embs ", allow_update_embs()
+            )
+        )
+        req(
+            ( cpu_flag() || ! cpu_flag() ), 
+            embs_complete_cases(), 
+            input$dr_method, 
+            prj_object_comp(),
+            allow_update_embs()
+        )
         log_print("--> prj_object")
         t_prj_0 = Sys.time()
         log_print("prj_object | Before switch ")    
@@ -1523,7 +1537,7 @@ shinyServer(function(input, output, session) {
     
     # Filter the embedding points and calculate/show the clusters if conditions are met.
     projections <- reactive({
-        req(input$dr_method, tsdf_ready())
+        req(input$dr_method, tsdf_ready(), allow_update_embs())
         log_print("--> projections")
         log_print("projections || before prjs")
         prjs <- req(prj_object())
@@ -2010,7 +2024,7 @@ score = 0
             input$wlen != 0,
             input$stride != 0,
             tsdf_ready(),
-            projections()
+            projections(),
         )
         log_print("--> Projections_plot")
         log_print(paste0(" projections_plot || ts variables (Start) ", ts_variables_str(ts_variables)), debug_group = 'main')
@@ -2125,7 +2139,8 @@ score = 0
                 input$wlen   != 0, 
                 input$stride != 0,
                 tsdf(),
-                input$select_variables
+                input$select_variables,
+                allow_update_embs()
             )
             log_print("**** ts_plot_dygraph ****")
             tspd_0 = Sys.time()

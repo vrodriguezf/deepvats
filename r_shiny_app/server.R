@@ -1034,8 +1034,8 @@ shinyServer(function(input, output, session) {
             " | tsdf_ready | ", tsdf_ready()
         ))
         req(tsdf_ready(), X(), enc(), enc_input_ready(), allow_update_embs())
-        log_print("|| Embs || --> embs")
         compute_flag <- reactiveVal_compute_or_cached(cached_embeddings, embs_params(),embs_params_current,"embs_comp")
+        log_print(paste0("|| Embs || --> embs | compute_flag ", compute_flag), debug_group = 'debug')
         if ( compute_flag ){
             res <- embs_comp()
             cached_embeddings(res)
@@ -1365,19 +1365,20 @@ prj_object_cpu <- reactive({
     res
 })
 
+    embs_complete_cases <- reactive({
+        req(embs())
+        log_print(paste0("prj_object | Before complete cases embs ~", dim(embs)))
+        embs <- embs()
+        embs <- embs[complete.cases(embs),]
+    })
+
     prj_object <- reactive({
         req(embs(), input$dr_method)
         log_print("--> prj_object")
         t_prj_0 = Sys.time()
-        embs = req(embs())
-        log_print(paste0("prj_object | Before complete cases embs ~", dim(embs)))
-        embs = embs[complete.cases(embs),]
-        #log_print(embs) #--
-        #log_print(paste0("--> prj_object | UMAP params ", str(umap_params_)))
-        log_print("prj_object | Before switch ")
-        
+        embs = req(embs_complete_cases())
+        log_print("prj_object | Before switch ")    
         cpu_flag = ifelse(input$cpu_flag == "CPU", TRUE, FALSE)
-
         res = switch( input$dr_method,
             UMAP = dvats$get_UMAP_prjs(
                 input_data  = embs, 

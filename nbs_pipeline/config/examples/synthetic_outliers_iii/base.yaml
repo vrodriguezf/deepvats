@@ -21,7 +21,6 @@ user_preferences:
     mode: &wdb_mode 'online'
     artifacts_path: &artifacts_path './data/wandb_artifacts'
   data:
-    #folder: &path '~/data/'
     folder: &path '~/data/synthetic_data/'
     fname: &fname 'synthetic_outliers(III)'
     #fname: &fname 'PulsusParadoxusSP02_30_10000' #'exoplanets' #"Insect_one_million"

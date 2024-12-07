@@ -1250,92 +1250,73 @@ shinyServer(function(input, output, session) {
         log_print(paste0("|| embs_complete_cases || After complete cases embs ~", dim(embs_complete_cases())))
     })
     
-    prj_umap <- reactive({
-        req(cpu_flag(), input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
-        prjs(
-            dvats$get_UMAP_prjs(
-                input_data  = embs_complete_cases(), 
-                cpu         = cpu_flag(), 
-                verbose     = as.integer(1),
-                n_neighbors = input$prj_n_neighbors, 
-                min_dist    = input$prj_min_dist, 
-                random_state= as.integer(input$prj_random_state)
-            )
+    prjs_umap <- reactive({
+        req(input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
+        dvats$get_UMAP_prjs(
+            input_data  = embs_complete_cases(), 
+            cpu         = cpu_flag(), 
+            verbose     = as.integer(1),
+            n_neighbors = input$prj_n_neighbors, 
+            min_dist    = input$prj_min_dist, 
+            random_state= as.integer(input$prj_random_state)
         )
     })
-    prj_tsne <- reactive({
-        req(cpu_flag(), embs_complete_cases(), input$prj_random_state)
-        prjs(
-            dvats$get_TSNE_prjs(
-                X           = embs_complete_cases(), 
-                cpu         = cpu_flag(), 
-                random_state=as.integer(input$prj_random_state)
-            )
+    prjs_tsne <- reactive({
+        req( embs_complete_cases(), input$prj_random_state)
+        dvats$get_TSNE_prjs(
+            X           = embs_complete_cases(), 
+            cpu         = cpu_flag(), 
+            random_state=as.integer(input$prj_random_state)
         )
     })
-    prj_pca <- reactive({
-        req(embs_complete_cases(), cpu_flag(), input$prj_random_state)
-        prjs(
-            dvats$get_PCA_prjs(
+    prjs_pca <- reactive({
+        req(embs_complete_cases(), input$prj_random_state)
+        res <- dvats$get_PCA_prjs(
             X           = embs_complete_cases(), 
             cpu         = cpu_flag(), 
             random_state= as.integer(input$prj_random_state)
             )
-        )
+        res
     })
-    prj_pca_umap <- reactive({
-        req(embs_complete_cases(), cpu_flag(), input$prj_random_state, input$prj_n_neighbors, input$prj_min_dist)
-        prjs(
-            dvats$get_PCA_UMAP_prjs(
+    prjs_pca_umap <- reactive({
+        req(
+            embs_complete_cases(), 
+            input$prj_random_state, 
+            input$prj_n_neighbors, 
+            input$prj_min_dist
+        )
+        log_print("Compute PCA_UMAP", debug_group = 'debug')
+        res <- dvats$get_PCA_UMAP_prjs(
                 input_data  = embs_complete_cases(), 
                 cpu         = cpu_flag(), 
                 verbose     = as.integer(1),
                 pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
                 umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
-            )
         )
+        log_print("PCA_UMAP computed", debug_group = 'debug')
+        res
     })
 
     prjs_comp <- reactive({
         log_print(paste0("|| prjs_comp || Before req || allow? ", allow_update_embs()), debug_group = 'debug')
-        req( 
-            cpu_flag(), 
-            embs_complete_cases(), 
-            input$dr_method,
-            allow_update_embs()
-        )
         log_print("--> prjs_comp", debug_group = 'debug')
-        switch( 
+        res <- switch( 
             input$dr_method,
-            UMAP = prj_umap(),
-            TSNE = prj_tsne(),
-            PCA  = prj_pca(),                
-            PCA_UMAP = prj_pca_umap()
+            UMAP    = prjs_umap(),
+            TSNE    = prjs_tsne(),
+            PCA     = prjs_pca(),                
+            PCA_UMAP= prjs_pca_umap()
         )
+        
         log_print("prjs_comp -->", debug_group = 'debug')
+        res
     })
     
     prj_object <- reactive({
-        log_print(paste0(
-            "|| prj_object || Before req ||",
-            " dr_method ", input$dr_method,
-            " cpu_flag ", cpu_flag(),
-            " tsdf_ready ", tsdf_ready(),
-            " prjs ", is.null(prjs())
-        ), debug_group = 'debug')
-        req(
-            embs_complete_cases(), 
-            input$dr_method, 
-            tsdf_ready(),
-            allow_update_embs()
-        )
-        log_print("--> prj_object")
         t_prj_0 = Sys.time()
-        log_print("prj_object | Before switch | is null prjs? ", is.null(prjs()))    
-        prjs_comp()
-        log_print("prj_object | After prjs_comp | is null prjs? ", is.null(prjs()))    
-        res <- prjs() %>% as.data.frame # TODO: This should be a matrix for improved efficiency
-        log_print("prj_object | About to put columns | null prjs? ", is.null(prjs()))    
+        res <- prjs_comp()
+        log_print("prj_object | After prjs_comp res~", dim(res))
+        res <- res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
         colnames(res) = c("xcoord", "ycoord")
         flush.console()
         t_prj_1 = Sys.time()
@@ -1545,7 +1526,7 @@ shinyServer(function(input, output, session) {
     # Auxiliary object for the interaction ts->projections
     tsidxs_per_embedding_idx <- reactive({
         #window_indices = get_window_indices(embedding_indices, input$wlen, input$stride)
-        req(input$wlen != 0, input$stride != 0)
+        req(projections())
         ts_indices <- get_window_indices(1:nrow(projections()), w = input$wlen, s = input$stride)
         ts_indices
     })
@@ -1555,8 +1536,7 @@ shinyServer(function(input, output, session) {
         req(input$dr_method, tsdf_ready(), allow_update_embs())
         log_print("--> projections")
         log_print("projections || before prjs")
-        prjs <- prjs()
-        log_print("projections || before switch")
+        prjs <- prj_object()
         log_print("projections || Compute clusters ")
         tcl_0 = Sys.time() 
         switch(clustering_options$selected,
@@ -1598,6 +1578,7 @@ shinyServer(function(input, output, session) {
              })
         on.exit({log_print("Projections -->"); flush.console()})
         prjs(prjs)
+        prjs()
     })
 
     update_palette <- reactive({
@@ -2012,19 +1993,18 @@ shinyServer(function(input, output, session) {
     # Generate projections plot
     output$projections_plot <- renderPlot({
         req( 
-            input$dataset,
             input$encoder,
             input$wlen != 0,
             input$stride != 0,
             tsdf_ready(),
-            projections(),
+            input$dr_method
         )
         log_print("--> Projections_plot")
         log_print(paste0(" projections_plot || ts variables (Start) ", ts_variables_str(ts_variables)), debug_group = 'main')
         t_pp_0 <- Sys.time()
         prjs_ <- projections()
          
-        log_print("projections_plot | Prepare column highlights")
+        log_print("projections_plot | Prepare column highlights prjs~", dim(prjs_))
         # Prepare the column highlight to color data
         if (!is.null(input$ts_plot_dygraph_click)) {
             log_print("Selected ts time points" , TRUE, LOG_PATH, LOG_HEADER)

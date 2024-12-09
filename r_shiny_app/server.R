@@ -1163,10 +1163,20 @@ shinyServer(function(input, output, session) {
 
     observe({
         log_print("Observe event | Input fine tune | Play fine tune ... Waiting ...", debug_group = 'tmi')
-        req(play_fine_tune(), input$fine_tune)
-        req(enc())
+        req(play_fine_tune(), input$fine_tune, enc(), input$ft_df)
         log_print("Observe event | Input fine tune | Play fine tune", debug_group = 'button')
-        df <- if (is.null(tsdf_preprocessed() || ! input$preprocess_dataset)) {tsdf()} else {tsdf_preprocessed()}
+        df <- NULL
+        if (
+                is.null(tsdf_preprocessed()) 
+            ||  ! input$preprocess_dataset 
+            ||  input$ft_df == "ft_df_ts"
+        ) {
+            log_print("Observe event | Input fine tune | Play fine tune | Using the original dataset", debug_group = 'force')
+            df <- tsdf()
+        } else {
+            log_print("Observe event | Input fine tune | Play fine tune | Using the preprocessed dataset", debug_group = 'force')
+            df <- tsdf_preprocessed()
+        }
         if (grepl("moment", input$encoder, ignore.case = TRUE)) {
             fine_tune_kwargs <- list(
                 X                               = df,

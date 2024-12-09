@@ -755,11 +755,11 @@ shinyServer(function(input, output, session) {
             enc_input <- enc_input[indexes,,,drop = FALSE]
             log_print(paste0("Enc input | reactive X | 2) enc_input ~ ", dim(enc_input)))
             log_print(paste0("Enc input | reactive X | Update sliding window | Apply stride ", input$stride," | X ~ enc_input ~ ", dim(enc_input), "-->"))
-            on.exit({print("Enc input | reactive X -->"); flush.console()})
+            on.exit({log_print("Enc input | reactive X -->", debug_group = 'main'); flush.console()})
             enc_input_ready(TRUE)
             X(enc_input)
         } else {
-            log_print("Enc input | reactive X | X already updated")
+            log_print("Enc input | reactive X | X already updated", debug_group = 'debug')
         }
 
         t_x_1 <- Sys.time() 
@@ -891,7 +891,7 @@ shinyServer(function(input, output, session) {
             execution_id ," | ", 
             input$cpu_flag, " | ", 
             input$dr_method, " | ", input$clustering_options, " | ", input$zoom_btn)
-        log_print(print(paste0(">>>>> Log header: ", log_header_, "<<<<<", debug_group = 'main')))
+        log_print(paste0(">>>>> Log header: ", log_header_, "<<<<<", debug_group = 'main'))
         LOG_HEADER <<- log_header_
     })
     
@@ -2038,18 +2038,6 @@ shinyServer(function(input, output, session) {
         do.call(tagList, window_info)
     })
     
-    # Generate encoder info table
-    #output$enc_info = renderDataTable({
-    #  print("enc_info")
-      #map(~ .$value) %>%
-    #  encoder_artiffact <- req(enc_ar())
-    #  print(paste0("Encoder artiffact", encoder_artiffact))
-      #req(enc_ar())$metadata %>%
-    #  print("Encoder artiffact metadata")
-    #  print(encoder_artiffact$metadata)
-    #  encoder_artiffact$metadata %>%
-    #    enframe()
-    #})
     output$enc_info = renderDataTable({
         selected_encoder_name <- req(input$encoder)
         on.exit({log_print("Encoder artiffact -->", debug_group = 'main'); flush.console()})

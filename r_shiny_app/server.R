@@ -275,10 +275,22 @@ shinyServer(function(input, output, session) {
     observe({
         req(tsdf())
         max_rows <- nrow(tsdf())
-        updateSliderInput(session, "so_range_normalization_sections", max = max_rows)
-        updateSliderInput(session, "so_range_normalization_sections_size", max = max_rows)
-        updateSliderInput(session, "ss_range_normalization_sections", max = max_rows)
-        updateSliderInput(session, "ss_range_normalization_sections_size", max = max_rows)
+        updateSliderInput(
+            session, "so_range_normalization_sections", 
+            min = 0,max = max_rows,value = 0
+        )
+        updateSliderInput(
+            session, "so_range_normalization_sections_size", 
+            min = 0,max = max_rows,value = 0
+        )
+        updateSliderInput(
+            session, "ss_range_normalization_sections", 
+            min = 0,max = max_rows,value = 0
+        )
+        updateSliderInput(
+            session, "ss_range_normalization_sections_size", 
+            min = 0,max = max_rows,value = 0
+        )
     })
 
     observe({
@@ -1492,7 +1504,7 @@ shinyServer(function(input, output, session) {
             params_now              = params_current,
             compute_function_name   = "tsdf_preprocessed"
         )
-        log_print(paste0("|| Preprocess dataset || Compute flag ", compute_flag))
+        log_print(paste0("|| Preprocess dataset || Compute flag ", compute_flag), debug_group = 'debug')
         if(compute_flag){
             log_print(
                 paste0(
@@ -1501,7 +1513,8 @@ shinyServer(function(input, output, session) {
                     " | sections ", 
                     sections_count(),
                     " | sections size ",
-                    sections_size()
+                    sections_size(),
+                    debug_group = 'force'
                 )
             )
             tsdf_preprocessed(

@@ -131,14 +131,14 @@ reactiveVal_compute_or_cached <- function(
 ){
     compute_flag <- FALSE
     header <- paste0("|| reactiveVal_compute_or_cached || ", compute_function_name, " || ")
-    log_print(paste0("-->", header), debug_group = 'force')
+    log_print(paste0("-->", header), debug_group = 'debug')
     if ( is.null( object() ) || ! identical( params_prev, params_now ) ) {
         shinyjs::enable(compute_function_name)
         if ( is.null( object() )){
-            log_print(paste0(header, "First embedding computation, skipping cache"), debug_group = 'force')
+            log_print(paste0(header, "First embedding computation, skipping cache"), debug_group = 'debug')
             compute_flag <- TRUE
         } else {
-            log_print(paste0(header, "At least 1 param changed"), debug_group = 'force')
+            log_print(paste0(header, "At least 1 param changed"), debug_group = 'debug')
             different_params <- names(params_now)[
                 sapply(
                     names(params_now), 
@@ -148,12 +148,12 @@ reactiveVal_compute_or_cached <- function(
             for (param in different_params){
                 old_value <- params_prev[[param]]
                 new_value <- params_now[[param]]
-                log_print(sprintf("|| %s || | %-10s | Old: %-20s | New: %-20s |", header, param, old_value, new_value), debug_group = 'force')
+                log_print(sprintf("|| %s || | %-10s | Old: %-20s | New: %-20s |", header, param, old_value, new_value), debug_group = 'debug')
             }
         }
         shinyjs::disable(compute_function_name)
     } else {
-        log_print(paste0(header, " Use cached || null? ", is.null( object() ), " || compute? || ", compute_flag, " -->" ), debug_group = 'force')
+        log_print(paste0(header, " Use cached || null? ", is.null( object() ), " || compute? || ", compute_flag, " -->" ), debug_group = 'debug')
     }
     return ( compute_flag )
 }

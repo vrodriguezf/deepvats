@@ -128,7 +128,7 @@ shinyUI(fluidPage(
                   "ft_df_ts" = "Use the original dataset",
                   "ft_df_ts_preprocess" = "Use the preprocessed dataset"
                 )
-              )
+              ),
             textInput("ft_batch_size", "Batch Size", value = 32),
             textOutput("ft_batch_size_value"),
             textInput("ft_mask_window_percent", "Percentage of windows/dataset to use for the training", value = 0.75), # mask

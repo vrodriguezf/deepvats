@@ -21,19 +21,15 @@ select_datasetServer <- function(
         mplot_compute_allow(FALSE)
         shinyjs::disable("get_tsdf")
         #req(encs_l)
-        log_print("--> observeEvent input_dataset | update encoder list")
-        log_print(input$dataset)
+        log_print("--> observeEvent input_dataset | update encoder list", debug_group = 'main')
         freezeReactiveValue(input, "encoder")
-        log_print(paste0("observeEvent input_dataset | update encoders for dataset ", input$dataset))
+        log_print(paste0("observeEvent input_dataset | update encoders for dataset ", input$dataset, debug_group = 'debug'))
         
-        
-
         ts_ar <- api$artifact(input$dataset, type='dataset')
 
         aliases <- ts_ar$name 
         header <- sub(":.*", "", ts_ar$name)
         aliases <- c(ts_ar$name, paste0(header, ":", ts_ar$aliases))
-
         
         encs_names <- encs_l %>% keep(
             ~ {
@@ -44,9 +40,7 @@ select_datasetServer <- function(
         )
   
         encs_names <- sapply(encs_names, function(art) art$name)
-        log_print(paste0(
-            "observeEvent input_dataset | Encoders for dataset ", input$dataset, " | ", encs_names)
-        )
+        log_print(paste0("observeEvent input_dataset | Encoders for dataset ", input$dataset, " | ", encs_names), debug_group = 'debug')
         updateSelectizeInput(
             session = session,
             inputId = "encoder",
@@ -58,7 +52,7 @@ select_datasetServer <- function(
         shinyjs::enable("get_tsdf")
         ################
         on.exit(
-            {log_print("observeEvent input_dataset | update encoder list -->"); flush.console()}
+            {log_print("observeEvent input_dataset | update encoder list -->", debug_group = 'main'); flush.console()}
         )
     }, label = "input_encoder")    
 }

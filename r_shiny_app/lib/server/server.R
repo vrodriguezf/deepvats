@@ -104,11 +104,11 @@ concat_preprocessed <- function(
     dataset_preprocessed    = NULL,
     ts_variables_selected   = NULL
 ){
-    log_print("--> concat preprocessed", debug_group = 'force')
+    log_print("--> concat preprocessed", debug_group = 'main')
     dataset_combined <- dataset
-    on.exit(log_print(paste0("concat preprocessed --> || colnames ", paste(colnames(dataset_combined), collapse = ', ')), debug_group = 'force'))
+    on.exit(log_print(paste0("concat preprocessed --> || colnames ", paste(colnames(dataset_combined), collapse = ', ')), debug_group = 'main'))
     if (!is.null(dataset_preprocessed) && ! is.null(dataset)) {
-        log_print("concat preprocessed || Concat", debug_group = 'force')
+        log_print("concat preprocessed || Concat", debug_group = 'debug')
         dataset_combined <- concat_datasets(
             dataset1        = dataset,
             dataset2        = dataset_preprocessed,

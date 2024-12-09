@@ -6,8 +6,6 @@ send_log <- function(message, session) {
     invalidateLater(10, session)
 }
 
-
-
 log_add <- function(
   log_mssg, 
   function_,

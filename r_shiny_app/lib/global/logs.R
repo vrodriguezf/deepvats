@@ -22,14 +22,15 @@ DEBUG_GROUPS<- list (
   'main'    = 1,
   'button'  = 2,
   'embs'    = 1,
-  'time'    = 8,
+  'time'    = 1, #8,
   'matrix'  = 9,
   'tmi'     = 12,
   'force'   = -1,
   'error'   = -1,
   'debug'   = 11,
-  'react'   = 11
-)
+  'react'   = 2,
+  'js'      = 12
+) 
 
 log_print <- function(
   mssg, 
@@ -68,7 +69,7 @@ log_add <- function(
   mssg, 
   time
 ) {
-  if (is.null(time)) {log_print("Time is empty! Check it out")}
+  if (is.null(time)) {log_print("Time is empty! Check it out", debug_group = 'force')}
   timestamp = format(as.POSIXct(Sys.time(), origin = "1970-01-01"), "%Y-%m-%d %H:%M:%OS3")
   new_mssg = data.frame(
     timestamp           = timestamp,

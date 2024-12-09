@@ -28,14 +28,14 @@ get_prjs_plot_name <- function(dataset_name, encoder_name, selected, cluster, in
         input$show_lines, "_",
         "prjs.png"
     )
-    log_print(paste0("embeddings plot name", plt_name))
+    log_print(paste0("get_prjs_plot_name | Name: ", plt_name), debug_group = 'tmi')
     plt_name
 }
 
 get_ts_plot_name <- function(dataset_name, encoder_name, input){
-    log_print("Getting timeserie plot name")
+    log_print("--> get_ts_plot_name")
     plt_name <- paste0(dataset_name,  "_", encoder_name, input$dr_method, "_ts.html")
-    log_print(paste0("ts plot name: ", plt_name))
+    log_print(paste0("get_ts_plot_name | Name: ", plt_name, "-->"), debug_group = 'tmi')
     plt_name
 }
 

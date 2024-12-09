@@ -40,7 +40,7 @@ encs_l_path <- path.expand("~/data/r_shiny_app_logs/encs_l.pickle")
 data_l_path <- path.expand("~/data/r_shiny_app_logs/data_l.pickle")
 
 if (UPDATE_WANDB_ARTIFACTS) {
-  log_print("Downloading w&b Artifacts")
+  log_print("Downloading w&b Artifacts", debug_group = 'main')
   downloaded <- download_and_write_data(encs_l_path, data_l_path)
   encs_l <- downloaded[['encs_l']]
   data_l <- downloaded[['data_l']]

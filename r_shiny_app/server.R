@@ -734,7 +734,7 @@ shinyServer(function(input, output, session) {
                 ),
                 debug_group = 'debug'
             )
-            log_print("Enc input | Update X", debug = 'debug')
+            log_print("Enc input | Update X", debug_group = 'debug')
             log_print("Enc input | ReactiveVal X | Update Sliding Window", debug_group = 'debug')
             log_print(paste0("Enc input | reactive X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"), debug_group = 'debug')
             log_print(paste0("Enc input | reactive X | ts_ar - id ", ts_ar()$id, " - name ", ts_ar()$name), debug_group = 'debug')
@@ -922,7 +922,13 @@ shinyServer(function(input, output, session) {
                 log_print(paste0("eventReactive enc_ar | Error: ", e$message), debug_group = 'error')
                 NULL
             })
-            on.exit({log_print("envent reactive enc_ar -->", debug_group = react); flush.console()})
+            on.exit({
+                log_print(
+                    "envent reactive enc_ar -->", 
+                    debug_group = 'react'
+                ); 
+                flush.console()
+            })
             result
         }, 
         ignoreInit = T
@@ -1387,7 +1393,11 @@ shinyServer(function(input, output, session) {
         chunks=split(df$timeindex, ceiling(seq_along(df$timeindex)/chunk_size))
                 
         log_print(paste0("Parallel posfix | Chunks: ", num_chunks), debug_group = 'debug')
-        on.exit({log_print("Parallel posfix | Make conversion -->"), debug_group = 'debug'})
+        on.exit({
+            log_print("Parallel posfix | Make conversion -->", 
+            debug_group = 'debug'
+            )
+        })
 
         cl = parallel::makeCluster(4)
         parallel::clusterEvalQ(cl, library(fasttime))
@@ -1651,7 +1661,13 @@ shinyServer(function(input, output, session) {
                 )
                 prjs$cluster
              })
-        on.exit({log_print("Projections -->", debug_group = main); flush.console()})
+        on.exit({
+            log_print(
+                "Projections -->", 
+                debug_group = 'main'
+            ); 
+            flush.console()
+        })
         prjs(prjs)
         prjs()
     })
@@ -2100,7 +2116,10 @@ shinyServer(function(input, output, session) {
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
         if(!("cluster" %in% names(prjs_)))
             prjs_$cluster = FALSE
-        log_print(paste0("projections_plot | GoGo Plot!", nrow(prjs_)), debug = 'main')
+        log_print(
+            paste0("projections_plot | GoGo Plot!", nrow(prjs_)), 
+            debug_group = 'main'
+        )
         plt <- ggplot(data = prjs_) + 
             aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
             scale_colour_manual(name = "clusters", values = req(update_palette())) +

@@ -89,11 +89,11 @@ shinyServer(function(input, output, session) {
     cached_embeddings       <- reactiveVal(NULL)
     embs_params             <- reactiveVal(
         list (
-            dataset = NULL,
-            encoder = NULL,
-            wlen    = NULL,
-            stride  = NULL,
-            fine_tune = NULL
+            dataset     = NULL,
+            encoder     = NULL,
+            wlen        = NULL,
+            stride      = NULL,
+            fine_tune   = NULL
         )
     )
     # Preprocess
@@ -464,18 +464,27 @@ shinyServer(function(input, output, session) {
         on.exit({log_print(paste0("reactive_enc_ar_stride | --> ", stride),  debug_group = 'generic'); flush.console()})
         stride
     })
-        
-    observeEvent(input$play_embs, {
-        on.exit( log_print(paste0("Play embs || Changes to ", allow_update_embs()),  debug_group = 'main') )
-        allow_update_embs(!allow_update_embs())
+
+    
+    enable_disable_embs <- reactive({
+        on.exit( log_print(paste0("Enable/disable embs || Changes to ", allow_update_embs()),  debug_group = 'main') )
         if (allow_update_embs()){
-            log_print("play_embs || enable embs")
+            log_print("Enable/disable embs || enable embs")
+            updateActionButton(session, "play_embs", label = "Stop embeddings", icon = shiny::icon("pause"))
             shinyjs::enable("embs")
         } else {
-            log_print("play_embs || disable embs")
+            log_print("Enable/disable embs || disable embs")
+            updateActionButton(session, "play_embs", label = "Get Embeddings!", icon = shiny::icon("play"))
             shinyjs::disable("embs")
         }
     })
+
+    observeEvent(input$play_embs, {
+        on.exit( log_print(paste0("Play embs || Changes to ", allow_update_embs()),  debug_group = 'main') )
+        allow_update_embs(!allow_update_embs())
+        enable_disable_embs()
+    })
+
 
     observeEvent(input$wlen, {
         req(input$wlen)
@@ -753,19 +762,52 @@ shinyServer(function(input, output, session) {
         X()
     })
     
+    
+    reset_tsdf_reactiveVals <- reactive({
+        tsdf_ready(FALSE)
+        enc_input_ready(FALSE)
+        tsdf(NULL)
+        tsdf_concatenated(NULL)
+        get_tsdf_prev(NULL)
+        tsdf_comp_flag(FALSE)
+        ts_vars_selected_mod(FALSE)
+            
+    })
+    reset_preprocess_reactiveVals <- reactive({
+        preprocess_dataset_prev(FALSE)
+        tsdf_preprocessed(NULL)
+        tsdf_preprocessed_params(NULL)
+        tsdf_ready_preprocessed(NULL)
+    })
+    reset_prjs_reactiveVals <- reactive({
+        allow_update_embs(FALSE)
+        enable_disable_embs() 
+        prjs(NULL)
+        embs(NULL)
+        embs_complete_cases(NULL)
+        enc(NULL)
+        cached_embeddings(NULL)
+        embs_params (
+            list(
+                dataset     = NULL,
+                encoder     = NULL, 
+                wlen        = NULL, 
+                stride      = NULL, 
+                fine_tune   = NULL
+            )
+        )
+    })
     # Time series artifact
     ts_ar <- eventReactive(
-        input$dataset, 
+        req(input$dataset), 
         {
-            #log_print(paste0("eventReactive ts_ar || Before req | Dataset ", input$dataset))
-            on.exit({log_print("eventReactive ts_ar -->"); flush.console()})
-            req(input$dataset)
-            tsdf_ready(FALSE)
-            enc_input_ready(FALSE)
             log_print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset))
+            on.exit({log_print("eventReactive ts_ar -->"); flush.console()})
+            # -- Reset tsdf
+            reset_tsdf_reactiveVals()
             ar <- api$artifact(input$dataset, type='dataset')
-            # -- Reset preprocess option for avoiding reactiveness errors
-            preprocess_dataset_prev(FALSE)
+            # -- Reset preprocess    
+            reset_preprocess_reactiveVals()
             updateCheckboxInput(
                 session = session,
                 inputId = "preprocess_dataset",
@@ -775,6 +817,9 @@ shinyServer(function(input, output, session) {
             play(FALSE)
             allow_tsdf(FALSE)
             updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
+            # -- Reset embs & encoder
+            reset_prjs_reactiveVals()
+            updateActionButton(session, "play_embs", label = "Get Embeddings!", icon = shiny::icon("play"))
             ar
         }, 
         label = "ts_ar"

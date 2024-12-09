@@ -242,7 +242,7 @@ shinyUI(fluidPage(
           div(
             id = "pcaOptionsPanel",
             class = "panel-collapse collapse",
-            sliderInput("pca_n_components", "PCA n_components:", min = 1, max = 100, value = 1),
+            sliderInput("pca_n_components", "PCA n_components:", min = 1, max = 100, value = 3),
             sliderInput("pca_random_state", "PCA random_state:", min = 0, max = 2000, value = 1234),
             numericInput("pca_random_state_text", "Enter PCA random_state", value = 0, min = 0, max = 1000000, step = 1),
           )

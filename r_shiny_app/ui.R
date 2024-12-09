@@ -122,6 +122,13 @@ shinyUI(fluidPage(
         column(4,
           conditionalPanel(
             condition = "input.fine_tune == true",
+              selectInput(
+                "ft_df", "Choose a dataset",
+                choices = list(
+                  "ft_df_ts" = "Use the original dataset",
+                  "ft_df_ts_preprocess" = "Use the preprocessed dataset"
+                )
+              )
             textInput("ft_batch_size", "Batch Size", value = 32),
             textOutput("ft_batch_size_value"),
             textInput("ft_mask_window_percent", "Percentage of windows/dataset to use for the training", value = 0.75), # mask
@@ -133,7 +140,7 @@ shinyUI(fluidPage(
             textInput("ft_min_windows_distance", "Minimum distance between windows sizes", value = 5),
             textInput("ft_num_windows", "Number of windows", value = 3),
             verbatimTextOutput("ft_output"),
-            selectInput("ft_dataset_option", "Choose dataset option", 
+            selectInput("ft_dataset_option", "Choose how to use the dataset in fine-tuning", 
             choices = list(
               "use_ft_window_percent" = "Fine-tune using the window percent.",
               "use_ft_num_windows" = "Fine-tune fixing the number of windows",

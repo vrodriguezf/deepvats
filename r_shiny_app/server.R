@@ -75,7 +75,6 @@ shinyServer(function(input, output, session) {
     embs                    <- reactiveVal(NULL)
     embs_complete_cases     <- reactiveVal(NULL)
     prjs                    <- reactiveVal(NULL)
-    embs_change             <- reactiveVal(FALSE) #TODO: ver cómo hacerlo. Ñapa
     ## -- Flags
     # DataFrame
     allow_tsdf              <- reactiveVal(FALSE)
@@ -516,16 +515,9 @@ shinyServer(function(input, output, session) {
     observeEvent(input$embs_preprocess, {
         on.exit(log_print(paste0("Embs preprocess "), debug_group = 'react'))
         log_print(paste0("Embs preprocess || use preprocess? ", input$embs_preprocess), debug_group = 'react')
-        if (embs_change()){# TODO: ver cómo hacerlo. Ñapa para que no se ejecute la primera vez
-            enc_input_ready(FALSE)
-            if (input$embs_preprocess){
-                allow_update_embs(FALSE)
-            } else {
-                allow_update_embs(TRUE)
-            }
-        } else {
-            embs_change(TRUE)
-        }
+        allow_update_embs(FALSE)
+        enc_input_ready(FALSE)
+        enable_disable_embs()
         log_print(paste0("Embs preprocess || Change button ", allow_update_embs()),  debug_group = 'react')
         enable_disable_embs()
     })
@@ -841,10 +833,10 @@ shinyServer(function(input, output, session) {
             log_print("Enc input | Update X", debug_group = 'debug')
             log_print("Enc input | ReactiveVal X | Update Sliding Window", debug_group = 'debug')
             log_print(paste0("Enc input | observe X | wlen ", input$wlen, " | stride ", input$stride, " | Let's prepare data"), debug_group = 'debug')
-            log_print(paste0("Enc input | observe X | ts_ar - id ", ts_ar()$id, " - name ", ts_ar()$name), debug_group = 'debug')
+            log_print(paste0("Enc input | observe X | ts_ar - id ", ts_ar()$id, " - name ", ts_ar()$name), debug_group = 'main')
             ############## SLIDING WINDOW VIEW
             path <- path_comp()
-            log_print(paste0("Enc input | observe X | path: ", path))
+            log_print(paste0("Enc input | observe X | path: ", path), debug_group = 'main')
             enc_input <- dvats$exec_with_feather_k_output(
                 function_name   = "prepare_forecasting_data",
                 module_name     = "tsai.data.preparation",
@@ -855,16 +847,16 @@ shinyServer(function(input, output, session) {
                 fcst_history    = input$wlen
             )
             ### Selecting indexes in the sliding window view version ###
-            log_print(paste0("Enc input | observe X | 1) enc_input ~ ", dim(enc_input)))
+            log_print(paste0("Enc input | observe X | 1) enc_input ~ ", dim(enc_input)), debug_group = 'main')
             indexes <- seq(1, dim(enc_input)[1], input$stride)
             enc_input <- enc_input[indexes,,,drop = FALSE]
-            log_print(paste0("Enc input | observe X | 2) enc_input ~ ", dim(enc_input)))
-            log_print(paste0("Enc input | observe X | Update sliding window | Apply stride ", input$stride," | X ~ enc_input ~ ", dim(enc_input), "-->"))
+            log_print(paste0("Enc input | observe X | 2) enc_input ~ ", dim(enc_input)), debug_group = 'main')
+            log_print(paste0("Enc input | observe X | Update sliding window | Apply stride ", input$stride," | X ~ enc_input ~ ", dim(enc_input), "-->"), debug_group = 'main')
             on.exit({log_print("Enc input | observe X -->", debug_group = 'main'); flush.console()})
             enc_input_ready(TRUE)
             X(enc_input)
         } else {
-            log_print("Enc input | observe X | X already updated", debug_group = 'debug')
+            log_print("Enc input | observe X | X already updated", debug_group = 'main')
         }
 
         t_x_1 <- Sys.time() 
@@ -1405,6 +1397,23 @@ shinyServer(function(input, output, session) {
         embs_complete_cases (embs()[complete.cases(embs()),])
         log_print(paste0("|| embs_complete_cases || After complete cases embs ~", dim(embs_complete_cases())), debug_group = 'force')
     })
+
+    embs_complete_cases_comp2 <- observeEvent(input$embs_preprocess, {
+        log_print(
+            paste0(
+                " || embs_complete_cases2 || before req || allow update? ", allow_update_embs(),
+                " | input encoder ", input$encoder,
+                " | tsdf_ready_preprocessed? ", tsdf_ready_preprocessed(),
+                " | input$embs_preprocess ", tsdf_ready_preprocessed()
+            ), 
+            debug_group = 'force'
+        )
+        req(allow_update_embs(), input$encoder, tsdf_ready_preprocessed())
+        embs_comp_or_cached()
+        log_print(paste0("|| embs_complete_cases2 || Before complete cases embs ~", dim(embs())), debug_group = 'debug')
+        embs_complete_cases(embs()[complete.cases(embs()),])
+        log_print(paste0("|| embs_complete_cases2 || After complete cases embs ~", dim(embs_complete_cases())), debug_group = 'force')
+    })
     
     prjs_umap <- reactive({
         req(input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
@@ -1441,7 +1450,7 @@ shinyServer(function(input, output, session) {
             input$prj_n_neighbors, 
             input$prj_min_dist
         )
-        log_print("Compute PCA_UMAP", debug_group = 'debug')
+        log_print("Compute PCA_UMAP", debug_group = 'main')
         res <- dvats$get_PCA_UMAP_prjs(
                 input_data  = embs_complete_cases(), 
                 cpu         = cpu_flag(), 
@@ -1449,13 +1458,18 @@ shinyServer(function(input, output, session) {
                 pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
                 umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
         )
-        log_print("PCA_UMAP computed", debug_group = 'debug')
+        log_print("PCA_UMAP computed", debug_group = 'main')
         res
     })
 
     prjs_comp <- reactive({
-        log_print(paste0("|| prjs_comp || Before req || allow? ", allow_update_embs()), debug_group = 'debug')
-        log_print("--> prjs_comp", debug_group = 'force')
+        req(input$dr_method, embs())
+        log_print(
+            paste0("--> || prjs_comp || Before req || allow? ", allow_update_embs(),
+            " | DR method: ", input$dr_method
+            ), 
+            debug_group = 'main'
+        )
         res <- switch( 
             input$dr_method,
             UMAP    = prjs_umap(),
@@ -1464,11 +1478,12 @@ shinyServer(function(input, output, session) {
             PCA_UMAP= prjs_pca_umap()
         )
         
-        log_print("prjs_comp -->", debug_group = 'force')
+        log_print("prjs_comp -->", debug_group = 'main')
         res
     })
     
     prj_object <- reactive({
+        log_print(paste0("prj_object | Befpre prjs_comp"), debug_group = 'main')
         t_prj_0 = Sys.time()
         res <- prjs_comp()
         log_print(paste0("prj_object | After prjs_comp res~", dim(res)), debug_group = 'main')
@@ -1990,7 +2005,7 @@ shinyServer(function(input, output, session) {
             input$wlen != 0, 
             input$stride, 
             tsdf_ready()
-            )
+        )
         t_tsp_0 = Sys.time()
         on.exit({log_print("ts_plot -->", debug_group = 'main'); flush.console()})        
         log_print(paste0("ts_plot || ts variables Before ts_plot_base ", ts_variables_str(ts_variables), " -->"), debug_group = 'main')
@@ -2208,9 +2223,8 @@ shinyServer(function(input, output, session) {
         log_print(ts_ar_config())
         ts_ar_config() %>% enframe()
     })
-       
-    # Generate projections plot
-    output$projections_plot <- renderPlot({
+    
+    projections_plot_comp <- reactive({
         log_print(
             paste0(
                 "Projections_plot || Before req",
@@ -2290,6 +2304,17 @@ shinyServer(function(input, output, session) {
             mssg                    = paste0("R execution time | Ts selected point", input$ts_plot_dygraph_click)
         )
         plt
+    })
+
+    # Generate projections plot
+    output$projections_plot <- renderPlot({
+        plt <- req(projections_plot_comp())
+        plt
+    })
+
+    observeEvent(X(),{
+        log_print("X() has changed, recompute projections_plot ", debug_group = 'react')
+        projections_plot_comp()
     })
     
     
@@ -2474,7 +2499,6 @@ shinyServer(function(input, output, session) {
         input$preprocess_dataset, 
     {
         log_print(paste0("observe preprocess dataset"), debug_group = 'react')
-        embs_change(FALSE)
         allow_update_embs(FALSE)
         enable_disable_embs()
     })

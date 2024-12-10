@@ -162,6 +162,10 @@ shinyUI(fluidPage(
       
       actionButton("play_pause", "Start with the dataset!", icon = shiny::icon("play")),
       actionButton("play_embs", "Get Embeddings!", icon = shiny::icon("play")),
+      conditionalPanel(
+        condition = "input.preprocess_dataset == true",
+        checkboxInput("embs_preprocess", "Use preprocessed dataset for getting embeddings", value = FALSE)
+      ),
       actionButton("cuda", "Remove CUDA cache", icon = shiny::icon("trash")),
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
@@ -276,10 +280,7 @@ shinyUI(fluidPage(
           )
         )
       ),
-      actionBttn( #TODO: controlar el cómputo de proyecciones por separado de obtener los embedding
-        inputId = "compute_projection", label = "Compute and show projection", 
-        style = "bordered", color = "primary", size = "sm", block = TRUE
-      ),
+      
       br(),
       radioButtons("clustering_options", label = "Select a clustering option", selected = "no_clusters",
                    choices = c("No clusters" = "no_clusters",

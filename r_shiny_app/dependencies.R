@@ -41,6 +41,9 @@ scipy <- import("scipy")
 
 torch <- reticulate::import("torch")
 momentfm <- reticulate::import("momentfm")
+ft <- reticulate::import("pyarrow.feather")
+
+
 #options(shiny.trace = TRUE)
 if(torch$cuda$is_available()){
   print(paste0("CUDA AVAILABLE. Num devices: ", torch$cuda$device_count()))

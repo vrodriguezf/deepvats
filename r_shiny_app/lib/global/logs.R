@@ -19,7 +19,7 @@ LOG_PATH    <- ""
 LOG_HEADER  <- ""
 DEBUG_GROUPS<- list (
   'generic' = 0,
-  'main'    = 1,
+  'main'    = -1,
   'button'  = 2,
   'embs'    = 1,
   'time'    = 1, #8,
@@ -28,7 +28,7 @@ DEBUG_GROUPS<- list (
   'force'   = -1,
   'error'   = -1,
   'debug'   = 11,
-  'react'   = 2,
+  'react'   = -1,
   'js'      = 12
 ) 
 

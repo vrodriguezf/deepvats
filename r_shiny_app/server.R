@@ -143,6 +143,7 @@ shinyServer(function(input, output, session) {
     enc_input_ready         <- reactiveVal(FALSE)
     allow_update_len        <- reactiveVal(TRUE)
     allow_update_embs       <- reactiveVal(FALSE)
+    projections_plot_ready  <- reactiveVal(TRUE)
     # Application options
     wlen_min                <- reactiveVal(0)
     wlen_max                <- reactiveVal(0)
@@ -510,18 +511,11 @@ shinyServer(function(input, output, session) {
         allow_update_embs(!allow_update_embs())
         log_print(paste0("Play embs || Change button ", allow_update_embs()),  debug_group = 'react')
         enable_disable_embs()
+        if (input$play_embs){
+            log_print("play_embs set to true, recompute projections_plot ", debug_group = 'react')
+            projections_plot_comp()
+        }
     })
-
-    observeEvent(input$embs_preprocess, {
-        on.exit(log_print(paste0("Embs preprocess "), debug_group = 'react'))
-        log_print(paste0("Embs preprocess || use preprocess? ", input$embs_preprocess), debug_group = 'react')
-        allow_update_embs(FALSE)
-        enc_input_ready(FALSE)
-        enable_disable_embs()
-        log_print(paste0("Embs preprocess || Change button ", allow_update_embs()),  debug_group = 'react')
-        enable_disable_embs()
-    })
-
 
     observeEvent(input$wlen, {
         req(input$wlen)
@@ -619,7 +613,16 @@ shinyServer(function(input, output, session) {
     observe({
         req(ts_vars_selected_mod())
         log_print("--> observeEvent ts_variables selected | update select variables choices",  debug_group = 'main')
-        on.exit({log_print(paste0("observeEvent ts_variables selected | update select variables choices | ts_variables:",ts_variables_str(ts_variables)," -->"),debug_group = 'main'); flush.console()})
+        on.exit({
+            log_print(
+                paste0(
+                    "observeEvent ts_variables selected | update select variables choices | ts_variables:",
+                    ts_variables_str(ts_variables)," -->"
+                ),
+                debug_group = 'main'
+            ); 
+            flush.console()
+        })
         updateCheckboxGroupInput(
             session     = session,
             inputId     = "select_variables",
@@ -689,7 +692,7 @@ shinyServer(function(input, output, session) {
         log_print(
             "Update prj graph", 
             file_flag   = TRUE, 
-            log_path    = LOG_PATH, 
+            file_path   = LOG_PATH, 
             log_header  = LOG_HEADER,
             debug_group = 'main'
         )
@@ -726,8 +729,7 @@ shinyServer(function(input, output, session) {
     #  REACTIVES  #
     ###############
     
-    observe({
-        req(ts_ar())
+    observeEvent(ts_ar(), {
         tsdf_path(file.path(DEFAULT_PATH_WANDB_ARTIFACTS, ts_ar()$metadata$TS$hash))
         enc_input_path(tsdf_path())
     })
@@ -763,6 +765,7 @@ shinyServer(function(input, output, session) {
         log_print(paste0("data_feather || data ~ --> ", dim(py_data)), debug_group = 'force')
         py_data
     })
+    
     path_comp <- reactive ({
         log_print("|| --> path_comp || ", debug_group = 'force')
         on.exit({log_print("|| path_comp --> || ", debug_group = 'force')})
@@ -779,7 +782,7 @@ shinyServer(function(input, output, session) {
                 data <- data_feather()
                 log_print(paste0("|| path_comp || data~: ", dim(data)), debug_group='force')
                 write_feather(data, path, compression = 'lz4')
-                log_print(paste0("|| path_comp || Dataset preprocessed saved at: ", path), debug_group='force')
+                log_print(paste0("|| path_comp || Preprocessed dataset saved at: ", path), debug_group='force')
             }, error = function(e) {
                 stop(paste0("|| path_comp || Error writing data ", dim(data), " into " , path, ": ", e$message))
             })
@@ -968,11 +971,11 @@ shinyServer(function(input, output, session) {
     observe({
         toguether_log_path = paste0(header, "-", execution_id)
         if (toguether){
-            log_path <<- toguether_log_path
+            LOG_PATH <<- toguether_log_path
             log_print(paste0(">>>> Toguether Log path: ", toguether_log_path))   
         } else {
             new_log_path <- paste0(toguether_log_path, "-", ts_ar()$name, ".log")  # Construye el nuevo log_path
-            log_path <<- new_log_path
+            LOG_PATH <<- new_log_path
             log_print(paste0(">>>> New Log path: ", new_log_path))   
         }
     })
@@ -1401,18 +1404,26 @@ shinyServer(function(input, output, session) {
     embs_complete_cases_comp2 <- observeEvent(input$embs_preprocess, {
         log_print(
             paste0(
-                " || embs_complete_cases2 || before req || allow update? ", allow_update_embs(),
+                " || embs_complete_cases2 || before req",
                 " | input encoder ", input$encoder,
                 " | tsdf_ready_preprocessed? ", tsdf_ready_preprocessed(),
                 " | input$embs_preprocess ", tsdf_ready_preprocessed()
             ), 
             debug_group = 'force'
         )
-        req(allow_update_embs(), input$encoder, tsdf_ready_preprocessed())
+        on.exit(log_print(paste0("Embs preprocess "), debug_group = 'react'))        
+        req(input$encoder, tsdf_ready_preprocessed())
+        allow_update_embs(TRUE)
         embs_comp_or_cached()
         log_print(paste0("|| embs_complete_cases2 || Before complete cases embs ~", dim(embs())), debug_group = 'debug')
         embs_complete_cases(embs()[complete.cases(embs()),])
         log_print(paste0("|| embs_complete_cases2 || After complete cases embs ~", dim(embs_complete_cases())), debug_group = 'force')
+        log_print(paste0("Embs preprocess || use preprocess? ", input$embs_preprocess), debug_group = 'react')
+        allow_update_embs(FALSE)
+        enc_input_ready(FALSE)
+        enable_disable_embs()
+        log_print(paste0("Embs preprocess || Change button ", allow_update_embs()),  debug_group = 'react')
+
     })
     
     prjs_umap <- reactive({
@@ -2313,7 +2324,9 @@ shinyServer(function(input, output, session) {
     })
 
     observeEvent(X(),{
-        log_print("X() has changed, recompute projections_plot ", debug_group = 'react')
+        on.exit("X() has changed || Recomputed projections plot -->")
+        log_print("--> X() has changed, recompute projections_plot ", debug_group = 'react')
+        allow_update_embs(TRUE)
         projections_plot_comp()
     })
     
@@ -2502,16 +2515,4 @@ shinyServer(function(input, output, session) {
         allow_update_embs(FALSE)
         enable_disable_embs()
     })
-
-    #############
-    ### DEBUG ###
-    #############
-    # Observe changes to ts_variables and log the source of the modification
-    previous_ts_variables <- reactiveValues(
-        original        = NULL,
-        preprocessed    = NULL,
-        complete        = NULL,
-        selected        = NULL
-    )
 })
-

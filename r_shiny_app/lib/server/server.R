@@ -134,9 +134,9 @@ reactiveVal_compute_or_cached <- function(
     log_print(paste0("-->", header), debug_group = 'debug')
     if ( is.null( object() ) || ! identical( params_prev, params_now ) ) {
         shinyjs::enable(compute_function_name)
+        compute_flag <- TRUE
         if ( is.null( object() )){
             log_print(paste0(header, "First embedding computation, skipping cache"), debug_group = 'debug')
-            compute_flag <- TRUE
         } else {
             log_print(paste0(header, "At least 1 param changed"), debug_group = 'debug')
             different_params <- names(params_now)[
@@ -153,6 +153,8 @@ reactiveVal_compute_or_cached <- function(
         }
         shinyjs::disable(compute_function_name)
     } else {
+        log_print(paste0(header, " Use cached || params_prev ", paste(params_prev, collapse = ', ')), debug_group = 'debug')
+        log_print(paste0(header, " Use cached || params_prev ", paste(params_now, collapse = ', ')), debug_group = 'debug')
         log_print(paste0(header, " Use cached || null? ", is.null( object() ), " || compute? || ", compute_flag, " -->" ), debug_group = 'debug')
     }
     return ( compute_flag )

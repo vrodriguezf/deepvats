@@ -170,15 +170,6 @@ shinyUI(fluidPage(
       #selectizeInput("embs_ar", label = "Select embeddings", choices = names(embs_l)),
       br(),
       actionBttn(
-        inputId = "get_tsdf", 
-        label = "Activate/Deactivate DF loading", 
-        style = "bordered", 
-        color = "primary", 
-        size = "sm", 
-        block = TRUE  
-      ),      
-      br(),
-      actionBttn(
         inputId = "restore_wlen_stride",
         label = "Restore window size and stride",
         style = "bordered",

@@ -131,7 +131,8 @@ reactiveVal_compute_or_cached <- function(
 ){
     compute_flag <- FALSE
     header <- paste0("|| reactiveVal_compute_or_cached || ", compute_function_name, " || ")
-    log_print(paste0("-->", header), debug_group = 'debug')
+    log_print(paste0("-->", header), debug_group = 'cache')
+    on.exit(log_print(paste0(header, " compute? ", compute_flag, "-->"), debug_group = 'cache'))
     if ( is.null( object() ) || ! identical( params_prev, params_now ) ) {
         shinyjs::enable(compute_function_name)
         compute_flag <- TRUE
@@ -155,7 +156,7 @@ reactiveVal_compute_or_cached <- function(
     } else {
         log_print(paste0(header, " Use cached || params_prev ", paste(params_prev, collapse = ', ')), debug_group = 'debug')
         log_print(paste0(header, " Use cached || params_prev ", paste(params_now, collapse = ', ')), debug_group = 'debug')
-        log_print(paste0(header, " Use cached || null? ", is.null( object() ), " || compute? || ", compute_flag, " -->" ), debug_group = 'debug')
+        log_print(paste0(header, " Use cached || null? ", is.null( object() ), " || compute? || ", compute_flag ), debug_group = 'debug')
     }
     return ( compute_flag )
 }

@@ -29,7 +29,8 @@ DEBUG_GROUPS<- list (
   'error'   = -1,
   'debug'   = 11,
   'react'   = -1,
-  'js'      = 12
+  'js'      = 12,
+  'cache'   = -1
 ) 
 
 log_print <- function(

@@ -2053,7 +2053,7 @@ shinyServer(function(input, output, session) {
                     log_print(paste0("idxs", ts_idxs), debug_group = 'tmi')
                     start_event_date = tsdf()$timeindex[head(ts_idxs, 1)]
                     end_event_date = tsdf()$timeindex[tail(ts_idxs, 1)]
-                    log_print(paste0("start_event_date", start_event_date), debug_group = 'tdebug')
+                    log_print(paste0("start_event_date", start_event_date), debug_group = 'debug')
                     log_print(paste0("end_event_date", end_event_date), debug_group = 'debug')
                     ts_plt <- ts_plt %>% dyShading(
                         from = start_event_date,

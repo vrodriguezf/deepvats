@@ -33,7 +33,8 @@ DEBUG_GROUPS<- list (
   'cache'   = 10,
   'proc'    = 3
 ) 
-MAX_CHARS   <- 80
+MAX_CHARS   <- 90
+
 message_header <- function(mssg, mssg_id, add_header, header, time) {
   if (add_header) {
     formated_mssg = paste0(time, " [", mssg_id, "] ", header, " || ", mssg, "\n")
@@ -61,15 +62,21 @@ message_split <- function(mssg, max_chars = MAX_CHARS) {
 log_to_file <- function(
   formated_mssg,
   file_flag,
-  file_path
+  file_path, 
+  collapse = ' '
 ){
   if (file_flag && !is.null(file_path)) {
     if (file_path != "") {
       file_path = paste0 ("../data/", file_path)
       if (!file.exists(file_path)) {
         file.create(file_path)
-        }
-        cat(formated_mssg, file = file_path, append = TRUE)
+      }
+      cat(
+        paste(formated_mssg, collapse = collapse),
+         file = file_path, 
+         append = TRUE, 
+         collapse = ''
+      )
     }
   }
 }
@@ -99,7 +106,10 @@ log_print   <- local({
             time        = time
           )
           formated_mssg <- message_split(formated_mssg, max_chars)
-          cat(formated_mssg)
+          cat(
+            paste(formated_mssg, collapse = paste0("\n ",time, " [", MESSAGE_ID, "] ")), 
+            collapse = ''
+          )
           log_to_file(formated_mssg, file_flag, file_path)
       }
       flush.console()

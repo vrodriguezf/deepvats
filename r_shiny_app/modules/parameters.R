@@ -21,9 +21,13 @@ select_datasetServer <- function(
         mplot_compute_allow(FALSE)
         shinyjs::disable("get_tsdf")
         #req(encs_l)
-        log_print("--> observeEvent input_dataset | update encoder list", debug_group = 'main')
+        log_print("--> observeEvent input_dataset | update encoder list", debug_group = 'react')
+        on.exit({log_print("observeEvent input_dataset | update encoder list -->", debug_group = 'main'); flush.console()})
         freezeReactiveValue(input, "encoder")
-        log_print(paste0("observeEvent input_dataset | update encoders for dataset ", input$dataset, debug_group = 'debug'))
+        log_print(
+            paste0("observeEvent input_dataset | update encoders for dataset ", input$dataset), 
+            debug_group = 'debug'
+        )
         
         ts_ar <- api$artifact(input$dataset, type='dataset')
 
@@ -51,9 +55,6 @@ select_datasetServer <- function(
         updateSliderInput(session, "stride", value = 0)
         shinyjs::enable("get_tsdf")
         ################
-        on.exit(
-            {log_print("observeEvent input_dataset | update encoder list -->", debug_group = 'main'); flush.console()}
-        )
     }, label = "input_encoder")    
 }
 

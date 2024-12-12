@@ -79,7 +79,6 @@ shinyServer(function(input, output, session) {
     # DataFrame
     allow_tsdf              <- reactiveVal(FALSE)
     get_tsdf_prev           <- reactiveVal(NULL)
-    tsdf_comp_flag          <- reactiveVal(FALSE)
     tsdf_ready              <- reactiveVal(FALSE)
     tsdf_ready_preprocessed <- reactiveVal(FALSE)
     # CPU
@@ -161,19 +160,18 @@ shinyServer(function(input, output, session) {
     #  OBSERVERS & OBSERVERS EVENTS #
     #################################
 
-    update_play_pause_button <- function() {
+    update_play_pause_button <- reactive({
         if (play()) {
             updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
             allow_tsdf(TRUE)
-            #tsdf_ready(FALSE)
-            #tsdf_ready_preprocessed(FALSE)
-            tsdf_comp_flag(FALSE)
+            tsdf_ready(FALSE)
+            tsdf_ready_preprocessed(FALSE)
             tsdf_comp()
         } else {
             updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
             allow_tsdf(FALSE)
         }
-    }
+    })
 
     update_play_fine_tune_button <- function() {
         log_print(paste0("--> Updating play_fine_tune ", play_fine_tune()), debug_group = 'button')
@@ -603,7 +601,7 @@ shinyServer(function(input, output, session) {
     
     # Update time series variables
     observe({
-        req(tsdf_comp_flag(), play(), ts_ar())
+        req(play(), ts_ar(), tsdf())
         if (! input$embs_preprocess){
             log_print("--> observe update ts variables (1) || Tsdf modified",  debug_group = 'main')
             on.exit(log_print(paste0(" observe update ts variables (1) || ts variables ", ts_variables_str(ts_variables), " -->"), debug_group = 'main'))
@@ -938,7 +936,6 @@ shinyServer(function(input, output, session) {
         tsdf(NULL)
         tsdf_concatenated(NULL)
         get_tsdf_prev(NULL)
-        tsdf_comp_flag(FALSE)
         ts_vars_selected_mod(FALSE)
             
     })
@@ -982,8 +979,7 @@ shinyServer(function(input, output, session) {
         )
         # -- Reset play button
         play(FALSE)
-        allow_tsdf(FALSE)
-        updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
+        update_play_pause_button()
         # -- Reset embs & encoder
         reset_prjs_reactiveVals()
         ts_ar(ar)
@@ -1204,7 +1200,7 @@ shinyServer(function(input, output, session) {
             processed = input$embs_preprocess
         )
         log_print(paste0(
-            "Embs || Before req enc_input_ready ", enc_input_ready(),
+            "embs_comp_or_cached || Before req enc_input_ready ", enc_input_ready(),
             " | play ", play(),
             " | allow_update_embs ", allow_update_embs(),
             " | X | ", ifelse(is.null(X()), "NULL", "NOT NULL"),
@@ -1213,7 +1209,7 @@ shinyServer(function(input, output, session) {
         ), debug_group = 'force')
         req(tsdf_ready(), X(), enc(), enc_input_ready(), allow_update_embs())
         compute_flag <- reactiveVal_compute_or_cached(cached_embeddings, embs_params(),embs_params_current,"embs_comp")
-        log_print(paste0("Embs || --> embs | compute_flag ", compute_flag), debug_group = 'force')
+        log_print(paste0("embs_comp_or_cached || --> embs | compute_flag ", compute_flag), debug_group = 'force')
         if ( compute_flag ){
             res <- embs_comp()
             cached_embeddings(res)
@@ -1222,7 +1218,7 @@ shinyServer(function(input, output, session) {
             res <- cached_embeddings()
         }
         embs_params(embs_params_current)
-        log_print(paste0("Embs || res ~", dim(res)), debug_group = 'force')
+        log_print(paste0("embs_comp_or_cached || res ~", dim(res)), debug_group = 'force')
         embs(res)
         res
     })
@@ -1231,8 +1227,8 @@ shinyServer(function(input, output, session) {
     embs_comp <- reactive({
         req(allow_update_embs(), enc_input_ready(), tsdf(), X())
         log_print(paste0("embs_comp || --> embs_comp | enc_input_ready ", enc_input_ready()), debug_group = 'main')
-        log_print(paste0("embs_comp || tsdf ~ ", dim(tsdf())), debug_group = 'debug')
-        log_print(paste0("embs_comp || X ~ ", dim(X())), debug_group = 'debug')
+        log_print(paste0("embs_comp || tsdf ~ (", paste(dim(tsdf()), collapse=', '),")"), debug_group = 'debug')
+        log_print(paste0("embs_comp || X ~(", paste(dim(X()), collapse=', '), ")"), debug_group = 'debug')
         log_print(paste0("embs_comp ||get embeddings"), debug_group = 'debug')
         if (torch$cuda$is_available()){
             log_print(paste0("embs_comp || CUDA devices: ", torch$cuda$device_count(), " | current_device: ", torch$cuda$current_device()), debug_group = 'tmi')
@@ -1440,10 +1436,10 @@ shinyServer(function(input, output, session) {
             ), 
             debug_group = 'force'
         )
-        req(allow_update_embs(), input$encoder, tsdf_ready())
+        req(allow_update_embs(), input$encoder, tsdf_ready(), tsdf(), X())
         embs_comp_or_cached()
         log_print(paste0("embs_complete_cases || Before complete cases embs ~", paste(dim(embs()), collapse = ', ')), debug_group = 'debug')
-        embs_complete_cases (embs()[complete.cases(embs()),])
+        embs_complete_cases(embs()[complete.cases(embs()),])
         log_print(paste0("embs_complete_cases || After complete cases embs ~", paste(dim(embs_complete_cases()), collapse = ', ')), debug_group = 'force')
     })
 
@@ -1453,7 +1449,7 @@ shinyServer(function(input, output, session) {
                 " || embs_complete_cases2 || before req",
                 " | input encoder ", input$encoder,
                 " | tsdf_ready_preprocessed? ", tsdf_ready_preprocessed(),
-                " | input$embs_preprocess ", tsdf_ready_preprocessed()
+                " | input$embs_preprocess ", input$embs_preprocess
             ), 
             debug_group = 'force'
         )
@@ -1465,17 +1461,7 @@ shinyServer(function(input, output, session) {
         allow_update_embs(TRUE)
         log_print("ObserveEvent Embs preprocess || Compute projections plot", debug_group = 'debug')
         allow_update_embs(TRUE)
-        projections_plot_comp()
-        #embs_comp_or_cached()
-        #log_print(paste0("embs_complete_cases2 || Before complete cases embs ~", dim(embs())), debug_group = 'debug')
-        #embs_complete_cases(embs()[complete.cases(embs()),])
-        #log_print(paste0("embs_complete_cases2 || After complete cases embs ~", dim(embs_complete_cases())), debug_group = 'force')
-        #log_print(paste0("Embs preprocess || use preprocess? ", input$embs_preprocess), debug_group = 'react')
-        #allow_update_embs(FALSE)
-        #enc_input_ready(FALSE)
-        #enable_disable_embs()
-        #log_print(paste0("Embs preprocess || Change button ", allow_update_embs()),  debug_group = 'react')
-
+        req(projections_plot_comp())
     })
     
     prjs_umap <- reactive({
@@ -1507,46 +1493,55 @@ shinyServer(function(input, output, session) {
         res
     })
     prjs_pca_umap <- reactive({
+        log_print(
+            paste0(
+                "prjs_pca_umap || Before req", 
+                " | embs complete cases? ", is.null(embs_complete_cases())
+            ),
+            debug_group = 'debug'
+        )
         req(
             embs_complete_cases(), 
             input$prj_random_state, 
             input$prj_n_neighbors, 
             input$prj_min_dist
         )
-        log_print("Compute PCA_UMAP", debug_group = 'main')
+        log_print("--> prjs_pca_umap", debug_group = 'main')
+        on.exit({log_print("prjs_pca_umap -->", debug_group = 'main')})
         res <- dvats$get_PCA_UMAP_prjs(
-                input_data  = embs_complete_cases(), 
-                cpu         = cpu_flag(), 
-                verbose     = as.integer(1),
-                pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
-                umap_kwargs = dict(random_state= as.integer(input$prj_random_state), n_neighbors = input$prj_n_neighbors, min_dist = input$prj_min_dist)
+            input_data  = embs_complete_cases(), 
+            cpu         = cpu_flag(), 
+            verbose     = as.integer(1),
+            pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
+            umap_kwargs = dict(
+                random_state= as.integer(input$prj_random_state), 
+                n_neighbors = input$prj_n_neighbors, 
+                min_dist    = input$prj_min_dist
+            )
         )
-        log_print("PCA_UMAP computed", debug_group = 'main')
         res
     })
 
     prjs_comp <- reactive({
         req(input$dr_method, embs())
         log_print(
-            paste0("--> || prjs_comp || Before req || allow? ", allow_update_embs(),
-            " | DR method: ", input$dr_method
-            ), 
+            paste0("--> || prjs_comp || Before switch || DR method: ", input$dr_method), 
             debug_group = 'main'
         )
-        res <- switch( 
-            input$dr_method,
+        on.exit({log_print("prjs_comp -->", debug_group = 'main')})
+        res <- switch( input$dr_method,
             UMAP    = prjs_umap(),
             TSNE    = prjs_tsne(),
             PCA     = prjs_pca(),                
             PCA_UMAP= prjs_pca_umap()
         )
         
-        log_print("prjs_comp -->", debug_group = 'main')
+        
         res
     })
     
     prj_object <- reactive({
-        log_print(paste0("prj_object | Befpre prjs_comp"), debug_group = 'main')
+        log_print(paste0("prj_object | Before prjs_comp"), debug_group = 'main')
         t_prj_0 = Sys.time()
         res <- prjs_comp()
         log_print(paste0("prj_object | After prjs_comp res~", dim(res)), debug_group = 'main')
@@ -1675,9 +1670,6 @@ shinyServer(function(input, output, session) {
                 mssg                = "Read feather"
             )
             flush.console()
-            tsdf_preprocessed(NULL)
-            tsdf_ready_preprocessed(FALSE)
-            tsdf_comp_flag(TRUE)
             log_print(
                 paste0(
                     "Reactive tsdf | Execution time: ", t_1 - t_0, " seconds | df ~ ", dim(df),
@@ -1687,13 +1679,16 @@ shinyServer(function(input, output, session) {
             flush.console()
             df
         })
-        tsdf_comp_flag(TRUE)
         tsdf(df)
         tsdf_concatenated(df)
+        tsdf_preprocessed(NULL)
+        tsdf_ready_preprocessed(NULL)
+        allow_update_embs(FALSE)
+        enable_disable_embs()
         log_print(
             paste0( 
                 "Reactive tsdf | ts_variables ", ts_variables_str(ts_variables),
-                " ready? ", ! is.null(ts_variables$complete) 
+                " ready? ", ! is.null(ts_variables$complete)
             ), debug_group = 'main'
         )
     })  
@@ -1815,17 +1810,17 @@ shinyServer(function(input, output, session) {
                 " | tsdf ready ", tsdf_ready(),
                 " | update embs ", allow_update_embs()
             ),
-            debug_group = 'force'
+            debug_group = 'debug'
         )
         req(input$dr_method, tsdf_ready(), allow_update_embs(), prj_object(), clustering_options$selected)
-        log_print("--> projections", debug_group = 'force')
-        log_print("projections || before prjs", debug_group = 'force')
+        log_print("--> projections", debug_group = 'main')
+        log_print("projections || before prjs", debug_group = 'debug')
         prjs <- prj_object()
         log_print(
             paste0("projections || Compute clusters? ", 
             clustering_options$selected
             ), 
-            debug_group = 'force'
+            debug_group = 'debug'
         )
         tcl_0 = Sys.time() 
         switch(clustering_options$selected,
@@ -1868,7 +1863,7 @@ shinyServer(function(input, output, session) {
         on.exit({
             log_print(
                 paste0("Projections --> | prjs ~", dim(prjs)), 
-                debug_group = 'force'
+                debug_group = 'main'
             ); 
             flush.console()
         })
@@ -2311,12 +2306,62 @@ shinyServer(function(input, output, session) {
         ts_ar_config() %>% enframe()
     })
     
+
+    projections_plot_comp_highlight <- function(prjs_){
+        log_print(paste0("--> projections_plot_comp_highlight | Prepare column highlights prjs~", paste(dim(prjs_), collapse = ', ')), debug_group = 'debug')
+        on.exit({log_print(paste0("projections_plot_comp_highlight -->"))})
+        highlight <- FALSE
+        if (!is.null(input$ts_plot_dygraph_click)) {
+            log_print(
+                "projections_plot_comp_highlight || Selected ts time points", 
+                TRUE, LOG_PATH, LOG_HEADER, debug_group = 'debug'
+            )
+            selected_ts_idx <- which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
+            indices_per_embedding <- get_window_indices(embedding_ids(), input$wlen, input$stride)
+            projections_idxs <- indices_per_embedding %>% map_lgl(~ selected_ts_idx %in% .)
+            log_print(paste0("prjs_ ~ ", indices_per_embedding), debug_group = 'DEBUG')
+            if (length(projections_idxs) > 0){
+                highlight <- projections_idxs
+            }
+        }
+        highlight
+    }
+
+    ggplot_base <- function(prjs_, config_style, ranges, cluster){
+        log_print("--> ggplot_base", debug_group = 'debug')
+        log_print("ggplot_base -->", debug_group = 'debug')
+        plt <- ggplot(data = prjs_) + 
+            aes(
+                x   = xcoord, 
+                y = ycoord, 
+                fill = highlight, color = as.factor(cluster)
+            ) + 
+            scale_colour_manual(
+                name = "clusters", 
+                values = req(update_palette())
+            ) +
+            geom_point(
+                shape = 21, 
+                alpha = config_style$point_alpha, 
+                size = config_style$point_size
+            ) + 
+            scale_shape(solid = FALSE) +
+            guides() + 
+            scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA")) +
+            coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE) +
+            theme_void() + 
+            theme(legend.position = "none")
+        return(plt)
+    }
+
     projections_plot_comp <- reactive({
         log_print(
             paste0(
                 "Projections_plot || Before req",
                 " | tsdf_ready? ",  tsdf_ready(),
-                " | update embs? ", allow_update_embs()
+                " | update embs? ", allow_update_embs(),
+                " | projections? ", is.null(projections()),
+                " | enc_input_path? ", enc_input_path()
             ),
             debug_group = 'force'
         )
@@ -2332,48 +2377,23 @@ shinyServer(function(input, output, session) {
             clustering_options$selected,
             enc_input_path()
         )
+        input$embs_preprocess
+
         log_print("--> Projections_plot", debug_group = 'force')
+        plt <- NULL
+        on.exit("Projections_plot --> || is null plt? ", is.null(plt))
         log_print(paste0(" Projections_plot || ts_variables:  ", ts_variables_str(ts_variables)), debug_group = 'force')
         t_pp_0 <- Sys.time()
         prjs_ <- req(projections())
-         
-        log_print(paste0("projections_plot | Prepare column highlights prjs~", paste(dim(prjs_), collapse = ', ')), debug_group = 'debug')
         # Prepare the column highlight to color data
-        if (!is.null(input$ts_plot_dygraph_click)) {
-            log_print("Selected ts time points" , TRUE, LOG_PATH, LOG_HEADER, debug_group = 'debug')
-            selected_ts_idx <- which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
-            ##### ---- AQUI --- #### #indices_per_embedding <- tsidxs_per_embedding_idx()
-            indices_per_embedding <- get_window_indices(embedding_ids(), input$wlen, input$stride)
-            projections_idxs <- indices_per_embedding %>% map_lgl(~ selected_ts_idx %in% .)
-            log_print(paste0("prjs_ ~ ", indices_per_embedding), debug_group = 'DEBUG')
-            if (length(projections_idxs) > 0){
-                prjs_$highlight <- projections_idxs
-            }
-        } else {
-            prjs_$highlight = FALSE
-        }
+        prjs_$highlight <- projections_plot_comp_highlight(prjs_)
         # Prepare the column highlight to color data. If input$generate_cluster has not been clicked
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
-        if(!("cluster" %in% names(prjs_)))
-            prjs_$cluster = FALSE
-        log_print(
-            paste0("projections_plot | GoGo Plot!", nrow(prjs_)), 
-            debug_group = 'force'
-        )
-        plt <- ggplot(data = prjs_) + 
-            aes(x = xcoord, y = ycoord, fill = highlight, color = as.factor(cluster)) + 
-            scale_colour_manual(name = "clusters", values = req(update_palette())) +
-            geom_point(shape = 21,alpha = config_style$point_alpha, size = config_style$point_size) + 
-            scale_shape(solid = FALSE) +
-            #geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha) + 
-            guides() + 
-            scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA"))+
-            coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE)+
-            theme_void() + 
-            theme(legend.position = "none")
+        if(!("cluster" %in% names(prjs_))){prjs_$cluster = FALSE}
+        log_print(paste0("projections_plot | GoGo Plot! ", nrow(prjs_)), debug_group = 'debug')
+        plt <- ggplot_base(prjs_, config_style, ranges, cluster)
         
         if (input$show_lines){
-            #plt <- plt + geom_path(size=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
             plt <- plt + geom_path(linewidth=config_style$path_line_size, colour = "#2F3B65",alpha = config_style$path_alpha)
         }
 
@@ -2381,6 +2401,7 @@ shinyServer(function(input, output, session) {
             plt <- plt + theme(plot.background = element_rect(fill = "white"))
             ggsave(filename = set_prjs_plot_name(), plot = plt, path = "../data/plots/")
         })
+
         t_pp_1 = Sys.time()
         log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, LOG_PATH, LOG_HEADER, debug_group = 'force')
         temp_log <<- log_add(
@@ -2398,6 +2419,9 @@ shinyServer(function(input, output, session) {
 
     # Generate projections plot
     output$projections_plot <- renderPlot({
+        req(tsdf_concatenated(), X())
+        log_print("--> output$projections_plot")
+        on.exit({log_print("output$projections_plot -->")})
         plt <- req(projections_plot_comp())
         plt
     })

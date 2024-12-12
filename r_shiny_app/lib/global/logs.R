@@ -13,7 +13,7 @@ header <-"r_shiny_app_logs"
 id_file <- file.path(data_path, header, "execution_id")
 
 ### Debug variables
-DEBUG_LEVEL <- 2 # Logged Group >= DEBUG_LEVEL
+DEBUG_LEVEL <- 11 # Logged Group >= DEBUG_LEVEL
 FILE_FLAG   <- FALSE
 LOG_PATH    <- ""
 LOG_HEADER  <- ""
@@ -33,7 +33,7 @@ DEBUG_GROUPS<- list (
   'cache'   = 10,
   'proc'    = 3
 ) 
-MAX_CHARS   <- 90
+MAX_CHARS   <- 85
 
 message_header <- function(mssg, mssg_id, add_header, header, time) {
   if (add_header) {
@@ -44,7 +44,7 @@ message_header <- function(mssg, mssg_id, add_header, header, time) {
   #print(paste0("formated", formated_mssg))
   return(formated_mssg)
 }
-message_split <- function(mssg, max_chars = MAX_CHARS) {
+message_split_single <- function(mssg, max_chars = MAX_CHARS) {
   n <- ceiling(nchar(mssg) / max_chars)
   start <- seq(1, by = max_chars, length.out = n)
   end <- pmin(start + max_chars - 1, nchar(mssg))
@@ -58,6 +58,17 @@ message_split <- function(mssg, max_chars = MAX_CHARS) {
   #print(paste0("Split || End indices: ", paste(end, collapse = ", ")))
   #print(paste0("Split || Splitted fragments: ", paste(splitted_mssg, collapse = " | ")))
   return(splitted_mssg)
+}
+message_split <- function(mssg, max_chars = MAX_CHARS) {
+  if (is.list(mssg) || is.vector(mssg)){
+    mssg_split <- ""
+    for ( i in seq_along(mssg)){
+      mssg_split <- c(mssg_split, message_split_single(mssg[[i]]))
+    }
+  } else {
+      mssg_split <- message_split_single(mssg)
+  }
+  return (mssg_split)
 }
 log_to_file <- function(
   formated_mssg,
@@ -80,6 +91,7 @@ log_to_file <- function(
     }
   }
 }
+
 
 log_print   <- local({
   MESSAGE_ID <- 0

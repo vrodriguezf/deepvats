@@ -104,6 +104,8 @@ shinyServer(function(input, output, session) {
     # Preprocess
     preprocess_play_flag    <- reactiveVal(FALSE)
     preprocess_dataset_prev <- reactiveVal(FALSE)
+    proposed_wlen           <- reactiveVal(NULL)
+    proposed_section_sizes  <- reactiveVal(NULL)
     # Logs
     update_trigger          <- reactiveVal(FALSE)
     temp_log                <- data.frame(
@@ -163,7 +165,8 @@ shinyServer(function(input, output, session) {
         if (play()) {
             updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
             allow_tsdf(TRUE)
-            tsdf_ready(FALSE)
+            #tsdf_ready(FALSE)
+            #tsdf_ready_preprocessed(FALSE)
             tsdf_comp_flag(FALSE)
             tsdf_comp()
         } else {
@@ -277,16 +280,58 @@ shinyServer(function(input, output, session) {
         }
     )
   
+    propose_wlen <- function(data, indexname, ncol = 1){
+        log_print("--> propose sizes ", debug_group = 'debug')
+        data    <- data %>% select(-all_of(indexname))
+        log_print(paste0("propose sizes || ", paste(colnames(data), collapse = ', ')), debug_group = 'debug')
+        #index   <- as.integer(seq_len(nrow(data)))
+        if (ncol(data) > 1){ data <- data[[min(length(data), ncol)]]}
+        sizes <- utils$find_dominant_window_sizes_list(
+                X               = np$array(data[[1]]),
+                nsizes          = 5,
+                offset          = 0.05,
+                verbose         = as.integer(0),
+                min_distance    = 5
+            )
+        proposed_wlen( sizes )
+        log_print("propose sizes --> ", debug_group = 'debug')
+        return(sizes)
+    }
+
+    propose_section_sizes <- function(wlens, data, factor_range = seq(1, 5, by = 1)) {
+        log_print("--> propose section sizes", debug_group = 'debug')
+        max_rows <- nrow(data)
+    
+        sizes <- sort(unique(as.integer(outer(wlens, factor_range, `*`))))
+
+        sizes <- sizes[sizes > 0 & sizes <= max_rows]
+
+        log_print(paste0("Proposed section sizes: ", paste(sizes, collapse = ", ")), debug_group = 'debug')
+        proposed_section_sizes(sizes)
+        return(sizes)
+    }
+
+    
     observe({
         req(tsdf())
+        tsdf_preprocessed()
         max_rows <- nrow(tsdf())
+        if (is.null(tsdf_preprocessed()) || ! input$preprocess_dataset){
+            wlens <- propose_wlen(tsdf(), 'timeindex')
+            sizes <- propose_section_sizes(wlens, tsdf())
+        } else {
+            wlens <- propose_wlen(tsdf_preprocessed(),'timeindex_preprocessed')
+            sizes <- propose_section_sizes(wlens, tsdf_preprocessed())
+        }
+        
+        
         updateSliderInput(
             session, "so_range_normalization_sections", 
             min = 0,max = max_rows,value = 0
         )
         updateSliderInput(
             session, "so_range_normalization_sections_size", 
-            min = 0,max = max_rows,value = 0
+            min = 0,max = max_rows,value = sizes[[1]]
         )
         updateSliderInput(
             session, "ss_range_normalization_sections", 
@@ -294,7 +339,7 @@ shinyServer(function(input, output, session) {
         )
         updateSliderInput(
             session, "ss_range_normalization_sections_size", 
-            min = 0,max = max_rows,value = 0
+            min = 0,max = max_rows,value = sizes[[1]]
         )
     })
 
@@ -877,6 +922,7 @@ shinyServer(function(input, output, session) {
     
     reset_tsdf_reactiveVals <- reactive({
         tsdf_ready(FALSE)
+        tsdf_ready_preprocessed(FALSE)
         enc_input_ready(FALSE)
         tsdf(NULL)
         tsdf_concatenated(NULL)
@@ -1396,18 +1442,24 @@ shinyServer(function(input, output, session) {
             ), 
             debug_group = 'force'
         )
-        on.exit(log_print(paste0("Embs preprocess "), debug_group = 'react'))        
+        log_print(paste0("|| --> ObserveEvent Embs preprocess"), debug_group = 'react')
+        on.exit(log_print(paste0("|| ObserveEvent Embs preprocess --> "), debug_group = 'react'))
         req(input$encoder, tsdf_ready_preprocessed())
-        allow_update_embs(TRUE)
-        embs_comp_or_cached()
-        log_print(paste0("|| embs_complete_cases2 || Before complete cases embs ~", dim(embs())), debug_group = 'debug')
-        embs_complete_cases(embs()[complete.cases(embs()),])
-        log_print(paste0("|| embs_complete_cases2 || After complete cases embs ~", dim(embs_complete_cases())), debug_group = 'force')
-        log_print(paste0("Embs preprocess || use preprocess? ", input$embs_preprocess), debug_group = 'react')
-        allow_update_embs(FALSE)
         enc_input_ready(FALSE)
         enable_disable_embs()
-        log_print(paste0("Embs preprocess || Change button ", allow_update_embs()),  debug_group = 'react')
+        allow_update_embs(TRUE)
+        log_print("|| ObserveEvent Embs preprocess || Compute projections plot", debug_group = 'debug')
+        allow_update_embs(TRUE)
+        projections_plot_comp()
+        #embs_comp_or_cached()
+        #log_print(paste0("|| embs_complete_cases2 || Before complete cases embs ~", dim(embs())), debug_group = 'debug')
+        #embs_complete_cases(embs()[complete.cases(embs()),])
+        #log_print(paste0("|| embs_complete_cases2 || After complete cases embs ~", dim(embs_complete_cases())), debug_group = 'force')
+        #log_print(paste0("Embs preprocess || use preprocess? ", input$embs_preprocess), debug_group = 'react')
+        #allow_update_embs(FALSE)
+        #enc_input_ready(FALSE)
+        #enable_disable_embs()
+        #log_print(paste0("Embs preprocess || Change button ", allow_update_embs()),  debug_group = 'react')
 
     })
     
@@ -1622,6 +1674,7 @@ shinyServer(function(input, output, session) {
         })
         tsdf_comp_flag(TRUE)
         tsdf(df)
+        tsdf_concatenated(df)
         log_print(
             paste0( 
                 "Reactive tsdf | ts_variables ", ts_variables_str(ts_variables),
@@ -1631,8 +1684,10 @@ shinyServer(function(input, output, session) {
     })  
     
     observeEvent(input$preprocess_play, {
+        log_print("|| --> Preprocess dataset Play ", debug_group = 'react')
+        log_print("|| Preprocess dataset Play -->", debug_group = 'react')
         if (preprocess_play_flag()) {
-            req(tsdf_ready() )
+            req(tsdf_ready())
             preprocess_dataset_prev(FALSE)
             ts_variables$complete <- ts_variables$original
             ts_variables$selected <- ts_variables$original
@@ -1644,8 +1699,8 @@ shinyServer(function(input, output, session) {
         preprocess_play_flag(!preprocess_play_flag())
         log_print(
             paste0( 
-                " ||| Preprocess dataset || Change to ", preprocess_play_flag(),
-                " | ts_variables ", ts_variables_str(ts_variables)
+                " || Preprocess dataset Play || Change to ", preprocess_play_flag(),
+                " | ts_variables ", ts_variables_str(ts_variables), " -->"
             ), debug_group = 'button'
         )
     })
@@ -1699,9 +1754,9 @@ shinyServer(function(input, output, session) {
                     " | sections ", 
                     sections_count(),
                     " | sections size ",
-                    sections_size(),
-                    debug_group = 'debug'
-                )
+                    sections_size()
+                ),
+                debug_group = 'debug'
             )
             tsdf_preprocessed(
                 apply_preprocessing(
@@ -1725,7 +1780,7 @@ shinyServer(function(input, output, session) {
         } else {
             log_print(paste0("|| Preprocess dataset || Use cached values "), debug_group = 'debug')
         }
-        log_print(paste0("|| Preprocess dataset || tsdf_preprocessed~", paste0(dim(tsdf_preprocessed()), collapse = ', ')), debug_group = 'force')
+        log_print(paste0("|| Preprocess dataset || tsdf_preprocessed~(", paste0(dim(tsdf_preprocessed()), collapse = ', '),")"), debug_group = 'force')
     })
    
     # Auxiliary object for the interaction ts->projections
@@ -1873,14 +1928,35 @@ shinyServer(function(input, output, session) {
         log_print(paste0("ts_concatenated | ts variables || ts variables After concat: ", ts_variables_str(ts_variables)), debug_group = 'debug')
     })
 
-    observe({
-        req(! preprocess_play_flag(), tsdf_ready(), tsdf())
-        tsdf_preprocessed(NULL)
-        tsdf_concatenated(tsdf())
+    observeEvent( preprocess_play_flag(), {
+        # Leads to errors in reactiveness. Take care with the transformations.
+        # req(! preprocess_play_flag(), tsdf_ready(), tsdf())
+        # tsdf_preprocessed(NULL)
+        # tsdf_concatenated(tsdf())
+        req(tsdf_ready())
+        on.exit({log_print("--> observe preprocess_play_flag", debug_group = 'react')})
+        on.exit({log_print("observe preprocess_play_flag -->", debug_group = 'react')})
+        if ( !preprocess_play_flag() ){
+            if ( tsdf_ready_preprocessed() ){
+                log_print("observe preprocess_play_flag || Maintain preprocessed dataset, update select to show only the original time series.", debug_group = 'debug')
+                ts_variables$selected <<- setdiff( ts_variables$selected, ts_variables$preprocess )
+                #ts_variables$complete <<- setdiff( ts_variables$selected ) # Think if we want to maintain or not the complete dataset and if it would be neccesary one more checkbox/global variable
+                ts_vars_selected_mod(TRUE)
+            } 
+        } else {
+            if ( tsdf_ready_preprocessed() ){
+                log_print("observe preprocess_play_flag || Update ts_variables$selected to show preprocessed variate.", debug_group = 'debug')
+                ts_variables$selected <<- c( ts_variables$selected, ts_variables$preprocess )
+                ts_vars_selected_mod(TRUE)
+            }
+        }
+        #log_print("observe preprocess_play_flag || Compute projections plot", debug_group = 'debug')
+        #allow_update_embs(TRUE)
+        #projections_plot_comp()
     })
 
     ts_plot_base <- reactive({
-        req(tsdf_ready(), input$select_variables)
+        req(tsdf_ready(), input$select_variables, tsdf_concatenated())
         log_print("--> ts_plot_base", debug_group = 'main')
         on.exit({log_print("ts_plot_base -->", debug_group = 'main'); flush.console()})
         start_date  = start_date()
@@ -2238,7 +2314,8 @@ shinyServer(function(input, output, session) {
             input$dr_method,
             allow_update_embs(),
             projections(),
-            clustering_options$selected
+            clustering_options$selected,
+            enc_input_path()
         )
         log_print("--> Projections_plot", debug_group = 'force')
         log_print(paste0(" Projections_plot || ts_variables:  ", ts_variables_str(ts_variables)), debug_group = 'force')
@@ -2311,10 +2388,13 @@ shinyServer(function(input, output, session) {
     })
 
     observeEvent(X(),{
-        on.exit("X() has changed || Recomputed projections plot -->")
-        log_print("--> X() has changed, recompute projections_plot ", debug_group = 'react')
-        allow_update_embs(TRUE)
-        projections_plot_comp()
+        on.exit({log_print(paste0("|| Observe X || X() changed || Recomputed projections plot -->"), debug_group = 'react')})
+        log_print(paste0("|| --> Observe X || X() changed"), debug_group = 'react')
+        allow_update_embs(input$play_embs)
+        if (input$play_embs){
+            log_print(paste0("|| Observe X || projections_plot_comp"), debug_group = 'react')
+            projections_plot_comp()
+        }
     })
     
     
@@ -2369,12 +2449,13 @@ shinyServer(function(input, output, session) {
                 input$stride != 0,
                 tsdf(),
                 input$select_variables,
-                allow_update_embs()
+                allow_update_embs(),
+                ts_plot()
             )
             log_print("**** ts_plot_dygraph ****", debug_group = 'force')
             tspd_0 = Sys.time()
             log_print(paste0("ts_plot_dygraph || ts_variables before ts_plot ", ts_variables_str(ts_variables)), debug_group = 'force')
-            ts_plot <- req(ts_plot())
+            ts_plot <- ts_plot()
             log_print(paste0("ts_plot_dygraph || ts_plot computed"), debug_group = 'force')
             #ts_plot %>% dyAxis("x", axisLabelFormatter = format_time_with_index) %>% JS(js_plot_with_id)
             ts_plot %>% dyCallbacks(drawCallback = JS(js_plot_with_id))
@@ -2514,7 +2595,15 @@ shinyServer(function(input, output, session) {
         enable_disable_embs()
         if (input$play_embs && play()){
             log_print("play_embs set to true, recompute projections_plot ", debug_group = 'react')
-            projections_plot_comp()
         }
     })
+
+    output$proposed_section_sizes <- renderText({
+        paste0("Proposed section sizes: [", paste(proposed_section_sizes(), collapse = ', '), "]")
+    })
+
+    output$proposed_wlen <- renderText({
+        paste0("Proposed window sizes: [", paste(proposed_wlen(), collapse = ', '), "]")
+    })
+
 })

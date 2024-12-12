@@ -13,52 +13,92 @@ header <-"r_shiny_app_logs"
 id_file <- file.path(data_path, header, "execution_id")
 
 ### Debug variables
-DEBUG_LEVEL <- 11 # Logged Group >= DEBUG_LEVEL
+DEBUG_LEVEL <- 2 # Logged Group >= DEBUG_LEVEL
 FILE_FLAG   <- FALSE
 LOG_PATH    <- ""
 LOG_HEADER  <- ""
 DEBUG_GROUPS<- list (
   'generic' = 0,
-  'main'    = -1,
+  'main'    = 1,
   'button'  = 2,
-  'embs'    = 1,
-  'time'    = 1, #8,
+  'embs'    = 4,
+  'time'    = 11, #8,
   'matrix'  = 9,
   'tmi'     = 12,
   'force'   = -1,
   'error'   = -1,
   'debug'   = 11,
-  'react'   = -1,
-  'js'      = 12,
-  'cache'   = -1
+  'react'   = 2,
+  'js'      = 10,
+  'cache'   = 10,
+  'proc'    = 3
 ) 
+MAX_CHARS   <- 80
 
-log_print <- function(
+message_header <- function(
   mssg, 
-  file_flag     = FILE_FLAG, 
-  file_path     = LOG_PATH, 
-  log_header    = LOG_HEADER,
-  debug_level   = DEBUG_LEVEL,
-  debug_group   = 'generic'
-) {
-    debug_group_id = DEBUG_GROUPS[[debug_group]]
-    
-    if (debug_group_id == -1 || debug_group_id <= debug_level){
-        time <- format(Sys.time(), "%H:%M:%OS3")
-        formated_mssg = paste0(time, "::::", log_header, "::::", mssg, "\n")
-        cat(formated_mssg)
-        if (file_flag && !is.null(file_path)) {
-            if (file_path != "") {
-                file_path = paste0 ("../data/", file_path)
-                if (!file.exists(file_path)) {
-                    file.create(file_path)
-                }
-                cat(formated_mssg, file = file_path, append = TRUE)
-            }
-        }
-    }
-    flush.console()
+  mssg_id,
+  add_header
+  header,
+  time
+){
+  if (add_header){
+    formated_mssg = paste0(time, "[", mssg_id,"] ", log_header, " ||", mssg, "\n")
+  } else {
+    formated_mssg = paste0(time, "[", mssg_id,"] ", mssg, "\n")
+  }
 }
+
+message_split <- function (mssg, max_chars = MAX_CHARS) {
+  n <- ceiling(nchar(mssg) / max_chars)
+  substr(
+    mssg, 
+    seq(1, nchar(mssg), length.out = n + 1)[-1], 
+    seq(max_chars, nchar(mssg), length.out = n)
+  )
+} 
+
+log_to_file(
+  formated_mssg,
+  file_flag,
+  file_path
+){
+  if (file_flag && !is.null(file_path)) {
+    if (file_path != "") {
+      file_path = paste0 ("../data/", file_path)
+      if (!file.exists(file_path)) {
+        file.create(file_path)
+        }
+        cat(formated_mssg, file = file_path, append = TRUE)
+    }
+  }
+}
+
+log_print   <- local({
+  MESSAGE_ID <- 0
+  function(
+    mssg, 
+    file_flag     = FILE_FLAG, 
+    file_path     = LOG_PATH, 
+    log_header    = LOG_HEADER,
+    debug_level   = DEBUG_LEVEL,
+    debug_group   = 'generic',
+    add_header    = FALSE, ### RESTAURAR A TRUE. ESTÁ A FALSE PARA FACILITARME LA DEPURACIÓN AHORA
+    max_chars     = MAX_CHARS
+  ) {
+      debug_group_id = DEBUG_GROUPS[[debug_group]]
+
+      if (debug_group_id == -1 || debug_group_id <= debug_level){
+          time <- format(Sys.time(), "%H:%M:%OS3")
+          MESSAGE_ID <<- MESSAGE_ID + 1
+          formated_mssg <- message_header(mssg, MESSAGE_ID, add_header, log_header, time)
+          formated_mssg <- message_split(mssg, max_chars)
+          cat(formated_mssg)
+          log_to_file(formated_mssg, file_flag, file_path)
+      }
+      flush.console()
+  }
+})
 
 log_add <- function(
   log_mssg, 

@@ -101,6 +101,11 @@ shinyUI(fluidPage(
           )
         ),
         conditionalPanel(
+          condition = "input.methods_sequence.includes('range_normalization') || input.methods_segments.includes('range_normalization')",
+          textOutput("proposed_section_sizes")
+        ),
+
+        conditionalPanel(
           condition = "input.task_type == 'trends'",
           checkboxGroupInput(
             "methods_trends", "Smoothing Options for Trends",
@@ -178,6 +183,7 @@ shinyUI(fluidPage(
         block = TRUE
       ),
       sliderInput("wlen", "Select window size", min = 0, max = 0, value =0 , step = 1),
+      textOutput("proposed_wlen"),
       numericInput("wlen_text", "Enter window size", value = 0, min = 0, max = 1000000, step = 1),
       sliderInput("stride", "Select stride", min = 0, max = 0, value = 0, step = 1),
       conditionalPanel(
@@ -224,7 +230,7 @@ shinyUI(fluidPage(
             sliderInput("prj_n_neighbors", "Projection  s n_neighbors:", min = 1, max = 50, value = 15),
             sliderInput("prj_min_dist", "Projections min_dist:", min = 0.0001, max = 1, value = 0.1),
             sliderInput("prj_random_state", "Projections random_state:", min = 0, max = 2000, value = 1234),
-            numericInput("prj_random_state_text", "Enter Projections random_state", value = 0, min = 0, max = 1000000, step = 1),
+            numericInput("prj_random_state_text", "Enter Projections random_state", value = 0, min = 0, max = 1000000, step = 1)
           )
         )
       ),

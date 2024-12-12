@@ -34,31 +34,31 @@ DEBUG_GROUPS<- list (
   'proc'    = 3
 ) 
 MAX_CHARS   <- 80
-
-message_header <- function(
-  mssg, 
-  mssg_id,
-  add_header
-  header,
-  time
-){
-  if (add_header){
-    formated_mssg = paste0(time, "[", mssg_id,"] ", log_header, " ||", mssg, "\n")
+message_header <- function(mssg, mssg_id, add_header, header, time) {
+  if (add_header) {
+    formated_mssg = paste0(time, " [", mssg_id, "] ", header, " || ", mssg, "\n")
   } else {
-    formated_mssg = paste0(time, "[", mssg_id,"] ", mssg, "\n")
+    formated_mssg = paste0(time, " [", mssg_id, "] ", mssg, "\n")
   }
+  #print(paste0("formated", formated_mssg))
+  return(formated_mssg)
 }
-
-message_split <- function (mssg, max_chars = MAX_CHARS) {
+message_split <- function(mssg, max_chars = MAX_CHARS) {
   n <- ceiling(nchar(mssg) / max_chars)
-  substr(
-    mssg, 
-    seq(1, nchar(mssg), length.out = n + 1)[-1], 
-    seq(max_chars, nchar(mssg), length.out = n)
+  start <- seq(1, by = max_chars, length.out = n)
+  end <- pmin(start + max_chars - 1, nchar(mssg))
+  #print(paste0("Split || Total messages: ", n))
+  splitted_mssg <- substring(
+      mssg, 
+      first = start, 
+      last  = end
   )
-} 
-
-log_to_file(
+  #print(paste0("Split || Start indices: ", paste(start, collapse = ", ")))
+  #print(paste0("Split || End indices: ", paste(end, collapse = ", ")))
+  #print(paste0("Split || Splitted fragments: ", paste(splitted_mssg, collapse = " | ")))
+  return(splitted_mssg)
+}
+log_to_file <- function(
   formated_mssg,
   file_flag,
   file_path
@@ -91,8 +91,14 @@ log_print   <- local({
       if (debug_group_id == -1 || debug_group_id <= debug_level){
           time <- format(Sys.time(), "%H:%M:%OS3")
           MESSAGE_ID <<- MESSAGE_ID + 1
-          formated_mssg <- message_header(mssg, MESSAGE_ID, add_header, log_header, time)
-          formated_mssg <- message_split(mssg, max_chars)
+          formated_mssg <- message_header(
+            mssg        = mssg, 
+            mssg_id     = MESSAGE_ID, 
+            add_header  = add_header, 
+            header      = log_header, 
+            time        = time
+          )
+          formated_mssg <- message_split(formated_mssg, max_chars)
           cat(formated_mssg)
           log_to_file(formated_mssg, file_flag, file_path)
       }

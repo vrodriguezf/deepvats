@@ -1013,12 +1013,16 @@ shinyServer(function(input, output, session) {
 
     
     observe({
+        on.exit({
+            log_print(
+                paste0(" Observe Log header ", LOG_HEADER, debug_group = 'main')
+            )
+        })
         log_header_ = paste0(
             ts_ar()$name, " | ", 
             execution_id ," | ", 
             input$cpu_flag, " | ", 
             input$dr_method, " | ", input$clustering_options, " | ", input$zoom_btn)
-        log_print(paste0(">>>>> Log header: ", log_header_, "<<<<<", debug_group = 'main'))
         LOG_HEADER <<- log_header_
     })
     

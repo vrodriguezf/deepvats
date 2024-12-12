@@ -154,7 +154,6 @@ get_execution_id <- function(file) {
   }
   # Guarda el ID actualizado en el archivo
   writeLines(as.character(id), file)
-  print(paste0("Execution id: ", id))
   return(id)
 }
 

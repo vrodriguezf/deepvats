@@ -928,47 +928,48 @@ shinyServer(function(input, output, session) {
         X() 
     })
     
-    
-    reset_tsdf_reactiveVals <- reactive({
-        # Use isolate to prevent immediate reactive propagation during batch updates
+    reset_reactiveVals <- function(type = c("all", "tsdf", "preprocess", "prjs")) {
+        type <- match.arg(type)
         isolate({
-            tsdf_ready(FALSE)
-            tsdf_ready_preprocessed(FALSE)
-            enc_input_ready(FALSE)
-            tsdf(NULL)
-            tsdf_concatenated(NULL)
-            get_tsdf_prev(NULL)
-            ts_vars_selected_mod(FALSE)      
-        })
-    })
-    reset_preprocess_reactiveVals <- reactive({
-        isolate({
-            preprocess_dataset_prev(FALSE)
-            tsdf_preprocessed(NULL)
-            tsdf_preprocessed_params(NULL)
-            tsdf_ready_preprocessed(NULL)
-        })
-    })
-    reset_prjs_reactiveVals <- reactive({
-        isolate({
-            prjs(NULL)
-            embs(NULL)
-            embs_complete_cases(NULL)
-            enc(NULL)
-            cached_embeddings(NULL)
-            embs_params (
-                list(
-                    dataset     = NULL,
-                    encoder     = NULL, 
-                    wlen        = NULL, 
-                    stride      = NULL, 
-                    fine_tune   = NULL
+            if (type == "all" || type == "tsdf") {
+                tsdf_ready(FALSE)
+                tsdf_ready_preprocessed(FALSE)
+                enc_input_ready(FALSE)
+                tsdf(NULL)
+                tsdf_concatenated(NULL)
+                get_tsdf_prev(NULL)
+                ts_vars_selected_mod(FALSE)
+            }
+            if (type == "all" || type == "preprocess") {
+                preprocess_dataset_prev(FALSE)
+                tsdf_preprocessed(NULL)
+                tsdf_preprocessed_params(NULL)
+                tsdf_ready_preprocessed(FALSE)
+            }
+            if (type == "all" || type == "prjs") {
+                prjs(NULL)
+                embs(NULL)
+                embs_complete_cases(NULL)
+                enc(NULL)
+                cached_embeddings(NULL)
+                embs_params(
+                    list(
+                        dataset     = NULL,
+                        encoder     = NULL, 
+                        wlen        = NULL, 
+                        stride      = NULL, 
+                        fine_tune   = NULL
+                    )
                 )
-            )
-            allow_update_embs(FALSE)
+                allow_update_embs(FALSE)
+                updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
+            }
         })
-        updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
-    })
+    }
+
+
+
+
     # Time series artifact
     observeEvent(input$dataset, {
         log_print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset), debug_group = 'react')
@@ -984,11 +985,11 @@ shinyServer(function(input, output, session) {
         } )
         # -- Reset tsdf
         log_print(paste0("eventReactive ts_ar || tsdf_ready 1) ", tsdf_ready()), debug_group = 'debug')
-        reset_tsdf_reactiveVals()
+        reset_reactiveVals("tsdf")
         log_print(paste0("eventReactive ts_ar || tsdf_ready 2) ", tsdf_ready()), debug_group = 'debug')
         ar <- api$artifact(input$dataset, type='dataset')
         # -- Reset preprocess    
-        reset_preprocess_reactiveVals()
+        reset_reactiveVals("preprocess")
         log_print(paste0("eventReactive ts_ar || tsdf_ready 3) ", tsdf_ready()), debug_group = 'debug')
         updateCheckboxInput(
             session = session,
@@ -1001,7 +1002,7 @@ shinyServer(function(input, output, session) {
         update_play_pause_button()
         log_print(paste0("eventReactive ts_ar || tsdf_ready 5) ", tsdf_ready()), debug_group = 'debug')
         # -- Reset embs & encoder
-        reset_prjs_reactiveVals()
+        reset_reactiveVals("prjs")
         log_print(paste0("eventReactive ts_ar || tsdf_ready 6) ", tsdf_ready()), debug_group = 'debug')
         ts_ar(ar)
     })

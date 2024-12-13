@@ -75,6 +75,7 @@ get_window_indices_ <- function(
     log_header
 ) {
     res <- c()
+    req(prjs)
     req(length(prjs) > 0, wlen > 0, stride > 0)
     kwargs <- list(
         file_path   = log_path,
@@ -90,6 +91,7 @@ get_window_indices_ <- function(
     for (idx in prjs){
         start_idx <- ((idx-1)*stride)+1
         end_idx <- start_idx + wlen -1
+        do.call(log_print, c(list(mssg = paste0("|| get_window_indices_ || sd ", start_idx)), kwargs))
         indices <- unlist(seq(start_idx, end_idx))
         log_print(paste0("|| get_window_indices_ || idx ", idx, " sd ", start_idx, " ed ", end_idx), debug_group = 'tmi')
         window_indices <- c(window_indices, indices)

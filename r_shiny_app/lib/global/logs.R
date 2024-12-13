@@ -22,7 +22,7 @@ DEBUG_GROUPS<- list (
   'main'    = 1,
   'button'  = 2,
   'embs'    = 4,
-  'time'    = 11, #8,
+  'time'    = 11,
   'matrix'  = 9,
   'tmi'     = 12,
   'force'   = -1,

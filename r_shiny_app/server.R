@@ -881,11 +881,20 @@ shinyServer(function(input, output, session) {
                 fcst_history    = input$wlen
             )
             ### Selecting indexes in the sliding window view version ###
-            log_print(paste0("Enc input | observe X | 1) enc_input ~ ", dim(enc_input)), debug_group = 'main')
+            log_print(paste0("Enc input | observe X | 1) ", "enc_input" %dimstr% enc_input), debug_group = 'main')
             indexes <- seq(1, dim(enc_input)[1], input$stride)
             enc_input <- enc_input[indexes,,,drop = FALSE]
-            log_print(paste0("Enc input | observe X | 2) enc_input ~ ", dim(enc_input)), debug_group = 'main')
-            log_print(paste0("Enc input | observe X | Update sliding window | Apply stride ", input$stride," | X ~ enc_input ~ ", dim(enc_input), "-->"), debug_group = 'main')
+            log_print(
+                paste0("Enc input | observe X | 2)", "enc_input" %dimstr% enc_input), 
+                debug_group = 'main'
+            )
+            log_print(
+                paste0(
+                    "Enc input | observe X | Update sliding window | Apply stride ", input$stride,
+                    " | ", "X=enc_input" %dimstr% enc_input
+                ),
+                debug_group = 'main'
+            )
             on.exit({log_print("Enc input | observe X -->", debug_group = 'main'); flush.console()})
             enc_input_ready(TRUE)
             X(enc_input)
@@ -921,59 +930,79 @@ shinyServer(function(input, output, session) {
     
     
     reset_tsdf_reactiveVals <- reactive({
-        tsdf_ready(FALSE)
-        tsdf_ready_preprocessed(FALSE)
-        enc_input_ready(FALSE)
-        tsdf(NULL)
-        tsdf_concatenated(NULL)
-        get_tsdf_prev(NULL)
-        ts_vars_selected_mod(FALSE)
-            
+        # Use isolate to prevent immediate reactive propagation during batch updates
+        isolate({
+            tsdf_ready(FALSE)
+            tsdf_ready_preprocessed(FALSE)
+            enc_input_ready(FALSE)
+            tsdf(NULL)
+            tsdf_concatenated(NULL)
+            get_tsdf_prev(NULL)
+            ts_vars_selected_mod(FALSE)      
+        })
     })
     reset_preprocess_reactiveVals <- reactive({
-        preprocess_dataset_prev(FALSE)
-        tsdf_preprocessed(NULL)
-        tsdf_preprocessed_params(NULL)
-        tsdf_ready_preprocessed(NULL)
+        isolate({
+            preprocess_dataset_prev(FALSE)
+            tsdf_preprocessed(NULL)
+            tsdf_preprocessed_params(NULL)
+            tsdf_ready_preprocessed(NULL)
+        })
     })
     reset_prjs_reactiveVals <- reactive({
-
-        prjs(NULL)
-        embs(NULL)
-        embs_complete_cases(NULL)
-        enc(NULL)
-        cached_embeddings(NULL)
-        embs_params (
-            list(
-                dataset     = NULL,
-                encoder     = NULL, 
-                wlen        = NULL, 
-                stride      = NULL, 
-                fine_tune   = NULL
+        isolate({
+            prjs(NULL)
+            embs(NULL)
+            embs_complete_cases(NULL)
+            enc(NULL)
+            cached_embeddings(NULL)
+            embs_params (
+                list(
+                    dataset     = NULL,
+                    encoder     = NULL, 
+                    wlen        = NULL, 
+                    stride      = NULL, 
+                    fine_tune   = NULL
+                )
             )
-        )
-        allow_update_embs(FALSE)
+            allow_update_embs(FALSE)
+        })
         updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
     })
     # Time series artifact
     observeEvent(input$dataset, {
         log_print(paste0("--> eventReactive ts_ar | Update dataset artifact | hash ", input$dataset), debug_group = 'react')
-        on.exit({log_print("eventReactive ts_ar -->", debug_group = 'react'); flush.console()})
+        on.exit({
+            log_print(
+                paste0(
+                    "eventReactive ts_ar ",
+                    "tsdf_ready? ", tsdf_ready(),
+                    " -->"
+                ),
+                debug_group = 'react'
+            ); flush.console()
+        } )
         # -- Reset tsdf
+        log_print(paste0("eventReactive ts_ar || tsdf_ready 1) ", tsdf_ready()), debug_group = 'debug')
         reset_tsdf_reactiveVals()
+        log_print(paste0("eventReactive ts_ar || tsdf_ready 2) ", tsdf_ready()), debug_group = 'debug')
         ar <- api$artifact(input$dataset, type='dataset')
         # -- Reset preprocess    
         reset_preprocess_reactiveVals()
+        log_print(paste0("eventReactive ts_ar || tsdf_ready 3) ", tsdf_ready()), debug_group = 'debug')
         updateCheckboxInput(
             session = session,
             inputId = "preprocess_dataset",
             value   = FALSE
         )
+        log_print(paste0("eventReactive ts_ar || tsdf_ready 4) ", tsdf_ready()), debug_group = 'debug')
         # -- Reset play button
         play(FALSE)
         update_play_pause_button()
+        log_print(paste0("eventReactive ts_ar || tsdf_ready 5) ", tsdf_ready()), debug_group = 'debug')
         # -- Reset embs & encoder
         reset_prjs_reactiveVals()
+        log_print(paste0("eventReactive ts_ar || tsdf_ready 6) ", tsdf_ready()), debug_group = 'debug')
         ts_ar(ar)
     })
 
@@ -1014,7 +1043,8 @@ shinyServer(function(input, output, session) {
     observe({
         on.exit({
             log_print(
-                paste0(" Observe Log header ", LOG_HEADER, debug_group = 'main')
+                paste0(" Observe Log header ", LOG_HEADER), 
+                debug_group = 'main'
             )
         })
         log_header_ = paste0(
@@ -1183,6 +1213,7 @@ shinyServer(function(input, output, session) {
 
     ####  CACHING EMBEDDINGS ####
     embs_comp_or_cached <- reactive({
+        req(input$dataset, input$encoder, input$wlen > 0, input$stride > 0)
         embs_params_current <- list(
             dataset   = input$dataset,
             encoder   = input$encoder,
@@ -1210,7 +1241,7 @@ shinyServer(function(input, output, session) {
             res <- cached_embeddings()
         }
         embs_params(embs_params_current)
-        log_print(paste0("embs_comp_or_cached || res ~", dim(res)), debug_group = 'force')
+        log_print(paste0("embs_comp_or_cached || res ~", paste(dim(res), collapse=', ')), debug_group = 'force')
         embs(res)
         res
     })
@@ -1422,13 +1453,14 @@ shinyServer(function(input, output, session) {
     embs_complete_cases_comp <- observe({
         log_print(
             paste0(
-                " || embs_complete_cases || before req || allow update? ", allow_update_embs(),
+                " || embs_complete_cases || before req || ",
+                " allow update? ", allow_update_embs(),
                 " | input encoder ", input$encoder,
                 " | tsdf_ready? ", tsdf_ready()
             ), 
             debug_group = 'force'
         )
-        req(allow_update_embs(), input$encoder, tsdf_ready(), tsdf(), X())
+        req(allow_update_embs(), input$encoder, tsdf_ready())
         embs_comp_or_cached()
         log_print(paste0("embs_complete_cases || Before complete cases embs ~", paste(dim(embs()), collapse = ', ')), debug_group = 'debug')
         embs_complete_cases(embs()[complete.cases(embs()),])
@@ -1436,21 +1468,24 @@ shinyServer(function(input, output, session) {
     })
 
     embs_complete_cases_comp2 <- observeEvent(input$embs_preprocess, {
-        log_print(
+        c(lps, lpe, lp) %<-% setup_log_print('oiep')
+        lps()
+        on.exit({lpe()})
+        lp(
             paste0(
-                " || embs_complete_cases2 || before req",
+                " || before req",
                 " | input encoder ", input$encoder,
                 " | tsdf_ready_preprocessed? ", tsdf_ready_preprocessed(),
                 " | input$embs_preprocess ", input$embs_preprocess
             ), 
             debug_group = 'force'
         )
-        log_print(paste0("--> ObserveEvent Embs preprocess"), debug_group = 'react')
-        on.exit(log_print(paste0("ObserveEvent Embs preprocess --> "), debug_group = 'react'))
+        
         enc_input_ready(FALSE)        
         allow_update_embs(FALSE)
         enable_disable_embs()
-    })
+
+    }, ignoreInit = TRUE)
     
     prjs_umap <- reactive({
         req(input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
@@ -1484,7 +1519,7 @@ shinyServer(function(input, output, session) {
         log_print(
             paste0(
                 "prjs_pca_umap || Before req", 
-                " | embs complete cases? ", is.null(embs_complete_cases())
+                " | embs complete cases? ", ! is.null(embs_complete_cases())
             ),
             debug_group = 'debug'
         )
@@ -1516,29 +1551,40 @@ shinyServer(function(input, output, session) {
             paste0("--> || prjs_comp || Before switch || DR method: ", input$dr_method), 
             debug_group = 'main'
         )
-        on.exit({log_print("prjs_comp -->", debug_group = 'main')})
+        on.exit({log_print(paste0("prjs_comp | res ~", paste(dim(res), collapse=', '), "-->"), debug_group = 'main')})
         res <- switch( input$dr_method,
             UMAP    = prjs_umap(),
             TSNE    = prjs_tsne(),
             PCA     = prjs_pca(),                
             PCA_UMAP= prjs_pca_umap()
         )
-        
-        
         res
     })
     
     prj_object <- reactive({
-        log_print(paste0("prj_object | Before prjs_comp"), debug_group = 'main')
+        c(lps, lpe, lp) %<-% setup_log_print('rpro')
+        lps()
+        lp(paste0("Before prjs_comp"))
         t_prj_0 = Sys.time()
-        res <- prjs_comp()
-        log_print(paste0("prj_object | After prjs_comp res~", dim(res)), debug_group = 'main')
-        res <- res %>% as.data.frame # TODO: This should be a matrix for improved efficiency
+        res <- req(prjs_comp())
+        lp(paste0("After prjs_comp res~", dim(res)))
+        # TODO: This should be a matrix for improved efficiency
+        res <- res %>% as.data.frame
         colnames(res) = c("xcoord", "ycoord")
         flush.console()
         t_prj_1 = Sys.time()
         on.exit({
-            log_print(paste0(" prj_object | cpu_flag: ", input$cpu_flag, " | ", input$dr_method, " | Execution time: ", t_prj_1-t_prj_0 , " seconds -->"), TRUE, LOG_PATH, LOG_HEADER, debug_group = 'time'); 
+            lp(
+                paste0(
+                    "cpu_flag: ", input$cpu_flag, 
+                    " | DR: ", input$dr_method, 
+                    " | Execution time: ", t_prj_1-t_prj_0 , 
+                    " | prjs ~ ", dim(res),
+                    " seconds"
+                ), 
+                file_flag = TRUE, file_path = LOG_PATH, log_header = LOG_HEADER, debug_group = 'time'
+            ); 
+            lpe()
             temp_log <<- log_add(
                 log_mssg            = temp_log,
                 function_           = "PRJ Object",
@@ -1796,11 +1842,17 @@ shinyServer(function(input, output, session) {
                 "projections || Before req", 
                 " | dr_method ", input$dr_method,
                 " | tsdf ready ", tsdf_ready(),
-                " | update embs ", allow_update_embs()
+                " | update embs ", allow_update_embs(),
+                " | prj_object? ", ! is.null(prj_object())
             ),
             debug_group = 'debug'
         )
-        req(input$dr_method, tsdf_ready(), allow_update_embs(), prj_object(), clustering_options$selected)
+        req(
+            input$dr_method, tsdf_ready(), 
+            allow_update_embs(), 
+            prj_object(),
+            clustering_options$selected
+        )
         log_print("--> projections", debug_group = 'main')
         log_print("projections || before prjs", debug_group = 'debug')
         prjs <- prj_object()
@@ -1850,13 +1902,13 @@ shinyServer(function(input, output, session) {
              })
         on.exit({
             log_print(
-                paste0("Projections --> | prjs ~", dim(prjs)), 
+                paste0("Projections |", "prjs" %dimstr% prjs, "-->"), 
                 debug_group = 'main'
             ); 
             flush.console()
         })
         prjs(prjs)
-        prjs()
+        prjs
     })
 
     update_palette <- reactive({
@@ -2003,31 +2055,27 @@ shinyServer(function(input, output, session) {
     })
 
     embedding_ids <- reactive({
-        bp <- NULL
-        if (!is.null(prj_object())){
-            log_print("--> embedding idx", debug_group = 'debug')
-            on.exit({log_print("embedding idx -->", debug_group = 'debug');})
-            bp = brushedPoints(
-                prj_object(), 
+        req(length(prj_object()>0))
+        log_print("--> embedding idx", debug_group = 'debug')
+        on.exit({log_print("embedding idx -->", debug_group = 'debug');})
+        bp <- brushedPoints(
+            prj_object(), 
                 input$projections_brush, 
                 allRows = TRUE
-            ) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
-            bp  %>% rownames_to_column("index")         %>% 
-                    dplyr::filter(selected_ == TRUE)    %>% 
-                    pull(index)                         %>% as.integer
-        }
-        bp
+            ) 
+        bp_indices <- bp %>% rownames_to_column("index")   %>% 
+                dplyr::filter(selected_ == TRUE)        %>% 
+                pull(index)                             %>% 
+                as.integer
+        bp_indices
     })
 
     filtered_window_indices <- reactive({
         log_print("--> filtered_window_indices", debug_group = 'generic')
         on.exit(log_print("filtered_window_indices -->", debug_group = 'generic'))
-        window_indices <- NULL
-        if ( is.null(embedding_ids()) || length(embedding_ids())<=0){
-            log_print("filtered_window_indices || embedding index available ")
-        } else {
-            window_indices <- get_window_indices_(embedding_indices, input$wlen, input$stride, LOG_PATH, LOG_HEADER)    
-        }
+        req(embedding_ids(), input$wlen != 0, input$stride != 0)
+        req(length(embedding_ids()>0))
+        window_indices <- get_window_indices_(embedding_ids(), input$wlen, input$stride, LOG_PATH, LOG_HEADER)
         window_indices
     })
 
@@ -2049,7 +2097,6 @@ shinyServer(function(input, output, session) {
             log_print(paste0("window_list || idx_window_limits", idx_window_limits), debug_group = 'tmi')
             # Include the first and last index to have a whole set of indexes.
             idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
-        
             # Create a reduced window lists
             reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
             # Populate the first element of the list with the idx of the first window.
@@ -2306,35 +2353,15 @@ shinyServer(function(input, output, session) {
         ts_ar_config() %>% enframe()
     })
     
-
-    projections_plot_comp_highlight <- function(prjs_){
-        log_print(paste0("--> projections_plot_comp_highlight | Prepare column highlights prjs~", paste(dim(prjs_), collapse = ', ')), debug_group = 'debug')
-        on.exit({log_print(paste0("projections_plot_comp_highlight -->"))})
-        highlight <- FALSE
-        if (!is.null(input$ts_plot_dygraph_click)) {
-            log_print(
-                "projections_plot_comp_highlight || Selected ts time points", 
-                TRUE, LOG_PATH, LOG_HEADER, debug_group = 'debug'
-            )
-            selected_ts_idx <- which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
-            indices_per_embedding <- get_window_indices(embedding_ids(), input$wlen, input$stride)
-            projections_idxs <- indices_per_embedding %>% map_lgl(~ selected_ts_idx %in% .)
-            log_print(paste0("prjs_ ~ ", indices_per_embedding), debug_group = 'DEBUG')
-            if (length(projections_idxs) > 0){
-                highlight <- projections_idxs
-            }
-        }
-        highlight
-    }
-
     ggplot_base <- function(prjs_, config_style, ranges, cluster){
         log_print("--> ggplot_base", debug_group = 'debug')
         log_print("ggplot_base -->", debug_group = 'debug')
         plt <- ggplot(data = prjs_) + 
             aes(
-                x   = xcoord, 
-                y = ycoord, 
-                fill = highlight, color = as.factor(cluster)
+                x       = xcoord, 
+                y       = ycoord, 
+                fill    = highlight, 
+                color = as.factor(cluster)
             ) + 
             scale_colour_manual(
                 name = "clusters", 
@@ -2385,10 +2412,29 @@ shinyServer(function(input, output, session) {
         log_print(paste0(" Projections_plot || ts_variables:  ", ts_variables_str(ts_variables)), debug_group = 'force')
         t_pp_0 <- Sys.time()
         prjs_ <- req(projections())
+        log_print(
+            paste0(
+                " Projections_plot || highlight ", 
+                "prjs_" %dimstr% prjs_
+            ),
+            debug_group = 'debug'
+        )
         # Prepare the column highlight to color data
-        prjs_$highlight <- projections_plot_comp_highlight(prjs_)
+        if (!is.null(input$ts_plot_dygraph_click)) {
+            selected_ts_idx = which(ts_plot()$x$data[[1]] == input$ts_plot_dygraph_click$x_closest_point)
+            projections_idxs = tsidxs_per_embedding_idx() %>% map_lgl(~ selected_ts_idx %in% .)
+            prjs_$highlight = projections_idxs
+        } else {
+            prjs_$highlight = FALSE
+        }
         # Prepare the column highlight to color data. If input$generate_cluster has not been clicked
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
+        log_print(
+            paste0(
+                " Projections_plot || Cluster ", 
+                "prjs_" %dimstr% prjs_
+            ),debug_group = 'debug'
+        )
         if(!("cluster" %in% names(prjs_))){prjs_$cluster = FALSE}
         log_print(paste0("projections_plot | GoGo Plot! ", nrow(prjs_)), debug_group = 'debug')
         plt <- ggplot_base(prjs_, config_style, ranges, cluster)

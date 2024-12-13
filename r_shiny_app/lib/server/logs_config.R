@@ -54,6 +54,14 @@ observe_configs <- list(
     'opd' = list(
         hd = 'observe preprocess dataset', 
         dg = 'react'
+    ),
+    'oiep' = list(
+        hd = "observe input$embs_preprocess",
+        dg = 'react'
+    ),
+    'rpro' = list(
+        hd = 'prj_object',
+        dg = 'main'
     )
 )
 

@@ -939,6 +939,7 @@ shinyServer(function(input, output, session) {
                 tsdf_concatenated(NULL)
                 get_tsdf_prev(NULL)
                 ts_vars_selected_mod(FALSE)
+                play(FALSE)
             }
             if (type == "all" || type == "preprocess") {
                 preprocess_dataset_prev(FALSE)
@@ -962,7 +963,6 @@ shinyServer(function(input, output, session) {
                     )
                 )
                 allow_update_embs(FALSE)
-                updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
             }
         })
     }
@@ -984,26 +984,22 @@ shinyServer(function(input, output, session) {
             ); flush.console()
         } )
         # -- Reset tsdf
-        log_print(paste0("eventReactive ts_ar || tsdf_ready 1) ", tsdf_ready()), debug_group = 'debug')
         reset_reactiveVals("tsdf")
-        log_print(paste0("eventReactive ts_ar || tsdf_ready 2) ", tsdf_ready()), debug_group = 'debug')
         ar <- api$artifact(input$dataset, type='dataset')
         # -- Reset preprocess    
         reset_reactiveVals("preprocess")
-        log_print(paste0("eventReactive ts_ar || tsdf_ready 3) ", tsdf_ready()), debug_group = 'debug')
         updateCheckboxInput(
             session = session,
             inputId = "preprocess_dataset",
             value   = FALSE
         )
-        log_print(paste0("eventReactive ts_ar || tsdf_ready 4) ", tsdf_ready()), debug_group = 'debug')
         # -- Reset play button
         play(FALSE)
         update_play_pause_button()
-        log_print(paste0("eventReactive ts_ar || tsdf_ready 5) ", tsdf_ready()), debug_group = 'debug')
         # -- Reset embs & encoder
         reset_reactiveVals("prjs")
-        log_print(paste0("eventReactive ts_ar || tsdf_ready 6) ", tsdf_ready()), debug_group = 'debug')
+        enable_disable_embs()
+        log_print(paste0("eventReactive ts_ar || tsdf_ready ", tsdf_ready()), debug_group = 'debug')
         ts_ar(ar)
     })
 

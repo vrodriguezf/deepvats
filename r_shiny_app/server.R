@@ -13,6 +13,7 @@ source("./lib/server/plots.R")
 source("./lib/server/server.R")
 source("./modules/parameters.R")
 source("./modules/mplots.R")
+source("./lib/server/logs_config.R")
 
 shinyServer(function(input, output, session) {
     options(shiny.verbose = TRUE)
@@ -615,19 +616,6 @@ shinyServer(function(input, output, session) {
         }
     })
 
-    observe({
-        req(!input$preprocess_dataset, preprocess_dataset_prev())
-        log_print("--> observe ! preprocess dataset",  debug_group = 'react')
-        on.exit(log_print(paste0("preprocess dataset || ts variables ", ts_variables_str(ts_variables), " -->"), debug_group = 'react'))
-        if (tsdf_ready()){
-            ts_variables <<- tsdf_variables_no_preprocess(tsdf(), ts_variables)
-        }
-        log_print(paste0("observe ! preprocess dataset || Change button ", allow_update_embs()),  debug_group = 'react')
-        allow_update_embs(FALSE)
-        ts_vars_selected_mod(TRUE)
-        enable_disable_embs()
-    })
-
     # Update ts_variables reactive value when time series variable selection changes
     observeEvent(input$select_variables, {
         log_print("--> input$select_variables mod || update ts_variables$selected",  debug_group = 'main')
@@ -814,7 +802,7 @@ shinyServer(function(input, output, session) {
                 file.path(DEFAULT_PATH_WANDB_ARTIFACTS, paste0(ts_ar()$metadata$TS$hash, '_preprocess'))
             )
             path <- enc_input_path()
-            log_print(paste0("path_comp || Preprocesado activado ", path), debug_group = 'force')
+            log_print(paste0("path_comp || Preprocess ", path), debug_group = 'force')
             req(tsdf_preprocessed())
             log_print(paste0("path_comp || path ", path), debug_group = 'force')
             dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
@@ -850,6 +838,9 @@ shinyServer(function(input, output, session) {
             input$stride != 0,
             allow_update_embs()
         )
+        # -- Intentando mejorar la reactividad ---
+        input$embs_preprocess
+        # --- FIN  Intentando mejorar la reactividad ---
         log_print("observe X | Update Sliding Window", debug_group = 'debug')
         log_print(
             paste0(
@@ -946,6 +937,7 @@ shinyServer(function(input, output, session) {
         tsdf_ready_preprocessed(NULL)
     })
     reset_prjs_reactiveVals <- reactive({
+
         prjs(NULL)
         embs(NULL)
         embs_complete_cases(NULL)
@@ -1455,13 +1447,9 @@ shinyServer(function(input, output, session) {
         )
         log_print(paste0("--> ObserveEvent Embs preprocess"), debug_group = 'react')
         on.exit(log_print(paste0("ObserveEvent Embs preprocess --> "), debug_group = 'react'))
-        req(input$encoder, tsdf_ready_preprocessed())
-        enc_input_ready(FALSE)
+        enc_input_ready(FALSE)        
+        allow_update_embs(FALSE)
         enable_disable_embs()
-        allow_update_embs(TRUE)
-        log_print("ObserveEvent Embs preprocess || Compute projections plot", debug_group = 'debug')
-        allow_update_embs(TRUE)
-        req(projections_plot_comp())
     })
     
     prjs_umap <- reactive({
@@ -2011,29 +1999,35 @@ shinyServer(function(input, output, session) {
                         .dygraph-legend > span.highlight { display: inline; }"
                     )
                 ) 
+        ts_plt
     })
 
     embedding_ids <- reactive({
-        req(prj_object())
-        log_print("--> embedding idx", debug_group = 'debug')
-        on.exit({log_print("embedding idx -->", debug_group = 'debug');})
-        bp = brushedPoints(
-            prj_object(), 
-            input$projections_brush, 
-            allRows = TRUE
-        ) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
-        bp  %>% rownames_to_column("index")         %>% 
-                dplyr::filter(selected_ == TRUE)    %>% 
-                pull(index)                         %>% as.integer
+        bp <- NULL
+        if (!is.null(prj_object())){
+            log_print("--> embedding idx", debug_group = 'debug')
+            on.exit({log_print("embedding idx -->", debug_group = 'debug');})
+            bp = brushedPoints(
+                prj_object(), 
+                input$projections_brush, 
+                allRows = TRUE
+            ) #%>% debounce(miliseconds) #Wait 1 seconds: 1000
+            bp  %>% rownames_to_column("index")         %>% 
+                    dplyr::filter(selected_ == TRUE)    %>% 
+                    pull(index)                         %>% as.integer
+        }
+        bp
     })
 
-    
-    
-    
     filtered_window_indices <- reactive({
-        req(length(embedding_ids()) > 0)
-        embedding_indices <- embedding_ids()
-        window_indices <- get_window_indices_(embedding_indices, input$wlen, input$stride, LOG_PATH, LOG_HEADER)
+        log_print("--> filtered_window_indices", debug_group = 'generic')
+        on.exit(log_print("filtered_window_indices -->", debug_group = 'generic'))
+        window_indices <- NULL
+        if ( is.null(embedding_ids()) || length(embedding_ids())<=0){
+            log_print("filtered_window_indices || embedding index available ")
+        } else {
+            window_indices <- get_window_indices_(embedding_indices, input$wlen, input$stride, LOG_PATH, LOG_HEADER)    
+        }
         window_indices
     })
 
@@ -2041,33 +2035,36 @@ shinyServer(function(input, output, session) {
         # Get the indices of the windows related to the selected projection points
         log_print("--> window_list", debug_group = 'generic')
         on.exit(log_print("window_list -->", debug_group = 'generic'))
+        reduced_window_list <- NULL
         # Get the window indices
-        window_indices <- filtered_window_indices()
-        # Put all the indices in one list and remove duplicates
-        unlist_window_indices = filtered_window_indices()
-        # Calculate a vector of differences to detect idx where a new window should be created 
-        diff_vector <- diff(unlist_window_indices,1)
-        log_print(paste0("window list || diff ", diff_vector), debug_group = 'tmi')
-        # Take indexes where the difference is greater than one (that represent a change of window)
-        idx_window_limits <- which(diff_vector!=1)
-        log_print(paste0("window_list || idx_window_limits", idx_window_limits), debug_group = 'tmi')
-        # Include the first and last index to have a whole set of indexes.
-        idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
+        if (! is.null(filtered_window_indices())){
+            window_indices <- filtered_window_indices()
+            # Put all the indices in one list and remove duplicates
+            unlist_window_indices = filtered_window_indices()
+            # Calculate a vector of differences to detect idx where a new window should be created 
+            diff_vector <- diff(unlist_window_indices,1)
+            log_print(paste0("window list || diff ", diff_vector), debug_group = 'tmi')
+            # Take indexes where the difference is greater than one (that represent a change of window)
+            idx_window_limits <- which(diff_vector!=1)
+            log_print(paste0("window_list || idx_window_limits", idx_window_limits), debug_group = 'tmi')
+            # Include the first and last index to have a whole set of indexes.
+            idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
         
-        # Create a reduced window lists
-        reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
-        # Populate the first element of the list with the idx of the first window.
-        reduced_window_list[[1]] = c(            
-            unlist_window_indices[idx_window_limits[1]+1],
-            unlist_window_indices[idx_window_limits[2]]
-        ) 
-        # Populate the rest of the list
-        if (length(idx_window_limits) > 2) {
-            for (i in 2:(length(idx_window_limits)-1)){
-                reduced_window_list[[i]]<- c(
-                    unlist_window_indices[idx_window_limits[i]+1],
-                    unlist_window_indices[idx_window_limits[i+1]]
-               )
+            # Create a reduced window lists
+            reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
+            # Populate the first element of the list with the idx of the first window.
+            reduced_window_list[[1]] = c(            
+                unlist_window_indices[idx_window_limits[1]+1],
+                unlist_window_indices[idx_window_limits[2]]
+            ) 
+            # Populate the rest of the list
+            if (length(idx_window_limits) > 2) {
+                for (i in 2:(length(idx_window_limits)-1)){
+                    reduced_window_list[[i]]<- c(
+                        unlist_window_indices[idx_window_limits[i]+1],
+                        unlist_window_indices[idx_window_limits[i+1]]
+                   )
+                }
             }
         }
         reduced_window_list
@@ -2092,14 +2089,16 @@ shinyServer(function(input, output, session) {
         on.exit({log_print("ts_plot -->", debug_group = 'main'); flush.console()})        
         log_print(paste0("ts_plot || ts variables Before ts_plot_base ", ts_variables_str(ts_variables), " -->"), debug_group = 'main')
         ts_plt = ts_plot_base() 
-
         log_print("ts_plot | bp", debug_group = 'main')
         log_print("ts_plot | embedings idxs ", debug_group = 'main')
-        embedding_idxs = embedding_ids()
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
-        log_print("ts_plot | Before if", debug_group = 'force')
-        if ((length(embedding_idxs)!=0) & isTRUE(input$plot_windows)) {
-            reduced_window_list = req(window_list())
+        log_print("ts_plot | Before if", debug_group = 'debug')
+        if (
+                ! is.null(embedding_ids()) 
+            &&  (length(embedding_ids())!=0) 
+            &&  isTRUE(input$plot_windows)
+        ) {
+            reduced_window_list = window_list()
             log_print(paste0("ts_plot | Selected projections ", reduced_window_list[1]), TRUE, LOG_PATH, LOG_HEADER, debug_group = 'tmi')
             start_indices = min(sapply(reduced_window_list, function(x) x[1]))
             end_indices = max(sapply(reduced_window_list, function(x) x[2]))
@@ -2178,8 +2177,9 @@ shinyServer(function(input, output, session) {
         } else { 
             log_print(
                 paste0(
-                    "ts_plot | Else | embedding_idxs~", 
-                    length(embedding_idxs), 
+                    "ts_plot | Else | ",
+                    " is null ids? ", is.null(embedding_ids()),
+                    " embedding_ids~",length(embedding_ids()), 
                     " | plot windows ?", 
                     input$plot_windows 
                 ),
@@ -2419,7 +2419,8 @@ shinyServer(function(input, output, session) {
 
     # Generate projections plot
     output$projections_plot <- renderPlot({
-        req(tsdf_concatenated(), X())
+        req(tsdf_concatenated(), X(), input$play_embs)
+        input$embs_preprocess
         log_print("--> output$projections_plot")
         on.exit({log_print("output$projections_plot -->")})
         plt <- req(projections_plot_comp())
@@ -2430,10 +2431,10 @@ shinyServer(function(input, output, session) {
         on.exit({log_print(paste0("Observe X || X() changed || Recomputed projections plot -->"), debug_group = 'react')})
         log_print(paste0("--> Observe X || X() changed"), debug_group = 'react')
         allow_update_embs(input$play_embs)
-        if (input$play_embs){
-            log_print(paste0("Observe X || projections_plot_comp"), debug_group = 'react')
-            projections_plot_comp()
-        }
+        #if (input$play_embs){
+        #    log_print(paste0("Observe X || projections_plot_comp"), debug_group = 'react')
+        #    projections_plot_comp()
+        #}
     })
     
     
@@ -2482,14 +2483,25 @@ shinyServer(function(input, output, session) {
     # Generate time series plot
     output$ts_plot_dygraph <- renderDygraph(
         {
+            log_print(
+                paste0(
+                    "ts_plot_dygraph || Before req", 
+                    "| tsdf ?", !is.null(tsdf()),
+                    "| prj_object ?",  !is.null(prj_object()),
+                    "| play ?", input$play_pause,
+                    "| embs ?", input$play_embs
+                ),
+                debug_group = 'debug'
+            )
             req (
                 input$encoder,
                 input$wlen   != 0, 
                 input$stride != 0,
                 tsdf(),
                 input$select_variables,
-                allow_update_embs(),
-                ts_plot()
+                prj_object(),
+                input$play_pause,
+                input$play_embs
             )
             log_print("**** ts_plot_dygraph ****", debug_group = 'force')
             tspd_0 = Sys.time()
@@ -2618,11 +2630,24 @@ shinyServer(function(input, output, session) {
     observeEvent(
         input$preprocess_dataset, 
     {
-        on.exit({log_print("observe preprocess dataset -->", debug_group = 'react')})
-        log_print(paste0("--> observe preprocess dataset"), debug_group = 'react')
-        allow_update_embs(FALSE)
+        c(lps, lpe, lp) %<-% setup_log_print('opd')
+        on.exit(lpe())
+        lps()
+        if (input$preprocess_dataset){
+            allow_update_embs(TRUE)
+            enable_disable_embs()
+        } else if ( preprocess_dataset_prev ){
+            lp("Use tsdf() dataset for getting the embeddings.")
+            if (tsdf_ready()){
+                lp("tsdf_ready => update selected variables")
+                ts_variables$selected <<- ts_variables$original
+            }
+        }   
+        allow_update_embs(TRUE)
+        ts_vars_selected_mod(tsdf_ready())
+        lp(paste0("Change update embs button ", allow_update_embs()))
         enable_disable_embs()
-    })
+    }, ignoreInit = TRUE)
 
     observeEvent(input$play_embs, {
         on.exit( 

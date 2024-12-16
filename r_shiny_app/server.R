@@ -808,7 +808,7 @@ shinyServer(function(input, output, session) {
             dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
             tryCatch({
                 data <- data_feather()
-                log_print(paste0("path_comp || data~: ", dim(data)), debug_group='force')
+                log_print(paste0("path_comp || ",  "data" %dimstr% data), debug_group='force')
                 write_feather(data, path, compression = 'lz4')
                 log_print(paste0("path_comp || Preprocessed dataset saved at: ", path), debug_group='force')
             }, error = function(e) {
@@ -919,8 +919,8 @@ shinyServer(function(input, output, session) {
             log_print(paste0(
                 "observe X | Update sliding window | Exit ", 
                 input$stride,
-                " | enc_input ~ ",
-                dim(X()),
+                " | ",
+                "enc_input" %dimstr% X(),
                 " | ts_variables ", ts_variables_str(ts_variables),
                 "-->"
             )); flush.console()
@@ -1481,6 +1481,8 @@ shinyServer(function(input, output, session) {
         enc_input_ready(FALSE)        
         allow_update_embs(FALSE)
         enable_disable_embs()
+        play(FALSE)
+        update_play_pause_button()
 
     }, ignoreInit = TRUE)
     
@@ -1840,12 +1842,14 @@ shinyServer(function(input, output, session) {
                 " | dr_method ", input$dr_method,
                 " | tsdf ready ", tsdf_ready(),
                 " | update embs ", allow_update_embs(),
-                " | prj_object? ", ! is.null(prj_object())
+                " | prj_object? ", ! is.null(prj_object()),
+                " | enc_input_ready?", enc_input_ready()
             ),
             debug_group = 'debug'
         )
         req(
-            input$dr_method, tsdf_ready(), 
+            input$dr_method, 
+            tsdf_ready(), 
             allow_update_embs(), 
             prj_object(),
             clustering_options$selected
@@ -2473,11 +2477,8 @@ shinyServer(function(input, output, session) {
     observeEvent(X(),{
         on.exit({log_print(paste0("Observe X || X() changed || Recomputed projections plot -->"), debug_group = 'react')})
         log_print(paste0("--> Observe X || X() changed"), debug_group = 'react')
-        allow_update_embs(input$play_embs)
-        #if (input$play_embs){
-        #    log_print(paste0("Observe X || projections_plot_comp"), debug_group = 'react')
-        #    projections_plot_comp()
-        #}
+        allow_update_embs(TRUE)
+        projections_plot_comp()
     })
     
     

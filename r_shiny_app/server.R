@@ -63,9 +63,9 @@ shinyServer(function(input, output, session) {
   enc_ar_stride <- eventReactive(enc_ar(), {
     stride = ceiling(enc_ar()$metadata$stride/2)
   })
-  
-  # Time series artifact
-  ts_ar <- eventReactive(
+
+    # Time series artifact
+    ts_ar <- eventReactive(
     input$dataset, 
     {
       req(input$dataset)
@@ -755,19 +755,19 @@ embedding_ids <- reactive({
         window_indices <- filtered_window_indices()
         # Put all the indices in one list and remove duplicates
         unlist_window_indices = filtered_window_indices()
-        print(paste0("Window indices: ", unlist_window_indices))
+        #print(paste0("Window indices: ", unlist_window_indices))
         # Calculate a vector of differences to detect idx where a new window should be created
         diff_vector <- diff(unlist_window_indices,1)
-        print(paste0("diff_vector: ", diff_vector))
+        #print(paste0("diff_vector: ", diff_vector))
         # Take indexes where the difference is greater than one (that represent a change of window)
         idx_window_limits <- which(diff_vector!=1)
-        print(paste0("idx_window_limits 1: ", idx_window_limits))
+        #print(paste0("idx_window_limits 1: ", idx_window_limits))
         # Include the first and last index to have a whole set of indexes.
         idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
          print(paste0("idx_window_limits 2: ", idx_window_limits))
         # Create a reduced window list
         reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
-        print(paste0("reduced_window_list: ", reduced_window_list))
+        #print(paste0("reduced_window_list: ", reduced_window_list))
         # Populate the first element of the list with the idx of the first window.
         reduced_window_list[[1]] = c(
             tsdf()$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
@@ -808,20 +808,20 @@ embedding_ids <- reactive({
     on.exit({print("ts_plot -->"); flush.console()})
     
     req(tsdf(), ts_variables, input$wlen != 0, input$stride)
-    print(tail(tsdf()))
+    #print(tail(tsdf()))
     ts_plt <- ts_plot_base()   
     
     print("ts_plot | bp")
     #miliseconds <-  ifelse(nrow(tsdf()) > 1000000, 2000, 1000)ç
-    print(nrow(tsdf()))
-    print( window_list()[1])
+    #print(nrow(tsdf()))
+    #print( window_list()[1])
     #reduced_window_list <- window_list()[1]
     reduced_window_list <- window_list()
-    print(paste0("ts_plot | reduced_window_list = ", reduced_window_list))
+    #print(paste0("ts_plot | reduced_window_list = ", reduced_window_list))
     #if (!is.data.frame(bp)) {bp = bp_}
     print("ts_plot | embedings idxs ")
     embedding_idxs <- embedding_ids()
-    print(embedding_idxs)
+    #print(embedding_idxs)
     # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
     print("ts_plot | Before if")
     if ((length(embedding_idxs) != 0) & isTRUE(input$plot_windows)) {
@@ -1163,7 +1163,7 @@ embedding_ids <- reactive({
         x = ~xcoord, y = ~ycoord, z = ~zcoord,
         type = "scatter3d",
         mode = "markers",
-        marker = list(color = initial_colors, size = 5),
+        marker = list(color = initial_colors, size = 3),
         line = list(color = "blue"),
         showlegend = FALSE
       )
@@ -1187,17 +1187,17 @@ embedding_ids <- reactive({
                             (prj_3d$zcoord - selected_coords$zcoord)^2)
         
         # Define el radio
-        radius <- 0.5  # ajusta este valor según sea necesario
+        radius <- 0.5 
         radius_idxs <- which(distances <= radius)
         points_in_radius(radius_idxs)
-        
+
         # Actualiza los colores de los puntos
         new_colors <- rep("black", nrow(prj_3d))
         new_colors[radius_idxs] <- "blue"
         new_colors[point_idx] <- "red"
         
         plotlyProxy("embedding_plot_3d", session) %>%
-          plotlyProxyInvoke("restyle", list(marker = list(color = new_colors, size = 5)), list(0))
+          plotlyProxyInvoke("restyle", list(marker = list(color = new_colors, size = 3)), list(0))
       }
     })
     
@@ -1209,37 +1209,85 @@ embedding_ids <- reactive({
     
     dataset_path <- reactiveVal(NULL)
     dataset_preview <- reactiveVal(NULL)
+
+    selected_column <- reactiveVal(1)
+    selected_freq <- reactiveVal("10h")
+    selected_n_epoch <- reactiveVal(100)
+    selected_ws1 <- reactiveVal(10)
+    selected_ws2 <- reactiveVal(20)
+    observe({
+      selected_column(1)
+      selected_freq("10h")
+      selected_n_epoch(100)
+      selected_ws1(10)
+      selected_ws2(20)
+    })
+    observeEvent(
+      list(input$cols_input, input$freq_input, input$n_epoch_input, input$ws1_input, input$ws2_input), {
+        selected_column(as.numeric(input$cols_input))
+        selected_freq(input$freq_input)
+        selected_n_epoch(as.numeric(input$n_epoch_input))
+        selected_ws1(as.numeric(input$ws1_input))
+        selected_ws2(as.numeric(input$ws2_input))
+      }
+    )
+    observeEvent(input$cancel_modal, {
+      dataset_path(NULL)
+      dataset_preview(NULL)
+      selected_column(1)
+      selected_freq("10h")
+      selected_n_epoch(100)
+      selected_ws1(10)
+      selected_ws2(20)
+      removeModal()
+    })
+
+
+
     
     volumes <- c(wd = "~")
     shinyFileChoose(input, "file", roots = volumes)
     
     createUploadModal <- function() {
-        modalDialog(
+      modalDialog(
         title = "Upload Dataset",
         shinyFilesButton("file", "Select file", title = "Please select a file:", multiple = FALSE),
-        textOutput("file_path_text"),
+        uiOutput("file_path_text"),
         tags$hr(),
         h4("Configuration"),
-        numericInput("cols_input", "Column:", value = 5, min = 0),
-        numericInput("freq_input", "Frequency:", value = 10, min = 1),
-        numericInput("n_epoch_input", "Epochs:", value = 100, min = 1),
-        numericInput("ws1_input", "Window:", value = 10, min = 1),
+        numericInput("cols_input", "Column:", value = selected_column(), min = 1),
+        textInput("freq_input", "Frequency:", value = selected_freq()),
+        numericInput("n_epoch_input", "Epochs:", value = selected_n_epoch(), min = 1),
+        fluidRow(
+          column(6, numericInput("ws1_input", "Window 1 (ws1):", value = selected_ws1(), min = 1)),
+          column(6, numericInput("ws2_input", "Window 2 (ws2):", value = selected_ws2(), min = 1))
+        ),
         tags$hr(),
         footer = tagList(
           actionButton("show_graphic", "Show Graphic"),
           actionButton("load_file", "Load"),
-          modalButton("Cancel")
+          actionButton("cancel_modal", "Cancel")
         )
       )
     }
-    
-    
-    observe({
+
+
+    observeEvent(input$file, {
       req(input$file)
-      output$file_path_text <- renderText({
-        parseFilePaths(roots = c(wd = "~"), input$file)$datapath
-      })
+      path <- parseFilePaths(volumes, input$file)$datapath
+      dataset_path(path)
+      dataset_preview(path)
     })
+
+    output$file_path_text <- renderUI({
+      if (!is.null(dataset_path())) {
+        tags$p(dataset_path())
+      } else {
+        "No file selected."
+      }
+      
+    })
+
     
     observeEvent(input$load_file, {
       filepath <- isolate(parseFilePaths(roots = c(wd = "~"), input$file)$datapath)
@@ -1391,47 +1439,71 @@ embedding_ids <- reactive({
      
     
     mod_file_base <- function(filepath){
+      # Leer el contenido del archivo YAML
       yaml_content <- readLines("~/work/nbs_pipeline/config/base.yaml")
       
+      # Obtener la extensión del archivo
       file_extension <- tools::file_ext(filepath)
       
+      # Obtener el nombre base del archivo sin extensión
       filename <- basename(filepath)
       filename <- tools::file_path_sans_ext(filename)
       
+      # Modificar el nombre del archivo en el contenido YAML
       new_fname <- paste("fname: &fname \"", filename, "\"", sep = "")
       yaml_content <- gsub("fname: &fname \".*\"", new_fname, yaml_content)
       
+      # Modificar el tipo de archivo en el contenido YAML
       new_ftype <- paste("ftype: &ftype \'.", file_extension, "\'", sep = "")
       yaml_content <- gsub("ftype: &ftype \'.*\'", new_ftype, yaml_content)
-
-      new_cols <- paste("cols: &cols [", input$cols_input, "]", sep = "")
-      new_freq <- paste("freq: &freq '", input$freq_input, "h'", sep = "")
       
+      # Modificar los valores de cols según el input
+      if (input$cols_input == 0) {
+        new_cols <- "cols: &cols []"  # Si es 0, escribe []
+      } else {
+        new_cols_value <- input$cols_input - 1
+        new_cols <- paste("cols: &cols [", new_cols_value, "]", sep = "")  # Si es >= 1, escribe el valor - 1
+      }
       yaml_content <- gsub("cols: &cols \\[.*\\]", new_cols, yaml_content)
+      
+      # Modificar la frecuencia en el contenido YAML
+      new_freq <- paste("freq: &freq '", input$freq_input, "h'", sep = "")
       yaml_content <- gsub("freq: &freq '.*'", new_freq, yaml_content)
       
+      # Escribir los cambios en el archivo YAML
       writeLines(yaml_content, "~/work/nbs_pipeline/config/base.yaml")
       
+      # Imprimir mensajes de confirmación
       print("Se han anadido las modificaciones al fichero base", sep = "\n")
       print(yaml_content, sep = "\n")
     }
+
     
+
     mod_file_02encodermvp <- function(filepath){
       
+      # Leer el contenido del archivo YAML
       yaml_content <- readLines("~/work/nbs_pipeline/config/02c-encoder_mvp-sliding_window_view.yaml")
       
+      # Modificar el valor de n_epoch
       new_n_epoch <- paste("    n_epoch:", input$n_epoch_input)
-      new_ws1 <- paste("      ws1:", input$ws1_input)
-      
       yaml_content <- gsub("    n_epoch: .*", new_n_epoch, yaml_content)
+      
+      # Modificar el valor de ws1
+      new_ws1 <- paste("      ws1:", input$ws1_input)
       yaml_content <- gsub("      ws1: .*", new_ws1, yaml_content)
+      
+      # Modificar el valor de ws2
+      new_ws2 <- paste("      ws2: &wlen", input$ws2_input)
+      yaml_content <- gsub("      ws2: &wlen.*", new_ws2, yaml_content)
       
       writeLines(yaml_content,"~/work/nbs_pipeline/config/02c-encoder_mvp-sliding_window_view.yaml")
       
       print(yaml_content, sep = "\n")
-      
+
       print("Se han anadido las modificaciones a ficheros de configuracion")
-    }
+    } 
+
     
     #-------------------------------------------------------------------------------------------------
     
@@ -1477,57 +1549,68 @@ embedding_ids <- reactive({
         dataset_preview(file_info$datapath)
       }
     })
-    
     dataset <- reactive({
       req(dataset_preview())
       data <- read.csv(dataset_preview())
-      start_date =isolate(start_date())
+      start_date <- isolate(start_date())
       
-      date_col <- which(str_detect(tolower(colnames(data)), "date|time|fecha"))
+      # Buscar columnas que contengan palabras clave
+      date_col_candidates <- which(str_detect(tolower(colnames(data)), "date|time|fecha"))
       
-      if (length(date_col) == 0) {
-        # No se encontró ninguna columna de fechas, se agrega una columna de fechas
+      if (length(date_col_candidates) == 0) {
+        # No se encontró ninguna columna de fechas, se agrega una columna de fechas generada
         data$fecha <- seq.POSIXt(from = as.POSIXct("2023-01-01 00:00:00"), by = "min", length.out = nrow(data))
         date_col <- which(colnames(data) == "fecha")
       } else {
-        # Se encontró una columna de fechas, asegurarse de que está en formato POSIXct
-        for (col in date_col) {
-          if (!inherits(data[[col]], "POSIXct")) {
-            # Intentar convertir el contenido a POSIXct
-            data[[col]] <- tryCatch(
-              as.POSIXct(data[[col]], format="%Y-%m-%d %H:%M:%S"),
-              error = function(e) {
-                # Si falla, usar el origen para conversiones numéricas
-                as.POSIXct(data[[col]], origin="1970-01-01")
-              }
-            )
+        # Si se encuentran múltiples columnas, seleccionar la primera que ya sea tipo fecha
+        date_col <- NULL
+        for (col in date_col_candidates) {
+          if (inherits(data[[col]], "POSIXct")) {
+            date_col <- col
+            break
           }
+        }
+        
+        # Si no hay columnas ya en formato POSIXct, intentar convertir la primera
+        if (is.null(date_col)) {
+          date_col <- date_col_candidates[1]
+          data[[date_col]] <- tryCatch(
+            as.POSIXct(data[[date_col]], format = "%Y-%m-%d %H:%M:%S"),
+            error = function(e) {
+              # Si falla la conversión, usar origen para conversiones numéricas
+              as.POSIXct(data[[date_col]], origin = "1970-01-01")
+            }
+          )
         }
       }
       
       list(data = data, date_col = date_col)
     })
+
     
     output$data_preview_plot <- renderDygraph({
-      data <- dataset()
-      print("-----data load------")
-      #print(data)
-      
-      data_info <- dataset()
-      print(data_info)
+      data_info <- dataset()  # Obtener el dataset procesado
       data <- data_info$data
       date_col <- data_info$date_col
-      #print(data)
-      #print(date_col)
-      # Transformar los datos en un formato de serie temporal
-      ts_data <- xts(data[ , -date_col], order.by = data[[date_col]])
-      print("-----grafico------")
       
-      # Generar la gráfica con dygraphs
-      dygraph(ts_data) %>%
-        dyAxis("x", label = "Fecha") %>%
-        dyAxis("y", label = "Valores")
+      # Obtener la columna seleccionada desde input$cols_input
+      selected_col <- selected_column()
+      
+      # Validar que la columna seleccionada sea válida
+      if (!is.null(selected_col) && selected_col > 0 && selected_col <= ncol(data)) {
+        ts_data <- xts(data[ , selected_col, drop = FALSE], order.by = data[[date_col]])
+        
+        # Generar la gráfica con la columna seleccionada
+        dygraph(ts_data) %>%
+          dyAxis("x", label = "Fecha") %>%
+          dyAxis("y", label = colnames(data)[selected_col])
+      } else {
+        # Mostrar mensaje si la selección no es válida
+        showNotification("La columna seleccionada no es valida.", type = "error")
+        NULL
+      }
     })
+
     
     
     observeEvent(input$show_graphic,{
@@ -1539,7 +1622,6 @@ embedding_ids <- reactive({
         footer =
           tagList(
             actionButton("back_to_upload", "Back to Upload"),
-            modalButton("Close")
           ),
         size = "l"
         

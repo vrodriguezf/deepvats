@@ -732,6 +732,9 @@ embedding_ids <- reactive({
     bp <- selected_points()[2]
   })
 
+  # Interacción desde el gráfico 2D de embeddings
+  #----------------------------------------------------------------
+
    filtered_window_indices <- reactive({
         req(length(embedding_ids() > 0))
         embedding_indices <- embedding_ids()
@@ -747,61 +750,32 @@ embedding_ids <- reactive({
         unlist(ts_indices[unlist(embedding_indices)])
     })
 
-  
     window_list <- reactive({
         print("--> window_list")
         on.exit(print("window_list -->"))
-        # Get the window indices
-        window_indices <- filtered_window_indices()
-        # Put all the indices in one list and remove duplicates
-        unlist_window_indices = filtered_window_indices()
-        #print(paste0("Window indices: ", unlist_window_indices))
-        # Calculate a vector of differences to detect idx where a new window should be created
-        diff_vector <- diff(unlist_window_indices,1)
-        #print(paste0("diff_vector: ", diff_vector))
-        # Take indexes where the difference is greater than one (that represent a change of window)
-        idx_window_limits <- which(diff_vector!=1)
-        #print(paste0("idx_window_limits 1: ", idx_window_limits))
-        # Include the first and last index to have a whole set of indexes.
-        idx_window_limits <- c(1, idx_window_limits, length(unlist_window_indices))
-         print(paste0("idx_window_limits 2: ", idx_window_limits))
-        # Create a reduced window list
-        reduced_window_list <-  vector(mode = "list", length = length(idx_window_limits)-1)
-        #print(paste0("reduced_window_list: ", reduced_window_list))
-        # Populate the first element of the list with the idx of the first window.
-        reduced_window_list[[1]] = c(
-            tsdf()$timeindex[unlist_window_indices[idx_window_limits[1]+1]],
-            tsdf()$timeindex[unlist_window_indices[idx_window_limits[2]]]
-        )
-        print(paste0("reduced_window_list: ", reduced_window_list))
-        # Populate the rest of the list
-        if (length(idx_window_limits) > 2) {
-          for (i in 2:(length(idx_window_limits)-1)) {
-              start_idx <- idx_window_limits[i] + 1
-              end_idx <- idx_window_limits[i + 1]
-              print(paste0("Iteracion: ", i, "Start index: ", start_idx, ", End index: ", end_idx))
-              
-              # Verifica que los índices estén dentro del rango de `unlist_window_indices`
-              if (start_idx <= length(unlist_window_indices) && end_idx <= length(unlist_window_indices)) {
-                  reduced_window_list[[i]] <- c(
-                      start_time <- isolate(tsdf())$timeindex[unlist_window_indices[start_idx]],
-                      end_time <- isolate(tsdf())$timeindex[unlist_window_indices[end_idx]]
-                  )
-                  if (!is.null(start_time) && !is.null(end_time)) {
-                    reduced_window_list[[i]] <- c(start_time, end_time)
-                    print(paste0("reduced_window_list[", i, "]: c(", start_time, ", ", end_time, ")"))
-                  } else {
-                    print(paste0("Iteracion ", i, ": start_time o end_time es NULL"))
-                  } 
-              } else {
-                  print("Index out of bounds detected!")
-              }
-          }
-        }
 
+        # Combinar índices de selección 2D y 3D
+        embedding_indices <- unique(c(
+            unlist(filtered_window_indices()),   # Selección en 2D
+            unlist(filtered_window_indices_3d()) # Selección en 3D
+        ))
+
+        # Resto de la lógica se mantiene igual
+        diff_vector <- diff(embedding_indices, 1)
+        idx_window_limits <- which(diff_vector != 1)
+        idx_window_limits <- c(1, idx_window_limits, length(embedding_indices))
+        reduced_window_list <- vector(mode = "list", length = length(idx_window_limits) - 1)
+
+        for (i in seq_len(length(idx_window_limits) - 1)) {
+            reduced_window_list[[i]] <- c(
+                isolate(tsdf())$timeindex[embedding_indices[idx_window_limits[i] + 1]],
+                isolate(tsdf())$timeindex[embedding_indices[idx_window_limits[i + 1]]]
+            )
+        }
         reduced_window_list
     })
-  
+
+
   # Reactive expression to generate ts_plot
   ts_plot <- reactive({
     print("--> ts_plot | Before req 1")
@@ -897,6 +871,89 @@ embedding_ids <- reactive({
     
     ts_plt
   })
+
+  # Interacción desde el gráfico 3D de embeddings
+  #----------------------------------------------------------------
+    filtered_window_indices_3d <- reactive({
+        req(length(points_in_radius() > 0))
+        embedding_indices <- points_in_radius()
+        ts_indices <- tsidxs_per_embedding_idx()  # Mapea embeddings a ventanas temporales
+        unlist(ts_indices[unlist(embedding_indices)])
+    })
+
+
+    # Reactive expression to generate ts_plot for 3D interactions
+    ts_plot_3d <- reactive({
+        print("--> ts_plot_3d | Before req 1")
+        on.exit({print("ts_plot_3d -->"); flush.console()})
+        
+        req(tsdf(), ts_variables, input$wlen != 0, input$stride)
+        ts_plt <- ts_plot_base()  # Gráfico base
+        
+        # Obtener la lista de ventanas basadas en el gráfico 3D
+        reduced_window_list <- window_list_3d()
+        print(paste0("ts_plot_3d | reduced_window_list = ", reduced_window_list))
+        
+        # Si hay ventanas definidas, procesarlas
+        if (!is.null(selected_point_3d()) && length(points_in_radius()) > 0) {
+            print("ts_plot_3d")
+            
+            # Extraer los rangos de tiempo de las ventanas seleccionadas
+            start_indices <- as.POSIXct(min(sapply(reduced_window_list, `[[`, 1)), origin = "1970-01-01", tz = "UTC")
+            end_indices <- as.POSIXct(max(sapply(reduced_window_list, `[[`, 2)), origin = "1970-01-01", tz = "UTC")
+            
+            print(paste0("ts_plot_3d | start_indices (POSIXct): ", start_indices))
+            print(paste0("ts_plot_3d | end_indices (POSIXct): ", end_indices))
+            
+            start_indices <- which(tsdf()$timeindex == start_indices)
+            end_indices <- which(tsdf()$timeindex == end_indices)
+
+            print(paste0("ts_plot_3d | start_indices (matched): ", start_indices))
+            print(paste0("ts_plot_3d | end_indices (matched): ", end_indices))
+
+            view_size <- end_indices - start_indices + 1
+            max_size <- 10000  # Limitar la vista si es demasiado grande
+            print(paste0("ts_plot_3d | view_size: ", view_size, " | max_size: ", max_size))
+
+            start_date <- tsdf()$timeindex[start_indices]
+            end_date <- tsdf()$timeindex[end_indices]
+
+            print(paste0("ts_plot_3d | start_date: ", start_date, " | end_date: ", end_date))
+
+            if (view_size > max_size) {
+                end_date <- tsdf()$timeindex[start_indices + max_size - 1]
+                print(paste0("ts_plot_3d | Updated end_date due to view size: ", end_date))
+            }
+
+            range_color <- "#FFCCE6"
+            print(paste0("ts_plot_3d | range_color: ", range_color))
+
+            # Sombrear las ventanas en el gráfico
+            count <- 0
+            for (ts_idxs in reduced_window_list) {
+                count <- count + 1
+                start_event_date <- head(as.POSIXct(sapply(ts_idxs, `[[`, 1), origin = "1970-01-01", tz = "UTC"), 1)
+                end_event_date <- tail(as.POSIXct(sapply(ts_idxs, `[[`, 2), origin = "1970-01-01", tz = "UTC"), 1)
+                
+                print(paste0("ts_plot_3d | Window ", count, " -> start_event_date: ", start_event_date, ", end_event_date: ", end_event_date))
+                
+                ts_plt <- ts_plt %>% dyShading(
+                    from = start_event_date,
+                    to = end_event_date,
+                    color = range_color
+                )
+                ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
+            }
+            
+            print(paste0("ts_plot_3d | Total windows processed: ", count))
+        } else {
+            print("ts_plot_3d | No windows to process (no points selected in 3D graph)")
+        }
+        
+        ts_plt
+    })
+
+
   
   # Get projections plot name for saving
   prjs_plot_name <- reactive({
@@ -1104,23 +1161,11 @@ embedding_ids <- reactive({
     })
         
     # Generate time series plot
-    output$ts_plot_dygraph <- renderDygraph(
-        {
-            req (
-                input$dataset, 
-                input$encoder,
-                input$wlen != 0, 
-                input$stride != 0
-            )
-            #print("Saving time series plot")
-            ts_plot <- req(ts_plot())
-            #save_path <- file.path("..", "data", "plots", ts_plot_name())
-            #htmlwidgets::saveWidget(ts_plot, file = save_path, selfcontained=TRUE)
-            #print(paste0("Time series plot saved to", save_path))
-            ts_plot
-            #req(ts_plot())
-        }   
-    )
+    output$ts_plot_dygraph <- renderDygraph({
+        req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
+        ts_plot()
+    })
+
 
 
     prjs_plot_name <- reactive({

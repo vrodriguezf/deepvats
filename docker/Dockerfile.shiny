@@ -1,0 +1,59 @@
+#############################
+#       SHINY-SERVER        #
+#     VOLUME DOCKERFILE     #
+#############################
+# Set up the shiny server   #
+# for using deepVATS App    #
+#############################
+FROM misantamaria/dvats-rstudio:rocker-ml4.2
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+# Add r-studio server user
+ARG USER=user
+ARG UID=1000
+ARG GID=1000
+
+ENV USER=$USER
+ENV UID=$UID
+ENV GID=$GID
+
+RUN addgroup --gid $GID $USER
+RUN adduser --disabled-password \
+    --gecos "Non-root user" \
+    --uid $UID \
+    --gid $GID \
+    --home $HOME \
+    $USER
+
+# Add user to app group
+RUN addgroup --system app \
+    && adduser --system --ingroup app app
+
+# Paths
+ENV HOME=/home/$USER
+ENV ENV_PREFIX $HOME/env
+ENV APP=$HOME/app
+
+# Ensure files and packages
+COPY --chown=app:app docker/entrypoint-rstudio.sh /usr/local/bin
+COPY --chown=app:app r_shiny_app $APP
+
+RUN R -e "install.packages('semantic.dashboard', repos='http://cran.r-project.org')"
+RUN R -e "install.packages('randomcoloR', repos='http://cran.r-project.org')"
+
+### Run server
+ARG SHINY_PORT
+ENV SHINY_PORT=${SHINY_PORT}
+
+RUN chown -R app:app $APP
+USER app
+
+ARG SHINY_PORT
+ENV SHINY_PORT=$SHINY_PORT
+EXPOSE ${SHINY_PORT}
+EXPOSE 3838
+
+COPY  --chown=app:app docker/entrypoint-shiny.sh /usr/local/bin/entrypoint-shiny.sh
+RUN chmod u+x /usr/local/bin/entrypoint-shiny.sh 
+
+CMD ["/usr/local/bin/entrypoint-shiny.sh"]

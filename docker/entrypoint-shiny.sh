@@ -1,11 +1,12 @@
 #!/bin/bash --login
 set -e
 
+[ -f ${LOG_DIR} ] && echo "${LOG_DIR} is a file" || echo "${LOG_DIR} is a directory"
+[ -f ${LOG_FILE} ] && echo "${LOG_FILE} is a file" || echo "${LOG_FILE} is a directory"
+
 echo ". ${HOME}/miniconda3/etc/profile.d/conda.sh" >> ${HOME}/.bashrc
 # Make bash automatically activate the conda environment
-echo "conda activate ${ENV_PREFIX}" >> ~/.bashrc
-#echo "export WANDB_ENTITY=${WANDB_ENTITY:-default}" >> ${HOME}/.bashrc
-# echo "WANDB_ENTITY=${WANDB_ENTITY:-default}" >> ${HOME}/.Renviron
+echo "conda activate ${ENV_PREFIX}" >> ${HOME}/.bashrc
 
 #... added for fixing fails when rebuilding docker ...#
 ### Ensuring to activate the correct conda
@@ -24,11 +25,14 @@ for ENV_VAR_NAME in "${ENV_VAR_NAMES[@]}"; do
 done
 
 ulimit -s 16384
+echo $LOG_FILE
+#sudo chown app:app "$LOG_FILE"
+sudo chown -R $UID:shared "$LOG_DIR"
+sudo chmod -R 775 /var/log/shiny-server
 
-# esto ya cuando esté controlado.
-# mkdir -p /var/log/shiny-server
-# push the "real" application logs to stdout with xtail in detached mode
-# exec xtail /var/log/shiny-server/ &
+ls -la $LOG_DIR
 
-#R --quiet -e "shiny::runApp('${APP}', host='0.0.0.0', port=${SHINY_PORT})"
+echo "DEBUG: Writing to ${LOG_FILE}" >> ${LOG_FILE}
+exec >> $LOG_FILE 2>&1
+
 R --quiet -e "shiny::runApp('${APP}', host='0.0.0.0', port=3838)"

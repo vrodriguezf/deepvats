@@ -27,6 +27,7 @@ services:
       - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/
       - conda-env:/usr/local/share/miniconda3/envs/env
       - miniconda:/usr/local/share/miniconda3
+      - lib:/usr/local/share/lib
     init: true
     stdin_open: true
     tty: true
@@ -44,8 +45,10 @@ services:
           dockerfile: docker/Dockerfile.rstudio
           args:
               - WANDB_API_KEY=${WANDB_API_KEY} #
-              - RETICULATE_PYTHON_ENV=/home/env
-              - RETICULATE_MINICONDA_PATH=/home/miniconda3
+              #- RETICULATE_PYTHON_ENV=/home/env
+              #- RETICULATE_MINICONDA_PATH=/home/miniconda3
+              - RETICULATE_PYTHON_ENV=/usr/local/share/miniconda3/envs/env
+              - RETICULATE_MINICONDA_PATH=/usr/local/share/miniconda3
               - USER=${USER_NAME} #* 
               - UID=${USER_ID} #*
               - GID=${GROUP_ID} #*
@@ -61,9 +64,7 @@ services:
           - GROUPID=${GROUP_ID} #*
           - PASSWORD=${RSTUDIO_PASSWD} #*
           - ROOT=FALSE
-          - CUDA_VISIBLE_DEVICES=0,1,2
-          #- CUDA_VISIBLE_DEVICES=1
-            #          - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+          - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
           - GH_TOKEN=${GH_TOKEN} #*
           # TODO (28/03/2023): I don't know why it is not working without this
           - ENV_VARS=WANDB_ENTITY,WANDB_API_KEY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES
@@ -72,7 +73,8 @@ services:
          - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ 
          - ../dvats:/home/${USER_NAME}/dvats
          - conda-env:/usr/local/share/miniconda3/envs/env
-         - miniconda:/home/user/local/share/miniconda3 
+         - miniconda:/usr/local/share/miniconda3 
+         - lib:/usr/local/share/lib
       deploy:
         resources:
           #limits:
@@ -82,7 +84,51 @@ services:
               - driver: nvidia
                 count: all
                 capabilities: [gpu]
-
+  shiny-server:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.shiny
+      args:
+        - WANDB_API_KEY=${WANDB_API_KEY}
+        - RETICULATE_PYTHON_ENV=/usr/local/share/miniconda3/envs/env
+        - RETICULATE_MINICONDA_PATH=/usr/local/share/miniconda3
+        - USER=${USER_NAME} #* 
+        - UID=${USER_ID} #*
+        - GID=${GROUP_ID} #*
+        - SHINY_PORT=${SHINY_PORT}
+    image: dvats-shiny:${USER_NAME}
+    ports:
+        - "${SHINY_PORT}:3838" #*
+    expose:
+        - "8888"
+    environment:
+      - WANDB_ENTITY=${WANDB_ENTITY}
+      - WANDB_API_KEY=${WANDB_API_KEY}
+      - WANDB_PROJECT=${WANDB_PROJECT}
+      - USER=${USER_NAME} #* 
+      - USERID=${USER_ID} #*
+      - GROUPID=${GROUP_ID} #*
+      - PASSWORD=${SHINY_PASSWD} #*
+      - ROOT=FALSE
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
+      - GH_TOKEN=${GH_TOKEN} #*
+      # TODO (28/03/2023): I don't know why it is not working without this
+      - ENV_VARS=WANDB_ENTITY,WANDB_API_KEY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES
+    volumes:
+      - ../r_shiny_app:/home/${USER_NAME}/app 
+      - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ 
+      - ../dvats:/home/${USER_NAME}/dvats
+      - conda-env:/usr/local/share/miniconda3/envs/env
+      - miniconda:/usr/local/share/miniconda3 
+      - lib:/usr/local/share/lib
+      - ../srv/shinylog:/var/log/shiny-server
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 volumes:
   conda-env:
   miniconda:

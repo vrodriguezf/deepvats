@@ -1,0 +1,391 @@
+DEBUG: Writing to /var/log/shiny-server/app.logs
+> shiny::runApp('/home/app', host='0.0.0.0', port=3838)
+Loading required package: shiny
+Warning in shiny::runApp("/home/app", host = "0.0.0.0", port = 3838) :
+  Shiny Server v0.3.4 or later is required; please upgrade!
+
+Attaching package: ‘shinyjs’
+
+The following object is masked from ‘package:shiny’:
+
+    runExample
+
+The following objects are masked from ‘package:methods’:
+
+    removeClass, show
+
+
+Attaching package: ‘jsonlite’
+
+The following object is masked from ‘package:purrr’:
+
+    flatten
+
+The following object is masked from ‘package:shiny’:
+
+    validate
+
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:purrr’:
+
+    transpose
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘shinyWidgets’
+
+The following object is masked from ‘package:shinyjs’:
+
+    alert
+
+
+Attaching package: ‘arrow’
+
+The following objects are masked from ‘package:feather’:
+
+    read_feather, write_feather
+
+The following object is masked from ‘package:utils’:
+
+    timestamp
+
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################
+
+Attaching package: ‘xts’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+The following objects are masked from ‘package:data.table’:
+
+    first, last
+
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+[1] "--> py_config "
+python:         /usr/local/share/miniconda3/envs/env/bin/python
+libpython:      /usr/local/share/miniconda3/envs/env/lib/libpython3.10.so
+pythonhome:     /usr/local/share/miniconda3/envs/env:/usr/local/share/miniconda3/envs/env
+version:        3.10.13 | packaged by conda-forge | (main, Oct 26 2023, 18:07:37) [GCC 12.3.0]
+numpy:          /usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/numpy
+numpy_version:  1.26.4
+torch:          /usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/torch
+
+NOTE: Python version was forced by RETICULATE_PYTHON
+[1] "py_config -->"
+[1] "Querying encoders"
+[1] "Done!"
+
+Listening on http://0.0.0.0:3838
+[1] "observeEvent encoders list enc_l | update dataset list | after freeze"
+[1] "observeEvent encoders list encs_l | update dataset list -->"
+[1] "--> observeEvent input_encoder | update wlen"
+[1] "observeEvent input_encoder | update wlen | Before enc_ar"
+[1] "--> Observe clustering options"
+[1] "Observe clustering options -->"
+[1] "--> observeEvent zoom_btn"
+[1] "--> embedding idx"
+[1] "embedding idx -->"
+[1] "--> observeEvent input_dataset | update encoder list"
+[1] "mi-santamaria/deepvats/gtrends_khols-normalized_yearly:v0"
+[1] "observeEvent input_dataset | update encoders for dataset mi-santamaria/deepvats/gtrends_khols-normalized_yearly:v0"
+[1] "observeEvent input_dataset | update encoder list -->"
+[1] "--> observeEvent input_encoder | update wlen"
+[1] "observeEvent input_encoder | update wlen | Before enc_ar"
+[1] "eventReactive enc_ar | Enc. Artifact: mi-santamaria/deepvats/zeroshot-moment-small-embedding:v0"
+[1] "envent reactive enc_ar -->"
+[1] "observeEvent input_encoder | update wlen | enc_ar: <Artifact QXJ0aWZhY3Q6MTM1Mzc4Nzc3MQ==>"
+[1] "observeEvent input_encoder | update wlen | Set wlen slider values"
+[1] "observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 12"
+[2] "observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 17"
+[1] "observeEvent input_encoder | update wlen | Update slider input (12, 17 ) -> 17"
+[1] "--> reactive enc_ar_stride"
+[1] "reactive_enc_ar_stride | --> 9"
+[1] "eventReactive ts_ar -->"
+[1] "--> Reactive tsdf | ts artifact <Artifact QXJ0aWZhY3Q6MTM1Mjk1MTAzMQ==>"
+[1] "Reactive tsdf | Read feather /home/macu/data/wandb_artifacts/-942329478971956879"
+[1] "Reactive tsdf | Read feather | Execution time: 0.0432560443878174 seconds"
+[1] "Reactive tsdf | Column to index | Execution time: 0.0439755916595459 seconds"
+[1] "--> observeEvent tsdf | update select variables"
+[1] "observeEvent tsdf | select variables volume"   
+[2] "observeEvent tsdf | select variables timeindex"
+[1] "--> observeEvent tsdf | update select variables -->"
+[1] "--> observeEvent input_wlen | update slide stride value | wlen 17"
+[1] "enc_ar_stride: 9"
+[1] "oserveEvent input_wlen | update slide stride value | Update stride to 9"
+[1] "Check reactiveness | X |  wlen, stride |"
+[1] "--> ReactiveVal X | Update Sliding Window"
+[1] "reactive X | wlen 17 | stride 9 | Let's prepare data"
+[1] "reactive X | SWV"
+[1] "reactive X | SWV: 0.0104906558990479 secs "
+[1] "reactive X | Update sliding window | Apply stride 9 | enc_input ~ 423-->"
+[2] "reactive X | Update sliding window | Apply stride 9 | enc_input ~ 1-->"  
+[3] "reactive X | Update sliding window | Apply stride 9 | enc_input ~ 17-->" 
+[1] "| Update | X"
+[1] "| Outside| X"
+[1] "--> ts_plot | Before req 1"
+[1] "--> ts_plot_base"
+[1] "ts_plot_base | start_date: 2004-01-01 end_date: 2012-05-31"
+[1] "ts_plot_base | tsdf_xts time0.0116572380065918"
+               volume
+2004-01-01 0.09091226
+2004-01-08 0.09091226
+2004-01-15 0.09091226
+2004-01-22 0.00000000
+2004-01-29 0.00000000
+2004-02-05 0.09091226
+               volume
+2012-04-26 0.06896603
+2012-05-03 0.12069014
+2012-05-10 0.10344822
+2012-05-17 0.05172411
+2012-05-24 0.06896603
+2012-05-31 0.12069014
+[1] "ts_plot_base -->"
+[1] "ts_plot | bp"
+[1] "ts_plot | embedings idxs "
+[1] "--> embedding idx"
+[1] "--> eventReactive enc | load encoder "
+py function:  prepare_forecasting_data :  <function prepare_forecasting_data at 0x7ff3e1eb01f0>
+--> Exec with feather | reading input from  /home/macu/data/wandb_artifacts/-942329478971956879
+--> Exec with feather | Apply function  /home/macu/data/wandb_artifacts/-942329478971956879
+Exec with feather | time:  0.008246898651123047
+Exec with feather -->  /home/macu/data/wandb_artifacts/-942329478971956879
+[1] "embedding idx -->"
+[1] "ts_plot -->"
+Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
+
+  234: <Anonymous>
+  233: stop
+  232: py_call_impl
+  231: pickle$load
+  230: py_load_object
+  229: eventReactiveValueFunc [/home/app/server.R#401]
+  185: enc
+  178: <reactive:embs> [/home/app/server.R#414]
+  162: embs
+  155: <reactive:prj_object> [/home/app/server.R#513]
+  139: prj_object
+  137: <reactive:embedding_ids> [/home/app/server.R#711]
+  121: embedding_ids
+  120: <reactive:ts_plot> [/home/app/server.R#766]
+  104: ts_plot
+   97: ::
+htmlwidgets
+shinyRenderWidget [/home/app/server.R#1072]
+   96: func
+   83: renderFunc
+   82: output$ts_plot_dygraph
+    1: shiny::runApp
+[1] "--> Projections_plot"
+[1] "--> Projections"
+Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
+
+  234: <Anonymous>
+  233: stop
+  232: py_call_impl
+  231: pickle$load
+  230: py_load_object
+  229: eventReactiveValueFunc [/home/app/server.R#401]
+  185: enc
+  178: <reactive:embs> [/home/app/server.R#414]
+  162: embs
+  155: <reactive:prj_object> [/home/app/server.R#513]
+  139: prj_object
+  137: <reactive:embedding_ids> [/home/app/server.R#711]
+  121: embedding_ids
+  120: <reactive:ts_plot> [/home/app/server.R#766]
+  104: ts_plot
+   97: ::
+htmlwidgets
+shinyRenderWidget [/home/app/server.R#1072]
+   96: func
+   83: renderFunc
+   82: output$ts_plot_dygraph
+    1: shiny::runApp
+Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
+
+  234: <Anonymous>
+  233: stop
+  232: py_call_impl
+  231: pickle$load
+  230: py_load_object
+  229: eventReactiveValueFunc [/home/app/server.R#401]
+  185: enc
+  178: <reactive:embs> [/home/app/server.R#414]
+  162: embs
+  155: <reactive:prj_object> [/home/app/server.R#513]
+  139: prj_object
+  137: <reactive:embedding_ids> [/home/app/server.R#711]
+  121: embedding_ids
+  120: <reactive:ts_plot> [/home/app/server.R#766]
+  104: ts_plot
+   97: ::
+htmlwidgets
+shinyRenderWidget [/home/app/server.R#1072]
+   96: func
+   83: renderFunc
+   82: output$ts_plot_dygraph
+    1: shiny::runApp
+Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
+
+  234: <Anonymous>
+  233: stop
+  232: py_call_impl
+  231: pickle$load
+  230: py_load_object
+  229: eventReactiveValueFunc [/home/app/server.R#401]
+  185: enc
+  178: <reactive:embs> [/home/app/server.R#414]
+  162: embs
+  155: <reactive:prj_object> [/home/app/server.R#513]
+  139: prj_object
+  137: <reactive:embedding_ids> [/home/app/server.R#711]
+  121: embedding_ids
+  120: <reactive:ts_plot> [/home/app/server.R#766]
+  104: ts_plot
+   97: ::
+htmlwidgets
+shinyRenderWidget [/home/app/server.R#1072]
+   96: func
+   83: renderFunc
+   82: output$ts_plot_dygraph
+    1: shiny::runApp
+[1] "Check reactiveness | X |  wlen, stride |"
+[1] "--> Projections_plot"
+Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
+
+  234: <Anonymous>
+  233: stop
+  232: py_call_impl
+  231: pickle$load
+  230: py_load_object
+  229: eventReactiveValueFunc [/home/app/server.R#401]
+  185: enc
+  178: <reactive:embs> [/home/app/server.R#414]
+  162: embs
+  155: <reactive:prj_object> [/home/app/server.R#513]
+  139: prj_object
+  137: <reactive:embedding_ids> [/home/app/server.R#711]
+  121: embedding_ids
+  120: <reactive:ts_plot> [/home/app/server.R#766]
+  104: ts_plot
+   97: ::
+htmlwidgets
+shinyRenderWidget [/home/app/server.R#1072]
+   96: func
+   83: renderFunc
+   82: output$ts_plot_dygraph
+    1: shiny::runApp
+Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
+
+  234: <Anonymous>
+  233: stop
+  232: py_call_impl
+  231: pickle$load
+  230: py_load_object
+  229: eventReactiveValueFunc [/home/app/server.R#401]
+  185: enc
+  178: <reactive:embs> [/home/app/server.R#414]
+  162: embs
+  155: <reactive:prj_object> [/home/app/server.R#513]
+  139: prj_object
+  137: <reactive:embedding_ids> [/home/app/server.R#711]
+  121: embedding_ids
+  120: <reactive:ts_plot> [/home/app/server.R#766]
+  104: ts_plot
+   97: ::
+htmlwidgets
+shinyRenderWidget [/home/app/server.R#1072]
+   96: func
+   83: renderFunc
+   82: output$ts_plot_dygraph
+    1: shiny::runApp
+[1] "--> Projections_plot"
+Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
+
+  234: <Anonymous>
+  233: stop
+  232: py_call_impl
+  231: pickle$load
+  230: py_load_object
+  229: eventReactiveValueFunc [/home/app/server.R#401]
+  185: enc
+  178: <reactive:embs> [/home/app/server.R#414]
+  162: embs
+  155: <reactive:prj_object> [/home/app/server.R#513]
+  139: prj_object
+  137: <reactive:embedding_ids> [/home/app/server.R#711]
+  121: embedding_ids
+  120: <reactive:ts_plot> [/home/app/server.R#766]
+  104: ts_plot
+   97: ::
+htmlwidgets
+shinyRenderWidget [/home/app/server.R#1072]
+   96: func
+   83: renderFunc
+   82: output$ts_plot_dygraph
+    1: shiny::runApp
+Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
+
+  234: <Anonymous>
+  233: stop
+  232: py_call_impl
+  231: pickle$load
+  230: py_load_object
+  229: eventReactiveValueFunc [/home/app/server.R#401]
+  185: enc
+  178: <reactive:embs> [/home/app/server.R#414]
+  162: embs
+  155: <reactive:prj_object> [/home/app/server.R#513]
+  139: prj_object
+  137: <reactive:embedding_ids> [/home/app/server.R#711]
+  121: embedding_ids
+  120: <reactive:ts_plot> [/home/app/server.R#766]
+  104: ts_plot
+   97: ::
+htmlwidgets
+shinyRenderWidget [/home/app/server.R#1072]
+   96: func
+   83: renderFunc
+   82: output$ts_plot_dygraph
+    1: shiny::runApp

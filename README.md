@@ -68,6 +68,8 @@ GH_TOKEN=your_github_pat
 RSTUDIO_PORT=
 # Password to access the Rstudio server
 RSTUDIO_PASSWD=
+# Port in which you want shiny server to be deployed (for running the app)
+SHINY_PORT=
 ```
 
 Finally, in a terminal located in the folder `docker` of this repository, run:

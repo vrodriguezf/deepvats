@@ -1245,10 +1245,21 @@ embedding_ids <- reactive({
           plotlyProxyInvoke("restyle", list(marker = list(color = new_colors, size = 3)), list(0))
       }
     })
+
+    toggle_graph_state <- reactiveVal(0)
     
-    observe({
-      if (is.null(input$toggle_graph)) {
-        updateNumericInput(session, "toggle_graph", value = 0)
+    observeEvent(input$toggle_graph, {
+      current_state <- toggle_graph_state()
+      new_state <- ifelse(current_state == 0, 1, 0)
+      toggle_graph_state(new_state)
+      print(paste("Toggle graph state:", new_state))
+    })
+
+    output$graph_ui <- renderUI({
+      if (toggle_graph_state() == 0) {
+        uiOutput("projections_plot_ui")
+      } else {
+        plotlyOutput("embedding_plot_3d")
       }
     })
     

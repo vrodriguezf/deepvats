@@ -162,12 +162,16 @@ shinyServer(function(input, output, session) {
     #################################
 
     update_play_pause_button <- reactive({
+        log_print("--> Update play_pause_button", debug_group='debug')
+        on.exit({log_print(paste0("Update play_pause_button || ",play()," -->"), debug_group = 'debug')})
         if (play()) {
             updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
             allow_tsdf(TRUE)
             tsdf_ready(FALSE)
             tsdf_ready_preprocessed(FALSE)
-            tsdf_comp()
+            log_print("Update play_pause_button | --> compute tsdf", debug_group = "debug")
+            req(tsdf_comp())
+            log_print("Update play_pause_button | compute tsdf -->", debug_group = "debug")
         } else {
             updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
             allow_tsdf(FALSE)
@@ -189,10 +193,10 @@ shinyServer(function(input, output, session) {
     })
 
     observeEvent(input$play_pause, {
-        log_print("--> observeEvent play_pause_button", debug_group = 'button')
+        log_print("--> observeEvent input$play_pause", debug_group = 'button')
+        on.exit({log_print("observeEvent input$play_pause | Run -->", debug_group='button')})
         play(!play())
         update_play_pause_button()
-        on.exit({log_print(paste0("observeEvent play_pause_button | Run ", play(), "-->"), debug_group='button'); flush.console()})
     })
 
     observeEvent(input$cuda, {
@@ -603,16 +607,17 @@ shinyServer(function(input, output, session) {
     # Update time series variables
     observe({
         req(play(), ts_ar(), tsdf())
-        if (! input$embs_preprocess){
-            log_print("--> observe update ts variables (1) || Tsdf modified",  debug_group = 'main')
+        log_print("--> observe update ts variables (1) || Tsdf modified",  debug_group = 'main')
             on.exit(log_print(paste0(" observe update ts variables (1) || ts variables ", ts_variables_str(ts_variables), " -->"), debug_group = 'main'))
-            ts_variables <<- tsdf_variables_no_preprocess(req(tsdf()), NULL)
+        if (! input$embs_preprocess || is.null(tsdf_ready_preprocessed()) ){
+            ts_variables <<- tsdf_variables_no_preprocess(tsdf(), NULL)
             tsdf_ready(TRUE)
             ts_vars_selected_mod(TRUE)
-            # --- Problems with reactiveness
-            #log_print(paste0("Update ts variables || Change button ", allow_update_embs()),  debug_group = 'react')
-            #allow_update_embs(FALSE)
-            #enable_disable_embs()
+        } else {
+            ts_variables <<- tsdf_variables_preprocess(tsdf(), tsdf_preprocessed())
+            tsdf_ready(TRUE)
+            tsdf_ready_preprocessed(TRUE)
+            ts_vars_selected_mod(TRUE)
         }
     })
 
@@ -711,7 +716,9 @@ shinyServer(function(input, output, session) {
         }
 
         send_log("Zoom btn_end", session)
-    })
+    },
+    ignoreInit=TRUE
+)
     
     
     # Observe the events related to change the appearance of the projections graph
@@ -1041,7 +1048,7 @@ shinyServer(function(input, output, session) {
         on.exit({
             log_print(
                 paste0(" Observe Log header ", LOG_HEADER), 
-                debug_group = 'main'
+                debug_group = 'tmi'
             )
         })
         log_header_ = paste0(
@@ -1087,8 +1094,7 @@ shinyServer(function(input, output, session) {
                 flush.console()
             })
             result
-        }, 
-        ignoreInit = T
+        }
     )
    
    # Encoder
@@ -1447,7 +1453,7 @@ shinyServer(function(input, output, session) {
         )
     })
 
-    embs_complete_cases_comp <- observe({
+    embs_complete_cases_comp <- observeEvent(allow_update_embs, {
         log_print(
             paste0(
                 " || embs_complete_cases || before req || ",
@@ -1457,7 +1463,7 @@ shinyServer(function(input, output, session) {
             ), 
             debug_group = 'force'
         )
-        req(allow_update_embs(), input$encoder, tsdf_ready())
+        req(input$encoder, tsdf_ready())
         embs_comp_or_cached()
         log_print(paste0("embs_complete_cases || Before complete cases embs ~", paste(dim(embs()), collapse = ', ')), debug_group = 'debug')
         embs_complete_cases(embs()[complete.cases(embs()),])
@@ -1484,7 +1490,7 @@ shinyServer(function(input, output, session) {
         play(FALSE)
         update_play_pause_button()
 
-    }, ignoreInit = TRUE)
+    })
     
     prjs_umap <- reactive({
         req(input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
@@ -1634,9 +1640,17 @@ shinyServer(function(input, output, session) {
     # Load and filter TimeSeries object from wandb
     tsdf_comp <- reactive({            
         if ( input$preprocess_dataset ) { tsdf_ready_preprocessed(FALSE) }
-        log_print(paste0("tsdf_comp || before req | Input encoder ", input$encoder), debug_group = 'tmi')
-        req(input$encoder, input$dataset)            
-        ts_ar = req(ts_ar())
+        log_print(
+            paste0(
+                "tsdf_comp || before req",
+                " | Input encoder ", input$encoder,
+                " | Input dataset ", input$dataset,
+                " | ts_ar ", ! is.null(ts_ar())
+            ), 
+            debug_group = 'debug'
+        )
+        req(input$encoder, input$dataset, ts_ar())            
+        ts_ar = ts_ar()
         log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar()), debug_group = 'main')
         flush.console()
         t_init <- Sys.time()
@@ -1713,6 +1727,7 @@ shinyServer(function(input, output, session) {
             df
         })
         tsdf(df)
+        tsdf_ready(TRUE)
         tsdf_concatenated(df)
         tsdf_preprocessed(NULL)
         tsdf_ready_preprocessed(NULL)
@@ -2388,8 +2403,10 @@ shinyServer(function(input, output, session) {
                 "Projections_plot || Before req",
                 " | tsdf_ready? ",  tsdf_ready(),
                 " | update embs? ", allow_update_embs(),
-                " | projections? ", is.null(projections()),
-                " | enc_input_path? ", enc_input_path()
+                " | projections? ", is.null(prjs()),
+                " | enc_input_path? ", " | enc_input_path? ", ifelse(
+                    is.null(enc_input_path()), "", enc_input_path()
+                    )
             ),
             debug_group = 'force'
         )
@@ -2466,11 +2483,19 @@ shinyServer(function(input, output, session) {
 
     # Generate projections plot
     output$projections_plot <- renderPlot({
-        req(tsdf_concatenated(), X(), input$play_embs)
-        input$embs_preprocess
+        #log_print(
+        #    paste0(
+        #        "output$projections_plot || Before req",
+        #        " || Play embs? ", input$play_embs,
+        #        " || tsdf_concatenated? ", ! is.null(tsdf_concatenated()),
+        #        " || X ready? ", ! is.null(X())
+        #    ),
+        #    debug_group = "main"
+        #)
+        #req(tsdf_concatenated(), X(),input$play_embs)
+        on.exit({log_print("output$projections_plot -->", debug_group='main')})
         log_print("--> output$projections_plot")
-        on.exit({log_print("output$projections_plot -->")})
-        plt <- req(projections_plot_comp())
+        plt <- projections_plot_comp()
         plt
     })
 
@@ -2545,7 +2570,8 @@ shinyServer(function(input, output, session) {
                 input$select_variables,
                 prj_object(),
                 input$play_pause,
-                input$play_embs
+                input$play_embs,
+                play()
             )
             log_print("**** ts_plot_dygraph ****", debug_group = 'force')
             tspd_0 = Sys.time()
@@ -2680,18 +2706,21 @@ shinyServer(function(input, output, session) {
         if (input$preprocess_dataset){
             allow_update_embs(TRUE)
             enable_disable_embs()
-        } else if ( preprocess_dataset_prev ){
+        } else if ( preprocess_dataset_prev() ){
             lp("Use tsdf() dataset for getting the embeddings.")
             if (tsdf_ready()){
                 lp("tsdf_ready => update selected variables")
                 ts_variables$selected <<- ts_variables$original
+            } else {
+                lp("tsdf_ready == FALSE => select no variable")
+                ts_variables$selected <<- NULL
             }
         }   
         allow_update_embs(TRUE)
         ts_vars_selected_mod(tsdf_ready())
         lp(paste0("Change update embs button ", allow_update_embs()))
         enable_disable_embs()
-    }, ignoreInit = TRUE)
+    })
 
     observeEvent(input$play_embs, {
         on.exit( 
@@ -2704,6 +2733,7 @@ shinyServer(function(input, output, session) {
         enable_disable_embs()
         if (input$play_embs && play()){
             log_print("play_embs set to true, recompute projections_plot ", debug_group = 'react')
+            projections_plot_comp()
         }
     })
 

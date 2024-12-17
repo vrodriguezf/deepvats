@@ -118,9 +118,9 @@ services:
       # TODO (28/03/2023): I don't know why it is not working without this
       - ENV_VARS=WANDB_ENTITY,WANDB_API_KEY,WANDB_PROJECT,USER,USERID,GROUPID,PASSWORD,ROOT,CUDA_VISIBLE_DEVICES
     volumes:
-      - ../r_shiny_app:/home/${USER_NAME}/app 
-      - ${LOCAL_DATA_PATH}:/home/${USER_NAME}/data/ 
-      - ../dvats:/home/${USER_NAME}/dvats
+      - ../r_shiny_app:/home/app/app 
+      - ${LOCAL_DATA_PATH}:/home/app/data/ 
+      - ../dvats:/home/app/dvats
       - conda-env:/usr/local/share/miniconda3/envs/env
       - miniconda:/usr/local/share/miniconda3 
       - lib:/usr/local/share/lib

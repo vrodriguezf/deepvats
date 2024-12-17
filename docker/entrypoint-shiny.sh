@@ -33,6 +33,6 @@ sudo chmod -R 775 /var/log/shiny-server
 ls -la $LOG_DIR
 echo "DEBUG: Test to write into $LOG_FILE"
 echo "DEBUG: Writing to ${LOG_FILE}" >> ${LOG_FILE}
-#exec >> $LOG_FILE 2>&1
+exec >> $LOG_FILE 2>&1
 echo "About to open the app"
 R --quiet -e "shiny::runApp('${APP}', host='0.0.0.0', port=3838)"

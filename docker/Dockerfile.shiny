@@ -20,11 +20,7 @@ ENV USER=$USER \
 # Paths
 ENV HOME=/home/$USER \
     ENV_PREFIX=$HOME/env \
-    APP=$HOME/app
-
-# Ensure files and packages
-COPY --chown=app:app docker/entrypoint-rstudio.sh /usr/local/bin
-COPY --chown=app:app r_shiny_app $APP
+    APP=/home/app/app
 
 # Create groups and users
 RUN addgroup --gid $GID $USER \
@@ -39,7 +35,11 @@ RUN addgroup --gid $GID $USER \
     && adduser --system --ingroup app app \
     && usermod -aG shared $USER \
     && usermod -aG shared app
-    
+
+# Ensure files and packages
+COPY --chown=app:shared docker/entrypoint-rstudio.sh /usr/local/bin
+COPY --chown=app:shared r_shiny_app $APP
+
 # Agregar usuarios al grupo sudo después de crearlos
 RUN adduser $USER sudo \
     && usermod -aG sudo app \
@@ -87,7 +87,13 @@ EXPOSE 3838
 
 COPY  --chown=app:app docker/entrypoint-shiny.sh /usr/local/bin/entrypoint-shiny.sh
 RUN chmod u+x /usr/local/bin/entrypoint-shiny.sh 
+ENV HOME=/home/app
+
+RUN mkdir -p $HOME/data
+RUN chown $USER:shared $HOME/data
+
 USER app
+
 RUN touch $LOG_FILE
 RUN ls -la $LOG_DIR && sleep 3
 CMD ["/usr/local/bin/entrypoint-shiny.sh"]

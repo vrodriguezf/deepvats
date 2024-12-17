@@ -39,8 +39,8 @@ RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 COPY --chown=${UID}:${GID} docker/entrypoint-rstudio.sh /usr/local/bin
 RUN chmod u+x /usr/local/bin/entrypoint-rstudio.sh
 
-RUN R -e "install.packages('semantic.dashboard', repos='http://cran.r-project.org')"
-
+RUN R -e "install.packages('semantic.dashboard', repos='http://cran.r-project.org')" \
+    && R -e "install.packages('randomcoloR', repos='http://cran.r-project.org')"
 
 WORKDIR $HOME
 

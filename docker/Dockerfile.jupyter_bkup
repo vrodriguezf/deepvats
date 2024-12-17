@@ -1,0 +1,203 @@
+#############################
+# JUPYTER VOLUME DOCKERFILE #
+#***************************#
+# Set up a jupyter-lab for  #
+# developing using deepvats #
+#############################
+##############
+# Base image #
+##############
+##--- Setup Ubuntu
+FROM misantamaria/dvats-jupyter:cuda12.2.0-ubuntu20.04-hooks-mplots-zeroshot
+
+#--- Tags
+LABEL maintainer="vrodriguezf <victor.rfernandez@upm.es>"
+LABEL cuda_version=${CUDA_VERSION}
+
+##---Initialize bash
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+#-- Environmental variables for wandb
+ENV LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 
+
+
+#-- Octave GUI - uing interactive octave plots
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive  apt-get install -y \
+    xvfb \
+    x11-xserver-utils \
+    gnuplot \
+    && rm -rf /var/lib/apt/lists/*
+
+
+########################
+# Create non-root user #
+########################
+ARG username=user\
+    uid=1000 \
+    gid=1000
+ENV USER=$username \
+    UID=$uid \
+    GID=$gid 
+ENV HOME=/home/$USER
+
+#-- Passwordless sudo (TODO: mv to root section)
+RUN addgroup --gid $GID $USER  \
+    && adduser --disabled-password \
+    --gecos "Non-root user" \
+    --uid $UID \
+    --gid $GID \
+    --home $HOME $USER\
+    && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+#-- Move to user
+USER $USER
+
+#-- Last installations 
+RUN pip install aeon
+RUN conda install -y -c conda-forge ruptures
+
+# Add the jupyterlab settings
+COPY --chown=$uid:$gid docker/jupyter_config $HOME/.jupyter
+
+#############################
+# Ensure miniconda for user #
+#############################
+
+#ENV MINICONDA_VERSION=4.10.3 \ 
+#    CONDA_DIR=/opt/miniconda3 
+
+#ENV PATH=$CONDA_DIR/bin:$PATH \
+ENV PROJECT_DIR=${HOME}
+#ENV ENV_PREFIX=/opt/env
+
+
+
+RUN echo "--> Activate conda"
+
+# Make conda activate command available from /bin/bash --interative shells
+RUN  conda init bash  \
+    # Create a project directory inside user home
+    && mkdir -p $PROJECT_DIR 
+
+RUN chown $USER $PROJECT_DIR
+RUN echo "--> WORKDIR"
+WORKDIR ${HOME}
+
+
+
+COPY --chown=$UID:$GID docker/entrypoint.sh /usr/local/bin
+
+# Make bash automatically activate the conda environment
+RUN echo "conda activate $ENV_PREFIX" >> ~/.bashrc \
+    && echo "--> Exec entrypoint" \
+    && chmod u+x /usr/local/bin/entrypoint.sh
+    
+ENV PATH /usr/local/share/miniconda3/envs/env/bin:$PATH
+
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+
+ARG JUPYTER_TOKEN
+ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
+# default command will be to launch JupyterLab server for development
+
+#COPY --chown=$UID:$GID  ./ $HOME/work
+RUN mkdir -p $HOME/work
+RUN chown $USER $HOME/work 
+
+COPY --chown=$UID:$GID ./.git $HOME/work/.git
+
+RUN  source /usr/local/share/miniconda3/bin/activate env \
+     && cd $HOME/work \
+     && ls -la $HOME/work \
+     && git --version 
+
+SHELL [ "/bin/sh", "-c" ]
+
+COPY --chown=$UID:$GID docker/pre-commit .git/hooks/pre-commit
+RUN cd ${HOME}/work/ \
+    && git config --global --add safe.directory $HOME/work \
+    && git rev-parse --is-inside-work-tree || (echo "Not inside a Git repository"; exit 1) \
+    && sleep 1\
+    && pre-commit install
+
+
+
+RUN conda list octave
+
+#CMD ["sh", "-c", "jupyter lab --no-browser --ip 0.0.0.0 --ContentsManager.allow_hidden=True --NotebookApp.token=$JUPYTER_TOKEN"]
+
+# #############
+# # Zero-shot #
+# #############
+# # POETRY
+# RUN curl -sSL https://install.python-poetry.org | ${ENV_PREFIX}/bin/python3.10 -
+# ENV POETRY_PATH="${HOME}/.local/bin/poetry"
+# RUN ${POETRY_PATH} --version
+
+# # MOMENT
+# RUN /usr/local/share/miniconda3/envs/env/bin/pip install git+https://github.com/moment-timeseries-foundation-model/moment.git
+
+# # MOIRAI
+# ENV LIB_PATH /usr/local/share/lib
+# RUN mkdir $LIB_PATH
+# RUN conda activate $ENV_PREFIX \
+#     && cd $LIB_PATH \
+#     && rm -rf uni2ts \
+#     && git clone https://github.com/SalesforceAIResearch/uni2ts.git \
+#     && cd uni2ts \
+#     && pip  install -e '.[notebook]' --no-warn-script-location \
+#     && conda deactivate
+
+# RUN conda activate $ENV_PREFIX \
+#     && cd $LIB_PATH \
+#     && rm -rf TEMPO TEMPO_project \
+#     && git clone https://github.com/DC-research/TEMPO.git \
+#     && cd TEMPO \
+#     && mv requirements.txt _requirements.txt \
+#     && grep -v -- '--extra-index-url' _requirements.txt > requirements.txt \
+#     && mv requirements.txt __requirements.txt \
+#     && grep -v -- '#' __requirements.txt > requirements.txt \
+#     && ${POETRY_PATH} init --name TEMPO --description "TEMPO" --author "Author Name <email@example.com>" --license "MIT" --no-interaction  \
+#     && cd TEMPO \
+#     && cat requirements.txt | xargs -I {} ${POETRY_PATH} add {} --no-interaction \
+#     # Lock versions
+#     && ${POETRY_PATH} lock --no-interaction \
+#     # Install dependencies
+#     && ${POETRY_PATH} install --no-interaction \
+#     # Ensure modules 
+#     && find ./TEMPO -type d -exec touch {}/__init__.py \; \
+#     && ${POETRY_PATH} new --name TEMPO --src TEMPO_project  \
+#     && cd TEMPO_project \
+#     && /usr/local/share/miniconda3/envs/env/bin/pip  install -e . \
+#     && conda deactivate
+# # ---- Zero shot ---- #
+
+COPY --chown=$UID:$GID ./Makefile $HOME/work/
+COPY --chown=$UID:$GID ./nbs $HOME/work/
+COPY --chown=$UID:$GID ./settings.ini $HOME/work/
+COPY --chown=$UID:$GID ./dvats $HOME/work/
+COPY --chown=$UID:$GID ./LICENSE $HOME/work/
+COPY --chown=$UID:$GID ./MANIFEST.in $HOME/work/
+COPY --chown=$UID:$GID ./nbs_pipeline $HOME/work/
+COPY --chown=$UID:$GID ./setup.py $HOME/work/
+COPY --chown=$UID:$GID ./README.md $HOME/work/
+
+
+# Last installs
+RUN cd $HOME/work  \
+    && pip install -e $HOME/work
+RUN pip install gputil
+
+ARG JUPYTER_TOKEN
+ENV JUPYTER_TOKEN=${JUPYTER_TOKEN}
+
+CMD [\
+    "sh", "-c", \
+    "xvfb-run -a jupyter lab \
+    --no-browser \
+    --ip 0.0.0.0 \
+    --ContentsManager.allow_hidden=True \
+    --NotebookApp.token=$JUPYTER_TOKEN"\
+    ]

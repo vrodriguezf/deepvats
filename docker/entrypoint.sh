@@ -1,36 +1,21 @@
 #!/bin/bash --login
 set -e
-#echo $ENV_PREFIX
-#conda list 
-#ls -la /home/$USER/work
-#pip install -e /home/$USER/work
-
-#echo $WANDB_ENTITY $USER $WANDB_PROJECT
 
 ### Ensuring to activate the correct conda
+echo "activating conda"
 source /usr/local/share/miniconda3/etc/profile.d/conda.sh
 conda activate /usr/local/share/miniconda3/envs/env
 #Check
-#conda list | grep wandb
-###
-
-#!/bin/bash
+echo "check conda 1"
+conda list -n env moment
 
 ############################
 # Extra pre-commit options #
 ############################
-
-#Check
-#conda list | grep wandb
-###
-
-
-
-#echo "Aqui"
-
+echo "Ensure permissions"
 sudo chown -R $USER:$USER $HOME/work
 sudo chown -R $USER:$USER $HOME/data
-
+echo "Check conda 2"
+conda list -n env moment
+echo "Go!"
 exec "$@"
-
-

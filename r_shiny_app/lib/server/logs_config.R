@@ -55,8 +55,8 @@ observe_configs <- list(
         hd = 'observe preprocess dataset', 
         dg = 'react'
     ),
-    'oiep' = list(
-        hd = "observe input$embs_preprocess",
+    'ecc' = list(
+        hd = "embs_complete_cases",
         dg = 'react'
     ),
     'rpro' = list(

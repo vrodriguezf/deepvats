@@ -1454,44 +1454,44 @@ shinyServer(function(input, output, session) {
         )
     })
 
-    embs_complete_cases_comp <- observe({
-        log_print(
+    embs_complete_cases_comp <- reactive({
+        c(lps, lpe, lp) %<-% setup_log_print('ecc')
+        lps()
+        on.exit({lpe()})
+        lp(
             paste0(
                 " || embs_complete_cases || before req || ",
                 " allow update? ", allow_update_embs(),
                 " | input encoder ", input$encoder,
                 " | tsdf_ready? ", tsdf_ready()
-            ), 
-            debug_group = 'force'
+            )
         )
-        req(input$encoder, tsdf_ready())
+        req(input$encoder, tsdf_ready(), ! (input$embs_preprocess && ! tsdf_ready_preprocessed()))    
         embs_comp_or_cached()
         log_print(paste0("embs_complete_cases || Before complete cases embs ~", paste(dim(embs()), collapse = ', ')), debug_group = 'debug')
         embs_complete_cases(embs()[complete.cases(embs()),])
         log_print(paste0("embs_complete_cases || After complete cases embs ~", paste(dim(embs_complete_cases()), collapse = ', ')), debug_group = 'force')
     })
 
-    embs_complete_cases_comp2 <- observeEvent(input$embs_preprocess, {
-        c(lps, lpe, lp) %<-% setup_log_print('oiep')
-        lps()
-        on.exit({lpe()})
-        lp(
-            paste0(
-                " || before req",
-                " | input encoder ", input$encoder,
-                " | tsdf_ready_preprocessed? ", tsdf_ready_preprocessed(),
-                " | input$embs_preprocess ", input$embs_preprocess
-            ), 
-            debug_group = 'force'
-        )
-        isolate({
-            enc_input_ready(FALSE)        
-            allow_update_embs(FALSE)
-            enable_disable_embs()
-            play(FALSE)
-            update_play_pause_button()
-        })
-    }, ignoreInit=TRUE)
+    #embs_complete_cases_comp2 <- observeEvent(input$embs_preprocess, {
+    #    c(lps, lpe, lp) %<-% setup_log_print('oiep')
+    #    lps()
+    #    on.exit({lpe()})
+    #    lp(
+    #        paste0(
+    #            " || before req",
+    #            " | input encoder ", input$encoder,
+    #            " | tsdf_ready_preprocessed? ", tsdf_ready_preprocessed(),
+    #            " | input$embs_preprocess ", input$embs_preprocess
+    #        ), 
+    #        debug_group = 'force'
+    #    )
+    #    enc_input_ready(FALSE)        
+    #    allow_update_embs(FALSE)
+    #    enable_disable_embs()
+    #    play(FALSE)
+    #    update_play_pause_button()
+    #}, ignoreInit=TRUE)
     
     prjs_umap <- reactive({
         req(input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
@@ -2423,7 +2423,8 @@ shinyServer(function(input, output, session) {
             enc_input_ready()
         )
         input$embs_preprocess
-
+        embs_complete_cases_comp()
+        req(embs_complete_cases())
         log_print("--> projections_plot_comp", debug_group = 'force')
         plt <- NULL
         on.exit("projections_plot_comp --> || is null plt? ", is.null(plt))

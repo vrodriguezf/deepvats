@@ -835,13 +835,15 @@ shinyServer(function(input, output, session) {
             tsdf_ready(), 
             " | wlen ", input$wlen, 
             " | stride ", input$stride,
-            " | allow update embs ", allow_update_embs()
+            " | allow update embs ", allow_update_embs(),
+            " | input$play_embs ", input$play_embs
         ), debug_group = 'force')
         req(
             tsdf_ready(), 
             input$wlen != 0, 
             input$stride != 0,
-            allow_update_embs()
+            allow_update_embs(),
+            input$play_embs
         )
         # -- Intentando mejorar la reactividad ---
         input$embs_preprocess
@@ -1482,14 +1484,14 @@ shinyServer(function(input, output, session) {
             ), 
             debug_group = 'force'
         )
-        
-        enc_input_ready(FALSE)        
-        allow_update_embs(FALSE)
-        enable_disable_embs()
-        play(FALSE)
-        update_play_pause_button()
-
-    })
+        isolate({
+            enc_input_ready(FALSE)        
+            allow_update_embs(FALSE)
+            enable_disable_embs()
+            play(FALSE)
+            update_play_pause_button()
+        })
+    }, ignoreInit=TRUE)
     
     prjs_umap <- reactive({
         req(input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
@@ -2675,31 +2677,6 @@ shinyServer(function(input, output, session) {
   
     output$ft_window_percent_value <- renderText({
         paste("Window Percent value:", input$ft_window_percent)
-    })
-
-    observeEvent(
-        input$preprocess_dataset, 
-    {
-        c(lps, lpe, lp) %<-% setup_log_print('opd')
-        on.exit(lpe())
-        lps()
-        if (input$preprocess_dataset){
-            allow_update_embs(TRUE)
-            enable_disable_embs()
-        } else if ( preprocess_dataset_prev() ){
-            lp("Use tsdf() dataset for getting the embeddings.")
-            if (tsdf_ready()){
-                lp("tsdf_ready => update selected variables")
-                ts_variables$selected <<- ts_variables$original
-            } else {
-                lp("tsdf_ready == FALSE => select no variable")
-                ts_variables$selected <<- NULL
-            }
-        }   
-        allow_update_embs(TRUE)
-        ts_vars_selected_mod(tsdf_ready())
-        lp(paste0("Change update embs button ", allow_update_embs()))
-        enable_disable_embs()
     })
 
     observeEvent(input$play_embs, {

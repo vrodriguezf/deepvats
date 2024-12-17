@@ -833,11 +833,9 @@ shinyServer(function(input, output, session) {
         log_print(
             paste0("--> observe X | Before req | tsdf_ready ", 
             tsdf_ready(), 
-            " | ts_vars ",
-            ts_variables_str(ts_variables),
             " | wlen ", input$wlen, 
             " | stride ", input$stride,
-            " | preprocess ", input$embs_preprocess
+            " | allow update embs ", allow_update_embs()
         ), debug_group = 'force')
         req(
             tsdf_ready(), 
@@ -905,6 +903,7 @@ shinyServer(function(input, output, session) {
             on.exit({log_print("Enc input | observe X -->", debug_group = 'main'); flush.console()})
             enc_input_ready(TRUE)
             X(enc_input)
+            allow_update_embs(TRUE)
         } else {
             log_print("Enc input | observe X | X already updated", debug_group = 'main')
         }
@@ -932,7 +931,7 @@ shinyServer(function(input, output, session) {
                 "-->"
             )); flush.console()
         })
-        X() 
+        X()
     })
     
     reset_reactiveVals <- function(type = c("all", "tsdf", "preprocess", "prjs")) {
@@ -1453,7 +1452,7 @@ shinyServer(function(input, output, session) {
         )
     })
 
-    embs_complete_cases_comp <- observeEvent(allow_update_embs, {
+    embs_complete_cases_comp <- observe({
         log_print(
             paste0(
                 " || embs_complete_cases || before req || ",
@@ -1551,27 +1550,36 @@ shinyServer(function(input, output, session) {
     })
 
     prjs_comp <- reactive({
-        req(input$dr_method, embs())
+        log_print(
+            paste0(
+                "prjs_comp | Before req",
+                " || DR: ", input$dr_method, 
+                " || embs? ", ! is.null(embs_complete_cases())
+            ),
+            debug_group = 'debug'
+        )
+        req(input$dr_method, embs_complete_cases())
         log_print(
             paste0("--> || prjs_comp || Before switch || DR method: ", input$dr_method), 
             debug_group = 'main'
         )
+        res <- NULL
         on.exit({log_print(paste0("prjs_comp | res ~", paste(dim(res), collapse=', '), "-->"), debug_group = 'main')})
         res <- switch( input$dr_method,
-            UMAP    = prjs_umap(),
-            TSNE    = prjs_tsne(),
-            PCA     = prjs_pca(),                
-            PCA_UMAP= prjs_pca_umap()
-        )
+                UMAP    = prjs_umap(),
+                TSNE    = prjs_tsne(),
+                PCA     = prjs_pca(),                
+                PCA_UMAP= prjs_pca_umap()
+            )
         res
     })
     
     prj_object <- reactive({
         c(lps, lpe, lp) %<-% setup_log_print('rpro')
         lps()
-        lp(paste0("Before prjs_comp"))
+        lp("Before prjs_comp")
         t_prj_0 = Sys.time()
-        res <- req(prjs_comp())
+        res <- prjs_comp()
         lp(paste0("After prjs_comp res~", dim(res)))
         # TODO: This should be a matrix for improved efficiency
         res <- res %>% as.data.frame
@@ -1857,25 +1865,16 @@ shinyServer(function(input, output, session) {
                 " | dr_method ", input$dr_method,
                 " | tsdf ready ", tsdf_ready(),
                 " | update embs ", allow_update_embs(),
-                " | prj_object? ", ! is.null(prj_object()),
-                " | enc_input_ready?", enc_input_ready()
+                " | enc_input_ready? ", enc_input_ready()
             ),
             debug_group = 'debug'
         )
-        req(
-            input$dr_method, 
-            tsdf_ready(), 
-            allow_update_embs(), 
-            prj_object(),
-            clustering_options$selected
-        )
+        req(input$dr_method, tsdf_ready(), allow_update_embs(), clustering_options$selected)
         log_print("--> projections", debug_group = 'main')
         log_print("projections || before prjs", debug_group = 'debug')
         prjs <- prj_object()
         log_print(
-            paste0("projections || Compute clusters? ", 
-            clustering_options$selected
-            ), 
+            paste0("projections || Compute clusters? ", clustering_options$selected), 
             debug_group = 'debug'
         )
         tcl_0 = Sys.time() 
@@ -2400,13 +2399,12 @@ shinyServer(function(input, output, session) {
     projections_plot_comp <- reactive({
         log_print(
             paste0(
-                "Projections_plot || Before req",
+                " projections_plot_comp|| Before req",
                 " | tsdf_ready? ",  tsdf_ready(),
                 " | update embs? ", allow_update_embs(),
-                " | projections? ", is.null(prjs()),
-                " | enc_input_path? ", " | enc_input_path? ", ifelse(
-                    is.null(enc_input_path()), "", enc_input_path()
-                    )
+                " | enc_input_path? ", ifelse(
+                    is.null(enc_input_path()), "", enc_input_path()),
+                " | enc_input_ready? ", enc_input_ready()
             ),
             debug_group = 'force'
         )
@@ -2418,23 +2416,21 @@ shinyServer(function(input, output, session) {
             tsdf_ready(),
             input$dr_method,
             allow_update_embs(),
-            projections(),
             clustering_options$selected,
-            enc_input_path()
+            enc_input_path(),
+            enc_input_ready()
         )
         input$embs_preprocess
 
-        log_print("--> Projections_plot", debug_group = 'force')
+        log_print("--> projections_plot_comp", debug_group = 'force')
         plt <- NULL
-        on.exit("Projections_plot --> || is null plt? ", is.null(plt))
-        log_print(paste0(" Projections_plot || ts_variables:  ", ts_variables_str(ts_variables)), debug_group = 'force')
+        on.exit("projections_plot_comp --> || is null plt? ", is.null(plt))
+        log_print(paste0(" projections_plot_comp || ts_variables:  ", ts_variables_str(ts_variables)), debug_group = 'force')
         t_pp_0 <- Sys.time()
-        prjs_ <- req(projections())
+        projections()
+        prjs_ <- req(prjs())
         log_print(
-            paste0(
-                " Projections_plot || highlight ", 
-                "prjs_" %dimstr% prjs_
-            ),
+            paste0(" projections_plot_comp || before highlight ", "prjs_" %dimstr% prjs_),
             debug_group = 'debug'
         )
         # Prepare the column highlight to color data
@@ -2449,12 +2445,12 @@ shinyServer(function(input, output, session) {
         # the column cluster will not exist in the dataframe, so we create with the value FALSE
         log_print(
             paste0(
-                " Projections_plot || Cluster ", 
+                " projections_plot_comp || Cluster ", 
                 "prjs_" %dimstr% prjs_
             ),debug_group = 'debug'
         )
         if(!("cluster" %in% names(prjs_))){prjs_$cluster = FALSE}
-        log_print(paste0("projections_plot | GoGo Plot! ", nrow(prjs_)), debug_group = 'debug')
+        log_print(paste0("projections_plot_comp | GoGo Plot! ", nrow(prjs_)), debug_group = 'debug')
         plt <- ggplot_base(prjs_, config_style, ranges, cluster)
         
         if (input$show_lines){
@@ -2467,7 +2463,7 @@ shinyServer(function(input, output, session) {
         })
 
         t_pp_1 = Sys.time()
-        log_print(paste0("projections_plot | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, LOG_PATH, LOG_HEADER, debug_group = 'force')
+        log_print(paste0("projections_plot_comp | Projections Plot time: ", t_pp_1-t_pp_0), TRUE, LOG_PATH, LOG_HEADER, debug_group = 'force')
         temp_log <<- log_add(
             log_mssg                = temp_log, 
             function_               = "Projections Plot",
@@ -2483,27 +2479,11 @@ shinyServer(function(input, output, session) {
 
     # Generate projections plot
     output$projections_plot <- renderPlot({
-        #log_print(
-        #    paste0(
-        #        "output$projections_plot || Before req",
-        #        " || Play embs? ", input$play_embs,
-        #        " || tsdf_concatenated? ", ! is.null(tsdf_concatenated()),
-        #        " || X ready? ", ! is.null(X())
-        #    ),
-        #    debug_group = "main"
-        #)
-        #req(tsdf_concatenated(), X(),input$play_embs)
+        req(input$play_embs)
         on.exit({log_print("output$projections_plot -->", debug_group='main')})
         log_print("--> output$projections_plot")
         plt <- projections_plot_comp()
         plt
-    })
-
-    observeEvent(X(),{
-        on.exit({log_print(paste0("Observe X || X() changed || Recomputed projections plot -->"), debug_group = 'react')})
-        log_print(paste0("--> Observe X || X() changed"), debug_group = 'react')
-        allow_update_embs(TRUE)
-        projections_plot_comp()
     })
     
     

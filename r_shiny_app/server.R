@@ -720,19 +720,30 @@ shinyServer(function(input, output, session) {
     
   })
   
-  # Reactive to store selected points
-  selected_points <- reactive({
+  # Reactive to store selected points 2D "Embedding projections"
+  selected_points_2d <- reactive({
     event_data("plotly_selected", source = "projections_plot")
   })
+
+  # Reactive to store selected points 3D "Embedding projections"
+    selected_points_3d <- reactiveVal(NULL)
   
   # Handle plotly brush event
 embedding_ids <- reactive({
+  if(toggle_graph_state() == 0){
     print("--> embedding idx")
     on.exit(print(paste0("embedding idx -->", bp)))
-    bp <- selected_points()[2]
+    bp <- selected_points_2d()[2]
+  }
+  else{
+    print("--> embedding idx")
+    on.exit(print(paste0("embedding idx -->", bp)))
+    bp <- selected_points_3d()[2]
+  }
+    
   })
 
-  # Interacción desde el gráfico 2D de embeddings
+  # Interacción desde el gráfico 2D-3D de embeddings
   #----------------------------------------------------------------
 
    filtered_window_indices <- reactive({
@@ -750,17 +761,26 @@ embedding_ids <- reactive({
         unlist(ts_indices[unlist(embedding_indices)])
     })
 
+    filtered_window_indices_3d <- reactive({
+        req(length(points_in_radius() > 0))
+        embedding_indices <- points_in_radius()
+        ts_indices <- tsidxs_per_embedding_idx()
+        unlist(ts_indices[unlist(embedding_indices)])
+    })
+
     window_list <- reactive({
         print("--> window_list")
         on.exit(print("window_list -->"))
 
         # Combinar índices de selección 2D y 3D
-        embedding_indices <- unique(c(
-            unlist(filtered_window_indices()),   # Selección en 2D
-            unlist(filtered_window_indices_3d()) # Selección en 3D
-        ))
+        if(toggle_graph_state() == 0){
+          embedding_indices <- unique(c(unlist(filtered_window_indices())))
+        }
+        else{
+          embedding_indices <- unique(c(unlist(filtered_window_indices_3d())))
+        }
+        print(paste0("Embedding indices: ", embedding_indices))
 
-        # Resto de la lógica se mantiene igual
         diff_vector <- diff(embedding_indices, 1)
         idx_window_limits <- which(diff_vector != 1)
         idx_window_limits <- c(1, idx_window_limits, length(embedding_indices))
@@ -772,6 +792,7 @@ embedding_ids <- reactive({
                 isolate(tsdf())$timeindex[embedding_indices[idx_window_limits[i + 1]]]
             )
         }
+        print(paste0(reduced_window_list))
         reduced_window_list
     })
 
@@ -798,7 +819,8 @@ embedding_ids <- reactive({
     #print(embedding_idxs)
     # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
     print("ts_plot | Before if")
-    if ((length(embedding_idxs) != 0) & isTRUE(input$plot_windows)) {
+    if ((length(embedding_idxs) != 0)) {
+      print(paste0("ts_plot | After if"))
       #reduced_window_list <- req(window_list())
       print("reduce windowlist")
       print(reduced_window_list[1])
@@ -871,88 +893,6 @@ embedding_ids <- reactive({
     
     ts_plt
   })
-
-  # Interacción desde el gráfico 3D de embeddings
-  #----------------------------------------------------------------
-    filtered_window_indices_3d <- reactive({
-        req(length(points_in_radius() > 0))
-        embedding_indices <- points_in_radius()
-        ts_indices <- tsidxs_per_embedding_idx()  # Mapea embeddings a ventanas temporales
-        unlist(ts_indices[unlist(embedding_indices)])
-    })
-
-
-    # Reactive expression to generate ts_plot for 3D interactions
-    ts_plot_3d <- reactive({
-        print("--> ts_plot_3d | Before req 1")
-        on.exit({print("ts_plot_3d -->"); flush.console()})
-        
-        req(tsdf(), ts_variables, input$wlen != 0, input$stride)
-        ts_plt <- ts_plot_base()  # Gráfico base
-        
-        # Obtener la lista de ventanas basadas en el gráfico 3D
-        reduced_window_list <- window_list_3d()
-        print(paste0("ts_plot_3d | reduced_window_list = ", reduced_window_list))
-        
-        # Si hay ventanas definidas, procesarlas
-        if (!is.null(selected_point_3d()) && length(points_in_radius()) > 0) {
-            print("ts_plot_3d")
-            
-            # Extraer los rangos de tiempo de las ventanas seleccionadas
-            start_indices <- as.POSIXct(min(sapply(reduced_window_list, `[[`, 1)), origin = "1970-01-01", tz = "UTC")
-            end_indices <- as.POSIXct(max(sapply(reduced_window_list, `[[`, 2)), origin = "1970-01-01", tz = "UTC")
-            
-            print(paste0("ts_plot_3d | start_indices (POSIXct): ", start_indices))
-            print(paste0("ts_plot_3d | end_indices (POSIXct): ", end_indices))
-            
-            start_indices <- which(tsdf()$timeindex == start_indices)
-            end_indices <- which(tsdf()$timeindex == end_indices)
-
-            print(paste0("ts_plot_3d | start_indices (matched): ", start_indices))
-            print(paste0("ts_plot_3d | end_indices (matched): ", end_indices))
-
-            view_size <- end_indices - start_indices + 1
-            max_size <- 10000  # Limitar la vista si es demasiado grande
-            print(paste0("ts_plot_3d | view_size: ", view_size, " | max_size: ", max_size))
-
-            start_date <- tsdf()$timeindex[start_indices]
-            end_date <- tsdf()$timeindex[end_indices]
-
-            print(paste0("ts_plot_3d | start_date: ", start_date, " | end_date: ", end_date))
-
-            if (view_size > max_size) {
-                end_date <- tsdf()$timeindex[start_indices + max_size - 1]
-                print(paste0("ts_plot_3d | Updated end_date due to view size: ", end_date))
-            }
-
-            range_color <- "#FFCCE6"
-            print(paste0("ts_plot_3d | range_color: ", range_color))
-
-            # Sombrear las ventanas en el gráfico
-            count <- 0
-            for (ts_idxs in reduced_window_list) {
-                count <- count + 1
-                start_event_date <- head(as.POSIXct(sapply(ts_idxs, `[[`, 1), origin = "1970-01-01", tz = "UTC"), 1)
-                end_event_date <- tail(as.POSIXct(sapply(ts_idxs, `[[`, 2), origin = "1970-01-01", tz = "UTC"), 1)
-                
-                print(paste0("ts_plot_3d | Window ", count, " -> start_event_date: ", start_event_date, ", end_event_date: ", end_event_date))
-                
-                ts_plt <- ts_plt %>% dyShading(
-                    from = start_event_date,
-                    to = end_event_date,
-                    color = range_color
-                )
-                ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
-            }
-            
-            print(paste0("ts_plot_3d | Total windows processed: ", count))
-        } else {
-            print("ts_plot_3d | No windows to process (no points selected in 3D graph)")
-        }
-        
-        ts_plt
-    })
-
 
   
   # Get projections plot name for saving
@@ -1192,9 +1132,6 @@ embedding_ids <- reactive({
       colnames(prj_3d) <- c("xcoord", "ycoord", "zcoord")
       prj_3d
     })
-
-    selected_point <- reactiveVal(NULL)
-    
     points_in_radius <- reactiveVal(NULL)
     
     output$embedding_plot_3d <- renderPlotly({
@@ -1220,11 +1157,10 @@ embedding_ids <- reactive({
     observeEvent(event_data("plotly_click"), {
       click_data <- event_data("plotly_click")
       if (!is.null(click_data)) {
-        point_idx <- click_data$pointNumber + 1
-        selected_point(point_idx)
+        selected_points_3d(click_data$pointNumber + 1)
         
         prj_3d <- embedding_3d()
-        selected_coords <- prj_3d[point_idx, ]
+        selected_coords <- prj_3d[selected_points_3d(), ]
         
         # Calcula la distancia euclidiana
         distances <- sqrt((prj_3d$xcoord - selected_coords$xcoord)^2 + 
@@ -1239,7 +1175,7 @@ embedding_ids <- reactive({
         # Actualiza los colores de los puntos
         new_colors <- rep("black", nrow(prj_3d))
         new_colors[radius_idxs] <- "blue"
-        new_colors[point_idx] <- "red"
+        new_colors[selected_points_3d()] <- "red"
         
         plotlyProxy("embedding_plot_3d", session) %>%
           plotlyProxyInvoke("restyle", list(marker = list(color = new_colors, size = 3)), list(0))

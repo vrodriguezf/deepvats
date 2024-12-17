@@ -738,3 +738,4 @@ Error in eval(ei, envir) :
 Calls: <Anonymous> ... withVisible -> eval -> eval -> <Anonymous> -> py_module_import
 Execution halted
 DEBUG: Writing to /var/log/shiny-server/app.logs
+DEBUG: Writing to /var/log/shiny-server/app.logs

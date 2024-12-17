@@ -1201,19 +1201,12 @@ embedding_ids <- reactive({
     
     dataset_path <- reactiveVal(NULL)
     dataset_preview <- reactiveVal(NULL)
+    selected_column <- reactiveVal()
+    selected_freq <- reactiveVal()
+    selected_n_epoch <- reactiveVal()
+    selected_ws1 <- reactiveVal()
+    selected_ws2 <- reactiveVal()
 
-    selected_column <- reactiveVal(1)
-    selected_freq <- reactiveVal("10h")
-    selected_n_epoch <- reactiveVal(100)
-    selected_ws1 <- reactiveVal(10)
-    selected_ws2 <- reactiveVal(20)
-    observe({
-      selected_column(1)
-      selected_freq("10h")
-      selected_n_epoch(100)
-      selected_ws1(10)
-      selected_ws2(20)
-    })
     observeEvent(
       list(input$cols_input, input$freq_input, input$n_epoch_input, input$ws1_input, input$ws2_input), {
         selected_column(as.numeric(input$cols_input))
@@ -1621,6 +1614,12 @@ embedding_ids <- reactive({
     })
     
     observeEvent(input$load_dataset, {
+      print(paste0("inicializadas variables de configuracion"))
+      selected_column(1)
+      selected_freq("10h")
+      selected_n_epoch(100)
+      selected_ws1(10)
+      selected_ws2(20)
       showModal(createUploadModal())
     })
     

@@ -178,6 +178,23 @@ shinyServer(function(input, output, session) {
         }
     })
 
+    update_play_pause_button_preprocessed <- reactive({
+        log_print("--> Update play_pause_button_preprocessed", debug_group='debug')
+        on.exit({log_print(paste0("Update play_pause_button_preprocessed || ",play()," -->"), debug_group = 'debug')})
+        if (play()) {
+            updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
+            allow_tsdf(FALSE)
+            tsdf_ready_preprocessed(FALSE)
+            log_print("Update play_pause_button_preprocessed | --> compute tsdf", debug_group = "debug")
+            #allow_update_embs(FALSE)
+            #enable_disable_embs()
+            log_print("Update play_pause_button_preprocessed | compute tsdf -->", debug_group = "debug")
+        } else {
+            updateActionButton(session, "play_pause", label = "Start with the dataset!", icon = shiny::icon("play"))
+            allow_tsdf(FALSE)
+        }
+    })
+
     update_play_fine_tune_button <- function() {
         log_print(paste0("--> Updating play_fine_tune ", play_fine_tune()), debug_group = 'button')
         play_fine_tune(!play_fine_tune())
@@ -836,14 +853,17 @@ shinyServer(function(input, output, session) {
             " | wlen ", input$wlen, 
             " | stride ", input$stride,
             " | allow update embs ", allow_update_embs(),
-            " | input$play_embs ", input$play_embs
+            " | input$play_embs ", input$play_embs,
+            " | tsdf_ready_preprocessed ", tsdf_ready_preprocessed(),
+            " | embs preprocess ", input$embs_preprocess
         ), debug_group = 'force')
         req(
             tsdf_ready(), 
             input$wlen != 0, 
             input$stride != 0,
             allow_update_embs(),
-            input$play_embs
+            input$play_embs,
+            ! (!tsdf_ready_preprocessed() && input$embs_preprocess)
         )
         # -- Intentando mejorar la reactividad ---
         input$embs_preprocess
@@ -1473,25 +1493,23 @@ shinyServer(function(input, output, session) {
         log_print(paste0("embs_complete_cases || After complete cases embs ~", paste(dim(embs_complete_cases()), collapse = ', ')), debug_group = 'force')
     })
 
-    #embs_complete_cases_comp2 <- observeEvent(input$embs_preprocess, {
-    #    c(lps, lpe, lp) %<-% setup_log_print('oiep')
-    #    lps()
-    #    on.exit({lpe()})
-    #    lp(
-    #        paste0(
-    #            " || before req",
-    #            " | input encoder ", input$encoder,
-    #            " | tsdf_ready_preprocessed? ", tsdf_ready_preprocessed(),
-    #            " | input$embs_preprocess ", input$embs_preprocess
-    #        ), 
-    #        debug_group = 'force'
-    #    )
-    #    enc_input_ready(FALSE)        
-    #    allow_update_embs(FALSE)
-    #    enable_disable_embs()
-    #    play(FALSE)
-    #    update_play_pause_button()
-    #}, ignoreInit=TRUE)
+    embs_preprocess <- observeEvent(input$embs_preprocess, {
+        c(lps, lpe, lp) %<-% setup_log_print('oiep')
+        lps()
+        on.exit({lpe()})
+        lp(
+            paste0(
+                " || before req",
+                " | input encoder ", input$encoder,
+                " | tsdf_ready_preprocessed? ", tsdf_ready_preprocessed(),
+                " | input$embs_preprocess ", input$embs_preprocess
+            )
+        )
+        allow_update_embs(FALSE)
+        enable_disable_embs()
+        play(FALSE)
+        update_play_pause_button_preprocessed()
+    }, ignoreInit=TRUE)
     
     prjs_umap <- reactive({
         req(input$prj_n_neighbors, input$prj_min_dist, input$prj_random_state, embs_complete_cases())
@@ -2023,7 +2041,12 @@ shinyServer(function(input, output, session) {
     })
 
     ts_plot_base <- reactive({
-        req(tsdf_ready(), input$select_variables, tsdf_concatenated())
+        req(
+	    tsdf_ready(), 
+	    input$select_variables, 
+	    tsdf_concatenated(),
+	    !( ! tsdf_ready_preprocessed() && input$embs_preprocess)
+	)
         log_print("--> ts_plot_base", debug_group = 'main')
         on.exit({log_print("ts_plot_base -->", debug_group = 'main'); flush.console()})
         start_date  = start_date()
@@ -2607,6 +2630,7 @@ shinyServer(function(input, output, session) {
     observeEvent(input$update_logs, {
         update_trigger = !update_trigger
     })
+
 
     timestamp_min_max <- reactive({
         data <- log_df()  # Obtén tus datos aquí

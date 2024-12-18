@@ -62,6 +62,10 @@ observe_configs <- list(
     'rpro' = list(
         hd = 'prj_object',
         dg = 'main'
+    ),
+    'oiep' = list(
+        hd = "observe input$embs_preprocess",
+        dg = 'react'
     )
 )
 

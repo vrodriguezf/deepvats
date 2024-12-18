@@ -33,7 +33,7 @@ DEBUG_GROUPS<- list (
   'cache'   = 10,
   'proc'    = 3
 ) 
-MAX_CHARS   <- 85
+MAX_CHARS   <- 65
 
 message_header <- function(mssg, mssg_id, add_header, header, time) {
   if (add_header) {

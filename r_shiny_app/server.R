@@ -1524,10 +1524,16 @@ shinyServer(function(input, output, session) {
             ||  input$ft_df == "ft_df_ts"
         ) {
             log_print("Observe event | Input fine tune | Play fine tune | Using the original dataset", debug_group = 'force')
-            df <- tsdf()
+            df <- tsdf()  %>% select(ts_variables$original, - "timeindex")
         } else {
-            log_print("Observe event | Input fine tune | Play fine tune | Using the preprocessed dataset", debug_group = 'force')
-            df <- tsdf_preprocessed()
+            log_print(
+                paste0(
+                    "Observe event | Input fine tune | Play fine tune | Using the preprocessed dataset", 
+                    " | ts_variables$selected"
+                ),
+                debug_group = 'force'
+            )
+            df <- tsdf_preprocessed()  %>% select(ts_variables$preprocessed, - "timeindex_preprocessed")
         }
         if (grepl("moment", input$encoder, ignore.case = TRUE)) {
             fine_tune_kwargs <- list(

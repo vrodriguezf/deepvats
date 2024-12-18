@@ -1507,8 +1507,10 @@ shinyServer(function(input, output, session) {
         )
         allow_update_embs(FALSE)
         enable_disable_embs()
-        play(FALSE)
-        update_play_pause_button_preprocessed()
+        #play(FALSE)
+        #update_play_pause_button_preprocessed()
+        path_comp()
+        lp(paste0("feather path: ", enc_input_path()))
     }, ignoreInit=TRUE)
     
     prjs_umap <- reactive({
@@ -1677,7 +1679,7 @@ shinyServer(function(input, output, session) {
             ), 
             debug_group = 'debug'
         )
-        req(input$encoder, input$dataset, ts_ar())            
+        req(input$encoder, input$dataset, ts_ar(), !tsdf_ready())   
         ts_ar = ts_ar()
         log_print(paste0("--> Reactive tsdf | ts artifact ", ts_ar()), debug_group = 'main')
         flush.console()
@@ -1758,7 +1760,7 @@ shinyServer(function(input, output, session) {
         tsdf_ready(TRUE)
         tsdf_concatenated(df)
         tsdf_preprocessed(NULL)
-        tsdf_ready_preprocessed(NULL)
+        tsdf_ready_preprocessed(FALSE)
         allow_update_embs(FALSE)
         enable_disable_embs()
         log_print(
@@ -2424,7 +2426,7 @@ shinyServer(function(input, output, session) {
     projections_plot_comp <- reactive({
         log_print(
             paste0(
-                " projections_plot_comp|| Before req",
+                " projections_plot_comp || Before req",
                 " | tsdf_ready? ",  tsdf_ready(),
                 " | update embs? ", allow_update_embs(),
                 " | enc_input_path? ", ifelse(

@@ -37,9 +37,9 @@ shinyUI(fluidPage(
     sidebarPanel(
       load_datasetUI("load_dataset1"),
       checkboxInput("preprocess_dataset", "Preprocess Dataset", value = FALSE),
-      actionButton("preprocess_play", "Preprocess", icon = shiny::icon("play")),
       conditionalPanel(
         condition = "input.preprocess_dataset == true",
+        actionButton("preprocess_play", "Preprocess", icon = shiny::icon("play")),
         selectInput("task_type", "Select Task Type", choices = list (
           "Detect outlier points" = "point_outlier",
           "Detect outlier sequences" = "sequence_outlier",

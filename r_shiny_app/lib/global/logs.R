@@ -31,7 +31,7 @@ DEBUG_GROUPS<- list (
   'react'   = 2,
   'js'      = 10,
   'cache'   = 10,
-  'proc'    = 3
+  'proc'    = 12
 ) 
 MAX_CHARS   <- 65
 

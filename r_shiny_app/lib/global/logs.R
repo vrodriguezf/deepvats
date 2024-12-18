@@ -151,7 +151,7 @@ log_add <- function(
     mssg                = ifelse(is.null(mssg), "", mssg),
     stringsAsFactors    = FALSE  # Evitar factores
   )
-  log_print(paste0("Log add | ", function_, debug_group = 'time'))
+  log_print(paste0("Log add | ", function_), debug_group = 'time')
   new_mssg = rbind(log_mssg, new_mssg)
   return(new_mssg) 
 }

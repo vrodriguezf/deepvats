@@ -81,7 +81,7 @@ shinyServer(function(input, output, session) {
     allow_tsdf              <- reactiveVal(FALSE)
     get_tsdf_prev           <- reactiveVal(NULL)
     tsdf_ready              <- reactiveVal(FALSE)
-    tsdf_ready_preprocessed <- reactiveVal(FALSE)
+    tsdf_ready_preprocessed <- reactiveVal(TRUE)
     # CPU
     force_cpu   <- reactiveVal(FALSE)
     cpu_flag    <- reactiveVal(FALSE)  
@@ -145,6 +145,7 @@ shinyServer(function(input, output, session) {
     enc_input_ready         <- reactiveVal(FALSE)
     allow_update_len        <- reactiveVal(TRUE)
     allow_update_embs       <- reactiveVal(FALSE)
+    play_prjs               <- reactiveVal(FALSE)
     # Application options
     wlen_min                <- reactiveVal(0)
     wlen_max                <- reactiveVal(0)
@@ -168,7 +169,7 @@ shinyServer(function(input, output, session) {
             updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
             allow_tsdf(TRUE)
             tsdf_ready(FALSE)
-            tsdf_ready_preprocessed(FALSE)
+            tsdf_ready_preprocessed(TRUE)
             log_print("Update play_pause_button | --> compute tsdf", debug_group = "debug")
             req(tsdf_comp())
             log_print("Update play_pause_button | compute tsdf -->", debug_group = "debug")
@@ -185,6 +186,7 @@ shinyServer(function(input, output, session) {
             updateActionButton(session, "play_pause", label = "Pause", icon = shiny::icon("pause"))
             allow_tsdf(FALSE)
             tsdf_ready_preprocessed(FALSE)
+            print(paste0("TSDF READY A FALSE 2", tsdf_ready_preprocessed())) #quitar
             log_print("Update play_pause_button_preprocessed | --> compute tsdf", debug_group = "debug")
             #allow_update_embs(FALSE)
             #enable_disable_embs()
@@ -686,7 +688,10 @@ shinyServer(function(input, output, session) {
     observeEvent(input$clusters_labels_name, {
         log_print("--> observe | precomputed_cluster selected ",  debug_group = 'generic')
         precomputed_clusters$selected <- req(input$clusters_labels_name)
-        log_print(paste0("observe | precomputed_cluster selected --> | ", precomputed_cluster$selected),  debug_group = 'generic')
+        log_print(
+            paste0("observe | precomputed_cluster selected --> | ", 
+            precomputed_cluster$selected
+        ),  debug_group = 'generic')
     })
     
     
@@ -853,7 +858,7 @@ shinyServer(function(input, output, session) {
             " | wlen ", input$wlen, 
             " | stride ", input$stride,
             " | allow update embs ", allow_update_embs(),
-            " | input$play_embs ", input$play_embs,
+            " | play_prjs ", play_prjs(),
             " | tsdf_ready_preprocessed ", tsdf_ready_preprocessed(),
             " | embs preprocess ", input$embs_preprocess
         ), debug_group = 'force')
@@ -862,7 +867,7 @@ shinyServer(function(input, output, session) {
             input$wlen != 0, 
             input$stride != 0,
             allow_update_embs(),
-            input$play_embs,
+            play_prjs(),
             ! (!tsdf_ready_preprocessed() && input$embs_preprocess)
         )
         # -- Intentando mejorar la reactividad ---
@@ -961,7 +966,7 @@ shinyServer(function(input, output, session) {
         isolate({
             if (type == "all" || type == "tsdf") {
                 tsdf_ready(FALSE)
-                tsdf_ready_preprocessed(FALSE)
+                tsdf_ready_preprocessed(TRUE)
                 enc_input_ready(FALSE)
                 tsdf(NULL)
                 tsdf_concatenated(NULL)
@@ -973,7 +978,10 @@ shinyServer(function(input, output, session) {
                 preprocess_dataset_prev(FALSE)
                 tsdf_preprocessed(NULL)
                 tsdf_preprocessed_params(NULL)
-                tsdf_ready_preprocessed(FALSE)
+                if (type == "preprocess") {
+                    tsdf_ready_preprocessed(TRUE)
+                }
+                print(paste0("TSDF READY A TRUE ", tsdf_ready_preprocessed())) #quitar
             }
             if (type == "all" || type == "prjs") {
                 prjs(NULL)
@@ -1236,8 +1244,62 @@ shinyServer(function(input, output, session) {
     })
 
     ####  CACHING EMBEDDINGS ####
-    embs_comp_or_cached <- reactive({
-        req(input$dataset, input$encoder, input$wlen > 0, input$stride > 0)
+    #embs_comp_or_cached <- reactive({
+    #    embs_params_current <- list(
+    #        dataset   = input$dataset,
+    #        encoder   = input$encoder,
+    #        wlen      = input$wlen,
+    #        stride    = input$stride,
+    #        fine_tune = input$fine_tune,
+    #        processed = input$embs_preprocess
+    #    )
+    #    log_print(paste0(
+    #        "embs_comp_or_cached || Before req enc_input_ready ", enc_input_ready(),
+    #        " | play ", play(),
+    #        " | play prjs ", play_prjs(),
+    #        " | allow_update_embs ", allow_update_embs(),
+    #        " | X | ", ifelse(is.null(X()), "NULL", "NOT NULL"),
+    #        " | enc | ", ifelse(is.null(enc()), "NULL", "NOT NULL"),
+    #        " | tsdf_ready | ", tsdf_ready(),
+    #        " | tsdf_ready_preprocessed | ", tsdf_ready_preprocessed(),
+    #        " | play? ", play(),
+    #        " | play prjs? ", play_prjs(),
+    #        " | tsdf_preprocessed flag? ", !( input$embs_preprocess && !tsdf_ready_preprocessed())
+    #    ), debug_group = 'force')
+    #    req(
+    #        input$dataset, 
+    #        input$encoder, 
+    #        input$wlen > 0, 
+    #        input$stride > 0,
+    #        tsdf_ready(), 
+    #        X(), 
+    #        enc(), 
+    #        enc_input_ready(), 
+    #        allow_update_embs(), 
+    #        tsdf_ready_preprocessed(),
+    #        play(),
+    #        play_prjs(),
+    #        !( input$embs_preprocess && !tsdf_ready_preprocessed())
+    #    )
+    #    print("embs_com_or_cached | after req") # Quitar
+    #    compute_flag <- reactiveVal_compute_or_cached(cached_embeddings, embs_params(),embs_params_current,"embs_comp")
+    #    log_print(paste0("embs_comp_or_cached || --> embs | compute_flag ", compute_flag), debug_group = 'force')
+    #    if ( compute_flag ){
+    #        res <- embs_comp()
+    #        cached_embeddings(res)
+    #        shinyjs::disable("embs_comp")
+    #    } else {
+    #        res <- cached_embeddings()
+    #    }
+    #    embs_params(embs_params_current)
+    #    log_print(paste0("embs_comp_or_cached || res ~", paste(dim(res), collapse=', ')), debug_group = 'force')
+    #    embs(res)
+    #    res
+    #})
+    
+    # Definir la función
+    embs_comp_or_cached <- function() {
+        res <- NULL
         embs_params_current <- list(
             dataset   = input$dataset,
             encoder   = input$encoder,
@@ -1249,26 +1311,51 @@ shinyServer(function(input, output, session) {
         log_print(paste0(
             "embs_comp_or_cached || Before req enc_input_ready ", enc_input_ready(),
             " | play ", play(),
+            " | play prjs ", play_prjs(),
             " | allow_update_embs ", allow_update_embs(),
             " | X | ", ifelse(is.null(X()), "NULL", "NOT NULL"),
             " | enc | ", ifelse(is.null(enc()), "NULL", "NOT NULL"),
-            " | tsdf_ready | ", tsdf_ready()
+            " | tsdf_ready | ", tsdf_ready(),
+            " | tsdf_ready_preprocessed | ", tsdf_ready_preprocessed(),
+            " | play? ", play(),
+            " | play prjs? ", play_prjs(),
+            " | tsdf_preprocessed flag? ", !( input$embs_preprocess && !tsdf_ready_preprocessed())
         ), debug_group = 'force')
-        req(tsdf_ready(), X(), enc(), enc_input_ready(), allow_update_embs())
-        compute_flag <- reactiveVal_compute_or_cached(cached_embeddings, embs_params(),embs_params_current,"embs_comp")
-        log_print(paste0("embs_comp_or_cached || --> embs | compute_flag ", compute_flag), debug_group = 'force')
-        if ( compute_flag ){
-            res <- embs_comp()
-            cached_embeddings(res)
-            shinyjs::disable("embs_comp")
+
+        if (
+            is.null(input$dataset) ||
+            is.null(input$encoder) ||
+            input$wlen <= 0 ||
+            input$stride <= 0 ||
+            !tsdf_ready() ||
+            is.null(X()) ||
+            is.null(enc()) ||
+            !enc_input_ready() ||
+            !allow_update_embs() ||
+            !tsdf_ready_preprocessed() ||
+            !play() ||
+            !play_prjs() ||
+            (input$embs_preprocess && !tsdf_ready_preprocessed())
+        ) {
+            log_print("embs_comp_or_cached | invalid parameters")
         } else {
-            res <- cached_embeddings()
+            print("embs_com_or_cached | after req") # Quitar
+            compute_flag <- reactiveVal_compute_or_cached(cached_embeddings, embs_params(), embs_params_current, "embs_comp")
+            log_print(paste0("embs_comp_or_cached || --> embs | compute_flag ", compute_flag), debug_group = 'force')
+            if (compute_flag) {
+                res <- embs_comp_func()
+                cached_embeddings(res)
+                shinyjs::disable("embs_comp")
+            } else {
+                res <- cached_embeddings()
+            }
+            embs_params(embs_params_current)
+            log_print(paste0("embs_comp_or_cached || res ~", paste(dim(res), collapse=', ')), debug_group = 'force')
         }
-        embs_params(embs_params_current)
-        log_print(paste0("embs_comp_or_cached || res ~", paste(dim(res), collapse=', ')), debug_group = 'force')
         embs(res)
         res
-    })
+    }
+
     ###########################
 
     embs_comp <- reactive({
@@ -1333,8 +1420,81 @@ shinyServer(function(input, output, session) {
         log_print("embs_comp || ...Cleaning GPU", debug_group = 'tmi')
         rm(enc_l, enc_input)
         log_print(paste0("embs_comp || Cleaning GPU... || ", dim(result)), debug_group = 'tmi')
-        result
+        return(result)
     }) 
+
+        # Definir la función
+    embs_comp_func <- function() {
+        if (!allow_update_embs() || !enc_input_ready() || is.null(tsdf()) || is.null(X())) {
+            return(NULL)
+        }
+
+        log_print(paste0("embs_comp || --> embs_comp | enc_input_ready ", enc_input_ready()), debug_group = 'main')
+        log_print(paste0("embs_comp || tsdf ~ (", paste(dim(tsdf()), collapse=', '),")"), debug_group = 'debug')
+        log_print(paste0("embs_comp || X ~(", paste(dim(X()), collapse=', '), ")"), debug_group = 'debug')
+        log_print(paste0("embs_comp ||get embeddings"), debug_group = 'debug')
+
+        if (torch$cuda$is_available()){
+            log_print(paste0("embs_comp || CUDA devices: ", torch$cuda$device_count(), " | current_device: ", torch$cuda$current_device()), debug_group = 'tmi')
+        } else {
+            force_cpu(TRUE)
+            log_print(" || embs_comp || CUDA NOT AVAILABLE", debug_group = 'tmi')
+        }
+
+        t_embs_0 <- Sys.time()
+
+        log_print("embs_comp || get embeddings | Get batch size and dataset", debug_group = 'debug')
+        dataset_logged_by   <- enc_ar()$logged_by()
+        bs                  <- dataset_logged_by$config$batch_size
+        stride              <- input$stride
+        log_print(paste0("embs_comp || get embeddings (set stride set batch size) | Stride ", input$stride, " | batch size: ", bs , " | stride: ", stride), debug_group = 'debug')
+        log_print(paste0("embs_comp || get embeddings | Original stride: ", dataset_logged_by$config$stride), debug_group = 'debug')
+        enc_input <- X()
+
+        chunk_size = 10000000 #N*32
+        log_print(paste0("embs_comp || get embeddings (set stride set batch size) | Chunk_size ", chunk_size), debug_group = 'debug')
+        log_print(paste0("embs_comp || get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | Before"), debug_group = 'debug')
+        specific_kwargs <- embs_kwargs()
+        enc_l <- enc()
+        kwargs_common <- list(
+            X                   = enc_input,
+            enc_learn           = enc_l,
+            verbose             = as.integer(2)
+        )
+        kwargs <- c(kwargs_common, list(stride = as.integer(input$stride)), specific_kwargs)
+
+        result <- do.call(
+                    dvats$get_enc_embs_set_stride_set_batch_size,
+                    kwargs
+                )
+
+        log_print(paste0("embs_comp || get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | After"), debug_group = 'debug')
+        log_print(paste0("embs_comp || get_enc_embs_set_stride_set_batch_size embs ~ | ", dim(result) ), debug_group = 'debug')
+        t_embs_1 <- Sys.time()
+        diff <- t_embs_1 - t_embs_0
+        diff_secs <- as.numeric(diff, units = "secs")
+        diff_mins <- as.numeric(diff, units = "mins")
+        log_print(paste0("get_enc_embs_set_stride_set_batch_size | ", input$cpu_flag, " | total time: ", diff_secs, " secs thus ", diff_mins, " mins | result ~", dim(result)), TRUE, LOG_PATH, LOG_HEADER, debug_group = 'debug')
+        temp_log <<- log_add(
+            log_mssg            = temp_log,
+            function_           = "Embeddings",
+            cpu_flag            = input$cpu_flag,
+            dr_method           = input$dr_method,
+            clustering_options  = input$clustering_options,
+            zoom                = input$zoom_btn,
+            time                = diff,
+            mssg                = "Get encoder embeddings"
+        )
+        X <- NULL
+        gc(verbose=as.integer(1))
+        on.exit({log_print(paste0("embs_comp || get embeddings | ", dim(result) , " -->"), debug_group = 'debug'); flush.console()})
+        log_print("embs_comp || ...Cleaning GPU", debug_group = 'tmi')
+        rm(enc_l, enc_input)
+        log_print(paste0("embs_comp || Cleaning GPU... || ", dim(result)), debug_group = 'tmi')
+        return(result)
+    }
+
+
 
     observeEvent(input$ft_dataset_option, {
         req(input$ft_dataset_option, input$ft_window_percent, input$ft_num_epochs)
@@ -1478,16 +1638,8 @@ shinyServer(function(input, output, session) {
         c(lps, lpe, lp) %<-% setup_log_print('ecc')
         lps()
         on.exit({lpe()})
-        lp(
-            paste0(
-                " || embs_complete_cases || before req || ",
-                " allow update? ", allow_update_embs(),
-                " | input encoder ", input$encoder,
-                " | tsdf_ready? ", tsdf_ready()
-            )
-        )
-        req(input$encoder, tsdf_ready(), ! (input$embs_preprocess && ! tsdf_ready_preprocessed()))    
-        embs_comp_or_cached()
+        req(embs())    
+        print("embs_complete_cases_comp | After req") #Quitar
         log_print(paste0("embs_complete_cases || Before complete cases embs ~", paste(dim(embs()), collapse = ', ')), debug_group = 'debug')
         embs_complete_cases(embs()[complete.cases(embs()),])
         log_print(paste0("embs_complete_cases || After complete cases embs ~", paste(dim(embs_complete_cases()), collapse = ', ')), debug_group = 'force')
@@ -1507,9 +1659,11 @@ shinyServer(function(input, output, session) {
         )
         allow_update_embs(FALSE)
         enable_disable_embs()
-        #play(FALSE)
-        #update_play_pause_button_preprocessed()
+        play(FALSE)
+        play_prjs(FALSE)
+        update_play_pause_button_preprocessed()
         path_comp()
+        enc_input_ready(FALSE)
         lp(paste0("feather path: ", enc_input_path()))
     }, ignoreInit=TRUE)
     
@@ -1669,7 +1823,10 @@ shinyServer(function(input, output, session) {
 
     # Load and filter TimeSeries object from wandb
     tsdf_comp <- reactive({            
-        if ( input$preprocess_dataset ) { tsdf_ready_preprocessed(FALSE) }
+        if ( input$preprocess_dataset ) { 
+            tsdf_ready_preprocessed(FALSE) 
+            print(paste0("TSDF READY A FALSE 3", tsdf_ready_preprocessed())) #quitar
+        }
         log_print(
             paste0(
                 "tsdf_comp || before req",
@@ -1760,7 +1917,8 @@ shinyServer(function(input, output, session) {
         tsdf_ready(TRUE)
         tsdf_concatenated(df)
         tsdf_preprocessed(NULL)
-        tsdf_ready_preprocessed(FALSE)
+        tsdf_ready_preprocessed(! input$preprocess_dataset)
+        print(paste0("TSDF READY A 4 ", tsdf_ready_preprocessed())) #quitar
         allow_update_embs(FALSE)
         enable_disable_embs()
         log_print(
@@ -2424,14 +2582,22 @@ shinyServer(function(input, output, session) {
     }
 
     projections_plot_comp <- reactive({
+        plt <- NULL
+        on.exit(
+            "projections_plot_comp --> || is null plt? ", 
+            is.null(plt)
+        )
         log_print(
             paste0(
                 " projections_plot_comp || Before req",
                 " | tsdf_ready? ",  tsdf_ready(),
+                " | tsdf_ready preprocessed? ",  tsdf_ready_preprocessed(),
                 " | update embs? ", allow_update_embs(),
                 " | enc_input_path? ", ifelse(
                     is.null(enc_input_path()), "", enc_input_path()),
-                " | enc_input_ready? ", enc_input_ready()
+                " | enc_input_ready? ", enc_input_ready(),
+                " | play prjs? ", play_prjs(),
+                " | play? ", play()
             ),
             debug_group = 'force'
         )
@@ -2441,18 +2607,30 @@ shinyServer(function(input, output, session) {
             input$wlen != 0,
             input$stride != 0,
             tsdf_ready(),
+            tsdf_ready_preprocessed(),
             input$dr_method,
             allow_update_embs(),
             clustering_options$selected,
             enc_input_path(),
-            enc_input_ready()
+            enc_input_ready(),
+            play_prjs(),
+            play()
         )
-        input$embs_preprocess
-        embs_complete_cases_comp()
-        req(embs_complete_cases())
         log_print("--> projections_plot_comp", debug_group = 'force')
+        embs_comp_or_cached()
+        log_print(
+            paste0("projections_plot_comp | embs?", !is.null(embs())),
+            debug_group = 'force'
+        )
+        req(embs())
+        embs_complete_cases_comp()
+        log_print(
+            paste0("projections_plot_comp | embs complete?", !is.null(embs_complete_cases())),
+            debug_group = 'force'
+        )
+        req(embs_complete_cases())
         plt <- NULL
-        on.exit("projections_plot_comp --> || is null plt? ", is.null(plt))
+        
         log_print(paste0(" projections_plot_comp || ts_variables:  ", ts_variables_str(ts_variables)), debug_group = 'force')
         t_pp_0 <- Sys.time()
         projections()
@@ -2507,7 +2685,7 @@ shinyServer(function(input, output, session) {
 
     # Generate projections plot
     output$projections_plot <- renderPlot({
-        req(input$play_embs)
+        req(play_prjs())
         on.exit({log_print("output$projections_plot -->", debug_group='main')})
         log_print("--> output$projections_plot")
         plt <- projections_plot_comp()
@@ -2564,9 +2742,9 @@ shinyServer(function(input, output, session) {
                 paste0(
                     "ts_plot_dygraph || Before req", 
                     "| tsdf ?", !is.null(tsdf()),
-                    "| prj_object ?",  !is.null(prj_object()),
-                    "| play ?", input$play_pause,
-                    "| embs ?", input$play_embs
+                    "| prj_object? ",  !is.null(prj_object()),
+                    "| play ?", play(),
+                    "| embs ?", play_prjs()
                 ),
                 debug_group = 'debug'
             )
@@ -2577,9 +2755,8 @@ shinyServer(function(input, output, session) {
                 tsdf(),
                 input$select_variables,
                 prj_object(),
-                input$play_pause,
-                input$play_embs,
-                play()
+                play(),
+                play_prjs()
             )
             log_print("**** ts_plot_dygraph ****", debug_group = 'force')
             tspd_0 = Sys.time()
@@ -2712,10 +2889,14 @@ shinyServer(function(input, output, session) {
                 paste0("Play embs || Changes to ", allow_update_embs()),  
                 debug_group = 'react'
             ))
-        allow_update_embs(!allow_update_embs())
+        # Update vars
+        play_prjs(! play_prjs())
+        allow_update_embs(play_prjs())
         log_print(paste0("Play embs || Change button ", allow_update_embs()),  debug_group = 'react')
+        # Update buttons
         enable_disable_embs()
-        if (input$play_embs && play()){
+        # Compute projections if it is the case
+        if (play_prjs() && play()){
             log_print("play_embs set to true, recompute projections_plot ", debug_group = 'react')
             projections_plot_comp()
         }

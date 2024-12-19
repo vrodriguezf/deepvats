@@ -7,6 +7,7 @@ options(scipen = 999) #Show decimals, no scientific notation (for logs)
 toguether = TRUE
 
 user <- Sys.getenv("USER")
+#user <- system("id -un", intern = TRUE)
 data_path <- file.path("/home", user, "data")
 
 header <-"r_shiny_app_logs"

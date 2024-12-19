@@ -926,4 +926,316 @@ Error in run_now(timeoutMs/1000, all = FALSE) :
  15:38:26.586 [16] 15:38:26.586 [16] --> observeEvent zoom_btn
  
  15:38:26.590 [17] 15:38:26.590 [17] --> observeEvent zoom_btn FALSE
+ DEBUG: Writing to /var/log/shiny-server/app.logs
+About to open the app
+> shiny::runApp('/home/app/app', host='0.0.0.0', port=3838)
+Loading required package: shiny
+Warning in shiny::runApp("/home/app/app", host = "0.0.0.0", port = 3838) :
+  Shiny Server v0.3.4 or later is required; please upgrade!
+
+Attaching package: ‘shinyjs’
+
+The following object is masked from ‘package:shiny’:
+
+    runExample
+
+The following objects are masked from ‘package:methods’:
+
+    removeClass, show
+
+
+Attaching package: ‘shinyWidgets’
+
+The following object is masked from ‘package:shinyjs’:
+
+    alert
+
+
+Attaching package: ‘jsonlite’
+
+The following object is masked from ‘package:purrr’:
+
+    flatten
+
+The following object is masked from ‘package:shiny’:
+
+    validate
+
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:purrr’:
+
+    transpose
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘arrow’
+
+The following objects are masked from ‘package:feather’:
+
+    read_feather, write_feather
+
+The following object is masked from ‘package:utils’:
+
+    timestamp
+
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################
+
+Attaching package: ‘xts’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+The following objects are masked from ‘package:data.table’:
+
+    first, last
+
+
+Attaching package: ‘semantic.dashboard’
+
+The following objects are masked from ‘package:shiny’:
+
+    column, icon
+
+The following object is masked from ‘package:graphics’:
+
+    box
+
+/usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
+  torch.utils._pytree._register_pytree_node(
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+wandb: WARNING Path /home/app/app/wandb/ wasn't writable, using system temp directory
+Oct2PyError: Octave evaluation error:
+error: graphics_toolkit: fltk toolkit is not available
+error: called from:
+    graphics_toolkit at line 84, column 5
+Octave is not ready. Please check the configuration
+
+Listening on http://0.0.0.0:3838
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+Warning: Error in run_now: IO error: Failed to open file: /home/app/data/r_shiny_app_logs/execution_id
+  43: <Anonymous>
+  42: stop
+  41: writeFeather
+  40: feather::write_feather
+  39: get_execution_id
+  38: server [/home/app/app/server.R#1061]
+   1: shiny::runApp
+Error in run_now(timeoutMs/1000, all = FALSE) : 
+  IO error: Failed to open file: /home/app/data/r_shiny_app_logs/execution_id
+
+ 16:57:13.628 [1] 16:57:13.628 [1] observeEvent encoders list enc_l | update datase
+ 16:57:13.628 [1] t list | after freeze
+ 
+ 16:57:13.657 [2] 16:57:13.657 [2] observeEvent encoders list encs_l | update datas
+ 16:57:13.657 [2] et list -->
+ 
+ 16:57:13.695 [3] 16:57:13.695 [3] --> observeEvent input_encoder
+ 
+ 16:57:13.695 [4] 16:57:13.695 [4] observeEvent input_encoder | update wlen | Befor
+ 16:57:13.695 [4] e enc_ar
+ Warning: Error in enc_ar: could not find function "enc_ar"
+  1: shiny::runApp
+
+ 16:57:13.746 [5] 16:57:13.746 [5] --> Observe clustering options
+ 
+ 16:57:13.748 [6] 16:57:13.748 [6] Observe clustering options -->
+ DEBUG: Writing to /var/log/shiny-server/app.logs
+About to open the app
+> shiny::runApp('/home/app/app', host='0.0.0.0', port=3838)
+Loading required package: shiny
+Warning in shiny::runApp("/home/app/app", host = "0.0.0.0", port = 3838) :
+  Shiny Server v0.3.4 or later is required; please upgrade!
+
+Attaching package: ‘shinyjs’
+
+The following object is masked from ‘package:shiny’:
+
+    runExample
+
+The following objects are masked from ‘package:methods’:
+
+    removeClass, show
+
+
+Attaching package: ‘shinyWidgets’
+
+The following object is masked from ‘package:shinyjs’:
+
+    alert
+
+
+Attaching package: ‘jsonlite’
+
+The following object is masked from ‘package:purrr’:
+
+    flatten
+
+The following object is masked from ‘package:shiny’:
+
+    validate
+
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:purrr’:
+
+    transpose
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘arrow’
+
+The following objects are masked from ‘package:feather’:
+
+    read_feather, write_feather
+
+The following object is masked from ‘package:utils’:
+
+    timestamp
+
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################
+
+Attaching package: ‘xts’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+The following objects are masked from ‘package:data.table’:
+
+    first, last
+
+
+Attaching package: ‘semantic.dashboard’
+
+The following objects are masked from ‘package:shiny’:
+
+    column, icon
+
+The following object is masked from ‘package:graphics’:
+
+    box
+
+/usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
+  torch.utils._pytree._register_pytree_node(
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+wandb: WARNING Path /home/app/app/wandb/ wasn't writable, using system temp directory
+Oct2PyError: Octave evaluation error:
+error: graphics_toolkit: fltk toolkit is not available
+error: called from:
+    graphics_toolkit at line 84, column 5
+Octave is not ready. Please check the configuration
+
+Listening on http://0.0.0.0:3838
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+Warning: Error in run_now: IO error: Failed to open file: /home/macu/data/r_shiny_app_logs/execution_id
+  43: <Anonymous>
+  42: stop
+  41: writeFeather
+  40: feather::write_feather
+  39: get_execution_id
+  38: server [/home/app/app/server.R#1061]
+   1: shiny::runApp
+Error in run_now(timeoutMs/1000, all = FALSE) : 
+  IO error: Failed to open file: /home/macu/data/r_shiny_app_logs/execution_id
+
+ 10:34:11.950 [1] 10:34:11.950 [1] observeEvent encoders list enc_l | update datase
+ 10:34:11.950 [1] t list | after freeze
+ 
+ 10:34:11.979 [2] 10:34:11.979 [2] observeEvent encoders list encs_l | update datas
+ 10:34:11.979 [2] et list -->
+ 
+ 10:34:12.016 [3] 10:34:12.016 [3] --> observeEvent input_encoder
+ 
+ 10:34:12.017 [4] 10:34:12.017 [4] observeEvent input_encoder | update wlen | Befor
+ 10:34:12.017 [4] e enc_ar
+ Warning: Error in enc_ar: could not find function "enc_ar"
+  1: shiny::runApp
+
+ 10:34:12.067 [5] 10:34:12.067 [5] --> Observe clustering options
+ 
+ 10:34:12.069 [6] 10:34:12.069 [6] Observe clustering options -->
  

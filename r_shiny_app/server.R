@@ -244,6 +244,28 @@ shinyServer(function(input, output, session) {
     )
 
     select_datasetServer(encs_l, mplot_compute_allow, input, output, session)
+    # Get encoder artifact
+    
+    enc_ar <- eventReactive(
+        input$encoder, 
+        {
+            log_print(paste0("eventReactive enc_ar | Enc. Artifact: ", input$encoder), debug_group = 'react')
+            result <- tryCatch({
+                api$artifact(input$encoder, type = 'learner')
+            }, error = function(e){
+                log_print(paste0("eventReactive enc_ar | Error: ", e$message), debug_group = 'error')
+                NULL
+            })
+            on.exit({
+                log_print(
+                    "envent reactive enc_ar -->", 
+                    debug_group = 'react'
+                ); 
+                flush.console()
+            })
+            result
+        }
+    )
     
     observeEvent(
         input$encoder,
@@ -1104,27 +1126,6 @@ shinyServer(function(input, output, session) {
         list_used_arts
     })
 
-    # Get encoder artifact
-    enc_ar <- eventReactive(
-        input$encoder, 
-        {
-            log_print(paste0("eventReactive enc_ar | Enc. Artifact: ", input$encoder), debug_group = 'react')
-            result <- tryCatch({
-                api$artifact(input$encoder, type = 'learner')
-            }, error = function(e){
-                log_print(paste0("eventReactive enc_ar | Error: ", e$message), debug_group = 'error')
-                NULL
-            })
-            on.exit({
-                log_print(
-                    "envent reactive enc_ar -->", 
-                    debug_group = 'react'
-                ); 
-                flush.console()
-            })
-            result
-        }
-    )
    
    # Encoder
     #enc_comp <- eventReactive(

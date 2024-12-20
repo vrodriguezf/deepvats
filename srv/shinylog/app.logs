@@ -1,858 +1,3 @@
-DEBUG: Writing to /var/log/shiny-server/app.logs
-> shiny::runApp('/home/app', host='0.0.0.0', port=3838)
-Loading required package: shiny
-Warning in shiny::runApp("/home/app", host = "0.0.0.0", port = 3838) :
-  Shiny Server v0.3.4 or later is required; please upgrade!
-
-Attaching package: ‘shinyjs’
-
-The following object is masked from ‘package:shiny’:
-
-    runExample
-
-The following objects are masked from ‘package:methods’:
-
-    removeClass, show
-
-
-Attaching package: ‘jsonlite’
-
-The following object is masked from ‘package:purrr’:
-
-    flatten
-
-The following object is masked from ‘package:shiny’:
-
-    validate
-
-
-Attaching package: ‘data.table’
-
-The following object is masked from ‘package:purrr’:
-
-    transpose
-
-
-Attaching package: ‘dplyr’
-
-The following objects are masked from ‘package:data.table’:
-
-    between, first, last
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-
-Attaching package: ‘shinyWidgets’
-
-The following object is masked from ‘package:shinyjs’:
-
-    alert
-
-
-Attaching package: ‘arrow’
-
-The following objects are masked from ‘package:feather’:
-
-    read_feather, write_feather
-
-The following object is masked from ‘package:utils’:
-
-    timestamp
-
-Loading required package: zoo
-
-Attaching package: ‘zoo’
-
-The following objects are masked from ‘package:base’:
-
-    as.Date, as.Date.numeric
-
-
-######################### Warning from 'xts' package ##########################
-#                                                                             #
-# The dplyr lag() function breaks how base R's lag() function is supposed to  #
-# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
-# source() into this session won't work correctly.                            #
-#                                                                             #
-# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
-# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
-# dplyr from breaking base R's lag() function.                                #
-#                                                                             #
-# Code in packages is not affected. It's protected by R's namespace mechanism #
-# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
-#                                                                             #
-###############################################################################
-
-Attaching package: ‘xts’
-
-The following objects are masked from ‘package:dplyr’:
-
-    first, last
-
-The following objects are masked from ‘package:data.table’:
-
-    first, last
-
-[1] "CUDA AVAILABLE. Num devices: 2"
-[1] ""
-[1] "--> py_config "
-python:         /usr/local/share/miniconda3/envs/env/bin/python
-libpython:      /usr/local/share/miniconda3/envs/env/lib/libpython3.10.so
-pythonhome:     /usr/local/share/miniconda3/envs/env:/usr/local/share/miniconda3/envs/env
-version:        3.10.13 | packaged by conda-forge | (main, Oct 26 2023, 18:07:37) [GCC 12.3.0]
-numpy:          /usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/numpy
-numpy_version:  1.26.4
-torch:          /usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/torch
-
-NOTE: Python version was forced by RETICULATE_PYTHON
-[1] "py_config -->"
-[1] "Querying encoders"
-[1] "Done!"
-
-Listening on http://0.0.0.0:3838
-[1] "observeEvent encoders list enc_l | update dataset list | after freeze"
-[1] "observeEvent encoders list encs_l | update dataset list -->"
-[1] "--> observeEvent input_encoder | update wlen"
-[1] "observeEvent input_encoder | update wlen | Before enc_ar"
-[1] "--> Observe clustering options"
-[1] "Observe clustering options -->"
-[1] "--> observeEvent zoom_btn"
-[1] "--> embedding idx"
-[1] "embedding idx -->"
-[1] "--> observeEvent input_dataset | update encoder list"
-[1] "mi-santamaria/deepvats/gtrends_khols-normalized_yearly:v0"
-[1] "observeEvent input_dataset | update encoders for dataset mi-santamaria/deepvats/gtrends_khols-normalized_yearly:v0"
-[1] "observeEvent input_dataset | update encoder list -->"
-[1] "--> observeEvent input_encoder | update wlen"
-[1] "observeEvent input_encoder | update wlen | Before enc_ar"
-[1] "eventReactive enc_ar | Enc. Artifact: mi-santamaria/deepvats/zeroshot-moment-small-embedding:v0"
-[1] "envent reactive enc_ar -->"
-[1] "observeEvent input_encoder | update wlen | enc_ar: <Artifact QXJ0aWZhY3Q6MTM1Mzc4Nzc3MQ==>"
-[1] "observeEvent input_encoder | update wlen | Set wlen slider values"
-[1] "observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 12"
-[2] "observeEvent input_encoder | update wlen | enc_ar$metadata$mvp_ws 17"
-[1] "observeEvent input_encoder | update wlen | Update slider input (12, 17 ) -> 17"
-[1] "--> reactive enc_ar_stride"
-[1] "reactive_enc_ar_stride | --> 9"
-[1] "eventReactive ts_ar -->"
-[1] "--> Reactive tsdf | ts artifact <Artifact QXJ0aWZhY3Q6MTM1Mjk1MTAzMQ==>"
-[1] "Reactive tsdf | Read feather /home/macu/data/wandb_artifacts/-942329478971956879"
-[1] "Reactive tsdf | Read feather | Execution time: 0.0432560443878174 seconds"
-[1] "Reactive tsdf | Column to index | Execution time: 0.0439755916595459 seconds"
-[1] "--> observeEvent tsdf | update select variables"
-[1] "observeEvent tsdf | select variables volume"   
-[2] "observeEvent tsdf | select variables timeindex"
-[1] "--> observeEvent tsdf | update select variables -->"
-[1] "--> observeEvent input_wlen | update slide stride value | wlen 17"
-[1] "enc_ar_stride: 9"
-[1] "oserveEvent input_wlen | update slide stride value | Update stride to 9"
-[1] "Check reactiveness | X |  wlen, stride |"
-[1] "--> ReactiveVal X | Update Sliding Window"
-[1] "reactive X | wlen 17 | stride 9 | Let's prepare data"
-[1] "reactive X | SWV"
-[1] "reactive X | SWV: 0.0104906558990479 secs "
-[1] "reactive X | Update sliding window | Apply stride 9 | enc_input ~ 423-->"
-[2] "reactive X | Update sliding window | Apply stride 9 | enc_input ~ 1-->"  
-[3] "reactive X | Update sliding window | Apply stride 9 | enc_input ~ 17-->" 
-[1] "| Update | X"
-[1] "| Outside| X"
-[1] "--> ts_plot | Before req 1"
-[1] "--> ts_plot_base"
-[1] "ts_plot_base | start_date: 2004-01-01 end_date: 2012-05-31"
-[1] "ts_plot_base | tsdf_xts time0.0116572380065918"
-               volume
-2004-01-01 0.09091226
-2004-01-08 0.09091226
-2004-01-15 0.09091226
-2004-01-22 0.00000000
-2004-01-29 0.00000000
-2004-02-05 0.09091226
-               volume
-2012-04-26 0.06896603
-2012-05-03 0.12069014
-2012-05-10 0.10344822
-2012-05-17 0.05172411
-2012-05-24 0.06896603
-2012-05-31 0.12069014
-[1] "ts_plot_base -->"
-[1] "ts_plot | bp"
-[1] "ts_plot | embedings idxs "
-[1] "--> embedding idx"
-[1] "--> eventReactive enc | load encoder "
-py function:  prepare_forecasting_data :  <function prepare_forecasting_data at 0x7ff3e1eb01f0>
---> Exec with feather | reading input from  /home/macu/data/wandb_artifacts/-942329478971956879
---> Exec with feather | Apply function  /home/macu/data/wandb_artifacts/-942329478971956879
-Exec with feather | time:  0.008246898651123047
-Exec with feather -->  /home/macu/data/wandb_artifacts/-942329478971956879
-[1] "embedding idx -->"
-[1] "ts_plot -->"
-Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
-
-  234: <Anonymous>
-  233: stop
-  232: py_call_impl
-  231: pickle$load
-  230: py_load_object
-  229: eventReactiveValueFunc [/home/app/server.R#401]
-  185: enc
-  178: <reactive:embs> [/home/app/server.R#414]
-  162: embs
-  155: <reactive:prj_object> [/home/app/server.R#513]
-  139: prj_object
-  137: <reactive:embedding_ids> [/home/app/server.R#711]
-  121: embedding_ids
-  120: <reactive:ts_plot> [/home/app/server.R#766]
-  104: ts_plot
-   97: ::
-htmlwidgets
-shinyRenderWidget [/home/app/server.R#1072]
-   96: func
-   83: renderFunc
-   82: output$ts_plot_dygraph
-    1: shiny::runApp
-[1] "--> Projections_plot"
-[1] "--> Projections"
-Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
-
-  234: <Anonymous>
-  233: stop
-  232: py_call_impl
-  231: pickle$load
-  230: py_load_object
-  229: eventReactiveValueFunc [/home/app/server.R#401]
-  185: enc
-  178: <reactive:embs> [/home/app/server.R#414]
-  162: embs
-  155: <reactive:prj_object> [/home/app/server.R#513]
-  139: prj_object
-  137: <reactive:embedding_ids> [/home/app/server.R#711]
-  121: embedding_ids
-  120: <reactive:ts_plot> [/home/app/server.R#766]
-  104: ts_plot
-   97: ::
-htmlwidgets
-shinyRenderWidget [/home/app/server.R#1072]
-   96: func
-   83: renderFunc
-   82: output$ts_plot_dygraph
-    1: shiny::runApp
-Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
-
-  234: <Anonymous>
-  233: stop
-  232: py_call_impl
-  231: pickle$load
-  230: py_load_object
-  229: eventReactiveValueFunc [/home/app/server.R#401]
-  185: enc
-  178: <reactive:embs> [/home/app/server.R#414]
-  162: embs
-  155: <reactive:prj_object> [/home/app/server.R#513]
-  139: prj_object
-  137: <reactive:embedding_ids> [/home/app/server.R#711]
-  121: embedding_ids
-  120: <reactive:ts_plot> [/home/app/server.R#766]
-  104: ts_plot
-   97: ::
-htmlwidgets
-shinyRenderWidget [/home/app/server.R#1072]
-   96: func
-   83: renderFunc
-   82: output$ts_plot_dygraph
-    1: shiny::runApp
-Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
-
-  234: <Anonymous>
-  233: stop
-  232: py_call_impl
-  231: pickle$load
-  230: py_load_object
-  229: eventReactiveValueFunc [/home/app/server.R#401]
-  185: enc
-  178: <reactive:embs> [/home/app/server.R#414]
-  162: embs
-  155: <reactive:prj_object> [/home/app/server.R#513]
-  139: prj_object
-  137: <reactive:embedding_ids> [/home/app/server.R#711]
-  121: embedding_ids
-  120: <reactive:ts_plot> [/home/app/server.R#766]
-  104: ts_plot
-   97: ::
-htmlwidgets
-shinyRenderWidget [/home/app/server.R#1072]
-   96: func
-   83: renderFunc
-   82: output$ts_plot_dygraph
-    1: shiny::runApp
-[1] "Check reactiveness | X |  wlen, stride |"
-[1] "--> Projections_plot"
-Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
-
-  234: <Anonymous>
-  233: stop
-  232: py_call_impl
-  231: pickle$load
-  230: py_load_object
-  229: eventReactiveValueFunc [/home/app/server.R#401]
-  185: enc
-  178: <reactive:embs> [/home/app/server.R#414]
-  162: embs
-  155: <reactive:prj_object> [/home/app/server.R#513]
-  139: prj_object
-  137: <reactive:embedding_ids> [/home/app/server.R#711]
-  121: embedding_ids
-  120: <reactive:ts_plot> [/home/app/server.R#766]
-  104: ts_plot
-   97: ::
-htmlwidgets
-shinyRenderWidget [/home/app/server.R#1072]
-   96: func
-   83: renderFunc
-   82: output$ts_plot_dygraph
-    1: shiny::runApp
-Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
-
-  234: <Anonymous>
-  233: stop
-  232: py_call_impl
-  231: pickle$load
-  230: py_load_object
-  229: eventReactiveValueFunc [/home/app/server.R#401]
-  185: enc
-  178: <reactive:embs> [/home/app/server.R#414]
-  162: embs
-  155: <reactive:prj_object> [/home/app/server.R#513]
-  139: prj_object
-  137: <reactive:embedding_ids> [/home/app/server.R#711]
-  121: embedding_ids
-  120: <reactive:ts_plot> [/home/app/server.R#766]
-  104: ts_plot
-   97: ::
-htmlwidgets
-shinyRenderWidget [/home/app/server.R#1072]
-   96: func
-   83: renderFunc
-   82: output$ts_plot_dygraph
-    1: shiny::runApp
-[1] "--> Projections_plot"
-Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
-
-  234: <Anonymous>
-  233: stop
-  232: py_call_impl
-  231: pickle$load
-  230: py_load_object
-  229: eventReactiveValueFunc [/home/app/server.R#401]
-  185: enc
-  178: <reactive:embs> [/home/app/server.R#414]
-  162: embs
-  155: <reactive:prj_object> [/home/app/server.R#513]
-  139: prj_object
-  137: <reactive:embedding_ids> [/home/app/server.R#711]
-  121: embedding_ids
-  120: <reactive:ts_plot> [/home/app/server.R#766]
-  104: ts_plot
-   97: ::
-htmlwidgets
-shinyRenderWidget [/home/app/server.R#1072]
-   96: func
-   83: renderFunc
-   82: output$ts_plot_dygraph
-    1: shiny::runApp
-Warning: Error in : ModuleNotFoundError: No module named 'momentfm'
-
-  234: <Anonymous>
-  233: stop
-  232: py_call_impl
-  231: pickle$load
-  230: py_load_object
-  229: eventReactiveValueFunc [/home/app/server.R#401]
-  185: enc
-  178: <reactive:embs> [/home/app/server.R#414]
-  162: embs
-  155: <reactive:prj_object> [/home/app/server.R#513]
-  139: prj_object
-  137: <reactive:embedding_ids> [/home/app/server.R#711]
-  121: embedding_ids
-  120: <reactive:ts_plot> [/home/app/server.R#766]
-  104: ts_plot
-   97: ::
-htmlwidgets
-shinyRenderWidget [/home/app/server.R#1072]
-   96: func
-   83: renderFunc
-   82: output$ts_plot_dygraph
-    1: shiny::runApp
-DEBUG: Writing to /var/log/shiny-server/app.logs
-> shiny::runApp('/home/app', host='0.0.0.0', port=3838)
-Loading required package: shiny
-Warning in shiny::runApp("/home/app", host = "0.0.0.0", port = 3838) :
-  Shiny Server v0.3.4 or later is required; please upgrade!
-
-Attaching package: ‘shinyjs’
-
-The following object is masked from ‘package:shiny’:
-
-    runExample
-
-The following objects are masked from ‘package:methods’:
-
-    removeClass, show
-
-
-Attaching package: ‘shinyWidgets’
-
-The following object is masked from ‘package:shinyjs’:
-
-    alert
-
-
-Attaching package: ‘jsonlite’
-
-The following object is masked from ‘package:purrr’:
-
-    flatten
-
-The following object is masked from ‘package:shiny’:
-
-    validate
-
-
-Attaching package: ‘data.table’
-
-The following object is masked from ‘package:purrr’:
-
-    transpose
-
-
-Attaching package: ‘dplyr’
-
-The following objects are masked from ‘package:data.table’:
-
-    between, first, last
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-
-Attaching package: ‘arrow’
-
-The following objects are masked from ‘package:feather’:
-
-    read_feather, write_feather
-
-The following object is masked from ‘package:utils’:
-
-    timestamp
-
-Loading required package: zoo
-
-Attaching package: ‘zoo’
-
-The following objects are masked from ‘package:base’:
-
-    as.Date, as.Date.numeric
-
-
-######################### Warning from 'xts' package ##########################
-#                                                                             #
-# The dplyr lag() function breaks how base R's lag() function is supposed to  #
-# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
-# source() into this session won't work correctly.                            #
-#                                                                             #
-# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
-# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
-# dplyr from breaking base R's lag() function.                                #
-#                                                                             #
-# Code in packages is not affected. It's protected by R's namespace mechanism #
-# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
-#                                                                             #
-###############################################################################
-
-Attaching package: ‘xts’
-
-The following objects are masked from ‘package:dplyr’:
-
-    first, last
-
-The following objects are masked from ‘package:data.table’:
-
-    first, last
-
-
-Attaching package: ‘semantic.dashboard’
-
-The following objects are masked from ‘package:shiny’:
-
-    column, icon
-
-The following object is masked from ‘package:graphics’:
-
-    box
-
-Error in eval(ei, envir) : 
-  ModuleNotFoundError: No module named 'momentfm'
-Calls: <Anonymous> ... withVisible -> eval -> eval -> <Anonymous> -> py_module_import
-Execution halted
-DEBUG: Writing to /var/log/shiny-server/app.logs
-> shiny::runApp('/home/app', host='0.0.0.0', port=3838)
-Loading required package: shiny
-Warning in shiny::runApp("/home/app", host = "0.0.0.0", port = 3838) :
-  Shiny Server v0.3.4 or later is required; please upgrade!
-
-Attaching package: ‘shinyjs’
-
-The following object is masked from ‘package:shiny’:
-
-    runExample
-
-The following objects are masked from ‘package:methods’:
-
-    removeClass, show
-
-
-Attaching package: ‘shinyWidgets’
-
-The following object is masked from ‘package:shinyjs’:
-
-    alert
-
-
-Attaching package: ‘jsonlite’
-
-The following object is masked from ‘package:purrr’:
-
-    flatten
-
-The following object is masked from ‘package:shiny’:
-
-    validate
-
-
-Attaching package: ‘data.table’
-
-The following object is masked from ‘package:purrr’:
-
-    transpose
-
-
-Attaching package: ‘dplyr’
-
-The following objects are masked from ‘package:data.table’:
-
-    between, first, last
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-
-Attaching package: ‘arrow’
-
-The following objects are masked from ‘package:feather’:
-
-    read_feather, write_feather
-
-The following object is masked from ‘package:utils’:
-
-    timestamp
-
-Loading required package: zoo
-
-Attaching package: ‘zoo’
-
-The following objects are masked from ‘package:base’:
-
-    as.Date, as.Date.numeric
-
-
-######################### Warning from 'xts' package ##########################
-#                                                                             #
-# The dplyr lag() function breaks how base R's lag() function is supposed to  #
-# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
-# source() into this session won't work correctly.                            #
-#                                                                             #
-# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
-# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
-# dplyr from breaking base R's lag() function.                                #
-#                                                                             #
-# Code in packages is not affected. It's protected by R's namespace mechanism #
-# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
-#                                                                             #
-###############################################################################
-
-Attaching package: ‘xts’
-
-The following objects are masked from ‘package:dplyr’:
-
-    first, last
-
-The following objects are masked from ‘package:data.table’:
-
-    first, last
-
-
-Attaching package: ‘semantic.dashboard’
-
-The following objects are masked from ‘package:shiny’:
-
-    column, icon
-
-The following object is masked from ‘package:graphics’:
-
-    box
-
-Error in eval(ei, envir) : 
-  ModuleNotFoundError: No module named 'momentfm'
-Calls: <Anonymous> ... withVisible -> eval -> eval -> <Anonymous> -> py_module_import
-Execution halted
-DEBUG: Writing to /var/log/shiny-server/app.logs
-> shiny::runApp('/home/app', host='0.0.0.0', port=3838)
-Loading required package: shiny
-Warning in shiny::runApp("/home/app", host = "0.0.0.0", port = 3838) :
-  Shiny Server v0.3.4 or later is required; please upgrade!
-
-Attaching package: ‘shinyjs’
-
-The following object is masked from ‘package:shiny’:
-
-    runExample
-
-The following objects are masked from ‘package:methods’:
-
-    removeClass, show
-
-
-Attaching package: ‘shinyWidgets’
-
-The following object is masked from ‘package:shinyjs’:
-
-    alert
-
-
-Attaching package: ‘jsonlite’
-
-The following object is masked from ‘package:purrr’:
-
-    flatten
-
-The following object is masked from ‘package:shiny’:
-
-    validate
-
-
-Attaching package: ‘data.table’
-
-The following object is masked from ‘package:purrr’:
-
-    transpose
-
-
-Attaching package: ‘dplyr’
-
-The following objects are masked from ‘package:data.table’:
-
-    between, first, last
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-
-Attaching package: ‘arrow’
-
-The following objects are masked from ‘package:feather’:
-
-    read_feather, write_feather
-
-The following object is masked from ‘package:utils’:
-
-    timestamp
-
-Loading required package: zoo
-
-Attaching package: ‘zoo’
-
-The following objects are masked from ‘package:base’:
-
-    as.Date, as.Date.numeric
-
-
-######################### Warning from 'xts' package ##########################
-#                                                                             #
-# The dplyr lag() function breaks how base R's lag() function is supposed to  #
-# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
-# source() into this session won't work correctly.                            #
-#                                                                             #
-# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
-# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
-# dplyr from breaking base R's lag() function.                                #
-#                                                                             #
-# Code in packages is not affected. It's protected by R's namespace mechanism #
-# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
-#                                                                             #
-###############################################################################
-
-Attaching package: ‘xts’
-
-The following objects are masked from ‘package:dplyr’:
-
-    first, last
-
-The following objects are masked from ‘package:data.table’:
-
-    first, last
-
-
-Attaching package: ‘semantic.dashboard’
-
-The following objects are masked from ‘package:shiny’:
-
-    column, icon
-
-The following object is masked from ‘package:graphics’:
-
-    box
-
-Error in eval(ei, envir) : 
-  ModuleNotFoundError: No module named 'momentfm'
-Calls: <Anonymous> ... withVisible -> eval -> eval -> <Anonymous> -> py_module_import
-Execution halted
-DEBUG: Writing to /var/log/shiny-server/app.logs
-DEBUG: Writing to /var/log/shiny-server/app.logs
-DEBUG: Writing to /var/log/shiny-server/app.logs
-DEBUG: Writing to /var/log/shiny-server/app.logs
-About to open the app
-> shiny::runApp('/home/app', host='0.0.0.0', port=3838)
-Loading required package: shiny
-Warning in shiny::runApp("/home/app", host = "0.0.0.0", port = 3838) :
-  Shiny Server v0.3.4 or later is required; please upgrade!
-
-Attaching package: ‘shinyjs’
-
-The following object is masked from ‘package:shiny’:
-
-    runExample
-
-The following objects are masked from ‘package:methods’:
-
-    removeClass, show
-
-
-Attaching package: ‘shinyWidgets’
-
-The following object is masked from ‘package:shinyjs’:
-
-    alert
-
-
-Attaching package: ‘jsonlite’
-
-The following object is masked from ‘package:purrr’:
-
-    flatten
-
-The following object is masked from ‘package:shiny’:
-
-    validate
-
-
-Attaching package: ‘data.table’
-
-The following object is masked from ‘package:purrr’:
-
-    transpose
-
-
-Attaching package: ‘dplyr’
-
-The following objects are masked from ‘package:data.table’:
-
-    between, first, last
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-
-Attaching package: ‘arrow’
-
-The following objects are masked from ‘package:feather’:
-
-    read_feather, write_feather
-
-The following object is masked from ‘package:utils’:
-
-    timestamp
-
-Loading required package: zoo
-
-Attaching package: ‘zoo’
-
-The following objects are masked from ‘package:base’:
-
-    as.Date, as.Date.numeric
-
-
-######################### Warning from 'xts' package ##########################
-#                                                                             #
-# The dplyr lag() function breaks how base R's lag() function is supposed to  #
-# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
-# source() into this session won't work correctly.                            #
-#                                                                             #
-# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
-# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
-# dplyr from breaking base R's lag() function.                                #
-#                                                                             #
-# Code in packages is not affected. It's protected by R's namespace mechanism #
-# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
-#                                                                             #
-###############################################################################
-
-Attaching package: ‘xts’
-
-The following objects are masked from ‘package:dplyr’:
-
-    first, last
-
-The following objects are masked from ‘package:data.table’:
-
-    first, last
-
-
-Attaching package: ‘semantic.dashboard’
-
-The following objects are masked from ‘package:shiny’:
-
-    column, icon
-
-The following object is masked from ‘package:graphics’:
-
-    box
-
 /usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
   torch.utils._pytree._register_pytree_node(
 [1] "CUDA AVAILABLE. Num devices: 2"
@@ -868,374 +13,177 @@ Octave is not ready. Please check the configuration
 Listening on http://0.0.0.0:3838
 [1] "CUDA AVAILABLE. Num devices: 2"
 [1] ""
-Warning: Error in run_now: IO error: Failed to open file: /home/macu/data/r_shiny_app_logs/execution_id
-  43: <Anonymous>
-  42: stop
-  41: writeFeather
-  40: feather::write_feather
-  39: get_execution_id
-  38: server [/home/app/server.R#1025]
-   1: shiny::runApp
-Error in run_now(timeoutMs/1000, all = FALSE) : 
-  IO error: Failed to open file: /home/macu/data/r_shiny_app_logs/execution_id
 
- 15:26:12.096 [1] 15:26:12.096 [1] observeEvent encoders list enc_l | update dataset list | after freez
- 15:26:12.096 [1] e
+ 09:26:37.379 [1] 09:26:37.379 [1] Execution id: 442, Start Timestamp: 20/12/24 09:
+ 09:26:37.379 [1] 26:37
  
- 15:26:12.126 [2] 15:26:12.126 [2] observeEvent encoders list encs_l | update dataset list -->
+ 09:26:37.638 [2] 09:26:37.638 [2] observeEvent encoders list enc_l | update datase
+ 09:26:37.638 [2] t list | after freeze
  
- 15:26:12.163 [3] 15:26:12.163 [3] --> observeEvent input_encoder
+ 09:26:37.689 [3] 09:26:37.689 [3] observeEvent encoders list encs_l | update datas
+ 09:26:37.689 [3] et list -->
  
- 15:26:12.164 [4] 15:26:12.164 [4] observeEvent input_encoder | update wlen | Before enc_ar
- Warning: Error in enc_ar: could not find function "enc_ar"
-  1: shiny::runApp
-
- 15:26:12.215 [5] 15:26:12.215 [5] --> Observe clustering options
+ 09:26:37.695 [4] 09:26:37.695 [4] --> observeEvent input_encoder
  
- 15:26:12.217 [6] 15:26:12.217 [6] Observe clustering options -->
+ 09:26:37.696 [5] 09:26:37.696 [5] observeEvent input_encoder | update wlen | Befor
+ 09:26:37.696 [5] e enc_ar
  
- 15:26:12.225 [7] 15:26:12.225 [7] --> observeEvent zoom_btn
+ 09:26:37.698 [6] 09:26:37.698 [6] eventReactive enc_ar | Enc. Artifact: 
  
- 15:26:12.234 [8] 15:26:12.234 [8] --> observeEvent zoom_btn FALSE
- Warning: Error in run_now: IO error: Failed to open file: /home/macu/data/r_shiny_app_logs/execution_id
-  43: <Anonymous>
-  42: stop
-  41: writeFeather
-  40: feather::write_feather
-  39: get_execution_id
-  38: server [/home/app/server.R#1025]
-   1: shiny::runApp
-Error in run_now(timeoutMs/1000, all = FALSE) : 
-  IO error: Failed to open file: /home/macu/data/r_shiny_app_logs/execution_id
+ 09:26:37.991 [7] 09:26:37.991 [7] eventReactive enc_ar | Error: wandb.errors.CommE
+ 09:26:37.991 [7] rror: Attempted to fetch artifact without alias (e.g. "<artifact_
+ 09:26:37.991 [7] name>:v3" or "<artifact_name>:latest")
 
- 15:38:26.491 [10] 15:38:26.491 [10] observeEvent encoders list enc_l | update dataset list | after free
- 15:38:26.491 [10] ze
  
- 15:38:26.520 [11] 15:38:26.520 [11] observeEvent encoders list encs_l | update dataset list -->
+ 09:26:37.992 [8] 09:26:37.992 [8] envent reactive enc_ar -->
  
- 15:38:26.525 [12] 15:38:26.525 [12] --> observeEvent input_encoder
+ 09:26:37.993 [9] 09:26:37.993 [9] observeEvent input_encoder | update wlen | enc_a
+ 09:26:37.993 [9] r: | Set wlen slider values
  
- 15:38:26.526 [13] 15:38:26.526 [13] observeEvent input_encoder | update wlen | Before enc_ar
- Warning: Error in enc_ar: could not find function "enc_ar"
-  1: shiny::runApp
-
- 15:38:26.577 [14] 15:38:26.577 [14] --> Observe clustering options
+ 09:26:37.993 [10] 09:26:37.993 [10] observeEvent input_encoder | update wlen | Set 
+ 09:26:37.993 [10] wlen slider values from w | 
  
- 15:38:26.579 [15] 15:38:26.579 [15] Observe clustering options -->
+ 09:26:37.993 [11] 09:26:37.993 [11] observeEvent input_encoder | update wlen | enc_
+ 09:26:37.993 [11] ar$metadata$mvp_ws 
  
- 15:38:26.586 [16] 15:38:26.586 [16] --> observeEvent zoom_btn
+ 09:26:37.993 [12] 09:26:37.993 [12] observeEvent input_encoder | update wlen | Upda
+ 09:26:37.993 [12] te slider input ws: (,  ) |  wlen: 
  
- 15:38:26.590 [17] 15:38:26.590 [17] --> observeEvent zoom_btn FALSE
- DEBUG: Writing to /var/log/shiny-server/app.logs
-About to open the app
-> shiny::runApp('/home/app/app', host='0.0.0.0', port=3838)
-Loading required package: shiny
-Warning in shiny::runApp("/home/app/app", host = "0.0.0.0", port = 3838) :
-  Shiny Server v0.3.4 or later is required; please upgrade!
-
-Attaching package: ‘shinyjs’
-
-The following object is masked from ‘package:shiny’:
-
-    runExample
-
-The following objects are masked from ‘package:methods’:
-
-    removeClass, show
-
-
-Attaching package: ‘shinyWidgets’
-
-The following object is masked from ‘package:shinyjs’:
-
-    alert
-
-
-Attaching package: ‘jsonlite’
-
-The following object is masked from ‘package:purrr’:
-
-    flatten
-
-The following object is masked from ‘package:shiny’:
-
-    validate
-
-
-Attaching package: ‘data.table’
-
-The following object is masked from ‘package:purrr’:
-
-    transpose
-
-
-Attaching package: ‘dplyr’
-
-The following objects are masked from ‘package:data.table’:
-
-    between, first, last
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-
-Attaching package: ‘arrow’
-
-The following objects are masked from ‘package:feather’:
-
-    read_feather, write_feather
-
-The following object is masked from ‘package:utils’:
-
-    timestamp
-
-Loading required package: zoo
-
-Attaching package: ‘zoo’
-
-The following objects are masked from ‘package:base’:
-
-    as.Date, as.Date.numeric
-
-
-######################### Warning from 'xts' package ##########################
-#                                                                             #
-# The dplyr lag() function breaks how base R's lag() function is supposed to  #
-# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
-# source() into this session won't work correctly.                            #
-#                                                                             #
-# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
-# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
-# dplyr from breaking base R's lag() function.                                #
-#                                                                             #
-# Code in packages is not affected. It's protected by R's namespace mechanism #
-# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
-#                                                                             #
-###############################################################################
-
-Attaching package: ‘xts’
-
-The following objects are masked from ‘package:dplyr’:
-
-    first, last
-
-The following objects are masked from ‘package:data.table’:
-
-    first, last
-
-
-Attaching package: ‘semantic.dashboard’
-
-The following objects are masked from ‘package:shiny’:
-
-    column, icon
-
-The following object is masked from ‘package:graphics’:
-
-    box
-
-/usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
-  torch.utils._pytree._register_pytree_node(
-[1] "CUDA AVAILABLE. Num devices: 2"
-[1] ""
-[1] "CUDA AVAILABLE. Num devices: 2"
-[1] ""
-wandb: WARNING Path /home/app/app/wandb/ wasn't writable, using system temp directory
-Oct2PyError: Octave evaluation error:
-error: graphics_toolkit: fltk toolkit is not available
-error: called from:
-    graphics_toolkit at line 84, column 5
-Octave is not ready. Please check the configuration
-
-Listening on http://0.0.0.0:3838
-[1] "CUDA AVAILABLE. Num devices: 2"
-[1] ""
-Warning: Error in run_now: IO error: Failed to open file: /home/app/data/r_shiny_app_logs/execution_id
-  43: <Anonymous>
-  42: stop
-  41: writeFeather
-  40: feather::write_feather
-  39: get_execution_id
-  38: server [/home/app/app/server.R#1061]
-   1: shiny::runApp
-Error in run_now(timeoutMs/1000, all = FALSE) : 
-  IO error: Failed to open file: /home/app/data/r_shiny_app_logs/execution_id
-
- 16:57:13.628 [1] 16:57:13.628 [1] observeEvent encoders list enc_l | update datase
- 16:57:13.628 [1] t list | after freeze
+ 09:26:38.055 [13] 09:26:38.055 [13] --> Observe clustering options
  
- 16:57:13.657 [2] 16:57:13.657 [2] observeEvent encoders list encs_l | update datas
- 16:57:13.657 [2] et list -->
+ 09:26:38.056 [14] 09:26:38.056 [14] Observe clustering options -->
  
- 16:57:13.695 [3] 16:57:13.695 [3] --> observeEvent input_encoder
+ 09:26:38.073 [16] 09:26:38.073 [16] >>>> Toguether Log path: r_shiny_app_logs-442
  
- 16:57:13.695 [4] 16:57:13.695 [4] observeEvent input_encoder | update wlen | Befor
- 16:57:13.695 [4] e enc_ar
- Warning: Error in enc_ar: could not find function "enc_ar"
-  1: shiny::runApp
-
- 16:57:13.746 [5] 16:57:13.746 [5] --> Observe clustering options
+ 09:26:38.182 [17] 09:26:38.182 [17] --> prj_object
  
- 16:57:13.748 [6] 16:57:13.748 [6] Observe clustering options -->
- DEBUG: Writing to /var/log/shiny-server/app.logs
-About to open the app
-> shiny::runApp('/home/app/app', host='0.0.0.0', port=3838)
-Loading required package: shiny
-Warning in shiny::runApp("/home/app/app", host = "0.0.0.0", port = 3838) :
-  Shiny Server v0.3.4 or later is required; please upgrade!
-
-Attaching package: ‘shinyjs’
-
-The following object is masked from ‘package:shiny’:
-
-    runExample
-
-The following objects are masked from ‘package:methods’:
-
-    removeClass, show
-
-
-Attaching package: ‘shinyWidgets’
-
-The following object is masked from ‘package:shinyjs’:
-
-    alert
-
-
-Attaching package: ‘jsonlite’
-
-The following object is masked from ‘package:purrr’:
-
-    flatten
-
-The following object is masked from ‘package:shiny’:
-
-    validate
-
-
-Attaching package: ‘data.table’
-
-The following object is masked from ‘package:purrr’:
-
-    transpose
-
-
-Attaching package: ‘dplyr’
-
-The following objects are masked from ‘package:data.table’:
-
-    between, first, last
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-
-Attaching package: ‘arrow’
-
-The following objects are masked from ‘package:feather’:
-
-    read_feather, write_feather
-
-The following object is masked from ‘package:utils’:
-
-    timestamp
-
-Loading required package: zoo
-
-Attaching package: ‘zoo’
-
-The following objects are masked from ‘package:base’:
-
-    as.Date, as.Date.numeric
-
-
-######################### Warning from 'xts' package ##########################
-#                                                                             #
-# The dplyr lag() function breaks how base R's lag() function is supposed to  #
-# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
-# source() into this session won't work correctly.                            #
-#                                                                             #
-# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
-# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
-# dplyr from breaking base R's lag() function.                                #
-#                                                                             #
-# Code in packages is not affected. It's protected by R's namespace mechanism #
-# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
-#                                                                             #
-###############################################################################
-
-Attaching package: ‘xts’
-
-The following objects are masked from ‘package:dplyr’:
-
-    first, last
-
-The following objects are masked from ‘package:data.table’:
-
-    first, last
-
-
-Attaching package: ‘semantic.dashboard’
-
-The following objects are masked from ‘package:shiny’:
-
-    column, icon
-
-The following object is masked from ‘package:graphics’:
-
-    box
-
-/usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
-  torch.utils._pytree._register_pytree_node(
-[1] "CUDA AVAILABLE. Num devices: 2"
-[1] ""
-[1] "CUDA AVAILABLE. Num devices: 2"
-[1] ""
-wandb: WARNING Path /home/app/app/wandb/ wasn't writable, using system temp directory
-Oct2PyError: Octave evaluation error:
-error: graphics_toolkit: fltk toolkit is not available
-error: called from:
-    graphics_toolkit at line 84, column 5
-Octave is not ready. Please check the configuration
-
-Listening on http://0.0.0.0:3838
-[1] "CUDA AVAILABLE. Num devices: 2"
-[1] ""
-Warning: Error in run_now: IO error: Failed to open file: /home/macu/data/r_shiny_app_logs/execution_id
-  43: <Anonymous>
-  42: stop
-  41: writeFeather
-  40: feather::write_feather
-  39: get_execution_id
-  38: server [/home/app/app/server.R#1061]
-   1: shiny::runApp
-Error in run_now(timeoutMs/1000, all = FALSE) : 
-  IO error: Failed to open file: /home/macu/data/r_shiny_app_logs/execution_id
-
- 10:34:11.950 [1] 10:34:11.950 [1] observeEvent encoders list enc_l | update datase
- 10:34:11.950 [1] t list | after freeze
+ 09:26:38.182 [18] 09:26:38.182 [18] prj_object || Before prjs_comp
  
- 10:34:11.979 [2] 10:34:11.979 [2] observeEvent encoders list encs_l | update datas
- 10:34:11.979 [2] et list -->
+ 09:26:38.183 [19] 09:26:38.183 [19] prjs_comp | Before req || DR: PCA_UMAP || embs?
+ 09:26:38.183 [19]  FALSE
  
- 10:34:12.016 [3] 10:34:12.016 [3] --> observeEvent input_encoder
+ 09:26:38.235 [21] 09:26:38.235 [21] mplot_start_computation |FALSE | Projections
  
- 10:34:12.017 [4] 10:34:12.017 [4] observeEvent input_encoder | update wlen | Befor
- 10:34:12.017 [4] e enc_ar
- Warning: Error in enc_ar: could not find function "enc_ar"
-  1: shiny::runApp
+ 09:26:38.324 [22] 09:26:38.324 [22] --> eventReactive ts_ar | Update dataset artifa
+ 09:26:38.324 [22] ct | hash gtrends_kohls-denoised:v1
+ [1] "TSDF READY A TRUE TRUE"
 
- 10:34:12.067 [5] 10:34:12.067 [5] --> Observe clustering options
+ 09:26:38.493 [23] 09:26:38.493 [23] --> Update play_pause_button
  
- 10:34:12.069 [6] 10:34:12.069 [6] Observe clustering options -->
+ 09:26:38.496 [24] 09:26:38.496 [24] Update play_pause_button || FALSE -->
+ 
+ 09:26:38.500 [25] 09:26:38.500 [25] --> Enable/disable embs
+ 
+ 09:26:38.501 [26] 09:26:38.501 [26] Enable/disable embs || disable embs
+ 
+ 09:26:38.504 [27] 09:26:38.504 [27] Enable/disable embs --> || Changes to FALSE
+ 
+ 09:26:38.505 [28] 09:26:38.505 [28] eventReactive ts_ar || tsdf_ready FALSE
+ 
+ 09:26:38.508 [29] 09:26:38.508 [29] eventReactive ts_ar tsdf_ready? FALSE -->
+ 
+ 09:26:38.524 [30] 09:26:38.524 [30] --> observeEvent input_dataset | update encoder
+ 09:26:38.524 [30]  list
+ 
+ 09:26:38.528 [31] 09:26:38.528 [31] observeEvent input_dataset | update encoders fo
+ 09:26:38.528 [31] r dataset gtrends_kohls-denoised:v1
+ 
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | zeroshot-moment-small-embedding:v0
+ 09:26:38.685 [32] 
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | zeroshot-moirai-small:v0
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moment-small-reconstruction:v1
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moment-small-reconstruction:v0
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moment-small-embedding:v4
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moment-small-embedding:v3
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moment-small-embedding:v1
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moment-small-embedding:v0
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moment-large-embedding:v2
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moirai-small:v2
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moirai-small:v1
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moirai-small:v0
+
+ 09:26:38.685 [32] 09:26:38.685 [32] observeEvent input_dataset | Encoders for datas
+ 09:26:38.685 [32] et gtrends_kohls-denoised:v1 | moirai:v0
+ 
+ 09:26:38.687 [33] 09:26:38.687 [33] observeEvent input_dataset | update encoder lis
+ 09:26:38.687 [33] t -->
+ 
+ 09:26:38.751 [34] 09:26:38.751 [34] --> observe X | Before req | tsdf_ready FALSE |
+ 09:26:38.751 [34]  wlen 0 | stride 0 | allow update embs FALSE | play_prjs FALSE | 
+ 09:26:38.751 [34] tsdf_ready_preprocessed TRUE | embs preprocess FALSE
+ 
+ 09:26:38.755 [35] 09:26:38.755 [35] --> observeEvent input_wlen | update slide stri
+ 09:26:38.755 [35] de value | wlen 0
+ 
+ 09:26:38.773 [36] 09:26:38.773 [36] observeEvent input_wlen | update slide stride v
+ 09:26:38.773 [36] alue | Error | 
+ 
+ 09:26:38.773 [37] 09:26:38.773 [37] observeEvent input_wlen | update slide stride v
+ 09:26:38.773 [37] alue | Finally |  wlen min 1 max 0 current value 0 -->
+ 
+ 09:26:38.936 [38] 09:26:38.936 [38] eventReactive enc_ar | Enc. Artifact: zeroshot-
+ 09:26:38.936 [38] moment-small-embedding:v0
+ 
+ 09:26:39.067 [39] 09:26:39.067 [39] envent reactive enc_ar -->
+ 
+ 09:26:39.095 [40] 09:26:39.095 [40] --> observeEvent input_encoder
+ 
+ 09:26:39.099 [41] 09:26:39.099 [41] observeEvent input_encoder | update wlen | Befo
+ 09:26:39.099 [41] re enc_ar
+ 
+ 09:26:39.099 [42] 09:26:39.099 [42] observeEvent input_encoder | update wlen | enc_
+ 09:26:39.099 [42] ar: <Artifact QXJ0aWZhY3Q6MTM1Mzc4Nzc3MQ==>| Set wlen slider valu
+ 09:26:39.099 [42] es
+ 
+ 09:26:39.100 [43] 09:26:39.100 [43] observeEvent input_encoder | update wlen | enc_
+ 09:26:39.100 [43] ar$metadata$mvp_ws 12
+
+ 09:26:39.100 [43] 09:26:39.100 [43] observeEvent input_encoder | update wlen | enc_
+ 09:26:39.100 [43] ar$metadata$mvp_ws 17
+ 
+ 09:26:39.101 [44] 09:26:39.101 [44] observeEvent input_encoder | update wlen | Upda
+ 09:26:39.101 [44] te slider input ws: (12, 17 ) |  wlen: 17
+ 
+ 09:26:39.103 [45] 09:26:39.103 [45] --> reactive enc_ar_stride
+ 
+ 09:26:39.104 [46] 09:26:39.104 [46] reactive_enc_ar_stride | --> 1
+ 
+ 09:26:39.182 [48] 09:26:39.182 [48] --> observe X | Before req | tsdf_ready FALSE |
+ 09:26:39.182 [48]  wlen 17 | stride 0 | allow update embs FALSE | play_prjs FALSE |
+ 09:26:39.182 [48]  tsdf_ready_preprocessed TRUE | embs preprocess FALSE
+ 
+ 09:26:39.226 [49] 09:26:39.226 [49] --> observeEvent input_wlen | update slide stri
+ 09:26:39.226 [49] de value | wlen 17
+ 
+ 09:26:39.227 [50] 09:26:39.227 [50] enc_ar_stride: 1
+ 
+ 09:26:39.231 [51] 09:26:39.231 [51] oserveEvent input_wlen | update slide stride va
+ 09:26:39.231 [51] lue | Update stride to 1
+ 
+ 09:26:39.302 [54] 09:26:39.302 [54] --> observe X | Before req | tsdf_ready FALSE |
+ 09:26:39.302 [54]  wlen 17 | stride 1 | allow update embs FALSE | play_prjs FALSE |
+ 09:26:39.302 [54]  tsdf_ready_preprocessed TRUE | embs preprocess FALSE
  

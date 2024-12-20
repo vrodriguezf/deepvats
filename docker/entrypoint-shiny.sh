@@ -27,7 +27,7 @@ done
 ulimit -s 16384
 echo $LOG_FILE
 #sudo chown app:app "$LOG_FILE"
-sudo chown -R $UID:shared "$LOG_DIR"
+#sudo chown -R $UID:shared "$LOG_DIR"
 sudo chmod -R 775 /var/log/shiny-server
 
 ls -la $LOG_DIR

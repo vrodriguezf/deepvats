@@ -8,6 +8,9 @@
 FROM misantamaria/dvats-rstudio:rocker-ml4.2
 SHELL [ "/bin/bash", "--login", "-c" ]
 
+RUN R -e "install.packages('semantic.dashboard', repos='http://cran.r-project.org')"\
+    && R -e "install.packages('randomcoloR', repos='http://cran.r-project.org')"
+
 # Add r-studio server user
 ARG USER=user \
     UID=1000 \
@@ -19,88 +22,56 @@ ENV USER=$USER \
 
 # Paths
 # Local Paths
-ENV GLOBAL=deepvats
+ENV GLOBAL=.
 ENV ENTRYPOINT=${GLOBAL}/docker/entrypoint-shiny.sh \
     APP_local=${GLOBAL}/r_shiny_app \
-    LOGS_local=${GLOBAL}/srv/shinylog \
-    DATA=work_dir
+    LOGS_local=${GLOBAL}/srv/shinylog 
 
 ARG LOG_DIR=/var/log/shiny-server
 ENV HOME=/home/$USER \
     ENV_PREFIX=$HOME/env \
-    APP=/home/app/app \
+    APP=/home/$USER/app \
     LOG_DIR=${LOG_DIR} \
     LOG_FILE=${LOG_DIR}/app.logs
     
 
 # Create groups and users
 RUN addgroup --gid $GID $USER \
-    && addgroup --system app \
-    && addgroup --system shared \
     && adduser --disabled-password \
        --gecos "Non-root user" \
        --uid $UID \
        --gid $GID \
        --home $HOME \
-       $USER \
-    && adduser --system --ingroup app app \
-    && usermod -aG shared $USER \
-    && usermod -aG shared app
+       $USER 
 
-# Make sudo
+# Non-password sudo
 RUN adduser $USER sudo \
-    && usermod -aG sudo app \
     && echo $USER "ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER \
-    && echo "app ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/app \
-    && chmod 0440 /etc/sudoers.d/$USER \
-    && chmod 0440 /etc/sudoers.d/app
+    && chmod 0440 /etc/sudoers.d/$USER 
 
-# Ensure files and packages
+# Ensure files
+
 COPY --chown=app:shared $ENTRYPOINT /usr/local/bin/entrypoint-shiny.sh
-COPY --chown=app:shared $APP_LOCAL $APP
-COPY --chown=app:shared $DATA /home/app/data
-COPY --chown=app:shared $LOGS_local $LOG_DIR
 RUN chmod u+x /usr/local/bin/entrypoint-shiny.sh 
-
-# Fix ownership and permissions for the home directory
-RUN chown -R $USER:$USER $HOME \
-    && chmod -R 775 $HOME \
-    && chown -R app:shared $HOME
-
-RUN echo "Log directory permissions"
-# Ensure the log directory and file exist with correct permissions
-RUN mkdir -p $LOG_DIR \
-    && touch $LOG_FILE \
-    && chown -R app:shared $LOG_DIR \
-    && chmod -R 775 $LOG_DIR
-
-RUN R -e "install.packages('semantic.dashboard', repos='http://cran.r-project.org')"\
-    && R -e "install.packages('randomcoloR', repos='http://cran.r-project.org')"
 
 ### Run server
 ARG SHINY_PORT
 ENV SHINY_PORT=${SHINY_PORT}
 
-#RUN chown -R app:shared $APP
-#RUN chown -R app:shared $LOG_DIR
-RUN touch $LOG_FILE
-#RUN chown -R app:shared $LOG_DIR
-
-RUN [ -f ${LOG_DIR} ] && echo "${LOG_DIR} is a file" || echo "${LOG_DIR} is a directory"
-
-#RUN ls -la $LOG_DIR && sleep 3
 ARG SHINY_PORT
 ENV SHINY_PORT=$SHINY_PORT
 EXPOSE ${SHINY_PORT}
 EXPOSE 3838
 
-ENV HOME=/home/app
+USER $USER
+ENV ENTRYPOINT=${GLOBAL}/docker/entrypoint-shiny.sh \
+APP_local=${GLOBAL}/r_shiny_app \
+LOGS_local=${GLOBAL}/srv/shinylog \
+DATA=work_dir
+RUN mkdir $HOME/app
+RUN sudo mkdir /var/log/shiny-server
+RUN mkdir $HOME/data
 
-#RUN mkdir -p $HOME/data
-#RUN chown $USER:shared $HOME/data
+WORKDIR $APP
 
-USER app
-
-RUN touch $LOG_FILE
-RUN ls -la $LOG_DIR && sleep 3
 CMD ["/usr/local/bin/entrypoint-shiny.sh"]

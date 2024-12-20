@@ -98,7 +98,8 @@ shinyServer(function(input, output, session) {
             wlen        = NULL,
             stride      = NULL,
             fine_tune   = NULL,
-            processed   = NULL
+            processed   = NULL,
+            path        = NULL
         )
     )
     # Preprocess
@@ -1017,7 +1018,8 @@ shinyServer(function(input, output, session) {
                         encoder     = NULL, 
                         wlen        = NULL, 
                         stride      = NULL, 
-                        fine_tune   = NULL
+                        fine_tune   = NULL,
+                        path        = NULL
                     )
                 )
                 allow_update_embs(FALSE)
@@ -1307,7 +1309,8 @@ shinyServer(function(input, output, session) {
             wlen      = input$wlen,
             stride    = input$stride,
             fine_tune = input$fine_tune,
-            processed = input$embs_preprocess
+            processed = input$embs_preprocess,
+            path      = enc_input_path()
         )
         log_print(paste0(
             "embs_comp_or_cached || Before req enc_input_ready ", enc_input_ready(),
@@ -1641,16 +1644,15 @@ shinyServer(function(input, output, session) {
         )
     })
 
-    embs_complete_cases_comp <- reactive({
+    embs_complete_cases_comp <- function(){
         c(lps, lpe, lp) %<-% setup_log_print('ecc')
         lps()
         on.exit({lpe()})
-        req(embs())    
-        print("embs_complete_cases_comp | After req") #Quitar
         log_print(paste0("embs_complete_cases || Before complete cases embs ~", paste(dim(embs()), collapse = ', ')), debug_group = 'debug')
-        embs_complete_cases(embs()[complete.cases(embs()),])
+        complete_cases <- (embs()[complete.cases(embs()),])
         log_print(paste0("embs_complete_cases || After complete cases embs ~", paste(dim(embs_complete_cases()), collapse = ', ')), debug_group = 'force')
-    })
+        return(complete_cases)
+    }
 
     embs_preprocess <- observeEvent(input$embs_preprocess, {
         c(lps, lpe, lp) %<-% setup_log_print('oiep')
@@ -2626,11 +2628,17 @@ shinyServer(function(input, output, session) {
         log_print("--> projections_plot_comp", debug_group = 'force')
         embs_comp_or_cached()
         log_print(
-            paste0("projections_plot_comp | embs?", !is.null(embs())),
+            paste0("projections_plot_comp | embs? ", !is.null(embs())),
             debug_group = 'force'
         )
-        req(embs())
-        embs_complete_cases_comp()
+        req(embs)
+        complete_cases <-embs_complete_cases_comp()
+        log_print(
+            paste0("projections_plot_comp | complete_cases? ", !is.null(complete_cases)),
+            debug_group = 'force'
+        )
+        req(complete_cases)
+        embs_complete_cases(complete_cases)
         log_print(
             paste0("projections_plot_comp | embs complete?", !is.null(embs_complete_cases())),
             debug_group = 'force'

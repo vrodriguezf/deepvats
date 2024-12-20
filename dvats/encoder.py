@@ -9,7 +9,7 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_t
            'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
            'fine_tune_moment_train_loop_step_', 'setup_scheduler', 'fine_tune_moment_train_',
            'prepare_train_and_eval_dataloaders', 'fine_tune_moment_single_', 'fine_tune_moment_ensure_windowed_dataset',
-           'fine_tune_moment_']
+           'fine_tune_moment_', 'fine_tune_']
 
 # %% ../nbs/encoder.ipynb 2
 from .memory import *
@@ -1844,6 +1844,70 @@ def fine_tune_moment_(
         eval_pre = False
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
+
+    
+
+# %% ../nbs/encoder.ipynb 50
+def fine_tune_(
+    X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
+    enc_learn                       : Learner, 
+    stride                          : int           = 1,      
+    batch_size                      : int           = 32,
+    cpu                             : bool          = False,
+    to_numpy                        : bool          = True, 
+    verbose                         : int           = 0, 
+    time_flag                       : bool          = False,
+    n_windows                       : int           = None,
+    n_windows_percent               : float         = None,
+    validation_percent              : float         = 0.2, 
+    training_percent                : float         = 0.2,
+    window_mask_percent             : float         = 0.3,
+    num_epochs                      : int           = 3,
+    shot                            : bool          = True,
+    eval_pre                        : bool          = True,
+    eval_post                       : bool          = True,
+    criterion                       : _Loss         = torch.nn.MSELoss, 
+    optimizer                                       = None, 
+    lr                              : float         = 5e-5, #1e-4, 
+    lr_scheduler_flag               : bool          = False, 
+    lr_scheduler_name               : str           = "linear",
+    lr_scheduler_num_warmup_steps   : int           = None,
+    window_sizes                    : List [int]    = None,
+    n_window_sizes                  : int           = 1,
+    window_sizes_offset             : int           = 0.05,
+    windows_min_distance            : int           = 1,
+    full_dataset                    : bool          = False,
+    #- Printing options for debugging
+    print_to_path                   : bool          = False,
+    print_path                      : str           = "~/data/logs/logs.txt",
+    print_mode                      : str           = 'a',
+    use_moment_masks                : bool          = False,
+    mask_stateful                   : bool          = False,
+    mask_future                     : bool          = False,
+    mask_sync                       : bool          = False
+):   
+    res = ( None, None, None, None, None, None, None, None )
+    enc_learn_class = str(enc_learn.__class__)[8:-2]
+    match enc_learn_class:
+        case "momentfm.models.moment.MOMENTPipeline":
+            res = fine_tune_moment_(
+                X, enc_learn, stride, batch_size, cpu, to_numpy, verbose, time_flag, 
+                n_windows, n_windows_percent, validation_percent, training_percent,
+                window_mask_percent, num_epochs, shot, eval_pre, eval_post,
+                criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name,
+                lr_scheduler_num_warmup_steps, window_sizes, n_window_sizes,
+                window_sizes_offset, windows_min_distance, full_dataset,
+                print_to_path, print_path, print_mode, use_moment_masks, 
+                mask_stateful, mask_future, mask_sync
+            )
+        case "fastai.learner.Learner":
+            print_flush("fine_tune | Learner fine_tune not yet implemented", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = 1, print_time = print_to_path)
+        case "uni2ts.model.moirai.module.MoiraiModule":
+            print_flush("fine_tune | Moirai fine_tune not yet implemented", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = 1, print_time = print_to_path)
+        case _:
+            print_flush(f"Fine-tune implementation is not yet implemented for {enc_learn_class}.", verbose = 1)
+    lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn = res
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
 
     

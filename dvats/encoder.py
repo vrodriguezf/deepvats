@@ -5,7 +5,7 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_t
            'sure_eval_moment', 'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP',
            'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
            'watch_gpu', 'get_enc_embs_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size',
-           'random_windows', 'ensure_windowed_dataset', 'setup_scheduler', 'prepare_train_and_eval_dataloaders',
+           'random_windows', 'windowed_dataset', 'setup_scheduler', 'prepare_train_and_eval_dataloaders',
            'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
            'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
            'fine_tune_moment_train_loop_step_', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
@@ -14,6 +14,7 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_t
 
 # %% ../nbs/encoder.ipynb 2
 from .memory import *
+from .utils import Mssg
 from .utils import Time
 from .utils import print_flush
 
@@ -349,7 +350,7 @@ def sure_eval_moment(
 from fastai.learner import Learner
 from tsai.data.core import TSDataLoaders
 
-# %% ../nbs/encoder.ipynb 19
+# %% ../nbs/encoder.ipynb 21
 def get_enc_embs_ensure_batch_size_(
     dls        : TSDataLoaders,
     batch_size : int = None,
@@ -369,7 +370,7 @@ def get_enc_embs_ensure_batch_size_(
         if verbose > 1: 
             print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}", verbose = verbose)
 
-# %% ../nbs/encoder.ipynb 20
+# %% ../nbs/encoder.ipynb 22
 def get_enc_embs_MVP(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -454,7 +455,7 @@ def get_enc_embs_MVP(
     if to_numpy: embs = embs.numpy() if cpu else embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 21
+# %% ../nbs/encoder.ipynb 23
 def get_enc_embs_MVP_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -602,7 +603,7 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
         print_flush("get_enc_embs_MVP_set_stride_set_batch_size -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 22
+# %% ../nbs/encoder.ipynb 24
 def get_enc_embs_moment(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -651,7 +652,7 @@ def get_enc_embs_moment(
         print_flush("get_enc_embs_moment -->", verbose = verbose)
     return embeddings
 
-# %% ../nbs/encoder.ipynb 23
+# %% ../nbs/encoder.ipynb 25
 def get_enc_embs_moment_reconstruction(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -694,14 +695,14 @@ def get_enc_embs_moment_reconstruction(
         embs = embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 25
+# %% ../nbs/encoder.ipynb 27
 import uni2ts.model.moirai.module as moirai
 import uni2ts.model.moirai.forecast as moirai_forecast
 
-# %% ../nbs/encoder.ipynb 26
+# %% ../nbs/encoder.ipynb 28
 import torch.profiler as profiler
 
-# %% ../nbs/encoder.ipynb 27
+# %% ../nbs/encoder.ipynb 29
 def watch_gpu(func, **kwargs):
     """
     Wrapper to execute GPU profiler
@@ -726,7 +727,7 @@ def watch_gpu(func, **kwargs):
     print_flush(prof.key_averages().table(sort_by="cuda_memory_usage", row_limit=10))
     return result
 
-# %% ../nbs/encoder.ipynb 28
+# %% ../nbs/encoder.ipynb 30
 def get_enc_embs_moirai(
     enc_input       : List [ List [ List [ Float ] ] ], 
     enc_model       : moirai.MoiraiModule, 
@@ -863,7 +864,7 @@ def get_enc_embs_moirai(
         print_flush("get_enc_embs_moirai -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 30
+# %% ../nbs/encoder.ipynb 32
 def get_enc_embs(
     X               , 
     enc_learn       : Learner, 
@@ -900,7 +901,7 @@ def get_enc_embs(
             print_flush(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 31
+# %% ../nbs/encoder.ipynb 33
 def get_enc_embs_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -976,7 +977,7 @@ def get_enc_embs_set_stride_set_batch_size(
     if verbose > 0: print_flush(f"get_enc_embs_set_stride_set_batch_size | embs~{embs.shape} -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 34
+# %% ../nbs/encoder.ipynb 36
 from tqdm.auto import tqdm
 from transformers import get_scheduler
 import evaluate
@@ -985,7 +986,7 @@ from tsai.data.preparation import SlidingWindow
 from .utils import find_dominant_window_sizes_list
 from .config import show_attrdict
 
-# %% ../nbs/encoder.ipynb 35
+# %% ../nbs/encoder.ipynb 37
 def random_windows(
     X : List [ List [ List [ float ]]], 
     n_windows   = None, 
@@ -1003,6 +1004,7 @@ def random_windows(
     - n_windows random windows from the array, if n_windows is given.
     - ceil(percent*len(X)) random windows otherwise
     """
+    if verbose > 0: print_flush(f"--> Random windows: {n_windows}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     if n_windows is None and percent is None:
         windows = torch.from_numpy(X)
     else: 
@@ -1011,11 +1013,11 @@ def random_windows(
         random_indices = np.random.randint(0, int(X.shape[0]), n_windows)
         windows = X[ random_indices ]
         windows = torch.from_numpy(windows)
-    if verbose > 0: print_flush(f"windows ~ {windows.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    if verbose > 0: print_flush(f"Random windows | windows ~ {windows.shape} | -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return windows
 
-# %% ../nbs/encoder.ipynb 36
-def ensure_windowed_dataset(
+# %% ../nbs/encoder.ipynb 38
+def windowed_dataset(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     stride                          : int           = 1,
     window_sizes                    : List [int]    = None,
@@ -1023,44 +1025,40 @@ def ensure_windowed_dataset(
     window_sizes_offset             : int           = 0.05,
     windows_min_distance            : int           = 1,
     full_dataset                    : bool          = False,
-    #- Printing options for debugging
-    print_to_path                   : bool          = False,
-    print_path                      : str           = "~/data/logs/logs.txt",
-    print_mode                      : str           = 'a',
-    verbose                         : int           = 0
+    mssg                            : Mssg          = Mssg()
 ): 
+    if mssg.verbose > 0: mssg.print("--> windowed_dataset")
     dss = []
     if isinstance(X, list):
+        if mssg.verbose > 0: mssg.print("windowed_dataset | X is a list. Converting to dataFrame")
         X = np.array(X)
-        enc_input = pd.DataFrame(X)
-        dss.append(enc_input)
+        X = pd.DataFrame(X)        
     if ( isinstance(X,pd.DataFrame) or full_dataset): 
-        if verbose > 0: print_flush("fine_tune_moment_ | X not-windowed dataset", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        if mssg.verbose > 0: mssg.print("windowed_dataset | X is a DataFrame")
         if window_sizes is None or n_window_sizes > len(window_sizes):
-            if verbose > 0: 
-                print_flush("fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences",  print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            if mssg.verbose > 0: mssg.print("windowed_dataset | X is a DataFrame | Selecting Fourier's dominant frequences")
             # Select Fourier's dominant frequences
             window_sizes_ = find_dominant_window_sizes_list(
                 X               = X, 
                 nsizes          = n_window_sizes, 
                 offset          = window_sizes_offset, 
                 min_distance    = windows_min_distance,
-                verbose         = verbose-1,
-                print_to_path   = print_to_path, print_path = print_path, print_mode = 'a'
+                verbose         = mssg.verbose-1,
+                print_to_path   = mssg.to_path, print_path = mssg.path, print_mode = mssg.mode
             )
             window_sizes = window_sizes_ if window_sizes is None else list(set(window_sizes + window_sizes_))[:n_window_sizes]
-            if verbose > 0: 
-                print_flush(f"fine_tune_moment_ | X not-windowed dataset | Selecting Fourier's dominant frequences | {window_sizes}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-        if verbose > 0: print_flush("fine_tune_moment_ | Building the datasets", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            if mssg.verbose > 0: mssg.print(f"windowed dataset | X is a DataFrame | Selecting Fourier's dominant frequences | {window_sizes}")
+        if mssg.verbose > 0: mssg.print(f"windowed dataset | Building the datasets")
         for w in window_sizes:
             enc_input, _ = SlidingWindow(window_len = w, stride = stride, get_y=[])(X)
             dss.append(enc_input)
     else: 
+        if mssg.verbose > 0: mssg.print("windowed_dataset | X is already windowed")
         dss = [X]
     return dss
 
 
-# %% ../nbs/encoder.ipynb 37
+# %% ../nbs/encoder.ipynb 39
 def setup_scheduler(
     dl_train                        : DataLoader,
     lr_scheduler_flag               : bool= False,
@@ -1094,7 +1092,7 @@ def setup_scheduler(
                 )
     return lr_scheduler
 
-# %% ../nbs/encoder.ipynb 38
+# %% ../nbs/encoder.ipynb 40
 def prepare_train_and_eval_dataloaders(
     X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     batch_size          : int,
@@ -1147,10 +1145,10 @@ def prepare_train_and_eval_dataloaders(
         dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
     return dl_eval, dl_train, ds_train
 
-# %% ../nbs/encoder.ipynb 40
+# %% ../nbs/encoder.ipynb 42
 from momentfm.utils.masking import Masking
 
-# %% ../nbs/encoder.ipynb 41
+# %% ../nbs/encoder.ipynb 43
 def fine_tune_moment_compute_loss_check_sizes_(
     batch           : List [ List [ List [ float ] ] ], 
     output, 
@@ -1177,7 +1175,7 @@ def fine_tune_moment_compute_loss_check_sizes_(
     if verbose > 0: print_flush("fine_tune_moment_compute_loss_check_sizes_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return b
 
-# %% ../nbs/encoder.ipynb 42
+# %% ../nbs/encoder.ipynb 44
 def fine_tune_moment_compute_loss(
     batch, 
     output, 
@@ -1215,7 +1213,7 @@ def fine_tune_moment_compute_loss(
     if verbose > 0: print_flush("fine_tune_moment_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return loss
 
-# %% ../nbs/encoder.ipynb 43
+# %% ../nbs/encoder.ipynb 45
 def fine_tune_moment_eval_preprocess(
     predictions : List [ List [ float ]],
     references : List [ List [ float ]],
@@ -1253,7 +1251,7 @@ def fine_tune_moment_eval_preprocess(
         print_flush(f"Eval | After NaN | refs~{references.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return predictions, references
 
-# %% ../nbs/encoder.ipynb 44
+# %% ../nbs/encoder.ipynb 46
 def fine_tune_moment_eval_step_(
     enc_learn : Learner,
     batch,
@@ -1292,7 +1290,7 @@ def fine_tune_moment_eval_step_(
         smape_metric.add_batch(predictions=predictions, references = references)
         return mse_metric, rmse_metric, mae_metric, smape_metric
 
-# %% ../nbs/encoder.ipynb 45
+# %% ../nbs/encoder.ipynb 47
 def fine_tune_moment_eval_(
     enc_learn : Learner,
     dl_eval   : DataLoader,
@@ -1357,7 +1355,7 @@ def fine_tune_moment_eval_(
     enc_learn.train()
     return eval_results
 
-# %% ../nbs/encoder.ipynb 46
+# %% ../nbs/encoder.ipynb 48
 def fine_tune_moment_train_loop_step_(
     enc_learn,
     batch, 
@@ -1481,7 +1479,7 @@ def fine_tune_moment_train_loop_step_(
         #print_flush(f"fine_tune_moment_train_loop_step_ | Enc_learn After compute loss {enc_learn.__class__} | -->")
     return loss, enc_learn
 
-# %% ../nbs/encoder.ipynb 47
+# %% ../nbs/encoder.ipynb 49
 def fine_tune_moment_train_(
     enc_learn                       : Learner, 
     dl_train                        : DataLoader,
@@ -1530,30 +1528,6 @@ def fine_tune_moment_train_(
         device = device
     ).long()
     if verbose > 1: print_flush(f"fine_tune_moment_train | Fine tune loop | print_to_path {print_to_path} | batch_masks~{batch_masks}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)     
-    #if print_to_path:
-    #    pf = os.path.expanduser(print_path + "_progress")
-    #    with open (pf, "w") as f:
-    #        progress_bar = tqdm(range(num_training_steps), file = f)
-    #        enc_learn = enc_learn.to(device)   
-    #        for epoch in range(num_epochs):
-    #            for batch in dl_train:
-    #                losses = fine_tune_moment_train_loop_step_(
-    #                    enc_learn                       = enc_learn,
-    #                    batch                           = batch,
-    #                    batch_masks                     = batch_masks, 
-    #                    criterion                       = criterion,
-    #                    optimizer                       = optimizer,
-    #                    lr                              = lr,
-    #                    lr_scheduler_flag               = lr_scheduler_flag,
-    #                    lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps,
-    #                    cpu                             = cpu,
-    #                    verbose                         = verbose,
-    #                    print_to_path                   = print_to_path,
-    #                    print_mode                      = 'a'
-    #                )
-    #                progress_bar.update(1)
-    #        progress_bar.close()
-    #else:
     progress_bar = tqdm(range(num_training_steps))
     if verbose > 0: print_flush(f"fine_tune_moment_train | num_epochs {num_epochs} | n_batches {len(dl_train)}", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     for epoch in range(num_epochs):
@@ -1616,7 +1590,7 @@ def fine_tune_moment_train_(
         print_flush(f"fine_tune_moment_train | -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return losses, enc_learn
 
-# %% ../nbs/encoder.ipynb 48
+# %% ../nbs/encoder.ipynb 50
 def fine_tune_moment_single_(
     X                               : List [ List [ List [ float ]]],
     enc_learn                       : Learner, 
@@ -1740,46 +1714,19 @@ def fine_tune_moment_single_(
     if verbose > 0: print_flush("fine_tune_moment_single -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, enc_learn
 
-# %% ../nbs/encoder.ipynb 49
+# %% ../nbs/encoder.ipynb 51
 def fine_tune_moment_(
-    X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
+    dss                             : List [ List [ List [ float ]]],
     enc_learn                       : Learner, 
-    stride                          : int           = 1,      
-    batch_size                      : int           = 32,
-    cpu                             : bool          = False,
-    to_numpy                        : bool          = True, 
-    verbose                         : int           = 0, 
-    time_flag                       : bool          = False,
-    n_windows                       : int           = None,
-    n_windows_percent               : float         = None,
-    validation_percent              : float         = 0.2, 
-    training_percent                : float         = 0.2,
-    window_mask_percent             : float         = 0.3,
-    num_epochs                      : int           = 3,
-    shot                            : bool          = True,
-    eval_pre                        : bool          = True,
-    eval_post                       : bool          = True,
-    criterion                       : _Loss         = torch.nn.MSELoss, 
-    optimizer                                       = None, 
-    lr                              : float         = 5e-5, #1e-4, 
-    lr_scheduler_flag               : bool          = False, 
-    lr_scheduler_name               : str           = "linear",
-    lr_scheduler_num_warmup_steps   : int           = None,
-    window_sizes                    : List [int]    = None,
-    n_window_sizes                  : int           = 1,
-    window_sizes_offset             : int           = 0.05,
-    windows_min_distance            : int           = 1,
-    full_dataset                    : bool          = False,
+    enc_args,
     #- Printing options for debugging
-    print_to_path                   : bool          = False,
-    print_path                      : str           = "~/data/logs/logs.txt",
-    print_mode                      : str           = 'a',
-    use_moment_masks                : bool          = False,
-    mask_stateful                   : bool          = False,
-    mask_future                     : bool          = False,
-    mask_sync                       : bool          = False
+    print_args
 ):   
-    if verbose > 0: print_flush("--> fine_tune_moment_", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+    print(print_args)
+    verbose = print_args['verbose']
+    if verbose > 0: print_flush("--> fine_tune_moment_", **print_args)
+    print_args['print_mode']='a'
+    # Return values
     lossess = []
     eval_results_pre = ""
     eval_results_post = []
@@ -1790,64 +1737,35 @@ def fine_tune_moment_(
     if verbose > 0: 
         print_flush(
             f"fine_tune_moment_ | Processing {len(dss)} datasets | First length : {dss[0].shape}", 
-            print_to_path = print_to_path, 
-            print_path = print_path, 
-            print_mode = 'a', 
-            verbose = verbose, 
-            print_time = print_to_path
+            **print_args
         )
-    
-    if optimizer is None: 
-        if verbose > 0: print_flush(f"fine_tune_moment_ | Setting up optimizer as AdamW", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-        optimizer = torch.optim.AdamW(enc_learn.parameters(), lr=lr)
-    
+    # Build optimizer
+    if enc_args['optimizer'] is None: 
+        if verbose > 0: print_flush(f"fine_tune_moment_ | Setting up optimizer as AdamW", **print_Args)
+        enc_args['optimizer'] = torch.optim.AdamW(enc_learn.parameters(), lr=lr)
+    # Compute model for each window in the windowed dataset
     for enc_input in dss:
-        if verbose > 0: print_flush(f"fine_tune_moment_ | Processing wlen {enc_input.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        if verbose > 0: print_flush(f"fine_tune_moment_ | Processing wlen {enc_input.shape[2]}", **print_args)
         ( 
             losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, enc_learn
         ) =  fine_tune_moment_single_(
             X                               = enc_input, 
             enc_learn                       = enc_learn,
-            stride                          = stride,
-            batch_size                      = batch_size,
-            cpu                             = cpu,
-            to_numpy                        = to_numpy,
-            verbose                         = verbose,
-            time_flag                       = time_flag,
-            n_windows                       = n_windows,
-            n_windows_percent               = n_windows_percent,
-            validation_percent              = validation_percent,
-            training_percent                = training_percent,
-            window_mask_percent             = window_mask_percent,
-            num_epochs                      = num_epochs,
-            shot                            = shot,
-            eval_pre                        = eval_pre,
-            eval_post                       = eval_post,
-            criterion                       = criterion,
-            optimizer                       = optimizer,
-            lr                              = lr,
-            lr_scheduler_flag               = lr_scheduler_flag,
-            lr_scheduler_name               = lr_scheduler_name,
-            lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps,
-            print_to_path = print_to_path, print_path = print_path, print_mode = 'a',
-            use_moment_masks                = use_moment_masks,
-            mask_stateful                   = mask_stateful,
-            mask_future                     = mask_future,
-            mask_sync                       = mask_sync
+           **enc_args,
+           **print_args
         )
-        
         lossess.append(losses)
-        if (eval_pre): eval_results_pre = eval_results_pre_
+        if (enc_args['eval_pre']): eval_results_pre = eval_results_pre_
         eval_results_post.append(eval_results_post_)
         t_shots.append(t_shot_)
-        if eval_pre: t_evals.append(t_eval_1)
-        if eval_post: t_evals.append(t_eval_2)
-        eval_pre = False
+        if enc_args['eval_pre']: t_evals.append(t_eval_1)
+        if enc_args['eval_post']: t_evals.append(t_eval_2)
+        enc_args['eval_pre'] = False
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
 
-# %% ../nbs/encoder.ipynb 51
+# %% ../nbs/encoder.ipynb 53
 def fine_tune_moment_compute_loss(
     batch, 
     output, 
@@ -1866,7 +1784,7 @@ def fine_tune_moment_compute_loss(
     if verbose > 0: print_flush("fine_tune_mvp_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return loss
 
-# %% ../nbs/encoder.ipynb 52
+# %% ../nbs/encoder.ipynb 54
 def fine_tune_mvp_step_(
     enc_learn : Learner,
     batch,
@@ -1886,7 +1804,7 @@ def fine_tune_mvp_step_(
     if verbose > 0: print_flush("fine_tune_mvp_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
 
 
-# %% ../nbs/encoder.ipynb 53
+# %% ../nbs/encoder.ipynb 55
 def fine_tune_mvp_train_loop_step_(
     # Print options
     print_to_path   : bool          = False,
@@ -1897,7 +1815,7 @@ def fine_tune_mvp_train_loop_step_(
     print_flush("fine_tune_mvp_train_loop_step_ | Not yet implemented", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     if verbose > 0: print_flush("fine_tune_mvp_train_loop_step_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
 
-# %% ../nbs/encoder.ipynb 54
+# %% ../nbs/encoder.ipynb 56
 def fine_tune_mvp_train_(
     verbose                         : int   = 0,
     print_to_path                   : bool  = False,
@@ -1908,20 +1826,61 @@ def fine_tune_mvp_train_(
     print_flush("fine_tune_mvp_train_ | Not yet implemented", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     if verbose > 0: print_flush("fine_tune_mvp_train_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
 
-# %% ../nbs/encoder.ipynb 55
+# %% ../nbs/encoder.ipynb 57
 def fine_tune_mvp_single_(
+    X                               : List [ List [ List [ float ] ] ],
+    validation_percent              : float         = 0.2, 
+    training_percent                : float         = 0.2,
+    window_mask_percent             : float         = 0.3,
+    mask_stateful                   : bool          = False,
+    mask_future                     : bool          = False,
+    mask_sync                       : bool          = False,
+    time_flag                       : bool          = False,
+    # -- Print options
+    show_plot                       : bool  = False,
     verbose                         : int   = 0,
     print_to_path                   : bool  = False,
     print_path                      : str   = "~/data/logs/logs.txt",
-    print_mode                      : str   = 'a'
+    print_mode                      : str   = 'a',
+    use_wandb                       : bool  = True
 ):
     if verbose > 0: print_flush("--> fine_tune_mvp_single_", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
-    print_flush("fine_tune_mvp_single_ | Not yet implemented", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+    t_shot = t_eval_1 = t_eval_2 = 0
+    losses = []
+    eval_results_pre = eval_results_post = ""
+    if time_flag: 
+        timer = Time()
+    n_windows_percent = validation_percent + training_percent 
+    X = random_windows(
+        X = X, percent     = window_percent, verbose     = verbose-1,#- Printing options for debugging
+        print_to_path = print_to_path,
+        print_path = print_path,
+        print_mode  = 'a'
+    )
+    splits = TimeSplitter(valid_size = validation_percent, show_plot = show_plot)(X)
+    cbs = L(WandbCallback(log_preds=False)) if use_wandb else L()
+    tfms = [ToFloat(), None]
+    batch_tfms = [TSStandardize(by_sample=config.norm_by_sample, 
+               use_single_batch=config.norm_use_single_batch)]
+    learn = ts_learner(
+    dls, InceptionTimePlus, cbs= cbs + sgc + MVP(
+            r = config.r, 
+            window_size=config.mvp_ws, 
+            future_mask = config.mask_future, 
+            target_dir='./models', 
+            sync = config.mask_sync, 
+            stateful = config.mask_stateful,
+            fname=f'encoder_MVP'
+        ), y_range=[X.min(), X.max()])
+    dls = get_ts_dls(X, splits=splits, tfms=tfms, bs=config.batch_size, batch_tfms=batch_tfms)
+    
+    if verbose > 0: print_flush("Fine tune MVP single | Split training dataset into training and test datasets",print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+    
     if verbose > 0: print_flush("fine_tune_mvp_single_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
 
-# %% ../nbs/encoder.ipynb 56
+# %% ../nbs/encoder.ipynb 58
 def fine_tune_mvp_(
-    X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
+    dss                             : List [ List [ List [ float ]]],
     enc_learn                       : Learner, 
     stride                          : int           = 1,      
     batch_size                      : int           = 32,
@@ -1944,11 +1903,6 @@ def fine_tune_mvp_(
     lr_scheduler_flag               : bool          = False, 
     lr_scheduler_name               : str           = "linear",
     lr_scheduler_num_warmup_steps   : int           = None,
-    window_sizes                    : List [int]    = None,
-    n_window_sizes                  : int           = 1,
-    window_sizes_offset             : int           = 0.05,
-    windows_min_distance            : int           = 1,
-    full_dataset                    : bool          = False,
     #- Printing options for debugging
     print_to_path                   : bool          = False,
     print_path                      : str           = "~/data/logs/logs.txt",
@@ -2026,7 +1980,7 @@ def fine_tune_mvp_(
     t_eval = sum(t_evals)
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
 
-# %% ../nbs/encoder.ipynb 59
+# %% ../nbs/encoder.ipynb 61
 def fine_tune_(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     enc_learn                       : Learner, 
@@ -2061,36 +2015,74 @@ def fine_tune_(
     print_path                      : str           = "~/data/logs/logs.txt",
     print_mode                      : str           = 'a',
     use_moment_masks                : bool          = False,
+    #- Masking options
     mask_stateful                   : bool          = False,
     mask_future                     : bool          = False,
     mask_sync                       : bool          = False
-):   
-    lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn = ( None, None, None, None, None, None, None, None )
+):      
+    mssg = Mssg(mssg = "--> Fine tune ", to_path = print_to_path,path = print_path,mode = print_mode, verbose = verbose)
+    print(mssg.mssg)
+    mssg.print()
+    mssg.styled(color = 'purple')
+    lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval = ( None, None, None, None, None, None, None )
     enc_learn_class = str(enc_learn.__class__)[8:-2]
-    enc_input = ensure_windowed_dataset(X, stride, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, print_to_path, print_path, print_mode, verbose)
+    enc_input = windowed_dataset(X, stride, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, mssg)
     func = None
+    enc_args = {
+        "stride": stride,
+        "batch_size": batch_size,
+        "cpu": cpu,
+        "to_numpy": to_numpy,
+        "verbose": verbose,
+        "time_flag": time_flag,
+        "n_windows": n_windows,
+        "n_windows_percent": n_windows_percent,
+        "validation_percent": validation_percent,
+        "training_percent": training_percent,
+        "window_mask_percent": window_mask_percent,
+        "num_epochs": num_epochs,
+        "shot": shot,
+        "eval_pre": eval_pre,
+        "eval_post": eval_post,
+        "criterion": criterion,
+        "optimizer": optimizer,
+        "lr": lr,
+        "lr_scheduler_flag": lr_scheduler_flag,
+        "lr_scheduler_name": lr_scheduler_name,
+        "lr_scheduler_num_warmup_steps": lr_scheduler_num_warmup_steps,
+        "mask_stateful": mask_stateful,
+        "mask_future": mask_future,
+        "mask_sync": mask_sync
+    }
+    
+    print_args = {
+        "print_to_path": print_to_path,
+        "print_path": print_path,
+        "print_mode": print_mode,
+        "verbose": verbose
+    }
     match enc_learn_class:
         case "momentfm.models.moment.MOMENTPipeline":
             func = fine_tune_moment_
+            enc_args["use_moment_masks"]=use_moment_masks
         case "fastai.learner.Learner":
             func = fine_tune_mvp_
             print_flush("fine_tune | Learner fine_tune not yet implemented", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = 1, print_time = print_to_path)
         case "uni2ts.model.moirai.module.MoiraiModule":
-            func_ = fine_tune_mvp
+            #func_ = fine_tune_moirai_
             print_flush("fine_tune | Moirai fine_tune not yet implemented", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = 1, print_time = print_to_path)
+            raise NotImplementedError("fine_tune | Moirai fine_tune not yet implemented")
+
         case _:
             print_flush(f"Fine-tune implementation is not yet implemented for {enc_learn_class}.", verbose = 1)
     if func is not None:
-        lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn = func(
-            enc_input, enc_learn, stride, batch_size, cpu, to_numpy, verbose, time_flag, 
-            n_windows, n_windows_percent, validation_percent, training_percent,
-            window_mask_percent, num_epochs, shot, eval_pre, eval_post,
-            criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name,
-            lr_scheduler_num_warmup_steps, window_sizes, n_window_sizes,
-            window_sizes_offset, windows_min_distance, full_dataset,
-            print_to_path, print_path, print_mode, use_moment_masks, 
-            mask_stateful, mask_future, mask_sync
-    )
+        ( 
+            lossess, eval_results_pre, eval_results_post, 
+            t_shots, t_shot, t_evals, t_eval, 
+            enc_learn 
+        ) = func(dss = enc_input, enc_learn = enc_learn, enc_args = enc_args, print_args = print_args)
+    else:
+        raise NotImplementedError("fine_tune | Fine-tune function is None.")
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
 
     

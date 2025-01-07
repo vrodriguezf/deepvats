@@ -9,14 +9,15 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_t
            'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
            'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
            'fine_tune_moment_train_loop_step_', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
-           'fine_tune_moment_', 'fine_tune_mvp_step_', 'fine_tune_mvp_train_loop_step_', 'fine_tune_mvp_train_',
-           'fine_tune_mvp_single_', 'fine_tune_mvp_', 'fine_tune_']
+           'fine_tune_mvp_step_', 'fine_tune_mvp_train_loop_step_', 'fine_tune_mvp_train_', 'fine_tune_mvp_single_',
+           'fine_tune_mvp_', 'fine_tune_']
 
 # %% ../nbs/encoder.ipynb 2
 from .memory import *
 from .utils import Mssg
 from .utils import Time
 from .utils import print_flush
+from .config import show_attrdict
 
 # %% ../nbs/encoder.ipynb 5
 import pandas as pd
@@ -35,7 +36,7 @@ import time
 import einops
 import traceback
 
-# %% ../nbs/encoder.ipynb 8
+# %% ../nbs/encoder.ipynb 11
 class DCAE_torch(Module):
     def __init__(self, c_in, seq_len, delta, nfs=[64, 32, 12], kss=[10, 5, 5],
                  pool_szs=[2,2,3], output_fsz=10):
@@ -77,7 +78,7 @@ class DCAE_torch(Module):
         x = self.upsample(x)
         return x
 
-# %% ../nbs/encoder.ipynb 11
+# %% ../nbs/encoder.ipynb 14
 ENCODER_EMBS_MODULE_NAME = {
     InceptionTimePlus: 'backbone', # for mvp based models
     DCAE_torch: 'bottleneck.latent_in'#,
@@ -85,7 +86,7 @@ ENCODER_EMBS_MODULE_NAME = {
     
 }
 
-# %% ../nbs/encoder.ipynb 13
+# %% ../nbs/encoder.ipynb 16
 def kwargs_to_gpu_(**kwargs):
     for key in kwargs:
         try: #if not able to be moved, just not move it
@@ -101,7 +102,7 @@ def kwargs_to_cpu_(**kwargs):
             continue
    
 
-# %% ../nbs/encoder.ipynb 14
+# %% ../nbs/encoder.ipynb 17
 def get_acts(
     model : torch.nn.Module, 
     module: torch.nn.Module, 
@@ -171,7 +172,7 @@ def get_acts(
     if verbose > 0:print_flush(f"get acts -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return res
 
-# %% ../nbs/encoder.ipynb 15
+# %% ../nbs/encoder.ipynb 18
 def get_acts_moment(
     enc_learn, 
     cpu             : bool          = False, 
@@ -241,7 +242,7 @@ def get_acts_moment(
                 
     return embs
 
-# %% ../nbs/encoder.ipynb 16
+# %% ../nbs/encoder.ipynb 19
 def sure_eval_moment(
     enc_learn, 
     cpu, 
@@ -346,11 +347,11 @@ def sure_eval_moment(
     
     return output, enc_learn
 
-# %% ../nbs/encoder.ipynb 18
+# %% ../nbs/encoder.ipynb 21
 from fastai.learner import Learner
 from tsai.data.core import TSDataLoaders
 
-# %% ../nbs/encoder.ipynb 21
+# %% ../nbs/encoder.ipynb 22
 def get_enc_embs_ensure_batch_size_(
     dls        : TSDataLoaders,
     batch_size : int = None,
@@ -370,7 +371,7 @@ def get_enc_embs_ensure_batch_size_(
         if verbose > 1: 
             print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}", verbose = verbose)
 
-# %% ../nbs/encoder.ipynb 22
+# %% ../nbs/encoder.ipynb 23
 def get_enc_embs_MVP(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -455,7 +456,7 @@ def get_enc_embs_MVP(
     if to_numpy: embs = embs.numpy() if cpu else embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 23
+# %% ../nbs/encoder.ipynb 24
 def get_enc_embs_MVP_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -603,7 +604,7 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
         print_flush("get_enc_embs_MVP_set_stride_set_batch_size -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 24
+# %% ../nbs/encoder.ipynb 25
 def get_enc_embs_moment(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -652,7 +653,7 @@ def get_enc_embs_moment(
         print_flush("get_enc_embs_moment -->", verbose = verbose)
     return embeddings
 
-# %% ../nbs/encoder.ipynb 25
+# %% ../nbs/encoder.ipynb 26
 def get_enc_embs_moment_reconstruction(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -695,14 +696,14 @@ def get_enc_embs_moment_reconstruction(
         embs = embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 27
+# %% ../nbs/encoder.ipynb 28
 import uni2ts.model.moirai.module as moirai
 import uni2ts.model.moirai.forecast as moirai_forecast
 
-# %% ../nbs/encoder.ipynb 28
+# %% ../nbs/encoder.ipynb 29
 import torch.profiler as profiler
 
-# %% ../nbs/encoder.ipynb 29
+# %% ../nbs/encoder.ipynb 30
 def watch_gpu(func, **kwargs):
     """
     Wrapper to execute GPU profiler
@@ -727,7 +728,7 @@ def watch_gpu(func, **kwargs):
     print_flush(prof.key_averages().table(sort_by="cuda_memory_usage", row_limit=10))
     return result
 
-# %% ../nbs/encoder.ipynb 30
+# %% ../nbs/encoder.ipynb 31
 def get_enc_embs_moirai(
     enc_input       : List [ List [ List [ Float ] ] ], 
     enc_model       : moirai.MoiraiModule, 
@@ -864,7 +865,7 @@ def get_enc_embs_moirai(
         print_flush("get_enc_embs_moirai -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 32
+# %% ../nbs/encoder.ipynb 33
 def get_enc_embs(
     X               , 
     enc_learn       : Learner, 
@@ -901,7 +902,7 @@ def get_enc_embs(
             print_flush(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 33
+# %% ../nbs/encoder.ipynb 34
 def get_enc_embs_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -977,16 +978,15 @@ def get_enc_embs_set_stride_set_batch_size(
     if verbose > 0: print_flush(f"get_enc_embs_set_stride_set_batch_size | embs~{embs.shape} -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 36
+# %% ../nbs/encoder.ipynb 37
 from tqdm.auto import tqdm
 from transformers import get_scheduler
 import evaluate
 from torch.nn.modules.loss import _Loss
 from tsai.data.preparation import SlidingWindow
 from .utils import find_dominant_window_sizes_list
-from .config import show_attrdict
 
-# %% ../nbs/encoder.ipynb 37
+# %% ../nbs/encoder.ipynb 38
 def random_windows(
     X : List [ List [ List [ float ]]], 
     n_windows   = None, 
@@ -1016,7 +1016,7 @@ def random_windows(
     if verbose > 0: print_flush(f"Random windows | windows ~ {windows.shape} | -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return windows
 
-# %% ../nbs/encoder.ipynb 38
+# %% ../nbs/encoder.ipynb 39
 def windowed_dataset(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     stride                          : int           = 1,
@@ -1058,7 +1058,7 @@ def windowed_dataset(
     return dss
 
 
-# %% ../nbs/encoder.ipynb 39
+# %% ../nbs/encoder.ipynb 40
 def setup_scheduler(
     dl_train                        : DataLoader,
     lr_scheduler_flag               : bool= False,
@@ -1092,7 +1092,7 @@ def setup_scheduler(
                 )
     return lr_scheduler
 
-# %% ../nbs/encoder.ipynb 40
+# %% ../nbs/encoder.ipynb 41
 def prepare_train_and_eval_dataloaders(
     X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     batch_size          : int,
@@ -1145,10 +1145,10 @@ def prepare_train_and_eval_dataloaders(
         dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
     return dl_eval, dl_train, ds_train
 
-# %% ../nbs/encoder.ipynb 42
+# %% ../nbs/encoder.ipynb 43
 from momentfm.utils.masking import Masking
 
-# %% ../nbs/encoder.ipynb 43
+# %% ../nbs/encoder.ipynb 44
 def fine_tune_moment_compute_loss_check_sizes_(
     batch           : List [ List [ List [ float ] ] ], 
     output, 
@@ -1175,7 +1175,7 @@ def fine_tune_moment_compute_loss_check_sizes_(
     if verbose > 0: print_flush("fine_tune_moment_compute_loss_check_sizes_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return b
 
-# %% ../nbs/encoder.ipynb 44
+# %% ../nbs/encoder.ipynb 45
 def fine_tune_moment_compute_loss(
     batch, 
     output, 
@@ -1213,7 +1213,7 @@ def fine_tune_moment_compute_loss(
     if verbose > 0: print_flush("fine_tune_moment_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return loss
 
-# %% ../nbs/encoder.ipynb 45
+# %% ../nbs/encoder.ipynb 46
 def fine_tune_moment_eval_preprocess(
     predictions : List [ List [ float ]],
     references : List [ List [ float ]],
@@ -1251,7 +1251,7 @@ def fine_tune_moment_eval_preprocess(
         print_flush(f"Eval | After NaN | refs~{references.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return predictions, references
 
-# %% ../nbs/encoder.ipynb 46
+# %% ../nbs/encoder.ipynb 47
 def fine_tune_moment_eval_step_(
     enc_learn : Learner,
     batch,
@@ -1290,7 +1290,7 @@ def fine_tune_moment_eval_step_(
         smape_metric.add_batch(predictions=predictions, references = references)
         return mse_metric, rmse_metric, mae_metric, smape_metric
 
-# %% ../nbs/encoder.ipynb 47
+# %% ../nbs/encoder.ipynb 48
 def fine_tune_moment_eval_(
     enc_learn : Learner,
     dl_eval   : DataLoader,
@@ -1355,7 +1355,7 @@ def fine_tune_moment_eval_(
     enc_learn.train()
     return eval_results
 
-# %% ../nbs/encoder.ipynb 48
+# %% ../nbs/encoder.ipynb 49
 def fine_tune_moment_train_loop_step_(
     enc_learn,
     batch, 
@@ -1479,7 +1479,7 @@ def fine_tune_moment_train_loop_step_(
         #print_flush(f"fine_tune_moment_train_loop_step_ | Enc_learn After compute loss {enc_learn.__class__} | -->")
     return loss, enc_learn
 
-# %% ../nbs/encoder.ipynb 49
+# %% ../nbs/encoder.ipynb 50
 def fine_tune_moment_train_(
     enc_learn                       : Learner, 
     dl_train                        : DataLoader,
@@ -1590,15 +1590,14 @@ def fine_tune_moment_train_(
         print_flush(f"fine_tune_moment_train | -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return losses, enc_learn
 
-# %% ../nbs/encoder.ipynb 50
+# %% ../nbs/encoder.ipynb 51
 def fine_tune_moment_single_(
     X                               : List [ List [ List [ float ]]],
     enc_learn                       : Learner, 
     stride                          : int           = 1,      
     batch_size                      : int           = 32,
     cpu                             : bool          = False,
-    to_numpy                        : bool          = True, 
-    verbose                         : int           = 0, 
+    to_numpy                        : bool          = True,     
     time_flag                       : bool          = False,
     n_windows                       : int           = None,
     n_windows_percent               : float         = None,
@@ -1615,15 +1614,13 @@ def fine_tune_moment_single_(
     lr_scheduler_flag               : bool          = False, 
     lr_scheduler_name               : str           = "linear",
     lr_scheduler_num_warmup_steps   : int           = 0,
-    print_to_path                   : bool          = False,
-    print_path                      : str           = "~/data/logs/logs.txt",
-    print_mode                      : str           = 'a',
     use_moment_masks                : bool          = False,
     mask_stateful                   : bool          = False,
     mask_future                     : bool          = False,
-    mask_sync                       : bool          = False
+    mask_sync                       : bool          = False,
+    enc                             : Encoder       = Encoder()
 ):
-    if verbose > 0: print_flush("--> fine_tune_moment_single", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose )
+    if enc.print.verbose > 0: enc.print("--> fine_tune_moment_single")
     t_shot = 0
     t_eval_1 = 0
     t_eval_2 = 0
@@ -1631,33 +1628,35 @@ def fine_tune_moment_single_(
     eval_results_pre = ""
     eval_results_post = ""
 
-    if time_flag:
-        timer = Time()
-    if verbose > 0: print_flush("fine_tune_moment_single | Prepare the dataset", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose )
+    if time_flag: timer = Time()
+    if enc.mssg.verbose > 0: enc.print("fine_tune_moment_single | Prepare the dataset")
     # Prepare the dataset
     dl_eval, dl_train, ds_train = prepare_train_and_eval_dataloaders(
         X = X, batch_size=batch_size, n_windows = n_windows, n_windows_percent=n_windows_percent,
         training_percent=training_percent, validation_percent=validation_percent, 
         shot = shot, eval_pre = eval_pre, eval_post=eval_post,
-        print_to_path=print_to_path, print_path=print_path, print_mode='a', verbose=verbose
+        print_to_path=enc.mssg.to_path, 
+        print_path=enc.mssg.path, print_mode = enc.mssg.mode, verbose=enc.mssg.verbose
     )
     if eval_pre:
-        print_flush(f"fine_tune_moment_single | Eval Pre | wlen {X.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        if enc.mssg.verbose > 0: enc.print(f"fine_tune_moment_single | Eval Pre | wlen {X.shape[2]}")
         if time_flag: timer.start()
         eval_results_pre = fine_tune_moment_eval_(
             enc_learn = enc_learn,
             dl_eval = dl_eval,
             num_epochs = num_epochs,
             cpu = cpu,
-            verbose = verbose-1,
-            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+            verbose = enc.mssg.verbose-1,
+            print_to_path = enc.mssg.to_path, 
+            print_path = enc.mssg.path, 
+            print_mode = enc.mssg.mode
         )
         if time_flag: 
             timer.end()
             t_eval_1 = timer.duration()
-            if verbose > 0: timer.show(verbose = verbose, print_to_path = print_to_path, print_mode = 'a')
+            if enc.mssg.verbose > 0: timer.show(verbose = enc.mssg.verbose, print_to_path = enc.mssg.to_path, print_mode = enc.mssg.mode)
     if shot:
-        print_flush(f"fine_tune_moment_single | Train | wlen {X.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        enc.print(f"fine_tune_moment_single | Train | wlen {X.shape[2]}")
         try:
             if time_flag: timer.start()
             losses, enc_learn = fine_tune_moment_train_(
@@ -1674,8 +1673,9 @@ def fine_tune_moment_single_(
                 lr_scheduler_name = lr_scheduler_name,
                 lr_scheduler_num_warmup_steps = lr_scheduler_num_warmup_steps,
                 cpu = cpu,
-                verbose = verbose-1,
-                print_to_path = print_to_path, print_path = print_path, print_mode = 'a',
+                verbose = enc.mssg.verbose-1,
+                print_to_path = enc.mssg.to_path, 
+                print_path = enc.mssg.path, print_mode = enc.mssg.mode,
                 use_moment_masks= use_moment_masks,
                 mask_stateful=mask_stateful,
                 mask_future=mask_future,
@@ -1684,48 +1684,50 @@ def fine_tune_moment_single_(
             if time_flag:
                 timer.end()
                 t_shot = timer.duration()
-                if verbose > 0: timer.show(verbose = verbose, print_to_path = print_to_path, print_mode = 'a')
+                if enc.mssg.verbose > 0: timer.show(verbose = enc.mssg.verbose, print_to_path = enc.mssg.to_path, print_mode = 'a')
         except Exception as e:
-            print_flush(f"fine_tune_moment_single | Train | Window {X.shape[2]} not valid | {e}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            enc.print(f"fine_tune_moment_single | Train | Window {X.shape[2]} not valid | {e}")
             traceback.print_exc()
     if eval_post:    
-        print_flush(f"fine_tune_moment_single | Eval Post | wlen {X.shape[2]}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        enc.print(f"fine_tune_moment_single | Eval Post | wlen {X.shape[2]}")
         if time_flag: timer.start()
         eval_results_post = fine_tune_moment_eval_(
             enc_learn = enc_learn,
             dl_eval = dl_eval,
             num_epochs = num_epochs,
             cpu = cpu,
-            verbose = verbose-1,
-            print_to_path = print_to_path, print_path = print_path, print_mode = 'a'
+            verbose = enc.mssg.verbose-1,
+            print_to_path = enc.mssg.to_path, 
+            print_path = enc.mssg.path, 
+            print_mode = 'a'
         )
         if time_flag:
             timer.end()
             t_eval_2 = timer.duration()
-            if verbose > 0: timer.show(verbose = verbose, print_to_path = print_to_path, print_mode = 'a')
-            if verbose > 0: 
-                print_flush(f"fine_tune_moment_single | Evaluation summary", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                if eval_pre: 
-                    print_flush(f"Eval pre: ", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                    show_attrdict(eval_results_pre, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
-                if eval_post: 
-                    print_flush(f"Eval post: ", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                    show_attrdict(eval_results_post, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
-    if verbose > 0: print_flush("fine_tune_moment_single -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+            if enc.mssg.verbose > 0: 
+                timer.show(
+                    verbose         = enc.mssg.verbose, 
+                    print_to_path   = enc.mssg.to_path, 
+                    print_mode      = enc.mssg.mode
+                )
+            if enc.mssg.verbose > 0: 
+                enc.show_eval_stats(
+                    eval_pre = eval_pre, eval_post = eval_post, 
+                    eval_stats_pre = eval_results_pre,
+                    eval_stats_post= eval_results_post,
+                    func_name="fine_tune_moment_single"
+                )
+    if enc.mssg.verbose > 0: print_flush("fine_tune_moment_single -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, enc_learn
 
-# %% ../nbs/encoder.ipynb 51
+# %% ../nbs/encoder.ipynb 52
 def fine_tune_moment_(
     dss                             : List [ List [ List [ float ]]],
     enc_learn                       : Learner, 
     enc_args,
-    #- Printing options for debugging
-    print_args
+    mssg : Mssg
 ):   
-    print(print_args)
-    verbose = print_args['verbose']
-    if verbose > 0: print_flush("--> fine_tune_moment_", **print_args)
-    print_args['print_mode']='a'
+    if mssg.verbose > 0: mssg.print("--> fine_tune_moment_")
     # Return values
     lossess = []
     eval_results_pre = ""
@@ -1734,25 +1736,22 @@ def fine_tune_moment_(
     t_shot = 0
     t_evals = []
     t_eval = 0
-    if verbose > 0: 
-        print_flush(
-            f"fine_tune_moment_ | Processing {len(dss)} datasets | First length : {dss[0].shape}", 
-            **print_args
-        )
+    if mssg.verbose > 0: 
+        mssg.print(f"fine_tune_moment_ | Processing {len(dss)} datasets | First length : {dss[0].shape}")
     # Build optimizer
     if enc_args['optimizer'] is None: 
-        if verbose > 0: print_flush(f"fine_tune_moment_ | Setting up optimizer as AdamW", **print_Args)
+        if mssg.verbose > 0: mssg.print(f"fine_tune_moment_ | Setting up optimizer as AdamW")
         enc_args['optimizer'] = torch.optim.AdamW(enc_learn.parameters(), lr=lr)
     # Compute model for each window in the windowed dataset
     for enc_input in dss:
-        if verbose > 0: print_flush(f"fine_tune_moment_ | Processing wlen {enc_input.shape[2]}", **print_args)
+        if mssg.verbose > 0: mssg.print(f"fine_tune_moment_ | Processing wlen {enc_input.shape[2]}")
         ( 
             losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, enc_learn
         ) =  fine_tune_moment_single_(
             X                               = enc_input, 
             enc_learn                       = enc_learn,
            **enc_args,
-           **print_args
+           mssg
         )
         lossess.append(losses)
         if (enc_args['eval_pre']): eval_results_pre = eval_results_pre_
@@ -1765,7 +1764,7 @@ def fine_tune_moment_(
     t_eval = sum(t_evals)
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
 
-# %% ../nbs/encoder.ipynb 53
+# %% ../nbs/encoder.ipynb 54
 def fine_tune_moment_compute_loss(
     batch, 
     output, 
@@ -1784,7 +1783,7 @@ def fine_tune_moment_compute_loss(
     if verbose > 0: print_flush("fine_tune_mvp_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return loss
 
-# %% ../nbs/encoder.ipynb 54
+# %% ../nbs/encoder.ipynb 55
 def fine_tune_mvp_step_(
     enc_learn : Learner,
     batch,
@@ -1804,7 +1803,7 @@ def fine_tune_mvp_step_(
     if verbose > 0: print_flush("fine_tune_mvp_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
 
 
-# %% ../nbs/encoder.ipynb 55
+# %% ../nbs/encoder.ipynb 56
 def fine_tune_mvp_train_loop_step_(
     # Print options
     print_to_path   : bool          = False,
@@ -1815,7 +1814,7 @@ def fine_tune_mvp_train_loop_step_(
     print_flush("fine_tune_mvp_train_loop_step_ | Not yet implemented", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     if verbose > 0: print_flush("fine_tune_mvp_train_loop_step_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
 
-# %% ../nbs/encoder.ipynb 56
+# %% ../nbs/encoder.ipynb 57
 def fine_tune_mvp_train_(
     verbose                         : int   = 0,
     print_to_path                   : bool  = False,
@@ -1826,7 +1825,7 @@ def fine_tune_mvp_train_(
     print_flush("fine_tune_mvp_train_ | Not yet implemented", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     if verbose > 0: print_flush("fine_tune_mvp_train_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
 
-# %% ../nbs/encoder.ipynb 57
+# %% ../nbs/encoder.ipynb 58
 def fine_tune_mvp_single_(
     X                               : List [ List [ List [ float ] ] ],
     validation_percent              : float         = 0.2, 
@@ -1878,7 +1877,7 @@ def fine_tune_mvp_single_(
     
     if verbose > 0: print_flush("fine_tune_mvp_single_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
 
-# %% ../nbs/encoder.ipynb 58
+# %% ../nbs/encoder.ipynb 59
 def fine_tune_mvp_(
     dss                             : List [ List [ List [ float ]]],
     enc_learn                       : Learner, 
@@ -1980,7 +1979,7 @@ def fine_tune_mvp_(
     t_eval = sum(t_evals)
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
 
-# %% ../nbs/encoder.ipynb 61
+# %% ../nbs/encoder.ipynb 62
 def fine_tune_(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     enc_learn                       : Learner, 
@@ -2020,13 +2019,19 @@ def fine_tune_(
     mask_future                     : bool          = False,
     mask_sync                       : bool          = False
 ):      
-    mssg = Mssg(mssg = "--> Fine tune ", to_path = print_to_path,path = print_path,mode = print_mode, verbose = verbose)
-    print(mssg.mssg)
-    mssg.print()
-    mssg.styled(color = 'purple')
+    enc = Encoder(
+        mssg = Mssg(mssg = "--> Fine tune ", to_path = print_to_path,path = print_path,mode = print_mode, verbose = verbose)
+    )
+    enc.print()
+    
     lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval = ( None, None, None, None, None, None, None )
     enc_learn_class = str(enc_learn.__class__)[8:-2]
-    enc_input = windowed_dataset(X, stride, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, mssg)
+    enc_input = windowed_dataset(
+        X, stride, window_sizes, 
+        n_window_sizes, window_sizes_offset, 
+        windows_min_distance, full_dataset, 
+        enc.print
+    )
     func = None
     enc_args = {
         "stride": stride,

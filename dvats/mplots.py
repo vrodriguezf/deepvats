@@ -105,19 +105,19 @@ def euclidean_distance (
     Returns:
         A tuple containing the distance and an object of Time if time_flag is True, or None otherwise.
     """
+    mssg = ut.Mssg(fname = ut.funcname(), verbose=verbose)
     t = None 
     vector_a = np.array(vector_a)
     vector_b = np.array(vector_b)
-    if verbose > 0: 
-        print("va", vector_a)
-        print("vb", vector_b)
+    mssg.print("va", vector_a)
+    mssg.print("vb", vector_b)
     if time_flag:
-        t = ut.Time(function = ut.funcname())
+        t = ut.Time(mssg = mssg)
         t.start(verbose = verbose - 1)
     dist = np.linalg.norm(vector_a - vector_b)
     if time_flag: 
         t.end(verbose = verbose - 1)
-        if verbose > 0: t.show()
+        t.show(verbose)
     return dist, t
 
 # %% ../nbs/mplots.ipynb 15

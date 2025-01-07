@@ -4,7 +4,7 @@ from nbconvert import PythonExporter
 import argparse
 import subprocess
 
-def convert_and_check(notebook_path, context_lines):
+def convert_and_check_nb(notebook_path, context_lines):
     # 1. Leer el notebook
     with open(notebook_path, 'r', encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
@@ -51,7 +51,7 @@ def convert_and_check(notebook_path, context_lines):
                         print(f"{prefix}{i + 1:4}: {lines[i]}", end='')
 
                     break
-                
+               
     except Exception as e:
         print(f"[ERROR] Failed to compile: {e}")
     
@@ -59,10 +59,20 @@ def convert_and_check(notebook_path, context_lines):
     os.remove(temp_script_path)
     print(f"[INFO] Temporary file removed: {temp_script_path}")
 
+def convert_and_check_dir(path, context_lines):
+    if os.path.isfile(path) and path.endswith(".ipynb"):
+        convert_and_check_nb(path, context_lines)
+    elif os.path.isdir(path):
+        for file in os.listdir(path):
+            if file.endswith(".ipynb"):
+                print(f"\n[INFO] Checking {file}...\n")
+                convert_and_check_nb(os.path.join(path, file), context_lines)
+    else:
+        print(f"[WARNING] {path} is not a valid notebook or directory.")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Check syntax errors in .ipynb files.")
     parser.add_argument("notebook", help="Path to the Jupyter notebook (.ipynb) file.")
     parser.add_argument("--context", type=int, default=1, help="Number of lines to print before and after the error.")
     args = parser.parse_args()
 
-    convert_and_check(args.notebook, args.context)
+    convert_and_check_dir(args.notebook, args.context)

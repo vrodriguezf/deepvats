@@ -720,26 +720,25 @@ shinyServer(function(input, output, session) {
     
   })
   
-  # Reactive to store selected points 2D "Embedding projections"
-  selected_points_2d <- reactive({
+selected_points_2d <- reactive({
     event_data("plotly_selected", source = "projections_plot")
-  })
+})
 
   # Reactive to store selected points 3D "Embedding projections"
-    selected_points_3d <- reactiveVal(NULL)
+  selected_points_3d <- reactiveVal(NULL)
   
   # Handle plotly brush event
-embedding_ids <- reactive({
-  if(toggle_graph_state() == 0){
-    print("--> embedding idx")
-    on.exit(print(paste0("embedding idx -->", bp)))
-    bp <- selected_points_2d()[2]
-  }
-  else{
-    print("--> embedding idx")
-    on.exit(print(paste0("embedding idx -->", bp)))
-    bp <- selected_points_3d()[2]
-  }
+  embedding_ids <- reactive({
+    if(toggle_graph_state() == 0){
+      print("--> embedding idx")
+      on.exit(print(paste0("embedding idx -->", bp)))
+      bp <- selected_points_2d()[2]
+    }
+    else{
+      print("--> embedding idx")
+      on.exit(print(paste0("embedding idx -->", bp)))
+      bp <- selected_points_3d()[2]
+    }
     
   })
 
@@ -749,6 +748,7 @@ embedding_ids <- reactive({
    filtered_window_indices <- reactive({
         req(length(embedding_ids() > 0))
         embedding_indices <- embedding_ids()
+        embedding_indices <- embedding_indices + 1
         #window_indices = get_window_indices(embedding_indices, input$wlen, input$stride)
         ts_indices <- tsidxs_per_embedding_idx()
         print("-------->")
@@ -764,7 +764,14 @@ embedding_ids <- reactive({
     filtered_window_indices_3d <- reactive({
         req(length(points_in_radius() > 0))
         embedding_indices <- points_in_radius()
+        print("-------->")
+        print(embedding_indices)
+        print("-------->")
+        print(unlist(embedding_indices))
         ts_indices <- tsidxs_per_embedding_idx()
+        print("-------->")
+        print(unlist(ts_indices[unlist(embedding_indices)]))
+        print("-------->")
         unlist(ts_indices[unlist(embedding_indices)])
     })
 
@@ -819,7 +826,7 @@ embedding_ids <- reactive({
     #print(embedding_idxs)
     # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
     print("ts_plot | Before if")
-    if ((length(embedding_idxs) != 0)) {
+    if ((length(embedding_idxs) != 0) & isTRUE(input$plot_windows)) {
       print(paste0("ts_plot | After if"))
       #reduced_window_list <- req(window_list())
       print("reduce windowlist")
@@ -1148,6 +1155,13 @@ embedding_ids <- reactive({
         marker = list(color = initial_colors, size = 3),
         line = list(color = "blue"),
         showlegend = FALSE
+      )%>%
+      layout(
+        scene = list(
+          xaxis = list(title = "", showticklabels = FALSE, zeroline = FALSE, showgrid = FALSE),
+          yaxis = list(title = "", showticklabels = FALSE, zeroline = FALSE, showgrid = FALSE),
+          zaxis = list(title = "", showticklabels = FALSE, zeroline = FALSE, showgrid = FALSE)
+        )
       )
       
       plot %>%
@@ -1180,7 +1194,28 @@ embedding_ids <- reactive({
         plotlyProxy("embedding_plot_3d", session) %>%
           plotlyProxyInvoke("restyle", list(marker = list(color = new_colors, size = 3)), list(0))
       }
+      if (is.null(click_data) || is.null(click_data$pointNumber)) {
+          points_in_radius(NULL)
+          selected_points_3d(NULL)
+          
+          prj_3d <- embedding_3d()
+          new_colors <- rep("black", nrow(prj_3d))
+          plotlyProxy("embedding_plot_3d", session) %>%
+              plotlyProxyInvoke("restyle", list(marker = list(color = new_colors, size = 3)), list(0))
+      }
     })
+
+    observeEvent(input$reset_selection_3d, {
+    points_in_radius(NULL)
+    selected_points_3d(NULL)
+    
+    prj_3d <- embedding_3d()
+    
+    new_colors <- rep("black", nrow(prj_3d))
+    plotlyProxy("embedding_plot_3d", session) %>%
+        plotlyProxyInvoke("restyle", list(marker = list(color = new_colors, size = 3)), list(0))
+    })
+
 
     toggle_graph_state <- reactiveVal(0)
     
@@ -1195,7 +1230,10 @@ embedding_ids <- reactive({
       if (toggle_graph_state() == 0) {
         uiOutput("projections_plot_ui")
       } else {
-        plotlyOutput("embedding_plot_3d")
+          tagList(
+            plotlyOutput("embedding_plot_3d"),
+            actionButton("reset_selection_3d", "Reset Selection", icon = icon("refresh"))
+          )
       }
     })
     

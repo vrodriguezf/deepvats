@@ -123,9 +123,9 @@ shinyUI(fluidPage(
             ),
             fluidRow(
               column(12,
-                     actionButton("toggle_graph", "Toggle Graph"),  # Botón para alternar entre los gráficos
-                     uiOutput("graph_ui")
-              ) # Agregamos la salida del gráfico en 3D
+                    actionButton("toggle_graph", "Toggle Graph"),
+                    uiOutput("graph_ui"),
+              )
             ) 
           ),
           fluidRow(h3("Original data")),

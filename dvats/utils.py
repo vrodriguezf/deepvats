@@ -105,11 +105,18 @@ class Mssg:
     function: str   = ''
     
     def __str__(self):
-        return mssg
+        return self.mssg
         
-    def styled(self, mssg = None, color=None, size=None, weight=None):
+    def styled(
+        self, 
+        mssg    = None, 
+        color   = None, 
+        size    = None, 
+        weight  = None
+    ):
         """Formated print"""
         self.mssg   = self.mssg if mssg is None else mssg
+        mssg = f" [ {self.function} ] {self.mssg}" if self.function is not None else self.mssg
         self.color  = self.color if color is None else color
         self.size   = self.size if size is  None else size
         self.weight = self.weight if weight is  None else weight
@@ -135,7 +142,7 @@ class Mssg:
     ):
         """Print message with console flush and debugging parameters"""
         self.mssg       = mssg if mssg is not None else self.mssg
-        self.to_path    = self.to_path if print_to_path is None else print_to_path
+        self.to_path    = self.to_path if ( print_to_path is None or not isinstance(print_to_path, bool) ) else print_to_path
         self.path       = self.path if print_path is None else print_path
         self.verbose    = self.verbose if verbose is None else verbose
         self.time       = self.time if print_time is None else print_time
@@ -181,15 +188,16 @@ class Mssg:
         mssg_.level -= 1
         return mssg_
     
-    def initial(
+    def initial_(
         self, 
+        func_name       = None,
         print_to_path   = None, 
         print_path      = None, 
         verbose         = None, 
         print_time      = None, 
         print_both      = None, 
         verbose_level   = None,
-        func_name       = None,
+        print_mode      = None,
         **kwargs
     ):
         """Print message with console flush and debugging parameters"""
@@ -198,23 +206,54 @@ class Mssg:
         self.verbose    = self.verbose if verbose is None else verbose
         self.time       = self.time if print_time is None else print_time
         self.both       = self.both if print_both is None else print_both
-        self.function   = func_name if func_name is not None else self.function
+        self.function   = self.function if func_name is None else func_name
+        self.mode       = self.mode if print_mode is None else print_mode
         self.ensure_function()
         verbose_level   = self.level if verbose_level is None else verbose_level
+        
         if self.verbose > verbose_level:
             mssg =f"[ --> {self.function} ]"
-            print_flush(mssg, self.to_path, self.path, self.mode,self.verbose, self.time, print_both, **kwargs)
+            
+            print_flush(mssg, self.to_path, self.path, self.mode,self.verbose, self.time, print_both = self.both, **kwargs)
         self.mode = 'a'
 
-    def final(
+    def initial(
         self, 
+        func_name       = None,
         print_to_path   = None, 
         print_path      = None, 
         verbose         = None, 
         print_time      = None, 
         print_both      = None, 
         verbose_level   = None,
+        print_mode      = None,
+        **kwargs
+    ):
+        """Print message with console flush and debugging parameters"""
+        to_path    = self.to_path if print_to_path is None else print_to_path
+        path       = self.path if print_path is None else print_path
+        verbose    = self.verbose if verbose is None else verbose
+        time       = self.time if print_time is None else print_time
+        both       = self.both if print_both is None else print_both
+        function   = self.function if func_name is None else func_name
+        mode       = self.mode if print_mode is None else print_mode
+        self.ensure_function()
+        verbose_level   = self.level if verbose_level is None else verbose_level
+        
+        if self.verbose > verbose_level:
+            mssg =f"[ --> {function} ]"
+            print_flush(mssg, to_path, path, mode, verbose, time, print_both, **kwargs)
+        self.mode = 'a'
+
+    def final(
+        self, 
         func_name       = None,
+        print_to_path   = None, 
+        print_path      = None, 
+        verbose         = None, 
+        print_time      = None, 
+        print_both      = None, 
+        verbose_level   = None,
         **kwargs
     ):
         """Print message with console flush and debugging parameters"""
@@ -1069,3 +1108,98 @@ def find_dominant_window_sizes_list(
         mssg.print(f"Final selected window sizes: {sizes}", verbose_level = mssg.level + 1)
     mssg.final()
     return sizes
+
+# %% ../nbs/utils.ipynb 101
+import warnings
+def _check_value(
+    value       : Any,
+    default     : Any,
+    name        : str   = "",
+    valid_types : Union [ type, List[type] ] = [ int ],
+    allow_none  : bool  = False,
+    positive    : bool  = False,
+    percent     : bool  = False,
+    mssg        : Mssg  = Mssg()
+):
+    mssg.initial(f"{funcname(2)} | {funcname(1)} | {funcname()} | {name}")
+    res = default
+    valid = True
+    if value is None and not allow_none:
+        valid = False
+    if valid and value is not None:
+        if percent:
+            positive = True
+            valid_types = [ int, float]
+        valid_types = valid_types if isinstance(valid_types, list) else [valid_types]
+        mssg.print(f"Checking if {value}'s type is one of {valid_types}")
+        if not isinstance(value, tuple(valid_types)):
+            valid_type_names = ", ".join(t.__name__ for t in valid_types)
+            warnings.warn(
+                f"Invalid type for '{name}' ({type(value).__name__}). Expected one of: {valid_type_names}. Using default: {default}"
+            )
+            valid = False
+        if valid and isinstance(value, (float, int)) and not math.isfinite(value):
+            mssg.print(f"Value {value} is not finite")
+            warnings.warn(f"'{name}' is not finite ({value}). Using default: {default}")
+            valid = False
+    
+        if valid and positive and isinstance(value, (float, int)) and value <= 0:
+            mssg.print(f"Value {value} is not positive")
+            warnings.warn(f"'{name}' must be positive ({value}). Using default: {default}")
+            valid = False
+        if valid and percent and value > 1:
+            warnings.warn(f"'{name}' must be lower or equal than 1 ({value}). Using default: {default}")
+            valid = False
+    if valid: res = value
+    mssg.print(f"valid? {valid}")
+    mssg.final()
+    return res, valid
+
+# %% ../nbs/utils.ipynb 102
+def _validate_nested_list(value, default, name, valid_types, levels, 
+    allow_none  : bool  = False,
+    positive    : bool  = False,
+    percent     : bool  = False,
+    mssg        : Mssg  = Mssg()
+):
+    """
+    Validates that a value is a nested list with exactly 'levels' levels
+    and that the innermost level contains elements of the 'valid_types'.
+    
+    Parameters:
+    - value: Any - The value to validate.
+    - valid_types: type - The expected type for the innermost elements.
+    - levels: int - The exact number of nested list levels expected.
+    
+    Returns:
+    - bool: True if the value is valid, False otherwise.
+    """
+    mssg.initial(f"{funcname()} | level {levels}")
+    # Base case: if levels == 0, the value must be of the expected type
+    valid_types = valid_types if isinstance(valid_types, list) else [valid_types]
+    valid_types = tuple(valid_types)
+    if levels == 0:
+        return _check_value(value, default, name, valid_types, allow_none, positive, percent)
+
+    # Check if the value is a list
+    if not isinstance(value, list):
+        return default
+    # Initialize the results list and overall validity
+    validated_list = []
+    overall_valid = True
+    # Recursively validate each element, reducing levels
+    for idx, item in enumerate(value):
+        mssg.print(f"Validating item {idx} at level {levels}")
+        validated_item, item_valid = _validate_nested_list(
+            item,
+            default, name, valid_types, levels - 1,
+            allow_none, positive, percent, mssg
+        )
+        validated_list.append(validated_item)
+        overall_valid = overall_valid and item_valid
+    mssg.print(averall_valid)
+    valid = all(averall_valid)
+    mssg.print(f"valid? {valid}")
+    mssg.final(f"{funcname()} | level {levels}")
+    return res, valid
+

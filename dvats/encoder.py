@@ -15,14 +15,20 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'EncoderInput', 'LRScheduler', 'EncoderOp
            'fine_tune__old', 'fine_tune']
 
 # %% ../nbs/encoder.ipynb 2
+import warnings
+import math
 from .memory import *
 import dvats.utils as ut
 from .config import show_attrdict
 from copy import deepcopy
 ## -- Classes & types
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple, Callable, Union
+from typing import List, Optional, Tuple, Callable, Union, Any
 
+# Fastai
+#| export
+from fastai.learner import Learner
+from tsai.data.core import TSDataLoaders
 # Moirai
 import uni2ts.model.moirai.module as moirai
 import uni2ts.model.moirai.forecast as moirai_forecast
@@ -44,42 +50,69 @@ import time
 import einops
 import traceback
 
-# %% ../nbs/encoder.ipynb 8
+# %% ../nbs/encoder.ipynb 7
 @dataclass
 class EncoderInput:
     # Data
     _data               : Union [ pd.DataFrame, List [ List [ List [ float ]]] ] = None
-    _size               : int           = None
-    _shape              : int           = None
-    stride              : int           = 1
-    batch_size          : int           = 32
-    _update_size        : bool          = False
-    _update_shape       : bool          = False
-    # Windows
-    n_windows           : int           = None
-    n_windows_percent   : float         = None
-    validation_percent  : float         = None
-    training_percent    : float         = None
-    window_mask_percent : float         = None
-    # Time
-    time_flag           : bool          = False
-    
+    _size               : int                               = None
+    _shape              : Optional [ Tuple [ int, ... ] ]   = None
+    stride              : int                               = None
+    batch_size          : int                               = None
+    _update_size        : bool                              = True
+    _update_shape       : bool                              = True
+    # Windows                   
+    n_windows           : int                               = None
+    n_windows_percent   : float                             = None
+    validation_percent  : float                             = None
+    training_percent    : float                             = None
+    window_mask_percent : float                             = None
+    # Time                  
+    time_flag           : bool                              = None
+
+    def __post_init__(self):
+        self._update_size       = True
+        self._update_shape      = True
+        #Todo: check how to validate the input dataset allowing both windowed or not
+        # --- Not working
+        ###self._data              = ut._check_value(self.data, None, "_data", pd.DataFrame, allow_none = True )
+        ###if self._data is None: 
+        ###    self._data = ut._validate_nested_list(self._data, None, "_data", [float, int], 3, False, False, False)
+        self.stride,_               = ut._check_value(self.stride, 1, "stride", int, positive = True)
+        self.batch_size,_           = ut._check_value(self.batch_size, 32, "batch_size", int)
+        self.validation_percent,_   = ut._check_value(self.validation_percent, 0.2, "validation_percent", percent = True)
+        self.training_percent,_     = ut._check_value(self.training_percent, 0.2, "training_percent", percent = True)
+        self.window_mask_percent,_  = ut._check_value(self.window_mask_percent, 0.3, "training_percent", percent = True)
+        self.time_flag,_            = ut._check_value(self.time_flag, "time_flag", bool)
+
     @property
     def size(self):
-        if self._data is not None and ( self._update_size or self._size is None ):
-            self._size = len(self.data)
-            self._update_size = False
+        if self._data is not None and ( self._update_size or self._size is None or self._size == 0):
+            self._size          = len(self._data)
+            self._update_size   = False
+            self._size,_ = ut._check_value(self._size, 0, "_size", int)
+            self._size = max(self._size, 0)
+        elif self._update_size: 
+            self._size = 0
+            self._update_size = True
         return self._size
     
     @property
-    def shape(self):
-        if self._data is not None and ( self._update_shape or self._shape is None ):
+    def shape(self) -> Tuple[int, ...]:
+        if (
+                self._data is not None and 
+                ( self._update_shape or self._shape is None or self._shape == 0 )
+        ):
             try: 
                 self._shape = self._data.shape
             except:
                 self._shape = self._data[0].shape
             self._update_shape = False
-        return self._size
+        elif self._update_shape: 
+            self._shape = 0,
+            self._update_shape = True
+        print(f"{ut.funcname(2)} | Checking shape {self._shape}")
+        return self._shape
 
     @property
     def data(self):
@@ -91,18 +124,54 @@ class EncoderInput:
         self._update_size   = True
         self._update_shape  = True
 
-# %% ../nbs/encoder.ipynb 9
+# %% ../nbs/encoder.ipynb 8
 @dataclass
-class LRScheduler():
-    lr                  : float = 1e-5
-    flag                : bool  = False
-    name                : str   = "OneCycleR"
-    num_warmup_steps    : int   = 0
+class LRScheduler:
+    lr              : float = None
+    flag            : bool  = None
+    name            : str   = None
+    num_warmup_steps: int   = None
+
+    def __post_init__(self):
+        self.lr                 = self._check_lr(self.lr, 1e-5)
+        self.flag               = self._check_flag(self.flag, False)
+        self.name               = self._check_name(self.name, "OneCycleR")
+        self.num_warmup_steps   = self._check_steps(self.num_warmup_steps, 0)
+
+    # Validation methods
+    def _check_lr(self, value, default):
+        if not isinstance(value, (float, int)) or not math.isfinite(value) or value <= 0:
+            warnings.warn(f"Invalid learning rate 'lr' ({value}). Using default: {default}")
+            return default
+        return float(value)
+
+    def _check_flag(self, value, default):
+        if not isinstance(value, bool):
+            warnings.warn(f"Invalid type for 'flag' ({type(value)}). Using default: {default}")
+            return default
+        return value
+
+    def _check_name(self, value, default):
+        if not isinstance(value, str):
+            warnings.warn(f"Invalid type for 'name' ({type(value)}). Using default: {default}")
+            return default
+        return value
+
+    def _check_steps(self, value, default):
+        if not isinstance(value, int) or value < 0:
+            warnings.warn(f"Invalid type or negative value for 'num_warmup_steps' ({value}). Using default: {default}")
+            return default
+        return value
+
+# %% ../nbs/encoder.ipynb 9
 @dataclass
 class EncoderOptimizer():
     criterion   : Optional   [ torch.nn.Module ]          = torch.nn.MSELoss
     optimizer   : Optional   [ torch.optim.Optimizer ]    = None
     lr          : Tuple      [ float, LRScheduler ]       = 1e-5
+
+    def _post__init__(self):
+        self.lr,_ = ut._check_value( self.lr, 1e-5, "lr", [ int, float ], False, True, False )
 
 # %% ../nbs/encoder.ipynb 10
 @dataclass
@@ -110,67 +179,103 @@ class Encoder():
     model               : Tuple [ 
                             MOMENTPipeline,
                             Learner,
-                            moirai.module.MoiraiModule
+                            moirai.MoiraiModule
                         ]                   = None
     input               : EncoderInput      = EncoderInput()
     mssg                : ut.Mssg           = ut.Mssg()
     cpu                 : bool              = False
     to_numpy            : bool              = False
-    num_epochs          : float             = 1
+    num_epochs          : int               = 1
     optim               : EncoderOptimizer  = EncoderOptimizer()
     mask_stateful       : bool              = False
     mask_future         : bool              = False
     mask_sync           : bool              = False
     eval_stats_pre      : AttrDict          = None
     eval_stats_post     : AttrDict          = None
-    use_moment_mask     : bool              = False
+    use_moment_masks     : bool              = False
     model_class         : str               = None
     time_flag           : bool              = False
-    def print(self, **args):
-        self.mssg.print(**args)
+    
+    def __post_init__(self):
+        self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False)
+        self.model              = self.set_model_(self.model)
+        ## TODO: check how to do this check
+        #self.input          , _ = ut._check_value(self.input, EncoderInput(), "input", EncoderInput, True)
+        self.mssg           , _ = ut._check_value(self.mssg, ut.Mssg(), "mssg", ut.Mssg)
+        self.cpu            , _ = ut._check_value(self.cpu, False, "cpu", bool)
+        self.to_numpy       , _ = ut._check_value(self.to_numpy, False, "to_numpy", bool)
+        self.num_epochs     , _ = ut._check_value(self.num_epochs, 1, "num_epochs", int, False, True)
+        ## TODO: check how to do this check
+        #self.optim          , _ = ut._check_value(self.optim, EncoderOptimizer(), "optim", EncoderOptimizer)
+        self.mask_stateful  , _ = ut._check_value(self.mask_stateful, False, "mask_statefull", bool)
+        self.mask_future    , _ = ut._check_value(self.mask_future, False, "mask_future", bool)
+        self.mask_sync      , _ = ut._check_value(self.mask_sync, False, "mask_sync", bool)
+        self.eval_stats_pre , _ = ut._check_value(self.eval_stats_pre, None, "eval_stats_pre", AttrDict, True)
+        self.eval_stats_post, _ = ut._check_value(self.eval_stats_post, None, "eval_stats_post", AttrDict, True)
+        self.use_moment_masks, _ = ut._check_value(self.use_moment_masks, False, "use_moment_masks", bool)
+        self.model_class        = None # Must be computed through get_model_class to avoid errors
+        self.time_flag      , _ = ut._check_value(self.time_flag, False, "time_flag", bool)
+
+    def print(self, **kwargs):
+        self.mssg.print(**kwargs)
 
     def get_model_class(self, force : bool = False): 
         if force or self.model_class is None:
             self.model_class = str(self.model.__class__)[8:-2]
         return self.model_class
     def set_model_(self, model):
-        self.model          = model
-        self.model_class    = self.get_model_class() 
-        self.fine_tune_     = self.set_fine_tune()
+        if model is not None:
+            self.model          = model
+            self.model_class    = self.get_model_class() 
+            try: # Initially it may not be defined and that would result in an execution error
+                self.fine_tune_     = self.set_fine_tune_()
+            except:
+                self.fine_tune_ = None
+        return self.model
 
-    def fine_tune_moment_(self, eval_pre = False, eval_post = False, shot = True): 
+    def fine_tune_moment_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False, use_moment_masks = False): 
         raise NotImplementedError("Encoder.fine_tune_moment_ not yet implemented")
-    def fine_tune_mvp_(self, eval_pre = False, eval_post = False, shot = True): 
+    def fine_tune_mvp_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False): 
+        raise NotImplementedError("Encoder.fine_tune_moment_ not yet implemented", time_flag = False)
+    def fine_tune_moirai_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False): 
         raise NotImplementedError("Encoder.fine_tune_moment_ not yet implemented")
-    def fine_tune_moirai_(self, eval_pre = False, eval_post = False, shot = True): 
-        raise NotImplementedError("Encoder.fine_tune_moment_ not yet implemented")
-    def fine_tune_(self, eval_pre = False, eval_post = False, shot = True):
+    def fine_tune_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False):
         raise NotImplementedError("Encoder.fine_tune_ not yet implemented")
+    def fine_tune_moment_single_(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def set_fine_tune_(self):
         raise NotImplementedError("Encoder.set_fine_tune_ not yet implemented")
+    def show_eval_stats_(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
 
 # %% ../nbs/encoder.ipynb 11
-def set_fine_tune_(self: Encoder):
-    match self.get_model_class():
+def set_fine_tune_(
+    self: Encoder
+) -> Callable:
+    self.mssg.initial_("set_fine_tune_")
+    model_class = self.get_model_class()
+    self.mssg.print(f"Model class: {model_class}")
+    match model_class:
         case "momentfm.models.moment.MOMENTPipeline":
             self.fine_tune_ = self.fine_tune_moment_
         case "fastai.learner.Learner":
             self.fine_tune_ = self.fine_tune_mvp_
         case "uni2ts.model.moirai.module.MoiraiModule":
-            self.print("fine_tune | Moirai fine_tune not yet implemented")
+            self.mssg.print("fine_tune | Moirai fine_tune not yet implemented")
             raise NotImplementedError("fine_tune | Moirai fine_tune not yet implemented")
         case _:
-            self.print(f"Fine-tune implementation is not yet implemented for {self.model_class}.", verbose = 1)
+            self.mssg.print(f"Fine-tune implementation is not yet implemented for {self.model_class}.", verbose_level = self.mssg.level+1)
             raise NotImplementedError(f"fine_tune | Not yet implemented for {self.model_class}")
-    return(self.fine_tune_)    
-Encoder.set_fine_tune = set_fine_tune_
+    self.mssg.final(ut.funcname())
+    return(self.fine_tune_)
+Encoder.set_fine_tune_ = set_fine_tune_
 
 # %% ../nbs/encoder.ipynb 12
 def show_eval_stats_(
-    self, 
-    print_to_path   = None, 
-    print_path      = None, 
-    print_mode      = None,
+    self            : Encoder, 
+    print_to_path   : bool      = None, 
+    print_path      : str       = None, 
+    print_mode      : str       = None,
     eval_pre        : bool = False,
     eval_post       : bool = False,
     eval_stats_pre  : AttrDict = None,
@@ -180,7 +285,6 @@ def show_eval_stats_(
     self.print(f"{func_name} | Evaluation summary")
     self.eval_stats_pre = self.eval_stats_pre if eval_stats_pre is None else eval_stats_pre
     self.eval_stats_post = self.eval_stats_post if eval_stats_post is None else eval_stats_post
-    self.eval_post = self.eval_post if eval_post is None else eval_post
     self.mssg.to_path = self.mssg.to_path if print_to_path is None else print_to_path
     self.mssg.path = self.mssg.path if print_path is None else print_path
     self.mssg.mode = self.mssg.mode if print_mode is None else print_mode        
@@ -514,10 +618,6 @@ def sure_eval_moment(
     return output, enc_learn
 
 # %% ../nbs/encoder.ipynb 24
-from fastai.learner import Learner
-from tsai.data.core import TSDataLoaders
-
-# %% ../nbs/encoder.ipynb 25
 def get_enc_embs_ensure_batch_size_(
     dls        : TSDataLoaders,
     batch_size : int = None,
@@ -537,7 +637,7 @@ def get_enc_embs_ensure_batch_size_(
         if verbose > 1: 
             ut.print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}", verbose = verbose)
 
-# %% ../nbs/encoder.ipynb 26
+# %% ../nbs/encoder.ipynb 25
 def get_enc_embs_MVP(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -622,7 +722,7 @@ def get_enc_embs_MVP(
     if to_numpy: embs = embs.numpy() if cpu else embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 27
+# %% ../nbs/encoder.ipynb 26
 def get_enc_embs_MVP_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -770,7 +870,7 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
         ut.print_flush("get_enc_embs_MVP_set_stride_set_batch_size -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 28
+# %% ../nbs/encoder.ipynb 27
 def get_enc_embs_moment(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -819,7 +919,7 @@ def get_enc_embs_moment(
         ut.print_flush("get_enc_embs_moment -->", verbose = verbose)
     return embeddings
 
-# %% ../nbs/encoder.ipynb 29
+# %% ../nbs/encoder.ipynb 28
 def get_enc_embs_moment_reconstruction(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -862,10 +962,10 @@ def get_enc_embs_moment_reconstruction(
         embs = embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 31
+# %% ../nbs/encoder.ipynb 30
 import torch.profiler as profiler
 
-# %% ../nbs/encoder.ipynb 32
+# %% ../nbs/encoder.ipynb 31
 def watch_gpu(func, **kwargs):
     """
     Wrapper to execute GPU profiler
@@ -890,7 +990,7 @@ def watch_gpu(func, **kwargs):
     ut.print_flush(prof.key_averages().table(sort_by="cuda_memory_usage", row_limit=10))
     return result
 
-# %% ../nbs/encoder.ipynb 33
+# %% ../nbs/encoder.ipynb 32
 def get_enc_embs_moirai(
     enc_input       : List [ List [ List [ Float ] ] ], 
     enc_model       : moirai.MoiraiModule, 
@@ -1028,7 +1128,7 @@ def get_enc_embs_moirai(
         ut.print_flush("get_enc_embs_moirai -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 34
+# %% ../nbs/encoder.ipynb 33
 def get_enc_embs(
     X               , 
     enc_learn       : Learner, 
@@ -1065,7 +1165,7 @@ def get_enc_embs(
             ut.print_flush(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 35
+# %% ../nbs/encoder.ipynb 34
 def get_enc_embs_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -1141,7 +1241,7 @@ def get_enc_embs_set_stride_set_batch_size(
     if verbose > 0: ut.print_flush(f"get_enc_embs_set_stride_set_batch_size | embs~{embs.shape} -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 38
+# %% ../nbs/encoder.ipynb 37
 from tqdm.auto import tqdm
 from transformers import get_scheduler
 import evaluate
@@ -1149,7 +1249,7 @@ from torch.nn.modules.loss import _Loss
 from tsai.data.preparation import SlidingWindow
 from .utils import find_dominant_window_sizes_list
 
-# %% ../nbs/encoder.ipynb 39
+# %% ../nbs/encoder.ipynb 38
 def random_windows(
     X           : List [ List [ List [ float ]]], 
     n_windows   : int       = None, 
@@ -1164,7 +1264,7 @@ def random_windows(
     - ceil(percent*len(X)) random windows otherwise
     """
     mssg_ = deepcopy(mssg)
-    mssg_.initial(func_name=f"{mssg.function} | {ut.funcname(1)}")
+    mssg_.initial(func_name=f"{mssg.function} | {ut.funcname()}")
     mssg_.print(f"N windows: {n_windows}")
     if n_windows is None and percent is None:
         windows = torch.from_numpy(X)
@@ -1178,7 +1278,7 @@ def random_windows(
     mssg_.final()
     return windows
 
-# %% ../nbs/encoder.ipynb 40
+# %% ../nbs/encoder.ipynb 39
 def windowed_dataset(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     stride                          : int           = 1,
@@ -1189,41 +1289,43 @@ def windowed_dataset(
     full_dataset                    : bool          = False,
     mssg                            : ut.Mssg       = ut.Mssg()
 ): 
-    mssg = deepcopy(mssg)
-    mssg.level -= 1
-    mssg.initial(ut.funcname(1))
-    mssg.level = -1
-    if mssg.verbose > 0: mssg.print("--> windowed_dataset")
+    mssg_ = deepcopy(mssg)
+    mssg_.level -= 1
+    mssg_.initial(ut.funcname())
     dss = []
     if isinstance(X, list):
-        mssg.print("windowed_dataset | X is a list. Converting to dataFrame")
+        mssg_.print("X is a list. Converting to dataFrame")
         X = np.array(X)
         X = pd.DataFrame(X)        
     if ( isinstance(X,pd.DataFrame) or full_dataset): 
-        mssg.print("windowed_dataset | X is a DataFrame")
+        mssg_.print(f"X is a DataFrame, X~{X.shape} | window_sizes {len(window_sizes) if window_sizes is not None else 0}, n_window_sizes {n_window_sizes}")
         if window_sizes is None or n_window_sizes > len(window_sizes):
-            mssg.print("windowed_dataset | X is a DataFrame | Selecting Fourier's dominant frequences")
+            mssg.print("X is a DataFrame | Selecting Fourier's dominant frequences")
             # Select Fourier's dominant frequences
             window_sizes_ = find_dominant_window_sizes_list(
                 X               = X, 
                 nsizes          = n_window_sizes, 
                 offset          = window_sizes_offset, 
                 min_distance    = windows_min_distance,
-                mssg            = mssg
+                mssg            = mssg_
             )
             window_sizes = window_sizes_ if window_sizes is None else list(set(window_sizes + window_sizes_))[:n_window_sizes]
-            mssg.print(f"windowed dataset | X is a DataFrame | Selecting Fourier's dominant frequences | {window_sizes}")
-        mssg.print(f"windowed dataset | Building the datasets")
+            mssg_.print(f"X is a DataFrame | Window sizes: {len(window_sizes)}")
+        mssg_.print(f"Building the windows")
         for w in window_sizes:
+            mssg_.print(f"w = {w}", verbose_level = mssg_.level+1)
             enc_input, _ = SlidingWindow(window_len = w, stride = stride, get_y=[])(X)
             dss.append(enc_input)
+            mssg_.print(f"w {w} | enc_input~{enc_input.shape} | dss~{len(dss)}",  verbose_level = mssg_.level+1)
     else: 
-        mssg.print("windowed_dataset | X is already windowed")
+        mssg_.print("X is already windowed")
         dss = [X]
+    mssg_.print(f"Number of windows: {len(dss)}")
+    mssg_.final()
     return dss
 
 
-# %% ../nbs/encoder.ipynb 41
+# %% ../nbs/encoder.ipynb 40
 def setup_scheduler(
     dl_train                        : DataLoader,
     lr_scheduler_flag               : bool= False,
@@ -1257,7 +1359,7 @@ def setup_scheduler(
                 )
     return lr_scheduler
 
-# %% ../nbs/encoder.ipynb 42
+# %% ../nbs/encoder.ipynb 41
 def prepare_train_and_eval_dataloaders(
     X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     batch_size          : int,
@@ -1304,10 +1406,10 @@ def prepare_train_and_eval_dataloaders(
         dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
     return dl_eval, dl_train, ds_train
 
-# %% ../nbs/encoder.ipynb 46
+# %% ../nbs/encoder.ipynb 43
 from momentfm.utils.masking import Masking
 
-# %% ../nbs/encoder.ipynb 47
+# %% ../nbs/encoder.ipynb 44
 def fine_tune_moment_compute_loss_check_sizes_(
     batch           : List [ List [ List [ float ] ] ], 
     output, 
@@ -1334,7 +1436,7 @@ def fine_tune_moment_compute_loss_check_sizes_(
     if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss_check_sizes_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return b
 
-# %% ../nbs/encoder.ipynb 48
+# %% ../nbs/encoder.ipynb 45
 def fine_tune_moment_compute_loss(
     batch, 
     output, 
@@ -1372,7 +1474,7 @@ def fine_tune_moment_compute_loss(
     if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return loss
 
-# %% ../nbs/encoder.ipynb 49
+# %% ../nbs/encoder.ipynb 46
 def fine_tune_moment_eval_preprocess(
     predictions : List [ List [ float ]],
     references : List [ List [ float ]],
@@ -1410,7 +1512,7 @@ def fine_tune_moment_eval_preprocess(
         ut.print_flush(f"Eval | After NaN | refs~{references.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return predictions, references
 
-# %% ../nbs/encoder.ipynb 50
+# %% ../nbs/encoder.ipynb 47
 def fine_tune_moment_eval_step_(
     enc_learn : Learner,
     batch,
@@ -1449,7 +1551,7 @@ def fine_tune_moment_eval_step_(
         smape_metric.add_batch(predictions=predictions, references = references)
         return mse_metric, rmse_metric, mae_metric, smape_metric
 
-# %% ../nbs/encoder.ipynb 51
+# %% ../nbs/encoder.ipynb 48
 def fine_tune_moment_eval_(
     enc_learn : Learner,
     dl_eval   : DataLoader,
@@ -1514,7 +1616,7 @@ def fine_tune_moment_eval_(
     enc_learn.train()
     return eval_results
 
-# %% ../nbs/encoder.ipynb 52
+# %% ../nbs/encoder.ipynb 49
 def fine_tune_moment_train_loop_step_(
     enc_learn,
     batch, 
@@ -1633,7 +1735,7 @@ def fine_tune_moment_train_loop_step_(
         #ut.print_flush(f"fine_tune_moment_train_loop_step_ | Enc_learn After compute loss {enc_learn.__class__} | -->")
     return loss, enc_learn
 
-# %% ../nbs/encoder.ipynb 53
+# %% ../nbs/encoder.ipynb 50
 def fine_tune_moment_train_(
     enc_learn                       : Learner, 
     dl_train                        : DataLoader,
@@ -1732,7 +1834,7 @@ def fine_tune_moment_train_(
         ut.print_flush(f"fine_tune_moment_train | -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return losses, enc_learn
 
-# %% ../nbs/encoder.ipynb 54
+# %% ../nbs/encoder.ipynb 51
 def fine_tune_moment_single_(
     self                : Encoder,
     eval_pre            : bool = False,
@@ -1843,24 +1945,25 @@ def fine_tune_moment_single_(
                     eval_stats_pre  = eval_results_pre,
                     eval_stats_post = eval_results_post,
                     # Function name
-                    func_name       = ut.funcname(1)
+                    func_name       = ut.funcname()
                 )
     self.end()
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 
 Encoder.fine_tune_moment_single_ = fine_tune_moment_single_
 
-# %% ../nbs/encoder.ipynb 55
+# %% ../nbs/encoder.ipynb 52
 def fine_tune_moment_(
-        self        : Encoder, 
-        eval_pre    : bool  = False, 
-        eval_post   : bool  = False, 
-        shot        : bool  = False,
-        time_flag   : bool  = False,
-        use_moment_masks : bool = False
+        self                : Encoder, 
+        eval_pre            : bool = False, 
+        eval_post           : bool = False, 
+        shot                : bool = False,
+        time_flag           : bool = None,
+        use_moment_masks    : bool = None
 ):   
-    self.mssg.initial()
-    if self.time_flag is None: self.time_flag = time_flag
+    self.mssg.initial(ut.funcname())
+    self.time_flag = self.time_flag if time_flag is None else time_flag
+    self.use_moment_masks = self.use_moment_masks if use_moment_masks is None else use_moment_masks
     # Return values
     lossess             = []
     eval_results_pre    = []
@@ -1869,16 +1972,19 @@ def fine_tune_moment_(
     t_shot              = 0
     t_evals             = []
     t_eval              = 0
-    self.print(f"Processing {self.input.size} datasets | First length : {self.input.shape}", verbose = 0)
+    if self.input.size is None:
+        self.mssg.print(f"Windows: {len(self.input._data)}")
+        raise ValueError(f"Invalid number of windows: {self.input.size}")
+    self.mssg.print(f"Processing {self.input.size} datasets | First length : {self.input.shape}")
     # Build optimizer
     if self.optim.optimizer is None: 
-        self.mssg.print(f"fine_tune_moment_ | Setting up optimizer as AdamW")
-        self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.optim.lr)
+        self.mssg.print(f"Setting up optimizer as AdamW")
+        self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.optim.lr.lr)
     # Compute model for each window in the windowed dataset
-    for i in range(self.input.data):
-        self.print(f"fine_tune_moment_ | Processing wlen {self.input.shape[2]}")
+    for i in range(self.input.size):
+        self.mssg.print(f"Processing wlen {self.input.shape[2]}")
         ( 
-            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, enc_learn
+            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model
         ) =  self.fine_tune_moment_single_(eval_pre, eval_post, shot, i, use_moment_masks)
         lossess.append(losses)
         if (eval_pre): eval_results_pre = eval_results_pre_
@@ -1889,12 +1995,12 @@ def fine_tune_moment_(
         eval_pre = False
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
-    self.mssg.final()
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
+    self.mssg.final(ut.funcname())
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
 
-# %% ../nbs/encoder.ipynb 57
+# %% ../nbs/encoder.ipynb 54
 def fine_tune_mvp_compute_loss(
     enc : Encoder,
     batch, 
@@ -1908,7 +2014,7 @@ def fine_tune_mvp_compute_loss(
     #if verbose > 0: ut.print_flush("fine_tune_mvp_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return loss
 
-# %% ../nbs/encoder.ipynb 58
+# %% ../nbs/encoder.ipynb 55
 def fine_tune_mvp_eval_step_(
     enc        : Encoder,
     batch,
@@ -1925,12 +2031,12 @@ def fine_tune_mvp_eval_step_(
     #if verbose > 0: ut.print_flush("fine_tune_mvp_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return mse_metric, rmse_metric, mae_metric, smape_metric
 
-# %% ../nbs/encoder.ipynb 59
+# %% ../nbs/encoder.ipynb 56
 def fine_tune_mvp_train_loop_step_(
     enc  : Encoder
 ):
     mssg = deepcopy(enc.mssg)
-    func = ut.funcname(1)
+    func = ut.funcname()
     mssg.initial(func)
     #if verbose > 0: ut.print_flush("--> fine_tune_mvp_train_loop_step_", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     error = f"{func} | Not yet implemented"
@@ -1938,7 +2044,7 @@ def fine_tune_mvp_train_loop_step_(
     raise NotImplementedError(error)
     #if verbose > 0: ut.print_flush("fine_tune_mvp_train_loop_step_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
 
-# %% ../nbs/encoder.ipynb 60
+# %% ../nbs/encoder.ipynb 57
 def fine_tune_mvp_train_(
     enc : Encoder
 ):
@@ -1950,7 +2056,7 @@ def fine_tune_mvp_train_(
     raise NotImplementedError(error)
     #self.print("fine_tune_mvp_train_ -->")
 
-# %% ../nbs/encoder.ipynb 61
+# %% ../nbs/encoder.ipynb 58
 def fine_tune_mvp_single_(
     enc         : Encoder,
     eval_pre    : bool  = False,
@@ -1966,7 +2072,7 @@ def fine_tune_mvp_single_(
     mssg.print(error)
     raise NotImplementedError(error)
 
-# %% ../nbs/encoder.ipynb 62
+# %% ../nbs/encoder.ipynb 59
 def fine_tune_mvp_(
     self                            : Encoder,
     shot                            : bool          = True,
@@ -1990,6 +2096,7 @@ def fine_tune_mvp_(
         self.optim.optimizer = torch.optim.AdamW(enc_learn.parameters(), lr=lr)
     
     for enc_input in dss:
+        mssg.print(f"fine_tune_moment_ | Processing wlen {enc_input.shape}", print_both = True)
         mssg.print(f"fine_tune_moment_ | Processing wlen {enc_input.shape[2]}")
         ( 
             losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, enc_learn
@@ -2015,9 +2122,9 @@ def fine_tune_mvp_(
         eval_pre = False
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
 
-# %% ../nbs/encoder.ipynb 65
+# %% ../nbs/encoder.ipynb 62
 def fine_tune__old(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     enc_learn                       : Learner, 
@@ -2095,7 +2202,7 @@ def fine_tune__old(
     )
     enc = Encoder(
         model           = enc_learn,
-        enc_input       = enc_input,
+        input           = enc_input,
         mssg            = mssg,
         cpu             = cpu,
         to_numpy        = to_numpy, 
@@ -2105,126 +2212,271 @@ def fine_tune__old(
         mask_future     = mask_future,
         mask_sync       = mask_sync,
         eval_stats_pre  = eval_results_pre,
-        eval_stats_post = eval_results_post,
-        use_moment_masks= use_moment_masks
+        eval_stats_post = eval_results_post
     )
     enc.set_fine_tune_()
     if enc.fine_tune_ == fine_tune_moment_:
         ( 
             lossess, eval_results_pre, eval_results_post, 
-            t_shots, t_shot, t_evals, t_eval, enc_learn 
+            t_shots, t_shot, t_evals, t_eval, enc.model 
         ) = enc.fine_tune_(
             eval_pre, eval_post, shot, time_flag, use_moment_masks
         )
     else:
         ( 
             lossess, eval_results_pre, eval_results_post, 
-            t_shots, t_shot, t_evals, t_eval, enc_learn 
+            t_shots, t_shot, t_evals, t_eval, enc.model 
         ) = enc.fine_tune_(eval_pre, eval_post, shot, time_flag)
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc.model
 
-# %% ../nbs/encoder.ipynb 66
-def fine_tune(
-    X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
-    enc_learn                       : Learner, 
-    stride                          : int           = 1,      
-    batch_size                      : int           = 32,
-    cpu                             : bool          = False,
-    to_numpy                        : bool          = True, 
+# %% ../nbs/encoder.ipynb 63
+def _get_mssg(
+    mssg : ut.Mssg = None,
     verbose                         : int           = 0, 
-    time_flag                       : bool          = False,
-    n_windows                       : int           = None,
-    n_windows_percent               : float         = None,
-    validation_percent              : float         = 0.2, 
-    training_percent                : float         = 0.2,
-    window_mask_percent             : float         = 0.3,
-    num_epochs                      : int           = 3,
-    shot                            : bool          = True,
-    eval_pre                        : bool          = True,
-    eval_post                       : bool          = True,
+    print_to_path                   : bool          = False,
+    print_path                      : str           = "~/data/logs/logs.txt",
+    print_mode                      : str           = 'a',
+):
+    mssg,_ = ut._check_value(mssg, None, "mssg", ut.Mssg)
+    if mssg is None:
+        mssg = ut.Mssg(
+            to_path = print_to_path,
+            path    = print_path,
+            mode    = print_mode,
+            verbose = verbose
+        ) 
+    return mssg
+
+def _get_enc_input(
+    mssg                            : ut.Mssg,
+    # Encoder Input
+    ## -- Using all parammeters
+    X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
+    stride                          : Optional [ int ]          = None,
+    batch_size                      : Optional [ int ]          = None,
+    n_windows                       : Optional [ int ]          = None,
+    n_windows_percent               : Optional [ float ]        = None,
+    validation_percent              : Optional [ float ]        = None, 
+    training_percent                : Optional [ float ]        = None,
+    window_mask_percent             : Optional [ float ]        = None,
+    window_sizes                    : Optional [ List [int] ]   = None,
+    n_window_sizes                  : Optional [ int ]          = 1,
+    window_sizes_offset             : Optional [ int ]          = 0.05,
+    windows_min_distance            : Optional [ int ]          = 1,
+    full_dataset                    : Optional [ bool ]         = False,
+    ## -- Using Type
+    enc_input                       : Optional [ EncoderInput ] = None
+): 
+    mssg.initial_(func_name = ut.funcname())
+    enc_input, _ = ut._check_value(enc_input, None, "enc_input", EncoderInput, True, False, False)
+    mssg.print(f"is none enc_input? {enc_input is None}")
+    if enc_input is None:
+        mssg.print(f"About to get the windows")
+        enc_input = windowed_dataset(
+            X                       = X,
+            stride                  = stride,
+            window_sizes            = window_sizes,
+            n_window_sizes          = n_window_sizes,
+            window_sizes_offset     = window_sizes_offset,
+            windows_min_distance    = windows_min_distance,
+            full_dataset            = full_dataset,
+            mssg                    = mssg
+        )
+        mssg.print(f"About to get the encoder input | windows~{len(enc_input)}")
+        enc_input = EncoderInput(
+            _data               = enc_input, 
+            stride              = stride,
+            batch_size          = batch_size,
+            n_windows           = n_windows,
+            n_windows_percent   = n_windows_percent,
+            validation_percent  = validation_percent,
+            training_percent    = training_percent,
+            window_mask_percent = window_mask_percent,
+        )
+        mssg.print(f"Enc input obtained | enc_input~{enc_input.shape}")
+    mssg.final()
+    return enc_input
+
+def _get_optimizer(
+    mssg                            : ut.Mssg,
+    optim                           : EncoderOptimizer = None,
     criterion                       : _Loss         = torch.nn.MSELoss, 
     optimizer                                       = None, 
     lr                              : float         = 5e-5, #1e-4, 
     lr_scheduler_flag               : bool          = False, 
     lr_scheduler_name               : str           = "linear",
-    lr_scheduler_num_warmup_steps   : int           = None,
-    window_sizes                    : List [int]    = None,
-    n_window_sizes                  : int           = 1,
-    window_sizes_offset             : int           = 0.05,
-    windows_min_distance            : int           = 1,
-    full_dataset                    : bool          = False,
-    #- Printing options for debugging
-    print_to_path                   : bool          = False,
-    print_path                      : str           = "~/data/logs/logs.txt",
-    print_mode                      : str           = 'a',
-    #- Only for moment
-    use_moment_masks                : bool          = False,
+    lr_scheduler_num_warmup_steps   : int           = None
+):
+    mssg.initial(ut.funcname())
+    optim,_ = ut._check_value(optim, None, "optim", EncoderOptimizer, True)
+    if optim is None:
+        optim = EncoderOptimizer(
+            criterion   = criterion,
+            optimizer   = optimizer,
+            lr          = LRScheduler (
+                            lr              = lr,
+                            flag            = lr_scheduler_flag,
+                            name            = lr_scheduler_name,
+                            num_warmup_steps= lr_scheduler_num_warmup_steps
+            ),
+        )
+    mssg.final()
+    return optim
+
+def _get_encoder(
+    ## -- Using all parammeters
+    X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
+    stride                          : Optional [ int ]          = None,
+    batch_size                      : Optional [ int ]          = None,
+    n_windows                       : Optional [ int ]          = None,
+    n_windows_percent               : Optional [ float ]        = None,
+    validation_percent              : Optional [ float ]        = None, 
+    training_percent                : Optional [ float ]        = None,
+    window_mask_percent             : Optional [ float ]        = None,
+    window_sizes                    : Optional [ List [int] ]   = None,
+    n_window_sizes                  : Optional [ int ]          = 1,
+    window_sizes_offset             : Optional [ int ]          = 0.05,
+    windows_min_distance            : Optional [ int ]          = 1,
+    full_dataset                    : Optional [ bool ]         = False,
+    ##-- Given by Type 
+    enc_input                       : Optional [ EncoderInput ] = None,
+    # Optimizer
+    optim                           : Optional [ EncoderOptimizer ] = None,
+    ## -- Using all parameters
+    criterion                       : Optional [ _Loss ]            = torch.nn.MSELoss, 
+    optimizer                                                       = None, 
+    lr                              : Optional [ float ]            = 5e-5, #1e-4, 
+    lr_scheduler_flag               : Optional [ bool ]             = False, 
+    lr_scheduler_name               : Optional [ str ]              = "linear",
+    lr_scheduler_num_warmup_steps   : Optional [ int ]              = None,
+    # Mssg
+    ## -- Using all parameters
+    verbose                         : Optional[ int ]               = 0, 
+    print_to_path                   : Optional[ bool ]              = False,
+    print_path                      : Optional[ str ]               = "~/data/logs/logs.txt",
+    print_mode                      : Optional[ str ]               = 'a',
+    ## -- Using Type
+    mssg                            : Optional [ ut.Mssg ]          = None,
+    ## Encoder 
+    enc                             : Optional [ Encoder ]          = None,
+    ## -- Using all parameters
+    num_epochs                      : Optional [ int]               = 3,
+    enc_learn                       : Optional [Learner]            = None, 
+    cpu                             : Optional [ bool ]             = False,
+    to_numpy                        : Optional [ bool ]             = True,
     #- Masking options
-    mask_stateful                   : bool          = False,
-    mask_future                     : bool          = False,
-    mask_sync                       : bool          = False
+    mask_stateful                   : Optional [ bool ]             = False,
+    mask_future                     : Optional [ bool ]             = False,
+    mask_sync                       : Optional [ bool ]             = False
+):
+    enc,_ = ut._check_value(enc, None, "enc", Encoder, True)
+    
+    if enc is None: 
+        mssg = _get_mssg(mssg, verbose, print_to_path, print_path, print_mode)
+        mssg.initial(ut.funcname())
+        mssg.print("About to exec _get_enc_input")
+        enc_input = _get_enc_input(mssg, X, stride, batch_size, n_windows, n_windows_percent, validation_percent, training_percent, window_mask_percent, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, enc_input)
+        mssg.print(f"enc_input~{enc_input.shape}")
+        mssg.print("About to exec _get_optimizer")
+        optim = _get_optimizer(mssg, optim, criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name, lr_scheduler_num_warmup_steps)
+        enc = Encoder(
+            model           = enc_learn,
+            input           = enc_input,
+            mssg            = mssg,
+            cpu             = cpu,
+            to_numpy        = to_numpy, 
+            num_epochs      = num_epochs, 
+            optim           = optim,
+            mask_stateful   = mask_stateful,
+            mask_future     = mask_future,
+            mask_sync       = mask_sync,
+            eval_stats_pre  = None,
+            eval_stats_post = None
+        )
+    enc.mssg.final(ut.funcname())
+    return enc
+
+# %% ../nbs/encoder.ipynb 64
+def fine_tune(
+    # Optional parameters
+    ## Encoder Input
+    ## -- Using all parammeters
+    X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
+    stride                          : Optional [ int ]          = None,
+    batch_size                      : Optional [ int ]          = None,
+    n_windows                       : Optional [ int ]          = None,
+    n_windows_percent               : Optional [ float ]        = None,
+    validation_percent              : Optional [ float ]        = None, 
+    training_percent                : Optional [ float ]        = None,
+    window_mask_percent             : Optional [ float ]        = None,
+    window_sizes                    : Optional [ List [int] ]   = None,
+    n_window_sizes                  : Optional [ int ]          = 1,
+    window_sizes_offset             : Optional [ int ]          = 0.05,
+    windows_min_distance            : Optional [ int ]          = 1,
+    full_dataset                    : Optional [ bool ]         = False,
+    ##-- Given by Type 
+    enc_input                       : Optional [ EncoderInput ] = None,
+    # Optimizer
+    optim                           : Optional [ EncoderOptimizer ] = None,
+    ## -- Using all parameters
+    criterion                       : Optional [ _Loss ]            = torch.nn.MSELoss, 
+    optimizer                                                       = None, 
+    lr                              : Optional [ float ]            = 5e-5, #1e-4, 
+    lr_scheduler_flag               : Optional [ bool ]             = False, 
+    lr_scheduler_name               : Optional [ str ]              = "linear",
+    lr_scheduler_num_warmup_steps   : Optional [ int ]              = None,
+    # Mssg
+    ## -- Using all parameters
+    verbose                         : Optional[ int ]               = 0, 
+    print_to_path                   : Optional[ bool ]              = False,
+    print_path                      : Optional[ str ]               = "~/data/logs/logs.txt",
+    print_mode                      : Optional[ str ]               = 'a',
+    ## -- Using Type
+    mssg                            : Optional [ ut.Mssg ]          = None,
+    
+    ## Encoder 
+    enc                             : Optional [ Encoder ]          = None,
+    ## -- Using all parameters
+    num_epochs                      : Optional [ int]               = 3,
+    enc_learn                       : Optional [Learner]            = None, 
+    cpu                             : Optional [ bool ]             = False,
+    to_numpy                        : Optional [ bool ]             = True,
+    #- Only for moment
+    use_moment_masks                : Optional [ bool ]             = False,
+    #- Masking options
+    mask_stateful                   : Optional [ bool ]             = False,
+    mask_future                     : Optional [ bool ]             = False,
+    mask_sync                       : Optional [ bool ]             = False,
+    # Non-Optional parameters
+    time_flag                       : bool          = False,
+    shot                            : bool          = True, 
+    eval_pre                        : bool          = True, 
+    eval_post                       : bool          = True
 ): 
-    mssg = ut.Mssg(
-            to_path=print_to_path,
-            path=print_path,
-            mode=print_mode,
-            verbose=verbose
-        ) 
-    mssg.initial()
-    
+    enc = _get_encoder(
+    X=X,stride=stride,batch_size=batch_size,
+    n_windows=n_windows,n_windows_percent=n_windows_percent,validation_percent=validation_percent,training_percent=training_percent,
+    window_mask_percent=window_mask_percent,window_sizes=window_sizes,n_window_sizes=n_window_sizes,window_sizes_offset=window_sizes_offset,windows_min_distance=windows_min_distance,full_dataset=full_dataset,enc_input=enc_input,optim=optim,criterion=criterion,optimizer=optimizer,lr=lr,lr_scheduler_flag=lr_scheduler_flag,lr_scheduler_name=lr_scheduler_name,lr_scheduler_num_warmup_steps=lr_scheduler_num_warmup_steps,
+    verbose=verbose,print_to_path=print_to_path,print_path=print_path,print_mode=print_mode,
+    mssg=mssg,
+    enc=enc,
+    num_epochs=num_epochs,enc_learn=enc_learn,cpu=cpu,to_numpy=to_numpy,mask_stateful=mask_stateful,mask_future=mask_future
+)
+    enc.mssg.initial("fine_tune")
+    enc.mssg.print(f"Original enc_learn { enc_learn }  | Final model { enc.model }")
     lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval = ( None, None, None, None, None, None, None )
-    
-    enc_input = windowed_dataset(
-        X, stride, window_sizes, 
-        n_window_sizes, window_sizes_offset, 
-        windows_min_distance, full_dataset, 
-        mssg
-    )
-    enc_input = EncoderInput(
-        _data               = enc_input, 
-        stride              = stride,
-        batch_size          = batch_size,
-        n_windows           = n_windows,
-        n_windows_percent   = n_windows_percent,
-        validation_percent  = validation_percent,
-        training_percent    = training_percent,
-        window_mask_percent = window_mask_percent,
-    )
-    optim = EncoderOptimizer(
-        criterion   = criterion,
-        optimizer   = optimizer,
-        lr          = LRScheduler (
-                        flag            = lr_scheduler_flag,
-                        name            = lr_scheduler_name,
-                        num_warmup_steps= lr_scheduler_num_warmup_steps
-        ),
-    )
-    enc = Encoder(
-        model           = enc_learn,
-        enc_input       = enc_input,
-        mssg            = mssg,
-        cpu             = cpu,
-        to_numpy        = to_numpy, 
-        num_epochs      = num_epochs, 
-        optim           = optim,
-        mask_stateful   = mask_stateful,
-        mask_future     = mask_future,
-        mask_sync       = mask_sync,
-        eval_stats_pre  = eval_results_pre,
-        eval_stats_post = eval_results_post,
-        use_moment_masks= use_moment_masks
-    )
     enc.set_fine_tune_()
     if enc.fine_tune_ == fine_tune_moment_:
         ( 
             lossess, eval_results_pre, eval_results_post, 
-            t_shots, t_shot, t_evals, t_eval, enc_learn 
+            t_shots, t_shot, t_evals, t_eval, enc.model 
         ) = enc.fine_tune_(
             eval_pre, eval_post, shot, time_flag, use_moment_masks
         )
     else:
         ( 
             lossess, eval_results_pre, eval_results_post, 
-            t_shots, t_shot, t_evals, t_eval, enc_learn 
+            t_shots, t_shot, t_evals, t_eval, enc.model 
         ) = enc.fine_tune_(eval_pre, eval_post, shot, time_flag)
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc_learn
+    enc.mssg.final()
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc.model

@@ -1121,7 +1121,8 @@ def _check_value(
     percent     : bool  = False,
     mssg        : Mssg  = Mssg()
 ):
-    mssg.initial(f"{funcname(2)} | {funcname(1)} | {funcname()} | {name}")
+    level = mssg.level
+    mssg.initial(f"{funcname(2)} | {funcname(1)} | {funcname()} | {name}", verbose_level = mssg.level+1)
     res = default
     valid = True
     if value is None and not allow_none:
@@ -1131,7 +1132,7 @@ def _check_value(
             positive = True
             valid_types = [ int, float]
         valid_types = valid_types if isinstance(valid_types, list) else [valid_types]
-        mssg.print(f"Checking if {value}'s type is one of {valid_types}")
+        mssg.print(f"Checking if {value}'s type is one of {valid_types}", verbose_level = mssg.level + 5)
         if not isinstance(value, tuple(valid_types)):
             valid_type_names = ", ".join(t.__name__ for t in valid_types)
             warnings.warn(
@@ -1139,7 +1140,7 @@ def _check_value(
             )
             valid = False
         if valid and isinstance(value, (float, int)) and not math.isfinite(value):
-            mssg.print(f"Value {value} is not finite")
+            mssg.print(f"Value {value} is not finite", verbose_level = mssg.level + 5)
             warnings.warn(f"'{name}' is not finite ({value}). Using default: {default}")
             valid = False
     
@@ -1151,8 +1152,9 @@ def _check_value(
             warnings.warn(f"'{name}' must be lower or equal than 1 ({value}). Using default: {default}")
             valid = False
     if valid: res = value
-    mssg.print(f"valid? {valid}")
-    mssg.final()
+    mssg.print(f"valid? {valid}", verbose_level = mssg.level + 1)
+    mssg.final(verbose_level = mssg.level+1)
+    mssg.level = level
     return res, valid
 
 # %% ../nbs/utils.ipynb 102

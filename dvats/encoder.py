@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['ENCODER_EMBS_MODULE_NAME', 'EncoderInput', 'LRScheduler', 'EncoderOptimizer', 'Encoder', 'set_fine_tune_',
-           'show_eval_stats_', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_to_cpu_', 'get_acts', 'get_acts_moment',
+           'show_eval_stats', 'DCAE_torch', 'kwargs_to_gpu_', 'kwargs_to_cpu_', 'get_acts', 'get_acts_moment',
            'sure_eval_moment', 'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP',
            'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
            'watch_gpu', 'get_enc_embs_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size',
@@ -79,7 +79,7 @@ class EncoderInput:
         ###if self._data is None: 
         ###    self._data = ut._validate_nested_list(self._data, None, "_data", [float, int], 3, False, False, False)
         self.stride,_               = ut._check_value(self.stride, 1, "stride", int, positive = True)
-        self.batch_size,_           = ut._check_value(self.batch_size, 32, "batch_size", int)
+        self.batch_size,_           = ut._check_value(self.batch_size, 32, "batch_size", int,  )
         self.validation_percent,_   = ut._check_value(self.validation_percent, 0.2, "validation_percent", percent = True)
         self.training_percent,_     = ut._check_value(self.training_percent, 0.2, "training_percent", percent = True)
         self.window_mask_percent,_  = ut._check_value(self.window_mask_percent, 0.3, "training_percent", percent = True)
@@ -111,7 +111,6 @@ class EncoderInput:
         elif self._update_shape: 
             self._shape = 0,
             self._update_shape = True
-        print(f"{ut.funcname(2)} | Checking shape {self._shape}")
         return self._shape
 
     @property
@@ -197,24 +196,24 @@ class Encoder():
     time_flag           : bool              = False
     
     def __post_init__(self):
-        self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False)
+        self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
         self.model              = self.set_model_(self.model)
         ## TODO: check how to do this check
         #self.input          , _ = ut._check_value(self.input, EncoderInput(), "input", EncoderInput, True)
-        self.mssg           , _ = ut._check_value(self.mssg, ut.Mssg(), "mssg", ut.Mssg)
-        self.cpu            , _ = ut._check_value(self.cpu, False, "cpu", bool)
-        self.to_numpy       , _ = ut._check_value(self.to_numpy, False, "to_numpy", bool)
-        self.num_epochs     , _ = ut._check_value(self.num_epochs, 1, "num_epochs", int, False, True)
+        self.mssg           , _ = ut._check_value(self.mssg, ut.Mssg(), "mssg", ut.Mssg, mssg = self.mssg)
+        self.cpu            , _ = ut._check_value(self.cpu, False, "cpu", bool, mssg = self.mssg)
+        self.to_numpy       , _ = ut._check_value(self.to_numpy, False, "to_numpy", bool,  mssg = self.mssg)
+        self.num_epochs     , _ = ut._check_value(self.num_epochs, 1, "num_epochs", int, False, True,  mssg = self.mssg)
         ## TODO: check how to do this check
         #self.optim          , _ = ut._check_value(self.optim, EncoderOptimizer(), "optim", EncoderOptimizer)
-        self.mask_stateful  , _ = ut._check_value(self.mask_stateful, False, "mask_statefull", bool)
-        self.mask_future    , _ = ut._check_value(self.mask_future, False, "mask_future", bool)
-        self.mask_sync      , _ = ut._check_value(self.mask_sync, False, "mask_sync", bool)
-        self.eval_stats_pre , _ = ut._check_value(self.eval_stats_pre, None, "eval_stats_pre", AttrDict, True)
-        self.eval_stats_post, _ = ut._check_value(self.eval_stats_post, None, "eval_stats_post", AttrDict, True)
-        self.use_moment_masks, _ = ut._check_value(self.use_moment_masks, False, "use_moment_masks", bool)
+        self.mask_stateful  , _ = ut._check_value(self.mask_stateful, False, "mask_statefull", bool,  mssg = self.mssg)
+        self.mask_future    , _ = ut._check_value(self.mask_future, False, "mask_future", bool,  mssg = self.mssg)
+        self.mask_sync      , _ = ut._check_value(self.mask_sync, False, "mask_sync", bool,  mssg = self.mssg)
+        self.eval_stats_pre , _ = ut._check_value(self.eval_stats_pre, None, "eval_stats_pre", AttrDict, True,  mssg = self.mssg)
+        self.eval_stats_post, _ = ut._check_value(self.eval_stats_post, None, "eval_stats_post", AttrDict, True,  mssg = self.mssg)
+        self.use_moment_masks, _= ut._check_value(self.use_moment_masks, False, "use_moment_masks", bool,  mssg = self.mssg)
         self.model_class        = None # Must be computed through get_model_class to avoid errors
-        self.time_flag      , _ = ut._check_value(self.time_flag, False, "time_flag", bool)
+        self.time_flag      , _ = ut._check_value(self.time_flag, False, "time_flag", bool,  mssg = self.mssg)
 
     def print(self, **kwargs):
         self.mssg.print(**kwargs)
@@ -245,7 +244,7 @@ class Encoder():
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def set_fine_tune_(self):
         raise NotImplementedError("Encoder.set_fine_tune_ not yet implemented")
-    def show_eval_stats_(self):
+    def show_eval_stats(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
 
 # %% ../nbs/encoder.ipynb 11
@@ -271,7 +270,7 @@ def set_fine_tune_(
 Encoder.set_fine_tune_ = set_fine_tune_
 
 # %% ../nbs/encoder.ipynb 12
-def show_eval_stats_(
+def show_eval_stats(
     self            : Encoder, 
     print_to_path   : bool      = None, 
     print_path      : str       = None, 
@@ -282,14 +281,14 @@ def show_eval_stats_(
     eval_stats_post : AttrDict = None,
     func_name       : str = ""
 ):
-    self.print(f"{func_name} | Evaluation summary")
+    self.mssg.print(f"{func_name} | Evaluation summary")
     self.eval_stats_pre = self.eval_stats_pre if eval_stats_pre is None else eval_stats_pre
     self.eval_stats_post = self.eval_stats_post if eval_stats_post is None else eval_stats_post
     self.mssg.to_path = self.mssg.to_path if print_to_path is None else print_to_path
     self.mssg.path = self.mssg.path if print_path is None else print_path
     self.mssg.mode = self.mssg.mode if print_mode is None else print_mode        
     if (eval_pre):
-        self.print(f"Eval pre: ")
+        self.mssg.print(f"Eval pre: ")
         show_attrdict(
             self.eval_stats_pre,
             print_to_path   = self.mssg.to_path,
@@ -297,14 +296,14 @@ def show_eval_stats_(
             print_mode      = self.mssg.mode
         )
     if eval_post:
-        self.print(f"Eval post: ")
+        self.mssg.print(f"Eval post: ")
         show_attrdict(
             self.eval_stats_post,
             print_to_path   = self.mssg.to_path,
             print_path      = self.mssg.path,
             print_mode      = self.mssg.mode 
         )
-Encoder.show_eval_stats_ = show_eval_stats_
+Encoder.show_eval_stats = show_eval_stats
 
 # %% ../nbs/encoder.ipynb 14
 class DCAE_torch(Module):
@@ -1840,11 +1839,10 @@ def fine_tune_moment_single_(
     eval_pre            : bool = False,
     eval_post           : bool = False,
     shot                : bool = True,
-    i                   : int  = 0,
+    sample_id           : int  = 0,
     use_moment_masks    : bool = False
 ):
-    mssg = deepcopy(self.mssg)
-    mssg.initial("fine_tune_moment_single")
+    self.mssg.initial_("fine_tune_moment_single")
     t_shot              = 0
     t_eval_1            = 0
     t_eval_2            = 0
@@ -1852,11 +1850,11 @@ def fine_tune_moment_single_(
     eval_results_pre    = ""
     eval_results_post   = ""
 
-    if self.time_flag: timer = ut.Time(mssg = mssg)
-    self.print("fine_tune_moment_single | Prepare the dataset")
+    if self.time_flag: timer = ut.Time(mssg = self.mssg)
+    self.mssg.print("fine_tune_moment_single | Prepare the dataset")
     # Prepare the dataset
     dl_eval, dl_train, ds_train = prepare_train_and_eval_dataloaders(
-        X                   = self.input.data, 
+        X                   = self.input.data[sample_id], 
         batch_size          = self.input.batch_size, 
         n_windows           = self.input.n_windows, 
         n_windows_percent   = self.input.n_windows_percent,
@@ -1868,7 +1866,7 @@ def fine_tune_moment_single_(
         mssg                = deepcopy(self.mssg)
     )
     if eval_pre:
-        self.print(f"fine_tune_moment_single | Eval Pre | wlen {self.input[i].shape[2]}")
+        self.mssg.print(f"fine_tune_moment_single | Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
         if self.time_flag: timer.start()
         eval_results_pre    = fine_tune_moment_eval_(
             enc_learn       = self.model,
@@ -1885,7 +1883,7 @@ def fine_tune_moment_single_(
             t_eval_1 = timer.duration()
             timer.show(verbose = self.mssg.verbose)
     if shot:
-        self.print(f"fine_tune_moment_single | Train | wlen {self.input.data[i].shape[2]}")
+        self.mssg.print(f"fine_tune_moment_single | Train | wlen {self.input.data[sample_id].shape[2]}")
         try:
             if self.time_flag: timer.start()
             losses, self.model                  = fine_tune_moment_train_(
@@ -1897,10 +1895,10 @@ def fine_tune_moment_single_(
                 num_epochs                      = self.num_epochs,
                 criterion                       = self.optim.criterion, 
                 optimizer                       = self.optim.optimizer, 
-                lr                              = self.optim.lr, 
-                lr_scheduler_flag               = self.optim.lr_scheduler_flag, 
-                lr_scheduler_name               = self.optim.lr_scheduler_name,
-                lr_scheduler_num_warmup_steps   = self.optim.lr_scheduler_num_warmup_steps,
+                lr                              = self.optim.lr.lr      if isinstance(self.optim.lr, LRScheduler) else self.optim.lr, 
+                lr_scheduler_flag               = self.optim.lr.flag    if isinstance(self.optim.lr, LRScheduler) else False, 
+                lr_scheduler_name               = self.optim.lr.name    if isinstance(self.optim.lr, LRScheduler) else False,
+                lr_scheduler_num_warmup_steps   = self.optim.lr.num_warmup_steps if isinstance(self.optim.lr, LRScheduler) else 0,
                 cpu                             = self.cpu,
                 verbose                         = self.mssg.verbose-1,
                 print_to_path                   = self.mssg.to_path, 
@@ -1916,10 +1914,10 @@ def fine_tune_moment_single_(
                 t_shot = timer.duration()
                 timer.show()
         except Exception as e:
-            self.print(f"fine_tune_moment_single | Train | Window {X.shape[2]} not valid | {e}")
+            self.mssg.print(f"fine_tune_moment_single | Train | Window {self.input.shape[2]} not valid | {e}")
             traceback.print_exc()
     if eval_post:    
-        self.print(f"fine_tune_moment_single | Eval Post | wlen {X.shape[2]}")
+        self.mssg.print(f"fine_tune_moment_single | Eval Post | wlen {self.input.shape[2]}")
         if self.time_flag: timer.start()
         eval_results_post = fine_tune_moment_eval_(
             enc_learn       = self.model,
@@ -1928,7 +1926,7 @@ def fine_tune_moment_single_(
             cpu             = self.cpu,
             verbose         = self.mssg.verbose-1,
             print_to_path   = self.mssg.to_path, 
-            print_path      = self.enc.mssg.path, 
+            print_path      = self.mssg.path, 
             print_mode      = 'a'
         )
         if self.time_flag:
@@ -1947,7 +1945,7 @@ def fine_tune_moment_single_(
                     # Function name
                     func_name       = ut.funcname()
                 )
-    self.end()
+    self.mssg.final(ut.funcname())
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 
 Encoder.fine_tune_moment_single_ = fine_tune_moment_single_

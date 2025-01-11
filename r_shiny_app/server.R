@@ -1158,9 +1158,9 @@ selected_points_2d <- reactive({
       )%>%
       layout(
         scene = list(
-          xaxis = list(title = "", showticklabels = FALSE, zeroline = FALSE, showgrid = FALSE),
-          yaxis = list(title = "", showticklabels = FALSE, zeroline = FALSE, showgrid = FALSE),
-          zaxis = list(title = "", showticklabels = FALSE, zeroline = FALSE, showgrid = FALSE)
+          xaxis = list(title = "", showticklabels = FALSE, zeroline = FALSE),
+          yaxis = list(title = "", showticklabels = FALSE, zeroline = FALSE),
+          zaxis = list(title = "", showticklabels = FALSE, zeroline = FALSE)
         )
       )
       

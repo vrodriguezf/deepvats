@@ -1052,11 +1052,11 @@ selected_points_2d <- reactive({
       scale_colour_manual(name = "clusters", values = req(update_palette())) +
       geom_point(shape = 21, alpha = config_style$point_alpha, size = config_style$point_size) + 
       scale_shape(solid = FALSE) +
-      guides() + 
+      #guides() + 
       scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA")) +
       coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE) +
       theme_void() + 
-      theme(legend.position = "none")
+      theme(legend.position = "none", panel.grid = element_blank())
     
     if (input$show_lines) {
       plt <- plt + geom_path(linewidth = config_style$path_line_size, colour = "#2F3B65", alpha = config_style$path_alpha)

@@ -167,7 +167,7 @@ class LRScheduler:
 class EncoderOptimizer():
     criterion   : Optional   [ torch.nn.Module ]          = torch.nn.MSELoss
     optimizer   : Optional   [ torch.optim.Optimizer ]    = None
-    lr          : Union      [ float, LRScheduler ]       = 1e-5
+    lr          : Tuple      [ float, LRScheduler ]       = 1e-5
 
     def _post__init__(self):
         self.lr,_ = ut._check_value( self.lr, 1e-5, "lr", [ int, float ], False, True, False )
@@ -191,7 +191,7 @@ class Encoder():
     mask_sync           : bool              = False
     eval_stats_pre      : AttrDict          = None
     eval_stats_post     : AttrDict          = None
-    use_moment_masks    : bool              = False
+    use_moment_masks     : bool              = False
     model_class         : str               = None
     time_flag           : bool              = False
     
@@ -233,17 +233,17 @@ class Encoder():
         return self.model
 
     def fine_tune_moment_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False, use_moment_masks = False): 
-        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+        raise NotImplementedError("Encoder.fine_tune_moment_ not yet implemented")
     def fine_tune_mvp_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False): 
-        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+        raise NotImplementedError("Encoder.fine_tune_moment_ not yet implemented", time_flag = False)
     def fine_tune_moirai_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False): 
-        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+        raise NotImplementedError("Encoder.fine_tune_moment_ not yet implemented")
     def fine_tune_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False):
-        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+        raise NotImplementedError("Encoder.fine_tune_ not yet implemented")
     def fine_tune_moment_single_(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def set_fine_tune_(self):
-        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+        raise NotImplementedError("Encoder.set_fine_tune_ not yet implemented")
     def show_eval_stats(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
 
@@ -282,11 +282,11 @@ def show_eval_stats(
     func_name       : str = ""
 ):
     self.mssg.print(f"{func_name} | Evaluation summary")
-    self.eval_stats_pre     = self.eval_stats_pre   or eval_stats_pre
-    self.eval_stats_post    = self.eval_stats_post  or eval_stats_post
-    self.mssg.to_path       = self.mssg.to_path     or print_to_path
-    self.mssg.path          = self.mssg.path        or print_path
-    self.mssg.mode          = self.mssg.mode        or print_mode       
+    self.eval_stats_pre = self.eval_stats_pre if eval_stats_pre is None else eval_stats_pre
+    self.eval_stats_post = self.eval_stats_post if eval_stats_post is None else eval_stats_post
+    self.mssg.to_path = self.mssg.to_path if print_to_path is None else print_to_path
+    self.mssg.path = self.mssg.path if print_path is None else print_path
+    self.mssg.mode = self.mssg.mode if print_mode is None else print_mode        
     if (eval_pre):
         self.mssg.print(f"Eval pre: ")
         show_attrdict(

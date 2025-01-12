@@ -1055,8 +1055,13 @@ selected_points_2d <- reactive({
       #guides() + 
       scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA")) +
       coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE) +
-      theme_void() + 
-      theme(legend.position = "none", panel.grid = element_blank())
+      theme_minimal() + 
+      theme(legend.position = "none", panel.grid = element_blank(), 
+      plot.background = element_rect(color = 1, size = 1),
+      axis.line = element_blank(),
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      axis.title = element_blank())
     
     if (input$show_lines) {
       plt <- plt + geom_path(linewidth = config_style$path_line_size, colour = "#2F3B65", alpha = config_style$path_alpha)

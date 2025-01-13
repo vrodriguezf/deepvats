@@ -15,7 +15,8 @@ user_preferences:
   wdb:
     user: &wdb_user mi-santamaria
     project_name: &wdb_project deepvats    
-    version: &wdb_version '0'
+    #version: &wdb_version '0' #Moment --- last even number
+    version: &wdb_version 'latest' #mvp
     # 'online' if the model will be tested on future data, or 'offline' if not
     mode: &wdb_mode 'online'
     artifacts_path: &artifacts_path './data/wandb_artifacts'

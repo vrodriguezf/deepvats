@@ -231,7 +231,7 @@ class Encoder():
             except:
                 self.fine_tune_ = None
         return self.model
-
+    #TODO: poner los equivalentes para train, eval, get_embeddings, get_acts, etc.
     def fine_tune_moment_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False, use_moment_masks = False): 
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_mvp_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False): 
@@ -1973,7 +1973,7 @@ def fine_tune_moment_(
     if self.input.size is None:
         self.mssg.print(f"Windows: {len(self.input._data)}")
         raise ValueError(f"Invalid number of windows: {self.input.size}")
-    self.mssg.print(f"Processing {self.input.size} datasets | First length : {self.input.shape}")
+    self.mssg.print(f"Processing {self.input.size} datasets : {self.input.shape}")
     # Build optimizer
     if self.optim.optimizer is None: 
         self.mssg.print(f"Setting up optimizer as AdamW")
@@ -2072,23 +2072,29 @@ def fine_tune_mvp_single_(
 
 # %% ../nbs/encoder.ipynb 59
 def fine_tune_mvp_(
-    self                            : Encoder,
-    shot                            : bool          = True,
-    eval_pre                        : bool          = True,
-    eval_post                       : bool          = True,
-):   
-    mssg = deepcopy(self.mssg)
-    mssg.initial("fine_tune_mvp_")
-    mssg.print("--> fine_tune_moment_")
+    self        : Encoder,
+    eval_pre    : bool = True,
+    eval_post   : bool = True,
+    shot        : bool = False,
+    time_flag   : bool = None
+):
+    self.mssg.initial_("fine_tune_mvp_")
+    self.time_flag = self.time_flag if time_flag is None else time_flag
+    # Return values
     lossess             = []
-    eval_results_pre    = ""
+    eval_results_pre    = []
     eval_results_post   = []
     t_shots             = []
     t_shot              = 0
     t_evals             = []
     t_eval              = 0
-    mssg.print(f"fine_tune_moment_ | Processing {self.input.size} datasets | First length : {self.input.data[0].shape}")
+
+    if self.input.size is None:
+        self.mssg.print(f"Windows: {len(self.input._data)}")
+        raise ValueError(f"Invalid number of windows: {self.input.size}")
     
+    self.mssg.print(f"Processing {self.input.size} datasets: {self.input.shape}")
+
     if self.optim.optimizer is None: 
         mssg.print(f"fine_tune_moment_ | Setting up optimizer as AdamW")
         self.optim.optimizer = torch.optim.AdamW(enc_learn.parameters(), lr=lr)

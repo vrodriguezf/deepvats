@@ -352,7 +352,7 @@ def export_and_get(self:Learner, keep_exported_file=False):
         Export the learner into an auxiliary file, load it and return it back.
     """
     aux_path = Path('aux.pkl')
-    self.export(function='aux.pkl')
+    self.export(fname='aux.pkl')
     aux_learn = load_learner('aux.pkl')
     if not keep_exported_file: aux_path.unlink()
     return aux_learn

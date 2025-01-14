@@ -252,7 +252,7 @@ shinyServer(function(input, output, session) {
   
   # Observe the events related to zoom the projections graph
   observeEvent(input$zoom_btn, {
-    
+
     print("--> observeEvent zoom_btn")
     brush <- input$projections_brush
     if (!is.null(brush)) {
@@ -892,7 +892,7 @@ selected_points_2d <- reactive({
           to = end_event_date,
           color = range_color
         ) 
-        ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
+          ts_plt <- ts_plt %>% dyRangeSelector(c(zoom_state$x_start, zoom_state$x_end))
       }   
       
       ts_plt <- ts_plt
@@ -935,10 +935,10 @@ selected_points_2d <- reactive({
     # Establecer límites basados en los datos
     first_date = min(reduced_window_df$start)
     last_date = max(reduced_window_df$end)
-    
+
     left = as.POSIXct(isolate(tsdf())$timeindex[1],  origin = "1970-01-01")
     right = as.POSIXct(isolate(tsdf())$timeindex[nrow(isolate(tsdf()))], origin = "1970-01-01")
-    
+
     # Configuración del gráfico base
     par(mar = c(5, 4, 4, 0) + 0.1)  #Down Up Left Right
     plt <- plot(
@@ -1116,6 +1116,23 @@ selected_points_2d <- reactive({
     output$ts_plot_dygraph <- renderDygraph({
         req(input$dataset, input$encoder, input$wlen != 0, input$stride != 0)
         ts_plot()
+    })
+
+    zoom_state <- reactiveValues(x_start = NULL, x_end = NULL)
+
+    debounced_zoom <- debounce(reactive({
+      input$ts_plot_dygraph_date_window
+    }), millis = 200)
+
+    observeEvent(debounced_zoom(), {
+      zoom_range <- debounced_zoom()
+      if (!is.null(zoom_range)) {
+        if (!identical(zoom_range, c(zoom_state$x_start, zoom_state$x_end))) {
+          zoom_state$x_start <- zoom_range[1]
+          zoom_state$x_end <- zoom_range[2]
+          print(paste("Zoom updated with debounce. Start:", zoom_state$x_start, "End:", zoom_state$x_end))
+        }
+      }
     })
 
 

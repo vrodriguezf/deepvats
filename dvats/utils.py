@@ -101,7 +101,7 @@ class Mssg:
     weight  : str   = 'normal'
     time    : bool  = False
     both    : bool  = False
-    level   : int   = -1
+    level   : int   = 0
     function: str   = ''
     
     def __str__(self):
@@ -501,8 +501,11 @@ class Time(Mssg):
         return self.time_end
         
     def duration(self):
-        self.time_total=self.time_end - self.time_start
+        if self.time_start is None:
+            raise ValueError("Checking for duration for not initialized timer.")
+        self.time_total = self.time_end - self.time_start
         return self.time_total
+    
     def show(
         self, 
         verbose         : int  = None,
@@ -901,8 +904,7 @@ def find_dominant_window_sizes_list_single_old(
         offset       : float= 0.05, 
         mssg         : Mssg = Mssg()
     ) -> List [ int ]:
-    mssg = deepcopy(mssg)
-    mssg.initial(f"Find_dominant_window_sizes_list")
+    mssg.initial_(f"Find_dominant_window_sizes_list")
     mssg.print(  f"X ~ {X.shape}", verbose = mssg.verbose + 1)
     mssg.print(  f"Looking for - at most - the best {nsizes} window sizes", verbose = mssg.verbose - 1)
     mssg.print(  f"Offset {offset} max size: {offset*len(X)}", verbose = mssg.verbose - 1)
@@ -1089,7 +1091,7 @@ def find_dominant_window_sizes_list(
         min_distance    : int   = 1,
         mssg            : Mssg  = Mssg()
     ) -> List [ int ]:
-    mssg.initial(f"Find_dominant_window_sizes_list")
+    mssg.initial_(f"Find_dominant_window_sizes_list")
     if len(X.shape) == 1: 
         sizes = find_dominant_window_sizes_list_single(X,nsizes,offset, min_distance, mssg)
     else: 

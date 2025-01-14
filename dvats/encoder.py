@@ -2244,18 +2244,14 @@ class CustomOptimizerCallback(Callback):
         del self.learn.opt
 
 # %% ../nbs/encoder.ipynb 58
-def validate_with_metrics(self : Encoder, metrics = None):
+def validate_with_metrics(learner, metrics):
     results = []
-    self.metrics = self.metrics if metrics is None else metrics 
-    original_crit = self.model.crit
-    if self.metrics is not None and len(self.metrics) > 0:
-        for metric in self.metrics:
-            self.model.crit = self.metric
-            result = self.model.validate()
-            results.append(result.item() if hasattr(result, 'item') else result)
-        self.model.crit=MSELossFlat
+    for metric in metrics:
+        learner.crit = metric
+        result = learner.validate()
+        results.append(result.item() if hasattr(result, 'item') else result)
+    learner.crit=MSELossFlat
     return results
-Encoder.validate_with_metrics = validate_with_metrics
 
 # %% ../nbs/encoder.ipynb 59
 def mvp_format_results(results):
@@ -2373,7 +2369,7 @@ def fine_tune_mvp_single_(
         if self.time_flag: timer.start()
         self.mssg.print(f"Eval Pre | wlen {X.shape[2]} | Model: {self.model.__class__} | {type(self.model)} ")
         self.model.eval()
-        results = self.validate_with_metrics()
+        results = validate_with_metrics(self.model, self.metrics)
         eval_results_pre = mvp_format_results(results)
         if self.time_flag:
             timer.end()
@@ -2401,7 +2397,7 @@ def fine_tune_mvp_single_(
         if self.time_flag: timer.start()
         self.mssg.print(f"Eval Pre | wlen {X.shape[2]}")
         self.model.eval()
-        results = self.validate_with_metrics()
+        results = validate_with_metrics(self.model, self.metrics)
         self.mssg.print(f"Format results | results~{len(results)}")
         eval_results_post = mvp_format_results(results)
         if self.time_flag:

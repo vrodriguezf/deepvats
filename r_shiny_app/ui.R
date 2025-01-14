@@ -138,6 +138,7 @@ shinyUI(fluidPage(
               ),
               actionBttn(inputId = "selectall",label = "Select/Deselect all",style = "simple",
                          color = "primary",icon = icon("check-double"),size = "xs", block = TRUE),
+              actionButton(inputId = "zoom", label = "Zoom", icon = icon("search-plus")), # Nuevo botón
               hr(),
               prettySwitch(inputId = "dygraph_sel",label = "Show stacked graphs (Not available yet)",
                            status = "success",fill = TRUE),

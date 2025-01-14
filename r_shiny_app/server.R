@@ -892,7 +892,12 @@ selected_points_2d <- reactive({
           to = end_event_date,
           color = range_color
         ) 
+        if(zoom_active()){
           ts_plt <- ts_plt %>% dyRangeSelector(c(zoom_state$x_start, zoom_state$x_end))
+        }else{
+          ts_plt <- ts_plt %>% dyRangeSelector(c(start_date, end_date))
+        }
+
       }   
       
       ts_plt <- ts_plt
@@ -1135,7 +1140,20 @@ selected_points_2d <- reactive({
       }
     })
 
+    zoom_active <- reactiveVal(FALSE)
 
+    observeEvent(input$zoom, {
+      current_state <- zoom_active()
+      zoom_active(!current_state)
+      
+      if (zoom_active()) {
+        showNotification("Zoom activado.", type = "message")
+        print("El estado de Zoom esta activado.")
+      } else {
+        showNotification("Zoom desactivado.", type = "message")
+        print("El estado de Zoom esta desactivado.")
+      }
+    })
 
     prjs_plot_name <- reactive({
         dataset_name <- basename(input$dataset)

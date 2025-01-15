@@ -78,7 +78,7 @@ shinyUI(fluidPage(
                        tags$b("Set height of the projections plot (px):"),
                        numericInput("embedding_plot_height", label = "Height",value =400),
                        hr(),
-                       tags$b("Configure aestethics"),
+                       tags$b("Configure aesthetics"),
                        sliderInput("path_line_size", label = "path_line_size", 
                                    value = DEFAULT_VALUES$path_line_size, min=0, max=5, step = 0.01),
                        sliderInput("path_alpha", label = "path_alpha",
@@ -89,8 +89,7 @@ shinyUI(fluidPage(
                                    value = DEFAULT_VALUES$point_size, min=0, max=10, step = 0.5),
                        checkboxInput("show_lines", "Show lines", value = TRUE),
                        actionButton('savePlot', 'Save embedding projections plot'),
-
-                       actionBttn(inputId = "update_prj_graph",label = "Update aestethics",style = "simple",
+                       actionBttn(inputId = "update_prj_graph",label = "Update aesthetics",style = "simple",
                                   color = "primary",icon = icon("bar-chart"),size = "xs", block = TRUE),
                        circle = FALSE, status = "primary",
                        icon = icon("gear"), width = "300px",size = "xs",
@@ -123,8 +122,10 @@ shinyUI(fluidPage(
               column(3)
             ),
             fluidRow(
-              uiOutput("projections_plot_ui")
-            )
+              column(12,
+                    uiOutput("graph_ui"),
+              )
+            ) 
           ),
           fluidRow(h3("Original data")),
           fluidRow(
@@ -136,6 +137,7 @@ shinyUI(fluidPage(
               ),
               actionBttn(inputId = "selectall",label = "Select/Deselect all",style = "simple",
                          color = "primary",icon = icon("check-double"),size = "xs", block = TRUE),
+              actionButton(inputId = "zoom", label = "Zoom", icon = icon("search-plus")), # Nuevo botón
               hr(),
               prettySwitch(inputId = "dygraph_sel",label = "Show stacked graphs (Not available yet)",
                            status = "success",fill = TRUE),

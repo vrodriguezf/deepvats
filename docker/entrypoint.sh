@@ -57,10 +57,6 @@ fi
 [ -d "/home/$USER/data/wandb_artifacts" ] || mkdir -p "/home/$USER/data/wandb_artifacts"
 
 
-if ! grep -Fxq "./path/to/check_yml_changes.sh" $HOME/work/.git/hooks/pre-commit; then \
-        sed -i '$i./path/to/check_yml_changes.sh' $HOME/work/.git/hooks/pre-commit; \
-    fi
-
 exec "$@"
 
 

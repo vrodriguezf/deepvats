@@ -69,7 +69,7 @@ def replace_includes_with_content(
     """
     if (print_flag):
         print("... About to replace includes with content")
-    with open(path+filename, 'r') as f:
+    with open(path+filename, 'r', encoding = 'utf-8') as f:
         content = f.read()
         
         # Mientras exista una directiva !include en el contenido, sigue reemplazándola
@@ -84,7 +84,7 @@ def replace_includes_with_content(
             include_filename = content[start_quote_idx:end_quote_idx]
             
             # Lee el archivo incluido
-            with open(path+include_filename, 'r') as include_file:
+            with open(path+include_filename, 'r',  encoding = 'utf-8') as include_file:
                 included_content = include_file.read()
             
             # Reemplaza la directiva por el contenido del archivo incluido

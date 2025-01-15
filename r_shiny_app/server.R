@@ -1257,25 +1257,34 @@ selected_points_2d <- reactive({
     })
 
 
-    toggle_graph_state <- reactiveVal(0)
+    toggle_graph_state <- reactiveVal(FALSE)
     
     observeEvent(input$toggle_graph, {
       current_state <- toggle_graph_state()
-      new_state <- ifelse(current_state == 0, 1, 0)
+      new_state <- !current_state
       toggle_graph_state(new_state)
       print(paste("Toggle graph state:", new_state))
     })
 
     output$graph_ui <- renderUI({
-      if (toggle_graph_state() == 0) {
-        uiOutput("projections_plot_ui")
-      } else {
-          tagList(
-            plotlyOutput("embedding_plot_3d"),
-            actionButton("reset_selection_3d", "Reset Selection", icon = icon("refresh"))
+      if (!toggle_graph_state()) {
+        fluidRow(
+          column(12,
+            actionButton("toggle_graph", "Toggle Graph"),
+            uiOutput("projections_plot_ui")
           )
+        )
+      } else {
+        fluidRow(
+          column(12,
+            actionButton("toggle_graph", "Toggle Graph"),
+            actionButton("reset_selection_3d", "Reset Selection", icon = icon("refresh")),
+            plotlyOutput("embedding_plot_3d")
+          )
+        )
       }
     })
+
     
     dataset_path <- reactiveVal(NULL)
     dataset_preview <- reactiveVal(NULL)

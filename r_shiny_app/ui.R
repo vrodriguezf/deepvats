@@ -123,7 +123,6 @@ shinyUI(fluidPage(
             ),
             fluidRow(
               column(12,
-                    actionButton("toggle_graph", "Toggle Graph"),
                     uiOutput("graph_ui"),
               )
             ) 

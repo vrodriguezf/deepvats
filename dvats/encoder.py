@@ -13,7 +13,8 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EncoderInput', 'LRSchedul
            'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
            'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
            'fine_tune_moment_train_loop_step_', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
-           'fine_tune_moment_', 'fit_fastai', 'fine_tune_mvp_single_', 'fine_tune_mvp_', 'fine_tune']
+           'fine_tune_moment_', 'fit_fastai', 'fine_tune_mvp_single_', 'fine_tune_mvp_', 'fine_tune_moirai_eval_',
+           'fine_tune_moirai_train_', 'fine_tune_moirai_single_', 'fine_tune_moirai_', 'fine_tune']
 
 # %% ../nbs/encoder.ipynb 2
 import warnings
@@ -164,6 +165,8 @@ class LRScheduler:
     name            : str   = None
     num_warmup_steps: int   = None
     scheduler               = None
+    monitor         : str   = "valid_loss"
+    interval        : str   = "step"
 
     def __post_init__(self):
         self.lr                 = self._check_lr(self.lr, 1e-5)
@@ -2400,6 +2403,8 @@ def fine_tune_moment_single_(
     sample_id           : int  = 0,
     use_moment_masks    : bool = False
 ):
+    self.mssg.level += 1
+    func = self.mssg.function
     self.mssg.initial_("fine_tune_moment_single")
     t_shot              = 0
     t_eval_1            = 0
@@ -2424,7 +2429,7 @@ def fine_tune_moment_single_(
         mssg                = deepcopy(self.mssg)
     )
     if eval_pre:
-        self.mssg.print(f"fine_tune_moment_single | Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
+        self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
         if self.time_flag: timer.start()
         eval_results_pre    = fine_tune_moment_eval_(
             enc_learn       = self.model,
@@ -2442,9 +2447,8 @@ def fine_tune_moment_single_(
             timer.show(verbose = self.mssg.verbose)
     if shot:
         if self.time_flag: timer.start()
-        self.mssg.print(f"fine_tune_moment_single | Train | wlen {self.input.data[sample_id].shape[2]}")
+        self.mssg.print(f"Train | wlen {self.input.data[sample_id].shape[2]}")
         try:
-            if self.time_flag: timer.start()
             losses, self.model                  = fine_tune_moment_train_(
                 enc_learn                       = self.model,
                 dl_train                        = dl_train,
@@ -2505,18 +2509,20 @@ def fine_tune_moment_single_(
                     func_name       = ut.funcname()
                 )
     self.mssg.final(ut.funcname())
+    self.mssg.level -= 1
+    self.mssg.function = func
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 
 Encoder.fine_tune_moment_single_ = fine_tune_moment_single_
 
 # %% ../nbs/encoder.ipynb 71
 def fine_tune_moment_(
-        self                : Encoder, 
-        eval_pre            : bool = False, 
-        eval_post           : bool = False, 
-        shot                : bool = False,
-        time_flag           : bool = None,
-        use_moment_masks    : bool = None
+    self                : Encoder, 
+    eval_pre            : bool = False, 
+    eval_post           : bool = False, 
+    shot                : bool = False,
+    time_flag           : bool = None,
+    use_moment_masks    : bool = None
 ):   
     self.mssg.initial(ut.funcname())
     self.time_flag = self.time_flag if time_flag is None else time_flag
@@ -2708,8 +2714,8 @@ def fine_tune_mvp_single_(
     show_plot       : bool  = False,
     sample_id       : int   = 0
 ):
-    self.mssg.initial_(ut.funcname())
     self.mssg.level+=1
+    self.mssg.initial_(ut.funcname())
     #--- Setup object parameters ---
     self.show_plot = self.show_plot if show_plot is None else show_plot
     #--- Setup output values
@@ -2743,11 +2749,11 @@ def fine_tune_mvp_single_(
     ]
     # Get dataloaders
     dls = get_ts_dls(
-        X = X, 
-        splits = self.splits, 
-        tfms = tfms, 
-        bs = self.input.batch_size, 
-        batch_tfms = batch_tfms
+        X           = X, 
+        splits      = self.splits, 
+        tfms        = tfms, 
+        bs          = self.input.batch_size, 
+        batch_tfms  = batch_tfms
     )
 
     if self.show_plot: 
@@ -2920,7 +2926,189 @@ def fine_tune_mvp_(
 
 Encoder.fine_tune_mvp_ = fine_tune_mvp_ 
 
-# %% ../nbs/encoder.ipynb 78
+# %% ../nbs/encoder.ipynb 79
+def fine_tune_moirai_eval_(
+    self    : Encoder,
+    dl_eval : DataLoader
+):
+    eval_results = {}
+
+    return eval_results
+
+# %% ../nbs/encoder.ipynb 80
+def fine_tune_moirai_train_(
+    self     : Encoder,
+    dl_train : DataLoader,
+    ds_train : pd.DataFrame
+): 
+    losses  = []
+    model   = self.model
+
+    return model
+
+# %% ../nbs/encoder.ipynb 81
+def fine_tune_moirai_single_(
+    self            : Encoder,
+    eval_pre        : bool  = False,
+    eval_post       : bool  = False,
+    shot            : bool  = False,
+    show_plot       : bool  = False,
+    sample_id       : int   = 0
+):
+    self.mssg.level+=1
+    func = self.mssg.function
+    self.mssg.initial_(ut.funcname())
+    #--- Setup object parameters ---
+    self.show_plot = self.show_plot if show_plot is None else show_plot
+    #--- Setup output values
+    # Time
+    t_shot = 0
+    t_eval_1 = 0
+    t_eval_2 = 0
+    # Training losses
+    losses = [],
+    # Evaluation metrics & results
+    eval_results_pre = {}
+    eval_results_post = {}
+    # Computation device
+    device = "cpu" if self.cpu else torch.cuda.current_device()
+    
+    #### -------- Start -------####
+    if self.time_flag : timer = ut.Time(mssg = self.mssg)
+    self.model.to(device)
+    self.mssg.print(f"Model Class {self.model.__class__} | Type: {type(self.model)}")
+    # Get dataloaders
+    self.mssg.print(f"fine_tune_moirai_single | Prepare the dataset | X ~ {self.input.data[sample_id].shape}")
+    dl_eval, dl_train, ds_train = prepare_train_and_eval_dataloaders(
+        X                   = self.input.data[sample_id], 
+        batch_size          = self.input.batch_size, 
+        n_windows           = self.input.n_windows, 
+        n_windows_percent   = self.input.n_windows_percent,
+        training_percent    = self.input.training_percent, 
+        validation_percent  = self.input.validation_percent, 
+        shot                = shot, 
+        eval_pre            = eval_pre, 
+        eval_post           = eval_post,
+        mssg                = deepcopy(self.mssg)
+    )
+    
+    ##-- Eval - Pre
+    if eval_pre:
+        self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
+        if self.time_flag: timer.start()
+        eval_results_pre = fine_tune_moirai_eval_(dl_eval)
+        if self.time_flag:
+            timer.end()
+            t_eval_1 = timer.duration()
+            timer.show(verbose = self.mssg.verbose)
+    ##-- Train
+    if shot:
+        if self.time_flag: timer.start()
+        self.mssg.print(f"Train | wlen {self.input.data[sample_id].shape[2]}")
+        losses, self.model = fine_tune_moirai_train_()
+        if self.time_flag: 
+            timer.end()
+            t_shot = timer.duration()
+            timer.show(verbose = self.mssg.verbose)
+
+    ##-- Eval - Post
+    if eval_post:
+        self.mssg.print(f"Eval Post | wlen {self.input.data[sample_id].shape[2]}")
+        if self.time_flag: timer.start()
+        eval_results_post = fine_tune_moirai_eval_(dl_eval)
+        if self.time_flag:
+            timer.end()
+            t_eval_2 = timer.duration()
+            timer.show(verbose = self.mssg.verbose)
+    self.mssg.final()
+    self.mssg.level += 1
+    self.mssg.function = func
+    return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
+Encoder.fine_tune_moirai_single_ = fine_tune_moirai_single_
+
+# %% ../nbs/encoder.ipynb 84
+def fine_tune_moirai_(
+        self                : Encoder, 
+        eval_pre            : bool = False, 
+        eval_post           : bool = False, 
+        shot                : bool = False,
+        time_flag           : bool = None,
+):  
+    self.mssg.initial(ut.funcname())
+    self.time_flag = self.time_flag if time_flag is None else time_flag
+    # Return values
+    lossess             = []
+    eval_results_pre    = {}
+    eval_results_post   = {}
+    t_shots             = []
+    t_shot              = 0
+    t_evals             = []
+    t_eval              = 0
+    
+    # Computation device
+    device = "cpu" if self.cpu else torch.cuda.current_device()
+    
+    ### ----- Start ----
+    if self.input.size is None:
+        self.mssg.print(f"Windows: {len(self.input._data)}")
+        raise ValueError(f"Invalid number of windows: {self.input.size}")
+    self.mssg.print(f"Processing {self.input.size} datasets : {self.input.shape}")
+
+    # TODO: Check the transformations for MOIRAI. This are the one of MVP
+    X = self.get_splits_(sample_id)
+    self.mssg.print("About to set batch tfms")
+    tfms = [ToFloat(), None]
+    batch_tfms = [
+        TSStandardize(
+            by_sample       = self.norm_by_sample, 
+            use_single_batch= self.norm_use_single_batch
+        )
+    ]
+
+    # Get dataloaders
+    dls = get_ts_dls(
+        X           = X, 
+        splits      = self.splits, 
+        tfms        = tfms, 
+        bs          = self.input.batch_size, 
+        batch_tfms  = batch_tfms
+    )
+
+    self.model.to(device)
+    
+    # Setup optimizer and scheduler
+    if self.optim.optimizer is None:
+        configure_optimizer_moirai(self, dls)
+    
+
+    for i in range (self.input.size):
+        self.mssg.print(f"Processing wlen {self.input.shape[2]}")
+        ( 
+            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model
+        ) =  self.fine_tune_moirai_single_(eval_pre, eval_post, shot, sample_id = i, show_plot = show_plot)
+    
+        lossess.append(losses)
+        if (eval_pre): eval_results_pre = eval_results_pre_
+        
+        if (eval_post): 
+            if eval_results_post == {}: eval_results_post = {key:[] for key in eval_results_post_.keys()}
+            #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
+            for key in eval_results_post.keys():
+                eval_results_post[key] += eval_results_post_[key]
+            #self.mssg.print_error(f"After concat: {eval_results_post}")
+        t_shots.append(t_shot_)
+        if eval_pre: t_evals.append(t_eval_1)
+        if eval_post: t_evals.append(t_eval_2)
+        eval_pre = False
+    t_shot = sum(t_shots)
+    t_eval = sum(t_evals)
+    self.mssg.final(ut.funcname())
+
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
+
+Encoder.fine_tune_moirai_ = fine_tune_moirai_
+
+# %% ../nbs/encoder.ipynb 86
 def fine_tune(
     # Optional parameters
     ## Encoder Input
@@ -3046,6 +3234,6 @@ def fine_tune(
             ( 
                 lossess, eval_results_pre, eval_results_post, 
                 t_shots, t_shot, t_evals, t_eval, enc.model 
-            ) = enc.fine_tune_(eval_pre, eval_post, shot, time_flag)
+            ) = enc.fine_tune_(eval_pre = eval_pre, eval_post = eval_post, shot = shot, time_flag = time_flag)
     enc.mssg.final()
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc.model

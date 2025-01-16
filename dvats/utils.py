@@ -1219,7 +1219,7 @@ def _check_value(
             warnings.warn(f"'{name}' must be lower or equal than 1 ({value}). Using default: {default}")
             valid = False
     if valid: res = value
-    mssg.print(f"valid? {valid}", verbose_level = mssg.level + 1)
+    #mssg.print(f"valid? {valid}", verbose_level = mssg.level + 1)
     mssg.final(verbose_level = mssg.level+1)
     mssg.level = level
     return res, valid

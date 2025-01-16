@@ -32,8 +32,9 @@ user_preferences:
     #alias: &alias 'gtrends_kohls-detrended'
     #alias: &alias 'gtrends_kohls-denoised'
     alias: &alias 'gtrends_khols-normalized_yearly'
-    algorithm: &alg "mvp"
+    #algorithm: &alg "mvp"
     #algorithm: &alg "zeroshot-moment-small-embedding"
+    algorithm: &alg "zeroshot-moirai-small"
   directories:
     # Folder to store temporary files
     tmp: &tmp 'tmp' 

@@ -209,9 +209,9 @@ class Mssg:
         self.function   = self.function if func_name is None else func_name
         self.mode       = self.mode if print_mode is None else print_mode
         self.ensure_function()
-        verbose_level   = self.level if verbose_level is None else verbose_level
+        self.level      = self.level if verbose_level is None else verbose_level
         
-        if self.verbose > verbose_level:
+        if self.verbose > self.level:
             mssg =f"[ --> {self.function} ]"
             
             print_flush(mssg, self.to_path, self.path, self.mode,self.verbose, self.time, print_both = self.both, **kwargs)
@@ -269,8 +269,71 @@ class Mssg:
             mssg = f"[{self.function} --> ]"
             print_flush(mssg, self.to_path, self.path, self.mode,self.verbose, self.time, print_both, **kwargs)
         self.mode = 'a'
+    
+    def final_(
+        self, 
+        func_name       = None,
+        print_to_path   = None, 
+        print_path      = None, 
+        verbose         = None, 
+        print_time      = None, 
+        print_both      = None, 
+        verbose_level   = None,
+        **kwargs
+    ):
+        """Print message with console flush and debugging parameters"""
+        self.to_path    = self.to_path if print_to_path is None else print_to_path
+        self.path       = self.path if print_path is None else print_path
+        self.verbose    = self.verbose if verbose is None else verbose
+        self.time       = self.time if print_time is None else print_time
+        self.both       = self.both if print_both is None else print_both
+        self.function   = func_name if func_name is not None else self.function
+        self.ensure_function()
+        self.level      = self.level if verbose_level is None else verbose_level
+        if self.verbose > self.level:
+            mssg = f"[{self.function} --> ]"
+            print_flush(mssg, self.to_path, self.path, self.mode,self.verbose, self.time, print_both, **kwargs)
+        self.mode = 'a'
 
-        
+    def print_error(
+        self, 
+        mssg            = None, 
+        print_to_path   = None, 
+        print_path      = None, 
+        verbose         = None, 
+        print_time      = None, 
+        print_both      = None, 
+        verbose_level   = None,
+        func_name       = None,
+        print_mode      = None,
+        **kwargs
+    ):
+        """Print error message in red with console flush and debugging parameters"""
+        self.mssg       = mssg if mssg is not None else self.mssg
+        self.to_path    = self.to_path if ( print_to_path is None or not isinstance(print_to_path, bool) ) else print_to_path
+        self.path       = self.path if print_path is None else print_path
+        self.verbose    = self.verbose if verbose is None else verbose
+        self.time       = self.time if print_time is None else print_time
+        self.both       = self.both if print_both is None else print_both
+        self.function   = func_name if func_name is not None else self.function
+        self.ensure_function()
+        self.mode       = self.mode if print_mode is None else print_mode
+        verbose_level   = self.level if verbose_level is None else verbose_level
+        if self.verbose > verbose_level:
+            mssg = f" [ {self.function} ] {self.mssg}" if self.function is not None else self.mssg
+            red_mssg = f"\033[91m{mssg}\033[0m"  # ANSI escape for red text
+            print_flush(
+                red_mssg, 
+                print_to_path = self.to_path, 
+                print_path    = self.path, 
+                print_mode    = self.mode,
+                verbose       = self.verbose, 
+                print_time    = self.time, 
+                print_both    = print_both, 
+                **kwargs
+            )
+        self.mode = 'a'
+
 
 # %% ../nbs/utils.ipynb 15
 def generate_TS_df(rows, cols):

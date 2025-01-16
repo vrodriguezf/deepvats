@@ -3,17 +3,17 @@
 # %% auto 0
 __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EncoderInput', 'LRScheduler', 'EncoderOptimizer', 'Encoder',
            'set_fine_tune_single_', 'set_fine_tune_', 'show_eval_stats', 'DCAE_torch', 'CustomWandbCallback',
-           'CustomOptimizerCallback', 'kwargs_to_gpu_', 'kwargs_to_cpu_', 'get_acts', 'get_acts_moment',
-           'sure_eval_moment', 'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP',
-           'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
-           'get_enc_embs_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size', 'rmse', 'smape',
-           'rmse_flat', 'smape_flat', 'mae_flat', 'mse_loss_flat', 'RMSELoss', 'RMSELossFlat', 'SMAPELoss',
-           'SMAPELossFlat', 'validate_with_metrics', 'get_metrics_dict', 'validate_with_metrics_format_results',
-           'random_windows', 'windowed_dataset', 'setup_scheduler', 'prepare_train_and_eval_dataloaders',
+           'kwargs_to_gpu_', 'kwargs_to_cpu_', 'get_acts', 'get_acts_moment', 'sure_eval_moment',
+           'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP', 'get_enc_embs_MVP_set_stride_set_batch_size',
+           'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction', 'get_enc_embs_moirai', 'get_enc_embs',
+           'get_enc_embs_set_stride_set_batch_size', 'rmse', 'smape', 'rmse_flat', 'smape_flat', 'mae_flat',
+           'mse_loss_flat', 'RMSELoss', 'RMSELossFlat', 'SMAPELoss', 'SMAPELossFlat', 'validate_with_metrics',
+           'validate_with_metrics_', 'get_metrics_dict', 'validate_with_metrics_format_results', 'random_windows',
+           'windowed_dataset', 'setup_scheduler', 'prepare_train_and_eval_dataloaders',
            'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
            'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
            'fine_tune_moment_train_loop_step_', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
-           'fine_tune_moment_', 'fine_tune_mvp_single_', 'fit_fastai', 'fine_tune']
+           'fine_tune_moment_', 'fit_fastai', 'fine_tune_mvp_single_', 'fine_tune_mvp_', 'fine_tune']
 
 # %% ../nbs/encoder.ipynb 2
 import warnings
@@ -236,6 +236,7 @@ class Encoder():
     norm_use_single_batch : bool            = True
     metrics             : List [ Callable ] = None
     metrics_names       : List [ str ]      = None
+    default_metric                          = MSELossFlat #-- Default for MVP
     #mvp_ws              : Tuple [ int, int ]= 0,0
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
@@ -308,11 +309,11 @@ class Encoder():
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
 
     # Fine_tune_
-    def fine_tune_moment_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False, use_moment_masks = False): 
+    def fine_tune_moment_(self): 
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
-    def fine_tune_mvp_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False): 
+    def fine_tune_mvp_(self): 
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
-    def fine_tune_moirai_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False): 
+    def fine_tune_moirai_(self): 
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
@@ -478,25 +479,6 @@ class CustomWandbCallback(WandbCallback):
         super().before_fit() # Call the original method 
 
 # %% ../nbs/encoder.ipynb 25
-class CustomOptimizerCallback(Callback):
-    def __init__(self, optimizer, scheduler):
-        self.optimizer = optimizer
-        self.scheduler = scheduler
-
-    def before_fit(self):
-        # Reemplazar el optimizador de FastAI con el personalizado
-        self.learn.opt = self.optimizer
-
-    def after_batch(self):
-        # Actualizar el scheduler después de cada batch
-        if self.scheduler is not None:
-            self.scheduler.step()
-
-    def after_fit(self):
-        # Restaurar el optimizador original si es necesario
-        del self.learn.opt
-
-# %% ../nbs/encoder.ipynb 27
 def kwargs_to_gpu_(**kwargs):
     for key in kwargs:
         try: #if not able to be moved, just not move it
@@ -512,7 +494,7 @@ def kwargs_to_cpu_(**kwargs):
             continue
    
 
-# %% ../nbs/encoder.ipynb 28
+# %% ../nbs/encoder.ipynb 26
 def get_acts(
     model : torch.nn.Module, 
     module: torch.nn.Module, 
@@ -582,7 +564,7 @@ def get_acts(
     if verbose > 0:ut.print_flush(f"get acts -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return res
 
-# %% ../nbs/encoder.ipynb 29
+# %% ../nbs/encoder.ipynb 27
 def get_acts_moment(
     enc_learn, 
     cpu             : bool          = False, 
@@ -652,7 +634,7 @@ def get_acts_moment(
                 
     return embs
 
-# %% ../nbs/encoder.ipynb 30
+# %% ../nbs/encoder.ipynb 28
 def sure_eval_moment(
     enc_learn, 
     cpu, 
@@ -757,7 +739,7 @@ def sure_eval_moment(
     
     return output, enc_learn
 
-# %% ../nbs/encoder.ipynb 32
+# %% ../nbs/encoder.ipynb 30
 def get_enc_embs_ensure_batch_size_(
     dls        : TSDataLoaders,
     batch_size : int = None,
@@ -777,7 +759,7 @@ def get_enc_embs_ensure_batch_size_(
         if verbose > 1: 
             ut.print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}", verbose = verbose)
 
-# %% ../nbs/encoder.ipynb 33
+# %% ../nbs/encoder.ipynb 31
 def get_enc_embs_MVP(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -862,7 +844,7 @@ def get_enc_embs_MVP(
     if to_numpy: embs = embs.numpy() if cpu else embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 34
+# %% ../nbs/encoder.ipynb 32
 def get_enc_embs_MVP_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -1010,7 +992,7 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
         ut.print_flush("get_enc_embs_MVP_set_stride_set_batch_size -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 35
+# %% ../nbs/encoder.ipynb 33
 def get_enc_embs_moment(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -1059,7 +1041,7 @@ def get_enc_embs_moment(
         ut.print_flush("get_enc_embs_moment -->", verbose = verbose)
     return embeddings
 
-# %% ../nbs/encoder.ipynb 36
+# %% ../nbs/encoder.ipynb 34
 def get_enc_embs_moment_reconstruction(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -1102,10 +1084,10 @@ def get_enc_embs_moment_reconstruction(
         embs = embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 38
+# %% ../nbs/encoder.ipynb 36
 import torch.profiler as profiler
 
-# %% ../nbs/encoder.ipynb 39
+# %% ../nbs/encoder.ipynb 37
 def get_enc_embs_moirai(
     enc_input       : List [ List [ List [ Float ] ] ], 
     enc_model       : moirai.MoiraiModule, 
@@ -1243,7 +1225,7 @@ def get_enc_embs_moirai(
         ut.print_flush("get_enc_embs_moirai -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 40
+# %% ../nbs/encoder.ipynb 38
 def get_enc_embs(
     X               , 
     enc_learn       : Learner, 
@@ -1280,7 +1262,7 @@ def get_enc_embs(
             ut.print_flush(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 41
+# %% ../nbs/encoder.ipynb 39
 def get_enc_embs_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -1356,10 +1338,10 @@ def get_enc_embs_set_stride_set_batch_size(
     if verbose > 0: ut.print_flush(f"get_enc_embs_set_stride_set_batch_size | embs~{embs.shape} -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 44
+# %% ../nbs/encoder.ipynb 42
 from fastai.metrics import mae
 
-# %% ../nbs/encoder.ipynb 45
+# %% ../nbs/encoder.ipynb 43
 def rmse(preds, targets):
     res = torch.sqrt(torch.nn.functional.mse_loss(preds, targets))
     return res
@@ -1396,11 +1378,11 @@ def mse_loss_flat(preds, targets):
     preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
     return torch.mean((preds - targets) ** 2)
 
-# %% ../nbs/encoder.ipynb 46
+# %% ../nbs/encoder.ipynb 44
 from fastai.losses import BaseLoss
 from torch.nn.modules.loss import _Loss
 
-# %% ../nbs/encoder.ipynb 47
+# %% ../nbs/encoder.ipynb 45
 class RMSELoss(_Loss):
     __constants__ = ["reduction"]
     def __init__(self, size_average = None, reduce = None, reduction: str = "mean") -> None:
@@ -1483,18 +1465,72 @@ def SMAPELossFlat(
 # Class alias for clarity
 MAELossFlat = L1LossFlat
 
-# %% ../nbs/encoder.ipynb 49
-def validate_with_metrics(learner, metrics):
+# %% ../nbs/encoder.ipynb 47
+def validate_with_metrics(
+    learner : Learner, 
+    metrics        = None,
+    default_metric = MSELossFlat #- Default for MVP
+):
+    """
+    Validates a `Learner` using multiple metrics and restores the default metric after computation.
+
+    Args:
+        learner (Learner): The `Learner` object to validate.
+        metrics (list, optional): A list of metric functions to use for validation. 
+            If not provided or empty, the `default_metric` will be used. 
+            Each metric function should be compatible with the `Learner`'s `crit` attribute.
+        default_metric (Callable, optional): The default metric to restore after validation. 
+            Defaults to `MSELossFlat`.
+
+    Returns:
+        list: A list of validation results, where each result corresponds to the validation 
+        score for the respective metric in the `metrics` list.
+
+    Raises:
+        Warning: If no metric is provided, a warning is issued, and the `default_metric` is used.
+
+    Example:
+        >>> learner = Learner(...)  # Initialize your learner
+        >>> metrics = [MSELossFlat, L1Loss]
+        >>> results = validate_with_metrics(learner, metrics)
+        >>> print(results)  # [0.25, 0.35]
+
+    Notes:
+        - The function temporarily replaces the `crit` attribute of the `Learner` object 
+          with each metric in the `metrics` list for validation.
+        - After validation, the `crit` attribute is restored to the `default_metric`.
+    """
+    #-- Ensure well formated metrics list
+    if metrics is None or len(metrics) == 0:
+        warnings.warn(f"No metric selected. Using default: {MSELossFlat.__name__}")
+        metrics = [MSELossFlat]
+    #-- Compute the results by
+    # 1) Changing learner criteria to the current metric
+    # 2) Use learner.validate()
     results = []
     for metric in metrics:
         learner.crit = metric
         result = learner.validate()
         result = result.item() if hasattr(result, 'item') else result
         results.append(result)
-    learner.crit=MSELossFlat
+    
+    #-- Restore default metric
+    learner.crit=default_metric
+    return results, metrics
+
+def validate_with_metrics_(
+    self : Encoder
+): 
+    results, self.metrics = validate_with_metrics(
+        learner        = self.model, 
+        metrics        = self.metrics, 
+        default_metric = self.default_metric
+    )
     return results
 
-# %% ../nbs/encoder.ipynb 50
+Encoder.validate_with_metrics_ = validate_with_metrics_
+
+# %% ../nbs/encoder.ipynb 48
 def get_metrics_dict(
     metrics: List[Callable],
     metrics_names: List[str] = None
@@ -1519,7 +1555,7 @@ def get_metrics_dict(
         raise ValueError("Length of metrics and metrics_names must match when metrics_names is provided.")
     return metrics_dict
 
-# %% ../nbs/encoder.ipynb 51
+# %% ../nbs/encoder.ipynb 49
 def validate_with_metrics_format_results(
     results, metrics, metrics_names = None
 ):
@@ -1540,7 +1576,7 @@ def validate_with_metrics_format_results(
         raise ValueError("Length of metrics and metrics_names must match when metrics_names is provided.")
     return metrics_dict
 
-# %% ../nbs/encoder.ipynb 55
+# %% ../nbs/encoder.ipynb 53
 from tqdm.auto import tqdm
 from transformers import get_scheduler
 import evaluate
@@ -1548,7 +1584,7 @@ from torch.nn.modules.loss import _Loss
 from tsai.data.preparation import SlidingWindow
 from .utils import find_dominant_window_sizes_list
 
-# %% ../nbs/encoder.ipynb 56
+# %% ../nbs/encoder.ipynb 54
 def random_windows(
     X           : List [ List [ List [ float ]]], 
     n_windows   : int       = None, 
@@ -1577,7 +1613,7 @@ def random_windows(
     mssg_.final()
     return windows
 
-# %% ../nbs/encoder.ipynb 57
+# %% ../nbs/encoder.ipynb 55
 def windowed_dataset(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     stride                          : int           = 1,
@@ -1630,7 +1666,7 @@ def windowed_dataset(
     return dss
 
 
-# %% ../nbs/encoder.ipynb 58
+# %% ../nbs/encoder.ipynb 56
 def setup_scheduler(
     dl_train                        : DataLoader,
     lr_scheduler_flag               : bool= False,
@@ -1665,7 +1701,7 @@ def setup_scheduler(
     return lr_scheduler
     
 
-# %% ../nbs/encoder.ipynb 59
+# %% ../nbs/encoder.ipynb 57
 def prepare_train_and_eval_dataloaders(
     X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     batch_size          : int,
@@ -1712,7 +1748,7 @@ def prepare_train_and_eval_dataloaders(
         dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
     return dl_eval, dl_train, ds_train
 
-# %% ../nbs/encoder.ipynb 60
+# %% ../nbs/encoder.ipynb 58
 def _get_enc_input(
     mssg                            : ut.Mssg,
     # Encoder Input
@@ -1763,7 +1799,7 @@ def _get_enc_input(
     mssg.final()
     return enc_input
 
-# %% ../nbs/encoder.ipynb 61
+# %% ../nbs/encoder.ipynb 59
 def _get_optimizer(
     mssg                            : ut.Mssg,
     optim                           : EncoderOptimizer = None,
@@ -1790,7 +1826,7 @@ def _get_optimizer(
     mssg.final()
     return optim
 
-# %% ../nbs/encoder.ipynb 62
+# %% ../nbs/encoder.ipynb 60
 def _get_encoder(
     ## -- Using all parammeters
     X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
@@ -1875,10 +1911,10 @@ def _get_encoder(
     enc.mssg.final(ut.funcname())
     return enc
 
-# %% ../nbs/encoder.ipynb 64
+# %% ../nbs/encoder.ipynb 62
 from momentfm.utils.masking import Masking
 
-# %% ../nbs/encoder.ipynb 65
+# %% ../nbs/encoder.ipynb 63
 def fine_tune_moment_compute_loss_check_sizes_(
     batch           : List [ List [ List [ float ] ] ], 
     output, 
@@ -1905,7 +1941,7 @@ def fine_tune_moment_compute_loss_check_sizes_(
     if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss_check_sizes_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return b
 
-# %% ../nbs/encoder.ipynb 66
+# %% ../nbs/encoder.ipynb 64
 def fine_tune_moment_compute_loss(
     batch, 
     output, 
@@ -1943,7 +1979,7 @@ def fine_tune_moment_compute_loss(
     if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return loss
 
-# %% ../nbs/encoder.ipynb 67
+# %% ../nbs/encoder.ipynb 65
 def fine_tune_moment_eval_preprocess(
     predictions : List [ List [ float ]],
     references : List [ List [ float ]],
@@ -1981,7 +2017,7 @@ def fine_tune_moment_eval_preprocess(
         ut.print_flush(f"Eval | After NaN | refs~{references.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return predictions, references
 
-# %% ../nbs/encoder.ipynb 68
+# %% ../nbs/encoder.ipynb 66
 def fine_tune_moment_eval_step_(
     enc_learn : Learner,
     batch,
@@ -2020,7 +2056,7 @@ def fine_tune_moment_eval_step_(
         smape_metric.add_batch(predictions=predictions, references = references)
         return mse_metric, rmse_metric, mae_metric, smape_metric
 
-# %% ../nbs/encoder.ipynb 69
+# %% ../nbs/encoder.ipynb 67
 def fine_tune_moment_eval_(
     enc_learn : Learner,
     dl_eval   : DataLoader,
@@ -2085,7 +2121,7 @@ def fine_tune_moment_eval_(
     enc_learn.train()
     return eval_results
 
-# %% ../nbs/encoder.ipynb 70
+# %% ../nbs/encoder.ipynb 68
 def fine_tune_moment_train_loop_step_(
     enc_learn,
     batch, 
@@ -2204,7 +2240,7 @@ def fine_tune_moment_train_loop_step_(
         #ut.print_flush(f"fine_tune_moment_train_loop_step_ | Enc_learn After compute loss {enc_learn.__class__} | -->")
     return loss, enc_learn
 
-# %% ../nbs/encoder.ipynb 71
+# %% ../nbs/encoder.ipynb 69
 def fine_tune_moment_train_(
     enc_learn                       : Learner, 
     dl_train                        : DataLoader,
@@ -2303,7 +2339,7 @@ def fine_tune_moment_train_(
         ut.print_flush(f"fine_tune_moment_train | -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return losses, enc_learn
 
-# %% ../nbs/encoder.ipynb 72
+# %% ../nbs/encoder.ipynb 70
 def fine_tune_moment_single_(
     self                : Encoder,
     eval_pre            : bool = False,
@@ -2421,7 +2457,7 @@ def fine_tune_moment_single_(
 
 Encoder.fine_tune_moment_single_ = fine_tune_moment_single_
 
-# %% ../nbs/encoder.ipynb 73
+# %% ../nbs/encoder.ipynb 71
 def fine_tune_moment_(
         self                : Encoder, 
         eval_pre            : bool = False, 
@@ -2469,165 +2505,59 @@ def fine_tune_moment_(
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
 
-# %% ../nbs/encoder.ipynb 75
-def fine_tune_mvp_single_(
-    self            : Encoder,
-    eval_pre        : bool  = False,
-    eval_post       : bool  = False,
-    shot            : bool  = False,
-    show_plot       : bool  = False,
-    sample_id       : int   = 0
-):
-    self.show_plot = self.show_plot if show_plot is None else show_plot
-    t_shot   = 0
-    t_eval_1 = 0
-    t_eval_2 = 0
-    losses   = []
-    eval_results_pre = {}
-    eval_results_post = {}
-    if self.time_flag : timer = ut.Time(mssg = self.mssg)
-    self.mssg.initial("fine_tune_mvp_single_")   
-    X = self.get_splits_(sample_id)
-    self.mssg.print("About to set callbacks", func_name = ut.funcname())
-    cbs = L(CustomWandbCallback(log_preds=False)) if self.use_wandb else L()
-    cbs2 = [
-        EarlyStoppingCallback(
-            monitor='valid_loss', 
-            min_delta=0.000001, 
-            patience=10
-        )
-    ]
-    
-
-    self.mssg.print("About to set batch tfms")
-    tfms = [ToFloat(), None]
-    batch_tfms = [
-        TSStandardize(
-            by_sample       = self.norm_by_sample, 
-            use_single_batch= self.norm_use_single_batch
-        )
-    ]
-    dls = get_ts_dls(X, splits = self.splits, tfms = tfms, bs = self.input.batch_size, batch_tfms = batch_tfms)
-
-    ### 
-    # Optimizer  ### TODO: CHECK
-    #### if not ( isinstance(self.optim.lr, float) or isinstance(self.optim.lr, int)):
-    ####     if self.optim.lr.flag:
-    ####         scheduler = setup_scheduler(
-    ####             dl_train = dls.train,
-    ####             lr_scheduler_flag = True,
-    ####             lr_scheduler_name = self.optim.lr.name,
-    ####             optimizer         = self.optim.optimizer,
-    ####             num_epochs        = self.num_epochs,
-    ####             lr_scheduler_num_warmup_steps = self.optim.lr.num_warmup_steps,
-    ####             lr_scheduler_max_lr = None, #TODO: Think
-    ####             lr                  = self.optim.lr.lr
-    ####         )
-    ####         custom_opt_cb = CustomOptimizerCallback(optimizer = self.optim.optimizer, scheduler = scheduler)
-    ####         cbs2 += [custom_opt_cb]
-    ###
-    if self.show_plot: 
-        self.mssg.print("Show plot")
-        display(dls.show_at(0))
-        sgc = ShowGraphCallback2()
-        self.model = ts_learner(
-            dls, 
-            InceptionTimePlus,
-            cbs = cbs + sgc + MVP(
-                r           = self.optim.lr if isinstance(self.optim.lr, float) else self.optim.lr.lr,
-                window_size = X.shape[2]-1,
-                future_mask = self.mask_future,
-                target_dir  = './models',
-                sync        = self.mask_sync,
-                stateful    = self.mask_stateful,
-                fname       = f'encoder_MVP'
-            ),
-            y_range = [X.min(), X.max()]
-        )
-    else:
-        self.mssg.print("Don't show plot")
-        self.model = ts_learner(
-            dls, 
-            InceptionTimePlus,
-            cbs = cbs + MVP(
-                r           = self.optim.lr if ( isinstance(self.optim.lr, float) or isinstance(self.optim.lr, int)) else self.optim.lr.lr,
-                window_size = X.shape[2]-1,
-                future_mask = self.mask_future,
-                target_dir  = './models',
-                sync        = self.mask_sync,
-                stateful    = self.mask_stateful,
-                fname       = f'encoder_MVP'
-            ),
-            y_range = [X.min(), X.max()]
-            #metrics = [torch.nn.functional.mse_loss, rmse, mae, smape]
-        )
-        self.mssg.print(f"Model Class {self.model.__class__} | Type: {type(self.model)}")
-
-    device = "cpu" if self.cpu else torch.cuda.current_device()
-    self.model.to(device)
-    self.mssg.print(f"Model Class {self.model.__class__} | Type: {type(self.model)}")
-
-    # Eval - pre 
-    if eval_pre:
-        if self.time_flag: timer.start()
-        self.mssg.print(f"Eval Pre | wlen {X.shape[2]} | Model: {self.model.__class__} | {type(self.model)} ")
-        self.model.eval()
-        results = validate_with_metrics(self.model, self.metrics)
-        eval_results_pre = validate_with_metrics_format_results(
-            results       = results,
-            metrics       = self.metrics,
-            metrics_names = self.metrics_names
-        )
-        if self.time_flag:
-            timer.end()
-            t_eval_1 = timer.duration()
-            timer.show(verbose = self.mssg.verbose)
-    # Train 
-    if shot:
-        if self.time_flag: timer.start()
-        self.model.train()
-        self.mssg.print(f"Training the model | window size {X.shape[2]} | X ~ {X.shape}")
-        lr_valley, lr_steep = self.model.lr_find(suggest_funcs=(valley, steep), show_plot=show_plot)
-        self.model.fit_one_cycle(
-            n_epoch = self.num_epochs, 
-            lr_max  = lr_valley,  
-            cbs     = cbs2
-        )
-        losses = self.model.recorder.losses
-        if self.time_flag:
-            timer.end()
-            t_shot= timer.duration()
-            timer.show(verbose = self.mssg.verbose)
-
-    # Eval - post
-    if eval_post:
-        if self.time_flag: timer.start()
-        self.mssg.print(f"Eval Pre | wlen {X.shape[2]}")
-        self.model.eval()
-        results = validate_with_metrics(self.model, self.metrics)
-        self.mssg.print(f"Format results | results~{len(results)}")
-        eval_results_post = validate_with_metrics_format_results(
-            results       = results,
-            metrics       = self.metrics,
-            metrics_names = self.metrics_names
-        )
-        if self.time_flag:
-            timer.end()
-            t_eval_2 = timer.duration()
-            timer.show(verbose = self.mssg.verbose)
-    self.mssg.final()
-    return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
-Encoder.fine_tune_mvp_single_ = fine_tune_mvp_single_
-
-# %% ../nbs/encoder.ipynb 76
+# %% ../nbs/encoder.ipynb 73
 def fit_fastai(
-    self: Encoder,
-    dl_train: DataLoader,
-    lr_funcs: Tuple[Callable, ...] = (valley,),  # steep
+    self     : Encoder,
+    dl_train : DataLoader,
+    lr_funcs : Tuple[Callable, ...] = (valley,),  # steep
     show_plot: bool = False,
-    n_cycles: Optional[int] = None,  # Allow dynamic calculation
-    cycle_len: Optional[int] = None
+    n_cycles : Optional[int] = None,  # Allow dynamic calculation
+    cycle_len : Optional[int] = None
 ) -> None:
+    """
+    Trains an `Encoder` model using different learning rate schedules, with support for
+    automatic learning rate finding and early stopping.
+
+    Args:
+        self (Encoder): The `Encoder` instance to be trained.
+        dl_train (DataLoader): The training DataLoader.
+        lr_funcs (Tuple[Callable, ...], optional): Functions to suggest the learning rate 
+            using `lr_find`. Defaults to `(valley,)`.
+        show_plot (bool, optional): Whether to display the learning rate finder plot.
+            Defaults to `False`.
+        n_cycles (int, optional): Number of cycles for cyclical learning rate methods.
+            If not provided, it is calculated as `n_epoch // cycle_len`.
+        cycle_len (int, optional): Length of each cycle (in epochs) for cyclical 
+            learning rate methods. If not provided, defaults to `1`.
+
+    Raises:
+        Exception: If `lr_find` fails to calculate the learning rate.
+
+    Returns:
+        None
+
+    Behavior:
+        - Uses the `lr_find` method to determine the optimal maximum learning rate (`lr_max`).
+        - Calculates `pct_start` based on the number of warm-up steps relative to the total training steps.
+        - Supports multiple learning rate schedules, including:
+          - `OneCycleLR`: Trains with a one-cycle learning rate policy.
+          - `FlatCosLR`: Trains with a flat cosine annealing schedule.
+          - `SgdrLR`: Trains using stochastic gradient descent with restarts (SGDR).
+          - Default `fit`: Trains using the basic fastai training loop if no scheduler matches.
+
+    Notes:
+        - Early stopping is enabled by default, monitoring `valid_loss` with a minimum delta of `1e-6` 
+          and a patience of 10 epochs.
+        - If `cycle_len` or `n_cycles` is not provided, default values are calculated to distribute 
+          training evenly across cycles.
+
+    Example:
+        >>> encoder = Encoder(...)
+        >>> dl_train = DataLoader(...)
+        >>> encoder.fit_fastai(dl_train, lr_funcs=(valley,), show_plot=True, n_cycles=3, cycle_len=2)
+    """
+    self.mssg.level += 1
+    self.mssg.initial_("fit_fastai")
     # Callbacks
     cbs = [
         EarlyStoppingCallback(
@@ -2638,17 +2568,36 @@ def fit_fastai(
     ]
     
     # Learning rate finding
-    lr_max = self.model.lr_find(
-        suggest_funcs=lr_funcs, 
-        show_plot=show_plot
-    )
+    lr = self.optim.lr if isinstance(self.optim.lr, float) else self.optim.lr.lr
+    try:
+        lr_max = self.model.lr_find(
+            suggest_funcs = lr_funcs, 
+            show_plot     = show_plot
+        )
+    except Exception as e:
+        self.mssg.print_error(
+            f"fit_fastai | error | {lr_funcs}"+
+            f"lr | {lr} | {e}" 
+        )
+        raise 
     
     # Training steps and pct_start
     steps_per_epoch = len(dl_train)
     training_steps = self.num_epochs * steps_per_epoch
-    warmup_steps = optim.lr.warmup_steps
+    warmup_steps = self.optim.lr.num_warmup_steps
     pct_start = warmup_steps / training_steps
-
+    assert training_steps > 0, (
+        f"Training steps must be greater than 0. Got: {training_steps}. "
+        f"Check if num_epochs={self.num_epochs} or steps_per_epoch={steps_per_epoch} is invalid."
+    )
+    assert 0 <= warmup_steps <= training_steps, (
+        f"Warmup steps must be between 0 and the total training steps. "
+        f"Got: warmup_steps={warmup_steps}, training_steps={training_steps}."
+    )
+    assert 0 <= pct_start <= 1, (
+        f"pct_start must be a valid percentage (0 <= pct_start <= 1). "
+        f"Calculated: pct_start={pct_start} with warmup_steps={warmup_steps} and training_steps={training_steps}."
+    )
     # Calculate n_cycles and cycle_len if not provided
     if cycle_len is None:
         cycle_len = 1  # Default to 1 epoch per cycle
@@ -2662,7 +2611,8 @@ def fit_fastai(
         "pct_start": pct_start,
         "cbs": cbs
     }
-    
+    # change to print (error just print red, debugging this part)
+    self.mssg.print_error(f"{args}")
     # Choose learning rate scheduler
     if (
         isinstance(self.optim.lr, float) or 
@@ -2686,32 +2636,44 @@ def fit_fastai(
                 )
             case _:
                 self.model.fit(self.num_epochs)
+    self.mssg.final()
+    self.mssg.level -= 1
 Encoder.fit_fastai = fit_fastai    
+
+# %% ../nbs/encoder.ipynb 74
 def fine_tune_mvp_single_(
     self            : Encoder,
     eval_pre        : bool  = False,
     eval_post       : bool  = False,
     shot            : bool  = False,
     show_plot       : bool  = False,
-    sample_id       : int   = 0    
+    sample_id       : int   = 0
 ):
+    self.mssg.initial_(ut.funcname())
+    self.mssg.level+=1
+    #--- Setup object parameters ---
     self.show_plot = self.show_plot if show_plot is None else show_plot
+    #--- Setup output values
+    # Time
     t_shot = 0
     t_eval_1 = 0
     t_eval_2 = 0
+    # Training losses
     losses = [],
-    metrics = [ MSELossFlat, RMSELossFlat, MAELossFlat, SMAPELossFlat ]
-    metrics_dict = get_metrics_dict(metrics, ["mse", "rmse", "mae", "smape"])
+    # Callbacks
+    cbs = L()
+    if self.use_wandb: cbs = L(CustomWandbCallback(log_preds=False))
+    # Evaluation metrics & results
+    metrics_dict = get_metrics_dict(self.metrics, self.metrics_names)
     eval_results_pre = {key: 0.0 for key in metrics_dict.keys()}
     eval_results_post = {key: 0.0 for key in metrics_dict.keys()}
+    # Computation device
+    device = "cpu" if self.cpu else torch.cuda.current_device()
     
+    #### -------- Start -------####
     if self.time_flag : timer = ut.Time(mssg = self.mssg)
-    self.mssg.initial("fine_tune_mvp_single_")   
+    # Split dataset and get the encoder input
     X = self.get_splits_(sample_id)
-    self.mssg.print("About to set callbacks", func_name = ut.funcname())
-    
-    cbs = L(CustomWandbCallback(log_preds=False)) if self.use_wandb else L()
-    
     self.mssg.print("About to set batch tfms")
     tfms = [ToFloat(), None]
     batch_tfms = [
@@ -2720,9 +2682,15 @@ def fine_tune_mvp_single_(
             use_single_batch= self.norm_use_single_batch
         )
     ]
-    dls = get_ts_dls(X, splits = self.splits, tfms = tfms, bs = self.input.batch_size, batch_tfms = batch_tfms)
+    # Get dataloaders
+    dls = get_ts_dls(
+        X = X, 
+        splits = self.splits, 
+        tfms = tfms, 
+        bs = self.input.batch_size, 
+        batch_tfms = batch_tfms
+    )
 
-    self.mssg.print(f"Metrics: {metrics}")
     if self.show_plot: 
         self.mssg.print("Show plot")
         display(dls.show_at(0))
@@ -2730,7 +2698,7 @@ def fine_tune_mvp_single_(
         self.model = ts_learner(
             dls, 
             InceptionTimePlus,
-            cbs = cbs + sgc +MVP(
+            cbs = cbs + sgc + MVP(
                 r           = self.optim.lr if isinstance(self.optim.lr, float) else self.optim.lr.lr,
                 window_size = X.shape[2]-1,
                 future_mask = self.mask_future,
@@ -2740,7 +2708,6 @@ def fine_tune_mvp_single_(
                 fname       = f'encoder_MVP',
             ),
             y_range = [X.min(), X.max()]#,
-            #metrics = metrics
         )
     else:
         self.mssg.print("Don't show plot")
@@ -2755,13 +2722,10 @@ def fine_tune_mvp_single_(
                 sync        = self.mask_sync,
                 stateful    = self.mask_stateful,
                 fname       = f'encoder_MVP',
-            ) + [ custom_opt_cb ],
-            y_range = [X.min(), X.max()]#,
-            #metrics = metrics
+            ),
+            y_range = [X.min(), X.max()]
         )
-        self.mssg.print(f"Model Class {self.model.__class__} | Type: {type(self.model)}")
-
-    device = "cpu" if self.cpu else torch.cuda.current_device()
+    
     self.model.to(device)
     self.mssg.print(f"Model Class {self.model.__class__} | Type: {type(self.model)}")
     
@@ -2770,15 +2734,18 @@ def fine_tune_mvp_single_(
         if self.time_flag: timer.start()
         self.mssg.print(f"Eval Pre | wlen {X.shape[2]} | Model: {self.model.__class__} | {type(self.model)} ")
         self.mssg.print(f"Model metrics: {self.model.metrics}")
-        self.model.eval()
-        #self.mssg.print(f"Model metrics after eval: {self.model.metrics}")
         self.mssg.print(f"metrics: {self.metrics}")
-        results = validate_with_metrics(self.model, self.metrics)
-        #self.model.validate()
-        #self.mssg.print(f"Model metrics after validate: {self.model.metrics}")
-        self.mssg.print(f"results~{len(results)}")
-        eval_results_pre = validate_with_metrics_format_results(results = results, metrics = self.metrics, metrics_names = self.metrics_names)
+        # Get metrics
+        self.model.eval() # Evaluation mode
+        results = self.validate_with_metrics_()
+        # Format the results in json
+        eval_results_pre = validate_with_metrics_format_results(
+            results = results, 
+            metrics = self.metrics, 
+            metrics_names = self.metrics_names
+        )
         self.mssg.print(f"Eval results pre with custom metrics: {eval_results_pre}")
+        # Compute time
         if self.time_flag:
             timer.end()
             t_eval_1 = timer.duration()
@@ -2786,21 +2753,25 @@ def fine_tune_mvp_single_(
     # Train 
     if shot:
         if self.time_flag: timer.start()
-        self.model.train()
         self.mssg.print(f"Training the model | window size {X.shape[2]} | X ~ {X.shape}")
+        # Train the model 
+        self.model.train() #Training mode
+        # Train using the selected optimizer & scheduler
         self.fit_fastai(dls, show_plot = show_plot)
         losses = self.model.recorder.losses
+        # Compute time
         if self.time_flag:
             timer.end()
             t_shot= timer.duration()
             timer.show(verbose = self.mssg.verbose)
-
+    
     # Eval - post
     if eval_post:
         if self.time_flag: timer.start()
         self.mssg.print(f"Eval Pre | wlen {X.shape[2]}")
-        self.model.eval()
-        results = validate_with_metrics(self.model, self.metrics)
+        # Get metrics
+        self.model.eval() # Evaluation mode
+        results = self.validate_with_metrics_()
         self.mssg.print(f"Format results | results~{len(results)}")
         eval_results_post = validate_with_metrics_format_results(
             results = results, metrics = self.metrics, metrics_names = self.metrics_names)
@@ -2811,10 +2782,80 @@ def fine_tune_mvp_single_(
             t_eval_2 = timer.duration()
             timer.show(verbose = self.mssg.verbose)
     self.mssg.final()
+    self.mssg.level += 1
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_mvp_single_ = fine_tune_mvp_single_
 
-# %% ../nbs/encoder.ipynb 79
+# %% ../nbs/encoder.ipynb 75
+def fine_tune_mvp_(
+    self                    : Encoder,
+    eval_pre                : bool  = True,
+    eval_post               : bool  = True,
+    shot                    : bool  = False,
+    time_flag               : bool  = None,
+    use_wandb               : bool  = None,
+    analysis_mode           : str   = None,
+    norm_by_sample          : bool  = None,
+    norm_use_single_batch   : bool  = None,
+    show_plot               : bool  = None
+):
+    self.mssg.initial_("fine_tune_mvp_")
+    self.time_flag      = self.time_flag if time_flag is None else time_flag
+    self.use_wandb      = self.use_wandb if use_wandb is None else use_wandb
+    self.analysis_mode  = self.analysis_mode if analysis_mode is None else analysis_mode
+    self.norm_by_sample = self.norm_by_sample if norm_by_sample is None else norm_by_sample
+    self.norm_use_single_batch = self.norm_use_single_batch if norm_use_single_batch is None else norm_use_single_batch
+    # Return values
+    lossess             = []
+    eval_results_pre    = {} # Only 1 (before fine-tune)
+    eval_results_post   = [] # One per window size (after training)
+    t_shots             = []
+    t_shot              = 0
+    t_evals             = []
+    t_eval              = 0
+
+    if self.input.size is None:
+        self.mssg.print(f"Windows: {len(self.input._data)}")
+        raise ValueError(f"Invalid number of windows: {self.input.size}")
+    self.mssg.print(f"Processing {self.input.size} datasets: {self.input.shapes}")
+    # Build optimizer
+    if self.optim.optimizer is None: 
+        self.mssg.print(f"Setting up optimizer as Adam")
+        lr = self.optim.lr
+        if (not isinstance(self.optim.lr, float)): 
+            lr = self.optim.lr.lr,
+       
+        self.optim.optimizer = Adam(
+            self.model.parameters(),
+            lr = lr,
+            mom = 0.0,
+            sqr_mom = 0.99,
+            eps = 1e-8,
+            wd = 0.01,
+            decouple_wd = True
+        )
+    self.mssg.print(f"Optimizer: {self.optim.optimizer}")
+    # Compute model for each window in the windowed dataset
+    for i in range(self.input.size):
+        self.mssg.print(f"Processing wlen {self.input.shape[2]}")
+        ( 
+            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model
+        ) =  self.fine_tune_mvp_single_(eval_pre, eval_post, shot, sample_id = i, show_plot = show_plot)
+        lossess.append(losses)
+        if (eval_pre): eval_results_pre = eval_results_pre_
+        if (eval_post): eval_results_post.append(eval_results_post_)
+        t_shots.append(t_shot_)
+        if eval_pre: t_evals.append(t_eval_1)
+        if eval_post: t_evals.append(t_eval_2)
+        eval_pre = False
+    t_shot = sum(t_shots)
+    t_eval = sum(t_evals)
+    self.mssg.final(ut.funcname())
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
+
+Encoder.fine_tune_mvp_ = fine_tune_mvp_ 
+
+# %% ../nbs/encoder.ipynb 78
 def fine_tune(
     # Optional parameters
     ## Encoder Input

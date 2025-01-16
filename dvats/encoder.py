@@ -2,18 +2,18 @@
 
 # %% auto 0
 __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EncoderInput', 'LRScheduler', 'EncoderOptimizer', 'Encoder',
-           'set_fine_tune_single_', 'set_fine_tune_', 'show_eval_stats', 'DCAE_torch', 'kwargs_to_gpu_',
-           'kwargs_to_cpu_', 'get_acts', 'get_acts_moment', 'sure_eval_moment', 'get_enc_embs_ensure_batch_size_',
-           'get_enc_embs_MVP', 'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment',
-           'get_enc_embs_moment_reconstruction', 'watch_gpu', 'get_enc_embs_moirai', 'get_enc_embs',
-           'get_enc_embs_set_stride_set_batch_size', 'random_windows', 'windowed_dataset', 'setup_scheduler',
-           'prepare_train_and_eval_dataloaders', 'fine_tune_moment_compute_loss_check_sizes_',
-           'fine_tune_moment_compute_loss', 'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_',
-           'fine_tune_moment_eval_', 'fine_tune_moment_train_loop_step_', 'fine_tune_moment_train_',
-           'fine_tune_moment_single_', 'fine_tune_moment_', 'rmse', 'smape', 'rmse_flat', 'smape_flat', 'mae_flat',
-           'mse_loss_flat', 'RMSELoss', 'RMSELossFlat', 'SMAPELoss', 'SMAPELossFlat', 'CustomOptimizerCallback',
-           'validate_with_metrics', 'mvp_format_results', 'fine_tune_mvp_single_', 'fine_tune_mvp_', 'fine_tune__old',
-           'fine_tune']
+           'set_fine_tune_single_', 'set_fine_tune_', 'show_eval_stats', 'DCAE_torch', 'CustomWandbCallback',
+           'CustomOptimizerCallback', 'kwargs_to_gpu_', 'kwargs_to_cpu_', 'get_acts', 'get_acts_moment',
+           'sure_eval_moment', 'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP',
+           'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
+           'get_enc_embs_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size', 'rmse', 'smape',
+           'rmse_flat', 'smape_flat', 'mae_flat', 'mse_loss_flat', 'RMSELoss', 'RMSELossFlat', 'SMAPELoss',
+           'SMAPELossFlat', 'validate_with_metrics', 'get_metrics_dict', 'validate_with_metrics_format_results',
+           'random_windows', 'windowed_dataset', 'setup_scheduler', 'prepare_train_and_eval_dataloaders',
+           'fine_tune_moment_compute_loss_check_sizes_', 'fine_tune_moment_compute_loss',
+           'fine_tune_moment_eval_preprocess', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
+           'fine_tune_moment_train_loop_step_', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
+           'fine_tune_moment_', 'fine_tune_mvp_single_', 'fit_fastai', 'fine_tune']
 
 # %% ../nbs/encoder.ipynb 2
 import warnings
@@ -49,6 +49,7 @@ from fastai.callback.hook import hook_outputs
 from momentfm import MOMENTPipeline
 from gluonts.dataset.pandas import PandasDataset
 from tsai.data.validation import TimeSplitter
+import wandb
 from fastai.callback.wandb import WandbCallback
 from fastai.callback.progress import ShowGraphCallback
 from fastai.callback.schedule import *
@@ -57,6 +58,7 @@ from fastai.callback.tracker import SaveModelCallback
 import time
 import einops
 import traceback
+import fastai.optimizer as fastopt
 
 # %% ../nbs/encoder.ipynb 7
 @dataclass
@@ -78,7 +80,7 @@ class EncoderInput:
     window_mask_percent : float                             = None
     # Time                  
     time_flag           : bool                              = None
-
+    
     def __post_init__(self):
         self._update_size       = True
         self._update_shape      = True
@@ -161,6 +163,7 @@ class LRScheduler:
     flag            : bool  = None
     name            : str   = None
     num_warmup_steps: int   = None
+    scheduler               = None
 
     def __post_init__(self):
         self.lr                 = self._check_lr(self.lr, 1e-5)
@@ -232,6 +235,7 @@ class Encoder():
     norm_by_sample      : bool              = True
     norm_use_single_batch : bool            = True
     metrics             : List [ Callable ] = None
+    metrics_names       : List [ str ]      = None
     #mvp_ws              : Tuple [ int, int ]= 0,0
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
@@ -310,7 +314,7 @@ class Encoder():
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_moirai_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False): 
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
-    def fine_tune_(self, eval_pre = False, eval_post = False, shot = True, time_flag = False):
+    def fine_tune_(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def set_fine_tune_(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
@@ -398,7 +402,7 @@ def show_eval_stats(
         )
 Encoder.show_eval_stats = show_eval_stats
 
-# %% ../nbs/encoder.ipynb 15
+# %% ../nbs/encoder.ipynb 16
 class DCAE_torch(Module):
     def __init__(self, c_in, seq_len, delta, nfs=[64, 32, 12], kss=[10, 5, 5],
                  pool_szs=[2,2,3], output_fsz=10):
@@ -440,7 +444,7 @@ class DCAE_torch(Module):
         x = self.upsample(x)
         return x
 
-# %% ../nbs/encoder.ipynb 18
+# %% ../nbs/encoder.ipynb 19
 ENCODER_EMBS_MODULE_NAME = {
     InceptionTimePlus: 'backbone', # for mvp based models
     DCAE_torch: 'bottleneck.latent_in'#,
@@ -448,7 +452,51 @@ ENCODER_EMBS_MODULE_NAME = {
     
 }
 
-# %% ../nbs/encoder.ipynb 20
+# %% ../nbs/encoder.ipynb 21
+from fastai.callback.core import Callback
+
+# %% ../nbs/encoder.ipynb 23
+class CustomWandbCallback(WandbCallback):
+    """
+    Callback that extends WandbCallback to avoid errors when validation 
+    is done before training.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+    def before_fit(self):
+        """
+        Overrides before_fit to ensure that'epoch' key exists.
+        """
+        try:
+            if wandb.run is not None and wandb.run.step:
+                if 'epoch' not in wandb.run.summary._as_dict():
+                    wandb.run.summary.update({'epoch': 0})
+        except Exception as e:
+            print(f"Error while checking epoch in wandb: {e}")
+            raise 
+        super().before_fit() # Call the original method 
+
+# %% ../nbs/encoder.ipynb 25
+class CustomOptimizerCallback(Callback):
+    def __init__(self, optimizer, scheduler):
+        self.optimizer = optimizer
+        self.scheduler = scheduler
+
+    def before_fit(self):
+        # Reemplazar el optimizador de FastAI con el personalizado
+        self.learn.opt = self.optimizer
+
+    def after_batch(self):
+        # Actualizar el scheduler después de cada batch
+        if self.scheduler is not None:
+            self.scheduler.step()
+
+    def after_fit(self):
+        # Restaurar el optimizador original si es necesario
+        del self.learn.opt
+
+# %% ../nbs/encoder.ipynb 27
 def kwargs_to_gpu_(**kwargs):
     for key in kwargs:
         try: #if not able to be moved, just not move it
@@ -464,7 +512,7 @@ def kwargs_to_cpu_(**kwargs):
             continue
    
 
-# %% ../nbs/encoder.ipynb 21
+# %% ../nbs/encoder.ipynb 28
 def get_acts(
     model : torch.nn.Module, 
     module: torch.nn.Module, 
@@ -534,7 +582,7 @@ def get_acts(
     if verbose > 0:ut.print_flush(f"get acts -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return res
 
-# %% ../nbs/encoder.ipynb 22
+# %% ../nbs/encoder.ipynb 29
 def get_acts_moment(
     enc_learn, 
     cpu             : bool          = False, 
@@ -604,7 +652,7 @@ def get_acts_moment(
                 
     return embs
 
-# %% ../nbs/encoder.ipynb 23
+# %% ../nbs/encoder.ipynb 30
 def sure_eval_moment(
     enc_learn, 
     cpu, 
@@ -709,7 +757,7 @@ def sure_eval_moment(
     
     return output, enc_learn
 
-# %% ../nbs/encoder.ipynb 25
+# %% ../nbs/encoder.ipynb 32
 def get_enc_embs_ensure_batch_size_(
     dls        : TSDataLoaders,
     batch_size : int = None,
@@ -729,7 +777,7 @@ def get_enc_embs_ensure_batch_size_(
         if verbose > 1: 
             ut.print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}", verbose = verbose)
 
-# %% ../nbs/encoder.ipynb 26
+# %% ../nbs/encoder.ipynb 33
 def get_enc_embs_MVP(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -814,7 +862,7 @@ def get_enc_embs_MVP(
     if to_numpy: embs = embs.numpy() if cpu else embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 27
+# %% ../nbs/encoder.ipynb 34
 def get_enc_embs_MVP_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -962,7 +1010,7 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
         ut.print_flush("get_enc_embs_MVP_set_stride_set_batch_size -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 28
+# %% ../nbs/encoder.ipynb 35
 def get_enc_embs_moment(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -1011,7 +1059,7 @@ def get_enc_embs_moment(
         ut.print_flush("get_enc_embs_moment -->", verbose = verbose)
     return embeddings
 
-# %% ../nbs/encoder.ipynb 29
+# %% ../nbs/encoder.ipynb 36
 def get_enc_embs_moment_reconstruction(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -1054,35 +1102,10 @@ def get_enc_embs_moment_reconstruction(
         embs = embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 31
+# %% ../nbs/encoder.ipynb 38
 import torch.profiler as profiler
 
-# %% ../nbs/encoder.ipynb 32
-def watch_gpu(func, **kwargs):
-    """
-    Wrapper to execute GPU profiler
-    Parameters: 
-    - func: function to monitor
-    - kwargs: func parameters
-    Returns:
-    - result of /func/.
-    """
-    with profiler.profile(
-        activities=[profiler.ProfilerActivity.CPU, profiler.ProfilerActivity.CUDA],
-        schedule=profiler.schedule(wait=1, warmup=1, active=3, repeat=2),  # Configuración de ciclos
-        on_trace_ready=profiler.tensorboard_trace_handler('./log_dir'),  # Guarda los resultados en un archivo para visualización
-        record_shapes=True,  # Registra la forma de los tensores
-        profile_memory=True,  # Perfil de memoria
-        with_stack=True  # Incluye la información de la pila
-    ) as prof:
-        # Ejecuta la función dentro del perfilador
-        result = func(**kwargs)
-    
-    # Mostrar el uso de la GPU durante y después de la ejecución
-    ut.print_flush(prof.key_averages().table(sort_by="cuda_memory_usage", row_limit=10))
-    return result
-
-# %% ../nbs/encoder.ipynb 33
+# %% ../nbs/encoder.ipynb 39
 def get_enc_embs_moirai(
     enc_input       : List [ List [ List [ Float ] ] ], 
     enc_model       : moirai.MoiraiModule, 
@@ -1220,7 +1243,7 @@ def get_enc_embs_moirai(
         ut.print_flush("get_enc_embs_moirai -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 34
+# %% ../nbs/encoder.ipynb 40
 def get_enc_embs(
     X               , 
     enc_learn       : Learner, 
@@ -1257,7 +1280,7 @@ def get_enc_embs(
             ut.print_flush(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 35
+# %% ../nbs/encoder.ipynb 41
 def get_enc_embs_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -1333,7 +1356,191 @@ def get_enc_embs_set_stride_set_batch_size(
     if verbose > 0: ut.print_flush(f"get_enc_embs_set_stride_set_batch_size | embs~{embs.shape} -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 38
+# %% ../nbs/encoder.ipynb 44
+from fastai.metrics import mae
+
+# %% ../nbs/encoder.ipynb 45
+def rmse(preds, targets):
+    res = torch.sqrt(torch.nn.functional.mse_loss(preds, targets))
+    return res
+
+def smape(preds, targets):
+    res = 100 * torch.mean(2 * torch.abs(preds - targets) / (torch.abs(preds) + torch.abs(targets)))
+    return res
+
+def rmse_flat(preds, targets):
+    """
+    Computes RMSE while flattening the tensors to ensure compatibility with MSELossFlat.
+    """
+    preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
+    return torch.sqrt(torch.nn.functional.mse_loss(preds, targets))
+
+def smape_flat(preds, targets):
+    """
+    Computes SMAPE while flattening the tensors to ensure compatibility with MSELossFlat.
+    """
+    preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
+    denominator = (torch.abs(preds) + torch.abs(targets))
+    return 100 * torch.mean(2 * torch.abs(preds - targets) / torch.clamp(denominator, min=1e-7))
+def mae_flat(preds, targets):
+    """
+    Computes Mean Absolute Error (MAE) while flattening the tensors to ensure compatibility.
+    """
+    preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
+    return torch.mean(torch.abs(preds - targets))
+
+def mse_loss_flat(preds, targets):
+    """
+    Computes Mean Squared Error (MSE) while flattening the tensors to ensure compatibility.
+    """
+    preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
+    return torch.mean((preds - targets) ** 2)
+
+# %% ../nbs/encoder.ipynb 46
+from fastai.losses import BaseLoss
+from torch.nn.modules.loss import _Loss
+
+# %% ../nbs/encoder.ipynb 47
+class RMSELoss(_Loss):
+    __constants__ = ["reduction"]
+    def __init__(self, size_average = None, reduce = None, reduction: str = "mean") -> None:
+        super().__init__(size_average, reduce, reduction)
+    
+    def forward(self, input: Tensor, target:Tensor) -> Tensor:
+        return torch.nn.functional.mse_loss(input, target, reduction = self.reduction)
+
+@use_kwargs_dict(reduction='mean')
+def RMSELossFlat(
+    *args,
+    axis:int = -1,
+    floatify: bool = True, 
+    **kwargs
+):
+    "Computes RMSE with flattening, similar to MSELossFlat."
+    return BaseLoss(RMSELoss, *args, axis = axis, floatify = floatify, is_2d = False, **kwargs)
+
+class SMAPELoss(_Loss):
+    __constants__ = ["reduction"]
+    
+    def __init__(self, size_average=None, reduce=None, reduction: str = "mean") -> None:
+        """
+        Initializes the SMAPE Loss.
+        
+        Args:
+            size_average (bool, optional): Deprecated (use reduction).
+            reduce (bool, optional): Deprecated (use reduction).
+            reduction (str): Specifies the reduction to apply to the output ('none', 'mean', 'sum').
+        """
+        super().__init__(size_average, reduce, reduction)
+    
+    def forward(self, input: Tensor, target: Tensor) -> Tensor:
+        """
+        Computes the SMAPE loss.
+        
+        Args:
+            input (Tensor): Predicted values.
+            target (Tensor): Ground truth values.
+        
+        Returns:
+            Tensor: Computed SMAPE loss.
+        """
+        return self.smape_loss(input, target)
+    
+    @staticmethod
+    def smape_loss(preds: Tensor, targets: Tensor) -> Tensor:
+        """
+        Computes the SMAPE loss for the given predictions and targets.
+        
+        Args:
+            preds (Tensor): Predicted values.
+            targets (Tensor): Ground truth values.
+        
+        Returns:
+            Tensor: SMAPE loss.
+        """
+        denominator = (torch.abs(preds) + torch.abs(targets))
+        smape = 100 * torch.mean(2 * torch.abs(preds - targets) / torch.clamp(denominator, min=1e-7))
+        return smape
+
+
+@use_kwargs_dict(reduction="mean")
+def SMAPELossFlat(
+    *args,
+    axis: int = -1,
+    floatify: bool = True,
+    **kwargs
+):
+    """
+    Computes SMAPE with flattening, similar to MSELossFlat.
+    
+    Args:
+        axis (int): Axis to flatten. Default is -1.
+        floatify (bool): Convert target to float. Default is True.
+        **kwargs: Additional arguments.
+    """
+    return BaseLoss(SMAPELoss, *args, axis=axis, floatify=floatify, is_2d=False, **kwargs)
+
+# Class alias for clarity
+MAELossFlat = L1LossFlat
+
+# %% ../nbs/encoder.ipynb 49
+def validate_with_metrics(learner, metrics):
+    results = []
+    for metric in metrics:
+        learner.crit = metric
+        result = learner.validate()
+        result = result.item() if hasattr(result, 'item') else result
+        results.append(result)
+    learner.crit=MSELossFlat
+    return results
+
+# %% ../nbs/encoder.ipynb 50
+def get_metrics_dict(
+    metrics: List[Callable],
+    metrics_names: List[str] = None
+) -> Dict[str, Callable]:
+    """
+    Creates a dictionary mapping metric names to metric functions.
+
+    Args:
+        metrics (List[Callable]): A list of metric functions.
+        metrics_names (List[str], optional): A list of metric names corresponding to the functions.
+
+    Returns:
+        Dict[str, Callable]: A dictionary mapping metric names to their corresponding functions.
+    """
+    if metrics_names is None:
+        # Use the function's name as the key if names are not provided
+        metrics_dict = {metric.__name__: metric for metric in metrics}
+    elif len(metrics) == len(metrics_names):
+        # Use provided names if lengths match
+        metrics_dict = {name: metric for name, metric in zip(metrics_names, metrics)}
+    else:
+        raise ValueError("Length of metrics and metrics_names must match when metrics_names is provided.")
+    return metrics_dict
+
+# %% ../nbs/encoder.ipynb 51
+def validate_with_metrics_format_results(
+    results, metrics, metrics_names = None
+):
+    if metrics_names is None:
+        # Use the function's name as the key if names are not provided
+        metrics_dict = {
+            metric.__name__: results[i] for 
+            (i, metric) in enumerate(metrics)
+        }
+    elif len(metrics) == len(metrics_names):
+        # Use provided names if lengths match
+        metrics_dict = {
+            name: results[i] for 
+            name, (i, metric) in 
+            zip(metrics_names, enumerate(metrics))
+        }
+    else:
+        raise ValueError("Length of metrics and metrics_names must match when metrics_names is provided.")
+    return metrics_dict
+
+# %% ../nbs/encoder.ipynb 55
 from tqdm.auto import tqdm
 from transformers import get_scheduler
 import evaluate
@@ -1341,7 +1548,7 @@ from torch.nn.modules.loss import _Loss
 from tsai.data.preparation import SlidingWindow
 from .utils import find_dominant_window_sizes_list
 
-# %% ../nbs/encoder.ipynb 39
+# %% ../nbs/encoder.ipynb 56
 def random_windows(
     X           : List [ List [ List [ float ]]], 
     n_windows   : int       = None, 
@@ -1370,7 +1577,7 @@ def random_windows(
     mssg_.final()
     return windows
 
-# %% ../nbs/encoder.ipynb 40
+# %% ../nbs/encoder.ipynb 57
 def windowed_dataset(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     stride                          : int           = 1,
@@ -1387,6 +1594,7 @@ def windowed_dataset(
     windows_min_distance = 1 if windows_min_distance is None else windows_min_distance
     full_dataset = False if full_dataset is None else full_dataset
     mssg = ut.Mssg() if mssg is None else mssg
+    mssg.level -= 1
     mssg.initial(ut.funcname())
     dss = []
     if isinstance(X, list):
@@ -1412,16 +1620,17 @@ def windowed_dataset(
             mssg.print(f"w = {w}", verbose_level = mssg.level+1)
             enc_input, _ = SlidingWindow(window_len = w, stride = stride, get_y=[])(X)
             dss.append(enc_input)
-            mssg.print(f"w {w} | enc_input~{enc_input.shape} | dss~{len(dss)}",  verbose_level = mssg.level+1)
+            mssg.print(f"w {w} | enc_input~{enc_input.shape} | dss~{len(dss)}",  verbose_level = mssg.level+1, func_name = ut.funcname())
     else: 
         mssg.print("X is already windowed")
         dss = [X]
     mssg.print(f"Number of windows: {len(dss)}")
     mssg.final()
+    mssg.level += 1
     return dss
 
 
-# %% ../nbs/encoder.ipynb 41
+# %% ../nbs/encoder.ipynb 58
 def setup_scheduler(
     dl_train                        : DataLoader,
     lr_scheduler_flag               : bool= False,
@@ -1454,8 +1663,9 @@ def setup_scheduler(
                     num_training_steps  = num_training_steps
                 )
     return lr_scheduler
+    
 
-# %% ../nbs/encoder.ipynb 42
+# %% ../nbs/encoder.ipynb 59
 def prepare_train_and_eval_dataloaders(
     X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     batch_size          : int,
@@ -1502,10 +1712,173 @@ def prepare_train_and_eval_dataloaders(
         dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
     return dl_eval, dl_train, ds_train
 
-# %% ../nbs/encoder.ipynb 44
+# %% ../nbs/encoder.ipynb 60
+def _get_enc_input(
+    mssg                            : ut.Mssg,
+    # Encoder Input
+    ## -- Using all parammeters
+    X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
+    stride                          : Optional [ int ]          = None,
+    batch_size                      : Optional [ int ]          = None,
+    n_windows                       : Optional [ int ]          = None,
+    n_windows_percent               : Optional [ float ]        = None,
+    validation_percent              : Optional [ float ]        = None, 
+    training_percent                : Optional [ float ]        = None,
+    window_mask_percent             : Optional [ float ]        = None,
+    window_sizes                    : Optional [ List [int] ]   = None,
+    n_window_sizes                  : Optional [ int ]          = 1,
+    window_sizes_offset             : Optional [ int ]          = 0.05,
+    windows_min_distance            : Optional [ int ]          = 1,
+    full_dataset                    : Optional [ bool ]         = False,
+    ## -- Using Type
+    enc_input                       : Optional [ EncoderInput ] = None
+): 
+    mssg.initial_(func_name = ut.funcname())
+    enc_input, _ = ut._check_value(enc_input, None, "enc_input", EncoderInput, True, False, False)
+    mssg.print(f"is none enc_input? {enc_input is None}")
+    if enc_input is None:
+        mssg.print(f"About to get the windows")
+        enc_input = windowed_dataset(
+            X                       = X,
+            stride                  = stride,
+            window_sizes            = window_sizes,
+            n_window_sizes          = n_window_sizes,
+            window_sizes_offset     = window_sizes_offset,
+            windows_min_distance    = windows_min_distance,
+            full_dataset            = full_dataset,
+            mssg                    = mssg
+        )
+        mssg.print(f"About to get the encoder input | windows~{len(enc_input)}", func_name = ut.funcname())
+        enc_input = EncoderInput(
+            _data               = enc_input, 
+            stride              = stride,
+            batch_size          = batch_size,
+            n_windows           = n_windows,
+            n_windows_percent   = n_windows_percent,
+            validation_percent  = validation_percent,
+            training_percent    = training_percent,
+            window_mask_percent = window_mask_percent,
+        )
+        mssg.print(f"Enc input obtained | enc_input~{enc_input.shape}")
+    mssg.final()
+    return enc_input
+
+# %% ../nbs/encoder.ipynb 61
+def _get_optimizer(
+    mssg                            : ut.Mssg,
+    optim                           : EncoderOptimizer = None,
+    criterion                       : _Loss         = torch.nn.MSELoss, 
+    optimizer                                       = None, 
+    lr                              : float         = 5e-5, #1e-4, 
+    lr_scheduler_flag               : bool          = False, 
+    lr_scheduler_name               : str           = "linear",
+    lr_scheduler_num_warmup_steps   : int           = None
+):
+    mssg.initial(ut.funcname())
+    optim,_ = ut._check_value(optim, None, "optim", EncoderOptimizer, True)
+    if optim is None:
+        optim = EncoderOptimizer(
+            criterion   = criterion,
+            optimizer   = optimizer,
+            lr          = LRScheduler (
+                            lr              = lr,
+                            flag            = lr_scheduler_flag,
+                            name            = lr_scheduler_name,
+                            num_warmup_steps= lr_scheduler_num_warmup_steps
+            ),
+        )
+    mssg.final()
+    return optim
+
+# %% ../nbs/encoder.ipynb 62
+def _get_encoder(
+    ## -- Using all parammeters
+    X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
+    stride                          : Optional [ int ]          = None,
+    batch_size                      : Optional [ int ]          = None,
+    n_windows                       : Optional [ int ]          = None,
+    n_windows_percent               : Optional [ float ]        = None,
+    validation_percent              : Optional [ float ]        = None, 
+    training_percent                : Optional [ float ]        = None,
+    window_mask_percent             : Optional [ float ]        = None,
+    window_sizes                    : Optional [ List [int] ]   = None,
+    n_window_sizes                  : Optional [ int ]          = 1,
+    window_sizes_offset             : Optional [ int ]          = 0.05,
+    windows_min_distance            : Optional [ int ]          = 1,
+    full_dataset                    : Optional [ bool ]         = False,
+    ##-- Given by Type 
+    enc_input                       : Optional [ EncoderInput ] = None,
+    # Optimizer
+    optim                           : Optional [ EncoderOptimizer ] = None,
+    ## -- Using all parameters
+    criterion                       : Optional [ _Loss ]            = torch.nn.MSELoss, 
+    optimizer                                                       = None, 
+    lr                              : Optional [ float ]            = 5e-5, #1e-4, 
+    lr_scheduler_flag               : Optional [ bool ]             = False, 
+    lr_scheduler_name               : Optional [ str ]              = "linear",
+    lr_scheduler_num_warmup_steps   : Optional [ int ]              = None,
+    # Mssg
+    ## -- Using all parameters
+    verbose                         : Optional[ int ]               = 0, 
+    print_to_path                   : Optional[ bool ]              = False,
+    print_path                      : Optional[ str ]               = "~/data/logs/logs.txt",
+    print_mode                      : Optional[ str ]               = 'a',
+    ## -- Using Type
+    mssg                            : Optional [ ut.Mssg ]          = None,
+    ## Encoder 
+    enc                             : Optional [ Encoder ]          = None,
+    ## -- Using all parameters
+    num_epochs                      : Optional [ int]               = 3,
+    enc_learn                       : Optional [Learner]            = None, 
+    cpu                             : Optional [ bool ]             = False,
+    to_numpy                        : Optional [ bool ]             = True,
+    #- Masking options
+    mask_stateful                   : Optional [ bool ]             = False,
+    mask_future                     : Optional [ bool ]             = False,
+    mask_sync                       : Optional [ bool ]             = False,
+    #- Loss criterions
+    metrics                         : Optional [ List [ Callable ]] = None,
+    metrics_names                   : Optional [ List [ str ] ]     = None
+):
+    enc,_ = ut._check_value(enc, None, "enc", Encoder, True)
+    
+    if enc is None: 
+        mssg = ut._get_mssg(
+            mssg          = mssg,
+            verbose       = verbose, 
+            print_to_path = print_to_path, 
+            print_path    = print_path, 
+            print_mode    = print_mode
+        )
+        mssg.initial(ut.funcname())
+        mssg.print("About to exec _get_enc_input")
+        enc_input = _get_enc_input(mssg, X, stride, batch_size, n_windows, n_windows_percent, validation_percent, training_percent, window_mask_percent, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, enc_input)
+        mssg.print(f"enc_input~{enc_input.shape}")
+        mssg.print("About to exec _get_optimizer")
+        optim = _get_optimizer(mssg, optim, criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name, lr_scheduler_num_warmup_steps)
+        enc = Encoder(
+            model           = enc_learn,
+            input           = enc_input,
+            mssg            = mssg,
+            cpu             = cpu,
+            to_numpy        = to_numpy, 
+            num_epochs      = num_epochs, 
+            optim           = optim,
+            mask_stateful   = mask_stateful,
+            mask_future     = mask_future,
+            mask_sync       = mask_sync,
+            eval_stats_pre  = None,
+            eval_stats_post = None,
+            metrics         = metrics,
+            metrics_names   = metrics_names
+        )
+    enc.mssg.final(ut.funcname())
+    return enc
+
+# %% ../nbs/encoder.ipynb 64
 from momentfm.utils.masking import Masking
 
-# %% ../nbs/encoder.ipynb 45
+# %% ../nbs/encoder.ipynb 65
 def fine_tune_moment_compute_loss_check_sizes_(
     batch           : List [ List [ List [ float ] ] ], 
     output, 
@@ -1532,7 +1905,7 @@ def fine_tune_moment_compute_loss_check_sizes_(
     if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss_check_sizes_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return b
 
-# %% ../nbs/encoder.ipynb 46
+# %% ../nbs/encoder.ipynb 66
 def fine_tune_moment_compute_loss(
     batch, 
     output, 
@@ -1570,7 +1943,7 @@ def fine_tune_moment_compute_loss(
     if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return loss
 
-# %% ../nbs/encoder.ipynb 47
+# %% ../nbs/encoder.ipynb 67
 def fine_tune_moment_eval_preprocess(
     predictions : List [ List [ float ]],
     references : List [ List [ float ]],
@@ -1608,7 +1981,7 @@ def fine_tune_moment_eval_preprocess(
         ut.print_flush(f"Eval | After NaN | refs~{references.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return predictions, references
 
-# %% ../nbs/encoder.ipynb 48
+# %% ../nbs/encoder.ipynb 68
 def fine_tune_moment_eval_step_(
     enc_learn : Learner,
     batch,
@@ -1647,7 +2020,7 @@ def fine_tune_moment_eval_step_(
         smape_metric.add_batch(predictions=predictions, references = references)
         return mse_metric, rmse_metric, mae_metric, smape_metric
 
-# %% ../nbs/encoder.ipynb 49
+# %% ../nbs/encoder.ipynb 69
 def fine_tune_moment_eval_(
     enc_learn : Learner,
     dl_eval   : DataLoader,
@@ -1712,7 +2085,7 @@ def fine_tune_moment_eval_(
     enc_learn.train()
     return eval_results
 
-# %% ../nbs/encoder.ipynb 50
+# %% ../nbs/encoder.ipynb 70
 def fine_tune_moment_train_loop_step_(
     enc_learn,
     batch, 
@@ -1831,7 +2204,7 @@ def fine_tune_moment_train_loop_step_(
         #ut.print_flush(f"fine_tune_moment_train_loop_step_ | Enc_learn After compute loss {enc_learn.__class__} | -->")
     return loss, enc_learn
 
-# %% ../nbs/encoder.ipynb 51
+# %% ../nbs/encoder.ipynb 71
 def fine_tune_moment_train_(
     enc_learn                       : Learner, 
     dl_train                        : DataLoader,
@@ -1930,7 +2303,7 @@ def fine_tune_moment_train_(
         ut.print_flush(f"fine_tune_moment_train | -->", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     return losses, enc_learn
 
-# %% ../nbs/encoder.ipynb 52
+# %% ../nbs/encoder.ipynb 72
 def fine_tune_moment_single_(
     self                : Encoder,
     eval_pre            : bool = False,
@@ -2048,7 +2421,7 @@ def fine_tune_moment_single_(
 
 Encoder.fine_tune_moment_single_ = fine_tune_moment_single_
 
-# %% ../nbs/encoder.ipynb 53
+# %% ../nbs/encoder.ipynb 73
 def fine_tune_moment_(
         self                : Encoder, 
         eval_pre            : bool = False, 
@@ -2096,173 +2469,7 @@ def fine_tune_moment_(
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
 
-# %% ../nbs/encoder.ipynb 55
-from fastai.metrics import mae
-def rmse(preds, targets):
-    res = torch.sqrt(torch.nn.functional.mse_loss(preds, targets))
-    return res
-
-def smape(preds, targets):
-    res = 100 * torch.mean(2 * torch.abs(preds - targets) / (torch.abs(preds) + torch.abs(targets)))
-    return res
-
-def rmse_flat(preds, targets):
-    """
-    Computes RMSE while flattening the tensors to ensure compatibility with MSELossFlat.
-    """
-    preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
-    return torch.sqrt(torch.nn.functional.mse_loss(preds, targets))
-
-def smape_flat(preds, targets):
-    """
-    Computes SMAPE while flattening the tensors to ensure compatibility with MSELossFlat.
-    """
-    preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
-    denominator = (torch.abs(preds) + torch.abs(targets))
-    return 100 * torch.mean(2 * torch.abs(preds - targets) / torch.clamp(denominator, min=1e-7))
-def mae_flat(preds, targets):
-    """
-    Computes Mean Absolute Error (MAE) while flattening the tensors to ensure compatibility.
-    """
-    preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
-    return torch.mean(torch.abs(preds - targets))
-
-def mse_loss_flat(preds, targets):
-    """
-    Computes Mean Squared Error (MSE) while flattening the tensors to ensure compatibility.
-    """
-    preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
-    return torch.mean((preds - targets) ** 2)
-
-# %% ../nbs/encoder.ipynb 56
-from fastai.losses import BaseLoss
-from fastai.losses import MSELossFlat
-from fastai.losses import L1LossFlat
-
-class RMSELoss(_Loss):
-    __constants__ = ["reduction"]
-    def __init__(self, size_average = None, reduce = None, reduction: str = "mean") -> None:
-        super().__init__(size_average, reduce, reduction)
-    
-    def forward(self, input: Tensor, target:Tensor) -> Tensor:
-        return torch.nn.functional.mse_loss(input, target, reduction = self.reduction)
-
-@use_kwargs_dict(reduction='mean')
-def RMSELossFlat(
-    *args,
-    axis:int = -1,
-    floatify: bool = True, 
-    **kwargs
-):
-    "Computes RMSE with flattening, similar to MSELossFlat."
-    return BaseLoss(RMSELoss, *args, axis = axis, floatify = floatify, is_2d = False, **kwargs)
-
-class SMAPELoss(_Loss):
-    __constants__ = ["reduction"]
-    
-    def __init__(self, size_average=None, reduce=None, reduction: str = "mean") -> None:
-        """
-        Initializes the SMAPE Loss.
-        
-        Args:
-            size_average (bool, optional): Deprecated (use reduction).
-            reduce (bool, optional): Deprecated (use reduction).
-            reduction (str): Specifies the reduction to apply to the output ('none', 'mean', 'sum').
-        """
-        super().__init__(size_average, reduce, reduction)
-    
-    def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        """
-        Computes the SMAPE loss.
-        
-        Args:
-            input (Tensor): Predicted values.
-            target (Tensor): Ground truth values.
-        
-        Returns:
-            Tensor: Computed SMAPE loss.
-        """
-        return self.smape_loss(input, target)
-    
-    @staticmethod
-    def smape_loss(preds: Tensor, targets: Tensor) -> Tensor:
-        """
-        Computes the SMAPE loss for the given predictions and targets.
-        
-        Args:
-            preds (Tensor): Predicted values.
-            targets (Tensor): Ground truth values.
-        
-        Returns:
-            Tensor: SMAPE loss.
-        """
-        denominator = (torch.abs(preds) + torch.abs(targets))
-        smape = 100 * torch.mean(2 * torch.abs(preds - targets) / torch.clamp(denominator, min=1e-7))
-        return smape
-
-
-@use_kwargs_dict(reduction="mean")
-def SMAPELossFlat(
-    *args,
-    axis: int = -1,
-    floatify: bool = True,
-    **kwargs
-):
-    """
-    Computes SMAPE with flattening, similar to MSELossFlat.
-    
-    Args:
-        axis (int): Axis to flatten. Default is -1.
-        floatify (bool): Convert target to float. Default is True.
-        **kwargs: Additional arguments.
-    """
-    return BaseLoss(SMAPELoss, *args, axis=axis, floatify=floatify, is_2d=False, **kwargs)
-
-# Class alias for clarity
-MAELossFlat = L1LossFlat
-
-# %% ../nbs/encoder.ipynb 57
-#TODO: Check. Adding lr_scheduler & optimizer to mvp
-from fastai.callback.core import Callback
-
-class CustomOptimizerCallback(Callback):
-    def __init__(self, optimizer, scheduler):
-        self.optimizer = optimizer
-        self.scheduler = scheduler
-
-    def before_fit(self):
-        # Reemplazar el optimizador de FastAI con el personalizado
-        self.learn.opt = self.optimizer
-
-    def after_batch(self):
-        # Actualizar el scheduler después de cada batch
-        if self.scheduler is not None:
-            self.scheduler.step()
-
-    def after_fit(self):
-        # Restaurar el optimizador original si es necesario
-        del self.learn.opt
-
-# %% ../nbs/encoder.ipynb 58
-def validate_with_metrics(learner, metrics):
-    results = []
-    for metric in metrics:
-        learner.crit = metric
-        result = learner.validate()
-        results.append(result.item() if hasattr(result, 'item') else result)
-    learner.crit=MSELossFlat
-    return results
-
-# %% ../nbs/encoder.ipynb 59
-def mvp_format_results(results):
-    return {
-        "mse"   : results[0],
-        "rmse"  : results[1],
-        "mae"   : results[2],
-        "smape" : results[3]
-    }
-
-# %% ../nbs/encoder.ipynb 60
+# %% ../nbs/encoder.ipynb 75
 def fine_tune_mvp_single_(
     self            : Encoder,
     eval_pre        : bool  = False,
@@ -2272,27 +2479,23 @@ def fine_tune_mvp_single_(
     sample_id       : int   = 0
 ):
     self.show_plot = self.show_plot if show_plot is None else show_plot
-    t_shot = 0
+    t_shot   = 0
     t_eval_1 = 0
     t_eval_2 = 0
-    losses = []
-    eval_results_pre = "",
-    eval_results_post = ""
+    losses   = []
+    eval_results_pre = {}
+    eval_results_post = {}
     if self.time_flag : timer = ut.Time(mssg = self.mssg)
     self.mssg.initial("fine_tune_mvp_single_")   
     X = self.get_splits_(sample_id)
     self.mssg.print("About to set callbacks", func_name = ut.funcname())
-    cbs = L(WandbCallback(log_preds=False)) if self.use_wandb else L()
+    cbs = L(CustomWandbCallback(log_preds=False)) if self.use_wandb else L()
     cbs2 = [
         EarlyStoppingCallback(
             monitor='valid_loss', 
             min_delta=0.000001, 
             patience=10
-        ),
-        #SaveModelCallback(
-        #    monitor = 'valid_loss', 
-        #    fname = 'best_model'
-        #),
+        )
     ]
     
 
@@ -2370,7 +2573,11 @@ def fine_tune_mvp_single_(
         self.mssg.print(f"Eval Pre | wlen {X.shape[2]} | Model: {self.model.__class__} | {type(self.model)} ")
         self.model.eval()
         results = validate_with_metrics(self.model, self.metrics)
-        eval_results_pre = mvp_format_results(results)
+        eval_results_pre = validate_with_metrics_format_results(
+            results       = results,
+            metrics       = self.metrics,
+            metrics_names = self.metrics_names
+        )
         if self.time_flag:
             timer.end()
             t_eval_1 = timer.duration()
@@ -2399,7 +2606,11 @@ def fine_tune_mvp_single_(
         self.model.eval()
         results = validate_with_metrics(self.model, self.metrics)
         self.mssg.print(f"Format results | results~{len(results)}")
-        eval_results_post = mvp_format_results(results)
+        eval_results_post = validate_with_metrics_format_results(
+            results       = results,
+            metrics       = self.metrics,
+            metrics_names = self.metrics_names
+        )
         if self.time_flag:
             timer.end()
             t_eval_2 = timer.duration()
@@ -2408,344 +2619,202 @@ def fine_tune_mvp_single_(
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_mvp_single_ = fine_tune_mvp_single_
 
-# %% ../nbs/encoder.ipynb 61
-# TODO: Revisar inclusion del optimizer en fine_tune_mvp_
-
-def fine_tune_mvp_(
-    self                    : Encoder,
-    eval_pre                : bool  = True,
-    eval_post               : bool  = True,
-    shot                    : bool  = False,
-    time_flag               : bool  = None,
-    use_wandb               : bool  = None,
-    analysis_mode           : str   = None,
-    norm_by_sample          : bool  = None,
-    norm_use_single_batch   : bool  = None,
-    show_plot               : bool  = None
-):
-    self.mssg.initial_("fine_tune_mvp_")
-    self.time_flag      = self.time_flag if time_flag is None else time_flag
-    self.use_wandb      = self.use_wandb if use_wandb is None else use_wandb
-    self.analysis_mode  = self.analysis_mode if analysis_mode is None else analysis_mode
-    self.norm_by_sample = self.norm_by_sample if norm_by_sample is None else norm_by_sample
-    self.norm_use_single_batch = self.norm_use_single_batch if norm_use_single_batch is None else norm_use_single_batch
-    # Return values
-    lossess             = []
-    eval_results_pre    = []
-    eval_results_post   = []
-    t_shots             = []
-    t_shot              = 0
-    t_evals             = []
-    t_eval              = 0
-
-    if self.input.size is None:
-        self.mssg.print(f"Windows: {len(self.input._data)}")
-        raise ValueError(f"Invalid number of windows: {self.input.size}")
-    self.mssg.print(f"Processing {self.input.size} datasets: {self.input.shapes}")
-    # Build optimizer
-    if self.optim.optimizer is None: 
-        self.mssg.print(f"Setting up optimizer as AdamW")
-        if (not isinstance(self.optim.lr, float)):
-            self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.optim.lr.lr)
-        else:
-            self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr)
-    # Compute model for each window in the windowed dataset
-    for i in range(self.input.size):
-        self.mssg.print(f"Processing wlen {self.input.shape[2]}")
-        ( 
-            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model
-        ) =  self.fine_tune_mvp_single_(eval_pre, eval_post, shot, sample_id = i, show_plot = show_plot)
-        lossess.append(losses)
-        if (eval_pre): eval_results_pre = eval_results_pre_
-        eval_results_post.append(eval_results_post_)
-        t_shots.append(t_shot_)
-        if eval_pre: t_evals.append(t_eval_1)
-        if eval_post: t_evals.append(t_eval_2)
-        eval_pre = False
-    t_shot = sum(t_shots)
-    t_eval = sum(t_evals)
-    self.mssg.final(ut.funcname())
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
-
-Encoder.fine_tune_mvp_ = fine_tune_mvp_ 
-
-# %% ../nbs/encoder.ipynb 64
-def fine_tune__old(
-    X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
-    enc_learn                       : Learner, 
-    stride                          : int           = 1,      
-    batch_size                      : int           = 32,
-    cpu                             : bool          = False,
-    to_numpy                        : bool          = True, 
-    verbose                         : int           = 0, 
-    time_flag                       : bool          = False,
-    n_windows                       : int           = None,
-    n_windows_percent               : float         = None,
-    validation_percent              : float         = 0.2, 
-    training_percent                : float         = 0.2,
-    window_mask_percent             : float         = 0.3,
-    num_epochs                      : int           = 3,
-    shot                            : bool          = True,
-    eval_pre                        : bool          = True,
-    eval_post                       : bool          = True,
-    criterion                       : _Loss         = torch.nn.MSELoss, 
-    optimizer                                       = None, 
-    lr                              : float         = 5e-5, #1e-4, 
-    lr_scheduler_flag               : bool          = False, 
-    lr_scheduler_name               : str           = "linear",
-    lr_scheduler_num_warmup_steps   : int           = None,
-    window_sizes                    : List [int]    = None,
-    n_window_sizes                  : int           = 1,
-    window_sizes_offset             : int           = 0.05,
-    windows_min_distance            : int           = 1,
-    full_dataset                    : bool          = False,
-    #- Printing options for debugging
-    print_to_path                   : bool          = False,
-    print_path                      : str           = "~/data/logs/logs.txt",
-    print_mode                      : str           = 'a',
-    #- Only for moment
-    use_moment_masks                : bool          = False,
-    #- Masking options
-    mask_stateful                   : bool          = False,
-    mask_future                     : bool          = False,
-    mask_sync                       : bool          = False
-): 
-    mssg = ut.Mssg(
-            to_path=print_to_path,
-            path=print_path,
-            mode=print_mode,
-            verbose=verbose
-        ) 
-    mssg.initial()
-    
-    lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval = ( None, None, None, None, None, None, None )
-    
-    enc_input = windowed_dataset(
-        X, stride, window_sizes, 
-        n_window_sizes, window_sizes_offset, 
-        windows_min_distance, full_dataset, 
-        mssg
-    )
-    enc_input = EncoderInput(
-        _data               = enc_input, 
-        stride              = stride,
-        batch_size          = batch_size,
-        n_windows           = n_windows,
-        n_windows_percent   = n_windows_percent,
-        validation_percent  = validation_percent,
-        training_percent    = training_percent,
-        window_mask_percent = window_mask_percent,
-    )
-    optim = EncoderOptimizer(
-        criterion   = criterion,
-        optimizer   = optimizer,
-        lr          = LRScheduler (
-                        flag            = lr_scheduler_flag,
-                        name            = lr_scheduler_name,
-                        num_warmup_steps= lr_scheduler_num_warmup_steps
-        ),
-    )
-    enc = Encoder(
-        model           = enc_learn,
-        input           = enc_input,
-        mssg            = mssg,
-        cpu             = cpu,
-        to_numpy        = to_numpy, 
-        num_epochs      = num_epochs, 
-        optim           = optim,
-        mask_stateful   = mask_stateful,
-        mask_future     = mask_future,
-        mask_sync       = mask_sync,
-        eval_stats_pre  = eval_results_pre,
-        eval_stats_post = eval_results_post
-    )
-    enc.set_fine_tune_()
-    match enc.fine_tune_.__name__:
-        case "fine_tune_moment_":
-            ( 
-                lossess, eval_results_pre, eval_results_post, 
-                t_shots, t_shot, t_evals, t_eval, enc.model 
-            ) = enc.fine_tune_(
-                eval_pre, eval_post, shot, time_flag, use_moment_masks
-            )
-        case _:
-            ( 
-                lossess, eval_results_pre, eval_results_post, 
-                t_shots, t_shot, t_evals, t_eval, enc.model 
-            ) = enc.fine_tune_(eval_pre, eval_post, shot, time_flag)
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc.model
-
-# %% ../nbs/encoder.ipynb 65
-def _get_mssg(
-    mssg : ut.Mssg = None,
-    verbose                         : int           = 0, 
-    print_to_path                   : bool          = False,
-    print_path                      : str           = "~/data/logs/logs.txt",
-    print_mode                      : str           = 'a',
-):
-    mssg,_ = ut._check_value(mssg, None, "mssg", ut.Mssg)
-    if mssg is None:
-        mssg = ut.Mssg(
-            to_path = print_to_path,
-            path    = print_path,
-            mode    = print_mode,
-            verbose = verbose
-        ) 
-    return mssg
-
-def _get_enc_input(
-    mssg                            : ut.Mssg,
-    # Encoder Input
-    ## -- Using all parammeters
-    X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
-    stride                          : Optional [ int ]          = None,
-    batch_size                      : Optional [ int ]          = None,
-    n_windows                       : Optional [ int ]          = None,
-    n_windows_percent               : Optional [ float ]        = None,
-    validation_percent              : Optional [ float ]        = None, 
-    training_percent                : Optional [ float ]        = None,
-    window_mask_percent             : Optional [ float ]        = None,
-    window_sizes                    : Optional [ List [int] ]   = None,
-    n_window_sizes                  : Optional [ int ]          = 1,
-    window_sizes_offset             : Optional [ int ]          = 0.05,
-    windows_min_distance            : Optional [ int ]          = 1,
-    full_dataset                    : Optional [ bool ]         = False,
-    ## -- Using Type
-    enc_input                       : Optional [ EncoderInput ] = None
-): 
-    mssg.initial_(func_name = ut.funcname())
-    enc_input, _ = ut._check_value(enc_input, None, "enc_input", EncoderInput, True, False, False)
-    mssg.print(f"is none enc_input? {enc_input is None}")
-    if enc_input is None:
-        mssg.print(f"About to get the windows")
-        enc_input = windowed_dataset(
-            X                       = X,
-            stride                  = stride,
-            window_sizes            = window_sizes,
-            n_window_sizes          = n_window_sizes,
-            window_sizes_offset     = window_sizes_offset,
-            windows_min_distance    = windows_min_distance,
-            full_dataset            = full_dataset,
-            mssg                    = mssg
+# %% ../nbs/encoder.ipynb 76
+def fit_fastai(
+    self: Encoder,
+    dl_train: DataLoader,
+    lr_funcs: Tuple[Callable, ...] = (valley,),  # steep
+    show_plot: bool = False,
+    n_cycles: Optional[int] = None,  # Allow dynamic calculation
+    cycle_len: Optional[int] = None
+) -> None:
+    # Callbacks
+    cbs = [
+        EarlyStoppingCallback(
+            monitor="valid_loss", 
+            min_delta=0.000001, 
+            patience=10
         )
-        mssg.print(f"About to get the encoder input | windows~{len(enc_input)}", func_name = ut.funcname())
-        enc_input = EncoderInput(
-            _data               = enc_input, 
-            stride              = stride,
-            batch_size          = batch_size,
-            n_windows           = n_windows,
-            n_windows_percent   = n_windows_percent,
-            validation_percent  = validation_percent,
-            training_percent    = training_percent,
-            window_mask_percent = window_mask_percent,
-        )
-        mssg.print(f"Enc input obtained | enc_input~{enc_input.shape}")
-    mssg.final()
-    return enc_input
+    ]
+    
+    # Learning rate finding
+    lr_max = self.model.lr_find(
+        suggest_funcs=lr_funcs, 
+        show_plot=show_plot
+    )
+    
+    # Training steps and pct_start
+    steps_per_epoch = len(dl_train)
+    training_steps = self.num_epochs * steps_per_epoch
+    warmup_steps = optim.lr.warmup_steps
+    pct_start = warmup_steps / training_steps
 
-def _get_optimizer(
-    mssg                            : ut.Mssg,
-    optim                           : EncoderOptimizer = None,
-    criterion                       : _Loss         = torch.nn.MSELoss, 
-    optimizer                                       = None, 
-    lr                              : float         = 5e-5, #1e-4, 
-    lr_scheduler_flag               : bool          = False, 
-    lr_scheduler_name               : str           = "linear",
-    lr_scheduler_num_warmup_steps   : int           = None
+    # Calculate n_cycles and cycle_len if not provided
+    if cycle_len is None:
+        cycle_len = 1  # Default to 1 epoch per cycle
+    if n_cycles is None:
+        n_cycles = self.num_epochs // cycle_len
+
+    # Shared arguments
+    args = {
+        "n_epoch": self.num_epochs,
+        "lr_max": lr_max,
+        "pct_start": pct_start,
+        "cbs": cbs
+    }
+    
+    # Choose learning rate scheduler
+    if (
+        isinstance(self.optim.lr, float) or 
+        not self.optim.lr.flag
+    ):
+        self.model.fit_one_cycle(**args)
+    else:
+        self.model.opt = self.optim.optimizer
+        match self.optim.lr.name:
+            case "OneCycleLr":
+                self.model.fit_one_cycle(**args)
+            case "FlatCosLR":
+                self.model.fit_flat_cos(**args)
+            case "SgdrLR":
+                # Use calculated or provided n_cycles and cycle_len
+                self.model.fit_sgdr(
+                    n_cycles=n_cycles,
+                    cycle_len=cycle_len,
+                    lr_max=lr_max,
+                    cbs=cbs
+                )
+            case _:
+                self.model.fit(self.num_epochs)
+Encoder.fit_fastai = fit_fastai    
+def fine_tune_mvp_single_(
+    self            : Encoder,
+    eval_pre        : bool  = False,
+    eval_post       : bool  = False,
+    shot            : bool  = False,
+    show_plot       : bool  = False,
+    sample_id       : int   = 0    
 ):
-    mssg.initial(ut.funcname())
-    optim,_ = ut._check_value(optim, None, "optim", EncoderOptimizer, True)
-    if optim is None:
-        optim = EncoderOptimizer(
-            criterion   = criterion,
-            optimizer   = optimizer,
-            lr          = LRScheduler (
-                            lr              = lr,
-                            flag            = lr_scheduler_flag,
-                            name            = lr_scheduler_name,
-                            num_warmup_steps= lr_scheduler_num_warmup_steps
+    self.show_plot = self.show_plot if show_plot is None else show_plot
+    t_shot = 0
+    t_eval_1 = 0
+    t_eval_2 = 0
+    losses = [],
+    metrics = [ MSELossFlat, RMSELossFlat, MAELossFlat, SMAPELossFlat ]
+    metrics_dict = get_metrics_dict(metrics, ["mse", "rmse", "mae", "smape"])
+    eval_results_pre = {key: 0.0 for key in metrics_dict.keys()}
+    eval_results_post = {key: 0.0 for key in metrics_dict.keys()}
+    
+    if self.time_flag : timer = ut.Time(mssg = self.mssg)
+    self.mssg.initial("fine_tune_mvp_single_")   
+    X = self.get_splits_(sample_id)
+    self.mssg.print("About to set callbacks", func_name = ut.funcname())
+    
+    cbs = L(CustomWandbCallback(log_preds=False)) if self.use_wandb else L()
+    
+    self.mssg.print("About to set batch tfms")
+    tfms = [ToFloat(), None]
+    batch_tfms = [
+        TSStandardize(
+            by_sample       = self.norm_by_sample, 
+            use_single_batch= self.norm_use_single_batch
+        )
+    ]
+    dls = get_ts_dls(X, splits = self.splits, tfms = tfms, bs = self.input.batch_size, batch_tfms = batch_tfms)
+
+    self.mssg.print(f"Metrics: {metrics}")
+    if self.show_plot: 
+        self.mssg.print("Show plot")
+        display(dls.show_at(0))
+        sgc = ShowGraphCallback2()
+        self.model = ts_learner(
+            dls, 
+            InceptionTimePlus,
+            cbs = cbs + sgc +MVP(
+                r           = self.optim.lr if isinstance(self.optim.lr, float) else self.optim.lr.lr,
+                window_size = X.shape[2]-1,
+                future_mask = self.mask_future,
+                target_dir  = './models',
+                sync        = self.mask_sync,
+                stateful    = self.mask_stateful,
+                fname       = f'encoder_MVP',
             ),
+            y_range = [X.min(), X.max()]#,
+            #metrics = metrics
         )
-    mssg.final()
-    return optim
+    else:
+        self.mssg.print("Don't show plot")
+        self.model = ts_learner(
+            dls, 
+            InceptionTimePlus,
+            cbs = cbs + mvp(
+                r           = self.optim.lr if ( isinstance(self.optim.lr, float) or isinstance(self.optim.lr, int)) else self.optim.lr.lr,
+                window_size = X.shape[2]-1,
+                future_mask = self.mask_future,
+                target_dir  = './models',
+                sync        = self.mask_sync,
+                stateful    = self.mask_stateful,
+                fname       = f'encoder_MVP',
+            ) + [ custom_opt_cb ],
+            y_range = [X.min(), X.max()]#,
+            #metrics = metrics
+        )
+        self.mssg.print(f"Model Class {self.model.__class__} | Type: {type(self.model)}")
 
-def _get_encoder(
-    ## -- Using all parammeters
-    X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
-    stride                          : Optional [ int ]          = None,
-    batch_size                      : Optional [ int ]          = None,
-    n_windows                       : Optional [ int ]          = None,
-    n_windows_percent               : Optional [ float ]        = None,
-    validation_percent              : Optional [ float ]        = None, 
-    training_percent                : Optional [ float ]        = None,
-    window_mask_percent             : Optional [ float ]        = None,
-    window_sizes                    : Optional [ List [int] ]   = None,
-    n_window_sizes                  : Optional [ int ]          = 1,
-    window_sizes_offset             : Optional [ int ]          = 0.05,
-    windows_min_distance            : Optional [ int ]          = 1,
-    full_dataset                    : Optional [ bool ]         = False,
-    ##-- Given by Type 
-    enc_input                       : Optional [ EncoderInput ] = None,
-    # Optimizer
-    optim                           : Optional [ EncoderOptimizer ] = None,
-    ## -- Using all parameters
-    criterion                       : Optional [ _Loss ]            = torch.nn.MSELoss, 
-    optimizer                                                       = None, 
-    lr                              : Optional [ float ]            = 5e-5, #1e-4, 
-    lr_scheduler_flag               : Optional [ bool ]             = False, 
-    lr_scheduler_name               : Optional [ str ]              = "linear",
-    lr_scheduler_num_warmup_steps   : Optional [ int ]              = None,
-    # Mssg
-    ## -- Using all parameters
-    verbose                         : Optional[ int ]               = 0, 
-    print_to_path                   : Optional[ bool ]              = False,
-    print_path                      : Optional[ str ]               = "~/data/logs/logs.txt",
-    print_mode                      : Optional[ str ]               = 'a',
-    ## -- Using Type
-    mssg                            : Optional [ ut.Mssg ]          = None,
-    ## Encoder 
-    enc                             : Optional [ Encoder ]          = None,
-    ## -- Using all parameters
-    num_epochs                      : Optional [ int]               = 3,
-    enc_learn                       : Optional [Learner]            = None, 
-    cpu                             : Optional [ bool ]             = False,
-    to_numpy                        : Optional [ bool ]             = True,
-    #- Masking options
-    mask_stateful                   : Optional [ bool ]             = False,
-    mask_future                     : Optional [ bool ]             = False,
-    mask_sync                       : Optional [ bool ]             = False,
-    #- Loss criterions
-    metrics                         : Optional [ List [ Callable ]] = None
-):
-    enc,_ = ut._check_value(enc, None, "enc", Encoder, True)
+    device = "cpu" if self.cpu else torch.cuda.current_device()
+    self.model.to(device)
+    self.mssg.print(f"Model Class {self.model.__class__} | Type: {type(self.model)}")
     
-    if enc is None: 
-        mssg = _get_mssg(mssg, verbose, print_to_path, print_path, print_mode)
-        mssg.initial(ut.funcname())
-        mssg.print("About to exec _get_enc_input")
-        enc_input = _get_enc_input(mssg, X, stride, batch_size, n_windows, n_windows_percent, validation_percent, training_percent, window_mask_percent, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, enc_input)
-        mssg.print(f"enc_input~{enc_input.shape}")
-        mssg.print("About to exec _get_optimizer")
-        optim = _get_optimizer(mssg, optim, criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name, lr_scheduler_num_warmup_steps)
-        enc = Encoder(
-            model           = enc_learn,
-            input           = enc_input,
-            mssg            = mssg,
-            cpu             = cpu,
-            to_numpy        = to_numpy, 
-            num_epochs      = num_epochs, 
-            optim           = optim,
-            mask_stateful   = mask_stateful,
-            mask_future     = mask_future,
-            mask_sync       = mask_sync,
-            eval_stats_pre  = None,
-            eval_stats_post = None,
-            metrics         = metrics
-        )
-    enc.mssg.final(ut.funcname())
-    return enc
+    # Eval - pre 
+    if eval_pre:
+        if self.time_flag: timer.start()
+        self.mssg.print(f"Eval Pre | wlen {X.shape[2]} | Model: {self.model.__class__} | {type(self.model)} ")
+        self.mssg.print(f"Model metrics: {self.model.metrics}")
+        self.model.eval()
+        #self.mssg.print(f"Model metrics after eval: {self.model.metrics}")
+        self.mssg.print(f"metrics: {self.metrics}")
+        results = validate_with_metrics(self.model, self.metrics)
+        #self.model.validate()
+        #self.mssg.print(f"Model metrics after validate: {self.model.metrics}")
+        self.mssg.print(f"results~{len(results)}")
+        eval_results_pre = validate_with_metrics_format_results(results = results, metrics = self.metrics, metrics_names = self.metrics_names)
+        self.mssg.print(f"Eval results pre with custom metrics: {eval_results_pre}")
+        if self.time_flag:
+            timer.end()
+            t_eval_1 = timer.duration()
+            timer.show(verbose = self.mssg.verbose)
+    # Train 
+    if shot:
+        if self.time_flag: timer.start()
+        self.model.train()
+        self.mssg.print(f"Training the model | window size {X.shape[2]} | X ~ {X.shape}")
+        self.fit_fastai(dls, show_plot = show_plot)
+        losses = self.model.recorder.losses
+        if self.time_flag:
+            timer.end()
+            t_shot= timer.duration()
+            timer.show(verbose = self.mssg.verbose)
 
-# %% ../nbs/encoder.ipynb 66
+    # Eval - post
+    if eval_post:
+        if self.time_flag: timer.start()
+        self.mssg.print(f"Eval Pre | wlen {X.shape[2]}")
+        self.model.eval()
+        results = validate_with_metrics(self.model, self.metrics)
+        self.mssg.print(f"Format results | results~{len(results)}")
+        eval_results_post = validate_with_metrics_format_results(
+            results = results, metrics = self.metrics, metrics_names = self.metrics_names)
+        #self.model.validate()
+        self.mssg.print(f"Eval results post with custom metrics: {eval_results_post}")
+        if self.time_flag:
+            timer.end()
+            t_eval_2 = timer.duration()
+            timer.show(verbose = self.mssg.verbose)
+    self.mssg.final()
+    return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
+Encoder.fine_tune_mvp_single_ = fine_tune_mvp_single_
+
+# %% ../nbs/encoder.ipynb 79
 def fine_tune(
     # Optional parameters
     ## Encoder Input
@@ -2806,7 +2875,8 @@ def fine_tune(
     norm_by_sample                  : bool          = None,
     norm_use_single_batch           : bool          = None,
     show_plot                       : bool          = False,
-    metrics                                         = None
+    metrics                                         = None,
+    metrics_names                   : List [ str ]  = None
 ): 
     enc = _get_encoder(
         X                               = X,
@@ -2843,8 +2913,9 @@ def fine_tune(
         mask_stateful                   = mask_stateful,
         mask_future                     = mask_future,
         mask_sync                       = mask_sync,
-        metrics                         = metrics        
-)
+        metrics                         = metrics,
+        metrics_names                   = metrics_names
+    )
     enc.mssg.initial_("fine_tune")
     enc.mssg.print(f"Original enc_learn { enc_learn }  | Final model { enc.model }")
     lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval = ( None, None, None, None, None, None, None )

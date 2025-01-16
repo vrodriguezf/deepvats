@@ -1207,3 +1207,24 @@ def _validate_nested_list(value, default, name, valid_types, levels,
     mssg.final(f"{funcname()} | level {levels}")
     return res, valid
 
+
+# %% ../nbs/utils.ipynb 103
+def _get_mssg(
+    mssg : Mssg = None,
+    verbose                         : int           = 0, 
+    print_to_path                   : bool          = False,
+    print_path                      : str           = "~/data/logs/logs.txt",
+    print_mode                      : str           = 'a',
+):
+    """
+    Check if mssg is valid. Otherwise, builds it
+    """
+    mssg,_ = _check_value(mssg, None, "mssg", Mssg)
+    if mssg is None:
+        mssg = Mssg(
+            to_path = print_to_path,
+            path    = print_path,
+            mode    = print_mode,
+            verbose = verbose
+        ) 
+    return mssg

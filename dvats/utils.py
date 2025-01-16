@@ -1278,6 +1278,7 @@ def _get_mssg(
     print_to_path                   : bool          = False,
     print_path                      : str           = "~/data/logs/logs.txt",
     print_mode                      : str           = 'a',
+    verbose_level                   : int           = -1
 ):
     """
     Check if mssg is valid. Otherwise, builds it
@@ -1288,6 +1289,7 @@ def _get_mssg(
             to_path = print_to_path,
             path    = print_path,
             mode    = print_mode,
-            verbose = verbose
+            verbose = verbose,
+            level    = verbose_level
         ) 
     return mssg

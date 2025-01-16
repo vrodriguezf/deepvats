@@ -2,8 +2,8 @@
 
 # %% auto 0
 __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EncoderInput', 'LRScheduler', 'EncoderOptimizer', 'Encoder',
-           'set_fine_tune_single_', 'set_fine_tune_', 'show_eval_stats', 'DCAE_torch', 'CustomWandbCallback',
-           'kwargs_to_gpu_', 'kwargs_to_cpu_', 'get_acts', 'get_acts_moment', 'sure_eval_moment',
+           'set_fine_tune_single_', 'set_fine_tune_', 'show_eval_stats', 'plot_eval_stats', 'DCAE_torch',
+           'CustomWandbCallback', 'kwargs_to_gpu_', 'kwargs_to_cpu_', 'get_acts', 'get_acts_moment', 'sure_eval_moment',
            'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP', 'get_enc_embs_MVP_set_stride_set_batch_size',
            'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction', 'get_enc_embs_moirai', 'get_enc_embs',
            'get_enc_embs_set_stride_set_batch_size', 'rmse', 'smape', 'rmse_flat', 'smape_flat', 'mae_flat',
@@ -402,6 +402,52 @@ def show_eval_stats(
             print_mode      = self.mssg.mode 
         )
 Encoder.show_eval_stats = show_eval_stats
+
+# %% ../nbs/encoder.ipynb 14
+def plot_eval_stats(self, figsize=(10, 6), save_fig=False, save_path="./", fname = "evaluation_metrics_plot"):
+    """
+    Plot evaluation metrics from eval_results_pre and eval_results_post across epochs.
+    """
+    # Validar que las métricas están presentes
+    if not self.eval_stats_pre or not self.eval_stats_post:
+        raise ValueError("Evaluation results (eval_stats_pre or eval_stats_post) are missing.")
+    
+    # Extraer las métricas pre y post
+    metrics_pre = self.eval_stats_pre  # Diccionario con las métricas iniciales
+    metrics_post = self.eval_stats_post  # Lista de diccionarios con métricas post-época
+
+    # Crear el rango de épocas (incluyendo la inicial)
+    epochs = list(range(self.num_epochs-1))
+    
+    # Inicializar el gráfico
+    plt.figure(figsize=figsize)
+    
+    # Iterar sobre las métricas (las claves del diccionario pre/post)
+    for metric in metrics_pre.keys():
+        # Crear lista de valores para esta métrica
+        values = metrics_pre[metric] + metrics_post[metric]
+        # Graficar la métrica
+        plt.plot(epochs, values, label=metric)
+    
+    # Configurar etiquetas y leyenda
+    plt.title("Evaluation Metrics Across Epochs")
+    plt.xlabel("Epoch")
+    plt.ylabel("Metric Value")
+    plt.legend()
+    plt.grid(True)
+    if save_fig:
+        # Asegurarse de que el directorio existe
+        os.makedirs(save_path, exist_ok=True)
+        
+        # Ruta completa del archivo
+        save_file = os.path.join(save_path, "{fname}.png")
+        
+        # Guardar el gráfico
+        plt.savefig(save_file, dpi=300, bbox_inches="tight")
+        self.mssg.print(f"Stats plot saved at: {save_file}")
+    plt.show()
+
+Encoder.plot_eval_stats = plot_eval_stats
 
 # %% ../nbs/encoder.ipynb 16
 class DCAE_torch(Module):
@@ -2353,8 +2399,8 @@ def fine_tune_moment_single_(
     t_eval_1            = 0
     t_eval_2            = 0
     losses              = []
-    eval_results_pre    = ""
-    eval_results_post   = ""
+    eval_results_pre    = {}
+    eval_results_post   = {}
 
     if self.time_flag: timer = ut.Time(mssg = self.mssg)
     self.mssg.print(f"fine_tune_moment_single | Prepare the dataset | X ~ {self.input.data[sample_id].shape}")
@@ -2471,8 +2517,8 @@ def fine_tune_moment_(
     self.use_moment_masks = self.use_moment_masks if use_moment_masks is None else use_moment_masks
     # Return values
     lossess             = []
-    eval_results_pre    = []
-    eval_results_post   = []
+    eval_results_pre    = {}
+    eval_results_post   = {}
     t_shots             = []
     t_shot              = 0
     t_evals             = []
@@ -2493,13 +2539,20 @@ def fine_tune_moment_(
         ) =  self.fine_tune_moment_single_(eval_pre, eval_post, shot, i, use_moment_masks)
         lossess.append(losses)
         if (eval_pre): eval_results_pre = eval_results_pre_
-        eval_results_post.append(eval_results_post_)
+        if eval_results_post == {}: eval_results_post = {key:[] for key in eval_results_post_.keys()}
+        #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
+        if (eval_post): 
+            for key in eval_results_post.keys():
+                eval_results_post[key] += eval_results_post_[key]
+        #self.mssg.print_error(f"After concat {eval_results_post}")
         t_shots.append(t_shot_)
         if eval_pre: t_evals.append(t_eval_1)
         if eval_post: t_evals.append(t_eval_2)
         eval_pre = False
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
+    self.eval_stats_pre = eval_results_pre
+    self.eval_stats_post = eval_results_post
     self.mssg.final(ut.funcname())
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
 
@@ -2666,7 +2719,7 @@ def fine_tune_mvp_single_(
     # Evaluation metrics & results
     metrics_dict = get_metrics_dict(self.metrics, self.metrics_names)
     eval_results_pre = {key: 0.0 for key in metrics_dict.keys()}
-    eval_results_post = {key: 0.0 for key in metrics_dict.keys()}
+    eval_results_post = {key: [] for key in metrics_dict.keys()}
     # Computation device
     device = "cpu" if self.cpu else torch.cuda.current_device()
     
@@ -2808,12 +2861,12 @@ def fine_tune_mvp_(
     # Return values
     lossess             = []
     eval_results_pre    = {} # Only 1 (before fine-tune)
-    eval_results_post   = [] # One per window size (after training)
+    eval_results_post   = {} # One per window size (after training)
     t_shots             = []
     t_shot              = 0
     t_evals             = []
     t_eval              = 0
-
+    
     if self.input.size is None:
         self.mssg.print(f"Windows: {len(self.input._data)}")
         raise ValueError(f"Invalid number of windows: {self.input.size}")
@@ -2843,7 +2896,13 @@ def fine_tune_mvp_(
         ) =  self.fine_tune_mvp_single_(eval_pre, eval_post, shot, sample_id = i, show_plot = show_plot)
         lossess.append(losses)
         if (eval_pre): eval_results_pre = eval_results_pre_
-        if (eval_post): eval_results_post.append(eval_results_post_)
+        
+        if (eval_post): 
+            if eval_results_post == {}: eval_results_post = {key:[] for key in eval_results_post_.keys()}
+            #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
+            for key in eval_results_post.keys():
+                eval_results_post[key] += eval_results_post_[key]
+            #self.mssg.print_error(f"After concat: {eval_results_post}")
         t_shots.append(t_shot_)
         if eval_pre: t_evals.append(t_eval_1)
         if eval_post: t_evals.append(t_eval_2)

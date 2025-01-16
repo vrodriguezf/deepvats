@@ -1187,7 +1187,7 @@ def _check_value(
     mssg        : Mssg  = Mssg()
 ):
     level = mssg.level
-    mssg.initial(f"{funcname(2)} | {funcname(1)} | {funcname()} | {name}", verbose_level = mssg.level+1)
+    #mssg.initial(f"{funcname(2)} | {funcname(1)} | {funcname()} | {name}", verbose_level = mssg.level+1)
     res = default
     valid = True
     if value is None and not allow_none:
@@ -1197,23 +1197,25 @@ def _check_value(
             positive = True
             valid_types = [ int, float]
         valid_types = valid_types if isinstance(valid_types, list) else [valid_types]
-        mssg.print(f"Checking if {value}'s type is one of {valid_types}", verbose_level = mssg.level + 5)
+        #mssg.print(f"Checking if {value}'s type is one of {valid_types}", verbose_level = mssg.level + 5)
         if not isinstance(value, tuple(valid_types)):
             valid_type_names = ", ".join(t.__name__ for t in valid_types)
+            mssg.print_error(f"Invalid type for '{name}' ({type(value).__name__}). Expected one of: {valid_type_names}. Using default: {default}")
             warnings.warn(
                 f"Invalid type for '{name}' ({type(value).__name__}). Expected one of: {valid_type_names}. Using default: {default}"
             )
             valid = False
         if valid and isinstance(value, (float, int)) and not math.isfinite(value):
-            mssg.print(f"Value {value} is not finite", verbose_level = mssg.level + 5)
+            mssg.print_error(f"Value {value} is not finite", verbose_level = mssg.level + 5)
             warnings.warn(f"'{name}' is not finite ({value}). Using default: {default}")
             valid = False
     
         if valid and positive and isinstance(value, (float, int)) and value <= 0:
-            mssg.print(f"Value {value} is not positive")
+            mssg.print_error(f"Value {value} is not positive")
             warnings.warn(f"'{name}' must be positive ({value}). Using default: {default}")
             valid = False
         if valid and percent and value > 1:
+            mssg.print_error(f'Value {value} must be lower or equal than 1')
             warnings.warn(f"'{name}' must be lower or equal than 1 ({value}). Using default: {default}")
             valid = False
     if valid: res = value
@@ -1278,7 +1280,6 @@ def _get_mssg(
     print_to_path                   : bool          = False,
     print_path                      : str           = "~/data/logs/logs.txt",
     print_mode                      : str           = 'a',
-    verbose_level                   : int           = -1
 ):
     """
     Check if mssg is valid. Otherwise, builds it
@@ -1289,7 +1290,6 @@ def _get_mssg(
             to_path = print_to_path,
             path    = print_path,
             mode    = print_mode,
-            verbose = verbose,
-            level    = verbose_level
+            verbose = verbose
         ) 
     return mssg

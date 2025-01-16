@@ -404,10 +404,14 @@ def show_eval_stats(
 Encoder.show_eval_stats = show_eval_stats
 
 # %% ../nbs/encoder.ipynb 14
+import matplotlib.pyplot as plt
 def plot_eval_stats(self, figsize=(10, 6), save_fig=False, save_path="./", fname = "evaluation_metrics_plot"):
     """
     Plot evaluation metrics from eval_results_pre and eval_results_post across epochs.
     """
+    self.mssg.level += 1
+    fname = self.mssg.function
+    self.mssg.initial_("plot_eval_stats")
     # Validar que las métricas están presentes
     if not self.eval_stats_pre or not self.eval_stats_post:
         raise ValueError("Evaluation results (eval_stats_pre or eval_stats_post) are missing.")
@@ -418,7 +422,7 @@ def plot_eval_stats(self, figsize=(10, 6), save_fig=False, save_path="./", fname
 
     # Crear el rango de épocas (incluyendo la inicial)
     epochs = list(range(self.num_epochs-1))
-    
+    self.mssg.print_error(f"epochs~{len(epochs)}: {epochs}")
     # Inicializar el gráfico
     plt.figure(figsize=figsize)
     
@@ -426,6 +430,7 @@ def plot_eval_stats(self, figsize=(10, 6), save_fig=False, save_path="./", fname
     for metric in metrics_pre.keys():
         # Crear lista de valores para esta métrica
         values = metrics_pre[metric] + metrics_post[metric]
+        self.mssg.print_error(f"{metric}.values~{len(values)}: {values}")
         # Graficar la métrica
         plt.plot(epochs, values, label=metric)
     
@@ -446,7 +451,8 @@ def plot_eval_stats(self, figsize=(10, 6), save_fig=False, save_path="./", fname
         plt.savefig(save_file, dpi=300, bbox_inches="tight")
         self.mssg.print(f"Stats plot saved at: {save_file}")
     plt.show()
-
+    self.mssg.final()
+    self.mssg.function = fname
 Encoder.plot_eval_stats = plot_eval_stats
 
 # %% ../nbs/encoder.ipynb 16

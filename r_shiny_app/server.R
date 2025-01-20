@@ -1065,14 +1065,34 @@ shinyServer(function(input, output, session) {
 
     observe({
         if (nrow(temp_log) > 0) {
+            #Todo: Quitar
+            print ("Observe temp log")
+            #print(temp_log)
+            #--- hasta aqui --
+            #new_record <- cbind(
+            #    execution_id= execution_id, 
+            #    dataset     = ts_ar()$name,
+            #    encoder     = ifelse(is.null(input$encoder), " ", input$encoder),
+            #    show_lines  = input$show_lines,
+
+            #    point_alpha = input$point_alpha,
+            #    temp_log
+            #)
+            print(paste0("Execution_id: ", execution_id))
+            print(paste0("ts_ar_name: ", ts_ar()$name))
+            print(paste0("nrows: ", ts_ar()$name))
+            print(paste0("show_lines: ", input$show_lines))
+            print(paste0("point_alpha: ", input$point_alpha))
+
             new_record <- cbind(
-                execution_id= execution_id, 
-                dataset     = ts_ar()$name,
-                encoder     = ifelse(is.null(input$encoder), " ", input$encoder),
-                show_lines  = input$show_lines,
-                point_alpha = input$point_alpha,
+                execution_id    = rep(execution_id, nrow(temp_log)), 
+                dataset         = rep(ts_ar()$name, nrow(temp_log)),
+                encoder         = rep(ifelse(is.null(input$encoder), "undefined", input$encoder), nrow(temp_log)),
+                show_lines      = rep(input$show_lines, nrow(temp_log)),
+                point_alpha     = rep(ifelse(is.null(input$point_alpha), "undefined", input$point_alpha), nrow(temp_log)),
                 temp_log
             )
+
             log_df(rbind(new_record, log_df()))
             temp_log <<- data.frame(timestamp = character(), function_ = character(), cpu_flag = character(), dr_method = character(), clustering_options = character(), zoom = logical(), time = numeric(), mssg = character(), stringsAsFactors = FALSE)
         }
@@ -1539,6 +1559,10 @@ shinyServer(function(input, output, session) {
             )
             df <- tsdf_preprocessed()  %>% select(ts_variables$preprocessed, - "timeindex_preprocessed")
         }
+
+        dataset_logged_by <- enc_ar()$logged_by()
+
+        
         if (grepl("moment", input$encoder, ignore.case = TRUE)) {
             fine_tune_kwargs <- list(
                 X                               = df,
@@ -1569,9 +1593,26 @@ shinyServer(function(input, output, session) {
                 window_sizes_offset             = as.numeric(0.05),
                 windows_min_distance            = as.integer(input$ft_min_windows_distance),
                 full_dataset                    = (input$ft_datset_option == "full_dataset"),
+                print_to_path                   = TRUE,
+                print_path                      = "~/data/logs.txt",
+                print_mode                      = "w",
+                use_moment_masks                = FALSE,
                 mask_stateful                   = ("ft_mask_stateful" %in% input$masking_options),
                 mask_future                     = ("ft_mask_future" %in% input$masking_options),
-                mask_sync                       = ("ft_sync" %in% input$masking_options)
+                mask_sync                       = ("ft_sync" %in% input$masking_options),
+                analysis_mode                   = dataset_logged_by$config$analysis_mode,
+                use_wandb                       = dataset_logged_by$config$dataset_logged_by,
+                norm_by_sample                  = dataset_logged_by$config$norm_by_sample,
+                norm_use_single_batch           = dataset_logged_by$config$norm_use_single_batch,
+                show_plot                       = FALSE,
+                metrics                         = c(
+                    dvats$encoder$EvalMSE, 
+                    dvats$encoder$EvalRMSE, 
+                    dvats$encoder$EvalMAE, 
+                    dvats$encoder$EvalSMAPE
+                ),
+                metrics_args = c(list(squared = FALSE), list(squared = TRUE), list(), list()),
+                metrics_names = c("mse","rmse", "mae", "smape"),
             )
 
             for (key in names(fine_tune_kwargs)) {

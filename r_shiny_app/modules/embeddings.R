@@ -23,19 +23,22 @@ path_alpha_selector <- function(id){
   )
 }
 point_alpha_selector <- function(id){
+  print(paste0("Default Values: ", paste(DEFAULT_VALUES, collapse = ', ')))
+  print(paste0("---- |||| point_alpha ||| ---", DEFAULT_VALUES$point_alpha))
   sliderInput(
     "point_alpha", 
     label = "point_alpha",
     value = DEFAULT_VALUES$point_alpha, 
     min=0, max=1, step = 0.01
   )
+  print(paste0("---- |||| point_alpha ||| ---", DEFAULT_VALUES$point_alpha))
 }
 point_size_selector <- function(id) {
   sliderInput(
     "point_size", 
     label = "point_size",
     value = DEFAULT_VALUES$point_size, 
-    min=0, max=10, step = 0.5
+    min=0, max=10, step = 0.25
   )
 }
 

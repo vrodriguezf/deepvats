@@ -7559,3 +7559,700 @@ error: called from:
 Octave is not ready. Please check the configuration
 
 Listening on http://0.0.0.0:3838
+DEBUG: Writing to /var/log/shiny-server/app.logs
+About to open the app
+> shiny::runApp('/home/macu/app', host='0.0.0.0', port=3838)
+Loading required package: shiny
+Warning in shiny::runApp("/home/macu/app", host = "0.0.0.0", port = 3838) :
+  Shiny Server v0.3.4 or later is required; please upgrade!
+
+Attaching package: ‘shinyjs’
+
+The following object is masked from ‘package:shiny’:
+
+    runExample
+
+The following objects are masked from ‘package:methods’:
+
+    removeClass, show
+
+
+Attaching package: ‘shinyWidgets’
+
+The following object is masked from ‘package:shinyjs’:
+
+    alert
+
+
+Attaching package: ‘jsonlite’
+
+The following object is masked from ‘package:purrr’:
+
+    flatten
+
+The following object is masked from ‘package:shiny’:
+
+    validate
+
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:purrr’:
+
+    transpose
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘arrow’
+
+The following objects are masked from ‘package:feather’:
+
+    read_feather, write_feather
+
+The following object is masked from ‘package:utils’:
+
+    timestamp
+
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################
+
+Attaching package: ‘xts’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+The following objects are masked from ‘package:data.table’:
+
+    first, last
+
+
+Attaching package: ‘semantic.dashboard’
+
+The following objects are masked from ‘package:shiny’:
+
+    column, icon
+
+The following object is masked from ‘package:graphics’:
+
+    box
+
+/usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
+  torch.utils._pytree._register_pytree_node(
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+Downloading builder script:   0%|          | 0.00/4.55k [00:00<?, ?B/s]Downloading builder script: 100%|██████████| 4.55k/4.55k [00:00<00:00, 12.2MB/s]
+Downloading builder script:   0%|          | 0.00/4.49k [00:00<?, ?B/s]Downloading builder script: 100%|██████████| 4.49k/4.49k [00:00<00:00, 13.4MB/s]
+Downloading builder script:   0%|          | 0.00/6.65k [00:00<?, ?B/s]Downloading builder script: 100%|██████████| 6.65k/6.65k [00:00<00:00, 17.1MB/s]
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+Oct2PyError: Octave evaluation error:
+error: graphics_toolkit: fltk toolkit is not available
+error: called from:
+    graphics_toolkit at line 84, column 5
+Octave is not ready. Please check the configuration
+
+Listening on http://0.0.0.0:3838
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+
+ 10:14:48.049 [1] 10:14:48.049 [1] Execution id: 452, Start Timestamp: 20/01/25 10:
+ 10:14:48.049 [1] 14:48
+ 
+ 10:14:48.274 [2] 10:14:48.274 [2] observeEvent encoders list enc_l | update datase
+ 10:14:48.274 [2] t list | after freeze
+ 
+ 10:14:48.337 [3] 10:14:48.337 [3] observeEvent encoders list encs_l | update datas
+ 10:14:48.337 [3] et list -->
+ 
+ 10:14:48.343 [4] 10:14:48.343 [4] --> observeEvent input_encoder
+ 
+ 10:14:48.344 [5] 10:14:48.344 [5] observeEvent input_encoder | update wlen | Befor
+ 10:14:48.344 [5] e enc_ar
+ 
+ 10:14:48.346 [6] 10:14:48.346 [6] eventReactive enc_ar | Enc. Artifact: 
+ 
+ 10:14:48.645 [7] 10:14:48.645 [7] eventReactive enc_ar | Error: wandb.errors.CommE
+ 10:14:48.645 [7] rror: Attempted to fetch artifact without alias (e.g. "<artifact_
+ 10:14:48.645 [7] name>:v3" or "<artifact_name>:latest")
+
+ 
+ 10:14:48.646 [8] 10:14:48.646 [8] envent reactive enc_ar -->
+ 
+ 10:14:48.648 [9] 10:14:48.648 [9] observeEvent input_encoder | update wlen | enc_a
+ 10:14:48.648 [9] r: | Set wlen slider values
+ 
+ 10:14:48.648 [10] 10:14:48.648 [10] observeEvent input_encoder | update wlen | Set 
+ 10:14:48.648 [10] wlen slider values from w | 
+ 
+ 10:14:48.648 [11] 10:14:48.648 [11] observeEvent input_encoder | update wlen | enc_
+ 10:14:48.648 [11] ar$metadata$mvp_ws 
+ 
+ 10:14:48.649 [12] 10:14:48.649 [12] observeEvent input_encoder | update wlen | Upda
+ 10:14:48.649 [12] te slider input ws: (,  ) |  wlen: 
+ 
+ 10:14:48.706 [13] 10:14:48.706 [13] --> Observe clustering options
+ 
+ 10:14:48.708 [14] 10:14:48.708 [14] Observe clustering options -->
+ 
+ 10:14:48.728 [16] 10:14:48.728 [16] >>>> Toguether Log path: r_shiny_app_logs-452
+ 
+ 10:14:48.847 [17] 10:14:48.847 [17] --> prj_object
+ 
+ 10:14:48.847 [18] 10:14:48.847 [18] prj_object || Before prjs_comp
+ 
+ 10:14:48.848 [19] 10:14:48.848 [19] prjs_comp | Before req || DR: PCA_UMAP || embs?
+ 10:14:48.848 [19]  FALSE
+ 
+ 10:14:48.904 [21] 10:14:48.904 [21] mplot_start_computation |FALSE | Projections
+ 
+ 10:14:49.029 [22] 10:14:49.029 [22] --> eventReactive ts_ar | Update dataset artifa
+ 10:14:49.029 [22] ct | hash gtrends_kohls-denoised:v1
+ [1] "TSDF READY A TRUE TRUE"
+
+ 10:14:49.228 [23] 10:14:49.228 [23] --> Update play_pause_button
+ 
+ 10:14:49.231 [24] 10:14:49.231 [24] Update play_pause_button || FALSE -->
+ 
+ 10:14:49.236 [25] 10:14:49.236 [25] --> Enable/disable embs
+ 
+ 10:14:49.236 [26] 10:14:49.236 [26] Enable/disable embs || disable embs
+ 
+ 10:14:49.239 [27] 10:14:49.239 [27] Enable/disable embs --> || Changes to FALSE
+ 
+ 10:14:49.240 [28] 10:14:49.240 [28] eventReactive ts_ar || tsdf_ready FALSE
+ 
+ 10:14:49.242 [29] 10:14:49.242 [29] eventReactive ts_ar tsdf_ready? FALSE -->
+ 
+ 10:14:49.247 [30] 10:14:49.247 [30] --> observeEvent input_dataset | update encoder
+ 10:14:49.247 [30]  list
+ 
+ 10:14:49.250 [31] 10:14:49.250 [31] observeEvent input_dataset | update encoders fo
+ 10:14:49.250 [31] r dataset gtrends_kohls-denoised:v1
+ 
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | zeroshot-moment-small-embedding:v0
+ 10:14:49.611 [32] 
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | zeroshot-moirai-small:v0
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moment-small-reconstruction:v1
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moment-small-reconstruction:v0
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moment-small-embedding:v4
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moment-small-embedding:v3
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moment-small-embedding:v1
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moment-small-embedding:v0
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moment-large-embedding:v2
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moirai-small:v2
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moirai-small:v1
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moirai-small:v0
+
+ 10:14:49.611 [32] 10:14:49.611 [32] observeEvent input_dataset | Encoders for datas
+ 10:14:49.611 [32] et gtrends_kohls-denoised:v1 | moirai:v0
+ 
+ 10:14:49.614 [33] 10:14:49.614 [33] observeEvent input_dataset | update encoder lis
+ 10:14:49.614 [33] t -->
+ 
+ 10:14:49.678 [34] 10:14:49.678 [34] --> observe X | Before req | tsdf_ready FALSE |
+ 10:14:49.678 [34]  wlen 0 | stride 0 | allow update embs FALSE | play_prjs FALSE | 
+ 10:14:49.678 [34] tsdf_ready_preprocessed TRUE | embs preprocess FALSE
+ 
+ 10:14:49.683 [35] 10:14:49.683 [35] --> observeEvent input_wlen | update slide stri
+ 10:14:49.683 [35] de value | wlen 0
+ 
+ 10:14:49.701 [36] 10:14:49.701 [36] observeEvent input_wlen | update slide stride v
+ 10:14:49.701 [36] alue | Error | 
+ 
+ 10:14:49.701 [37] 10:14:49.701 [37] observeEvent input_wlen | update slide stride v
+ 10:14:49.701 [37] alue | Finally |  wlen min 1 max 0 current value 0 -->
+ 
+ 10:14:49.860 [38] 10:14:49.860 [38] eventReactive enc_ar | Enc. Artifact: zeroshot-
+ 10:14:49.860 [38] moment-small-embedding:v0
+ 
+ 10:14:49.998 [39] 10:14:49.998 [39] envent reactive enc_ar -->
+ 
+ 10:14:50.027 [40] 10:14:50.027 [40] --> observeEvent input_encoder
+ 
+ 10:14:50.031 [41] 10:14:50.031 [41] observeEvent input_encoder | update wlen | Befo
+ 10:14:50.031 [41] re enc_ar
+ 
+ 10:14:50.031 [42] 10:14:50.031 [42] observeEvent input_encoder | update wlen | enc_
+ 10:14:50.031 [42] ar: <Artifact QXJ0aWZhY3Q6MTM1Mzc4Nzc3MQ==>| Set wlen slider valu
+ 10:14:50.031 [42] es
+ 
+ 10:14:50.032 [43] 10:14:50.032 [43] observeEvent input_encoder | update wlen | enc_
+ 10:14:50.032 [43] ar$metadata$mvp_ws 12
+
+ 10:14:50.032 [43] 10:14:50.032 [43] observeEvent input_encoder | update wlen | enc_
+ 10:14:50.032 [43] ar$metadata$mvp_ws 17
+ 
+ 10:14:50.033 [44] 10:14:50.033 [44] observeEvent input_encoder | update wlen | Upda
+ 10:14:50.033 [44] te slider input ws: (12, 17 ) |  wlen: 17
+ 
+ 10:14:50.035 [45] 10:14:50.035 [45] --> reactive enc_ar_stride
+ 
+ 10:14:50.036 [46] 10:14:50.036 [46] reactive_enc_ar_stride | --> 1
+ 
+ 10:14:50.052 [48] 10:14:50.052 [48] --> observe X | Before req | tsdf_ready FALSE |
+ 10:14:50.052 [48]  wlen 17 | stride 0 | allow update embs FALSE | play_prjs FALSE |
+ 10:14:50.052 [48]  tsdf_ready_preprocessed TRUE | embs preprocess FALSE
+ 
+ 10:14:50.086 [49] 10:14:50.086 [49] --> observeEvent input_wlen | update slide stri
+ 10:14:50.086 [49] de value | wlen 17
+ 
+ 10:14:50.087 [50] 10:14:50.087 [50] enc_ar_stride: 1
+ 
+ 10:14:50.091 [51] 10:14:50.091 [51] oserveEvent input_wlen | update slide stride va
+ 10:14:50.091 [51] lue | Update stride to 1
+ 
+ 10:14:50.118 [54] 10:14:50.118 [54] --> observe X | Before req | tsdf_ready FALSE |
+ 10:14:50.118 [54]  wlen 17 | stride 1 | allow update embs FALSE | play_prjs FALSE |
+ 10:14:50.118 [54]  tsdf_ready_preprocessed TRUE | embs preprocess FALSE
+ 
+ 10:15:04.832 [55] 10:15:04.832 [55] --> eventReactive ts_ar | Update dataset artifa
+ 10:15:04.832 [55] ct | hash gtrends_kohls:v0
+ [1] "TSDF READY A TRUE TRUE"
+
+ 10:15:04.961 [56] 10:15:04.961 [56] eventReactive ts_ar || tsdf_ready FALSE
+ 
+ 10:15:04.963 [57] 10:15:04.963 [57] eventReactive ts_ar tsdf_ready? FALSE -->
+ 
+ 10:15:05.001 [58] 10:15:05.001 [58] --> observeEvent input_dataset | update encoder
+ 10:15:05.001 [58]  list
+ 
+ 10:15:05.005 [59] 10:15:05.005 [59] observeEvent input_dataset | update encoders fo
+ 10:15:05.005 [59] r dataset gtrends_kohls:v0
+ 
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | zeroshot-moment-small-embedding:v0
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | zeroshot-moirai-small:v0
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moment-small-reconstruction:v1
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moment-small-reconstruction:v0
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moment-small-embedding:v4
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moment-small-embedding:v3
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moment-small-embedding:v1
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moment-small-embedding:v0
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moment-large-embedding:v2
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moirai-small:v2
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moirai-small:v1
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moirai-small:v0
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | moirai:v0
+
+ 10:15:05.165 [60] 10:15:05.165 [60] observeEvent input_dataset | Encoders for datas
+ 10:15:05.165 [60] et gtrends_kohls:v0 | mvp:v183
+ 
+ 10:15:05.167 [61] 10:15:05.167 [61] observeEvent input_dataset | update encoder lis
+ 10:15:05.167 [61] t -->
+ 
+ 10:15:05.216 [62] 10:15:05.216 [62] eventReactive enc_ar | Enc. Artifact: zeroshot-
+ 10:15:05.216 [62] moment-small-embedding:v0
+ 
+ 10:15:05.342 [63] 10:15:05.342 [63] envent reactive enc_ar -->
+ 
+ 10:15:05.345 [64] 10:15:05.345 [64] --> observeEvent input_encoder
+ 
+ 10:15:05.349 [65] 10:15:05.349 [65] observeEvent input_encoder | update wlen | Befo
+ 10:15:05.349 [65] re enc_ar
+ 
+ 10:15:05.349 [66] 10:15:05.349 [66] observeEvent input_encoder | update wlen | enc_
+ 10:15:05.349 [66] ar: <Artifact QXJ0aWZhY3Q6MTM1Mzc4Nzc3MQ==>| Set wlen slider valu
+ 10:15:05.349 [66] es
+ 
+ 10:15:05.350 [67] 10:15:05.350 [67] observeEvent input_encoder | update wlen | enc_
+ 10:15:05.350 [67] ar$metadata$mvp_ws 12
+
+ 10:15:05.350 [67] 10:15:05.350 [67] observeEvent input_encoder | update wlen | enc_
+ 10:15:05.350 [67] ar$metadata$mvp_ws 17
+ 
+ 10:15:05.351 [68] 10:15:05.351 [68] observeEvent input_encoder | update wlen | Upda
+ 10:15:05.351 [68] te slider input ws: (12, 17 ) |  wlen: 17
+ 
+ 10:15:05.353 [69] 10:15:05.353 [69] --> reactive enc_ar_stride
+ 
+ 10:15:05.353 [70] 10:15:05.353 [70] reactive_enc_ar_stride | --> 1
+ 
+ 10:15:05.369 [72] 10:15:05.369 [72] --> observeEvent input_wlen | update slide stri
+ 10:15:05.369 [72] de value | wlen 17
+ 
+ 10:15:05.370 [73] 10:15:05.370 [73] enc_ar_stride: 1
+ 
+ 10:15:05.373 [74] 10:15:05.373 [74] oserveEvent input_wlen | update slide stride va
+ 10:15:05.373 [74] lue | Update stride to 1
+ 
+ 10:15:05.419 [77] 10:15:05.419 [77] --> observe X | Before req | tsdf_ready FALSE |
+ 10:15:05.419 [77]  wlen 17 | stride 1 | allow update embs FALSE | play_prjs FALSE |
+ 10:15:05.419 [77]  tsdf_ready_preprocessed TRUE | embs preprocess FALSE
+ 
+ 10:15:25.052 [78] 10:15:25.052 [78] --> observeEvent input$play_pause
+ 
+ 10:15:25.055 [79] 10:15:25.055 [79] --> Update play_pause_button
+ 
+ 10:15:25.059 [80] 10:15:25.059 [80] Update play_pause_button | --> compute tsdf
+ 
+ 10:15:25.061 [81] 10:15:25.061 [81] tsdf_comp || before req | Input encoder zerosho
+ 10:15:25.061 [81] t-moment-small-embedding:v0 | Input dataset gtrends_kohls:v0 | ts
+ 10:15:25.061 [81] _ar TRUE
+ 
+ 10:15:25.063 [82] 10:15:25.063 [82] --> Reactive tsdf | ts artifact <Artifact QXJ0a
+ 10:15:25.063 [82] WZhY3Q6MTM1MzgwNDc1OQ==>
+ 
+ 10:15:25.064 [83] 10:15:25.064 [83] Reactive tsdf | Read feather /home/macu/data/wa
+ 10:15:25.064 [83] ndb_artifacts/-7635916990915258888
+ 
+ 10:15:25.064 [84] 10:15:25.064 [84] Reactive tsdf | Read feather | Before | /home/m
+ 10:15:25.064 [84] acu/data/wandb_artifacts/-7635916990915258888
+ 
+ 10:15:25.123 [85] 10:15:25.123 [85] Reactive tsdf | Read feather | After | /home/ma
+ 10:15:25.123 [85] cu/data/wandb_artifacts/-7635916990915258888
+ 
+ 10:15:25.123 [86] 10:15:25.123 [86] Reactive tsdf | Read feather | Load time: 0.058
+ 10:15:25.123 [86] 3486557006836 seconds | N elements: 440
+ 
+ 10:15:25.126 [87] 10:15:25.126 [87] Log add | TSDF | Load dataset | Read feather
+ 
+ 10:15:25.127 [88] 10:15:25.127 [88] Reactive tsdf | Execution time: 0.0583486557006
+ 10:15:25.127 [88] 836 seconds | df ~ 440time
+
+ 10:15:25.127 [88] 10:15:25.127 [88] Reactive tsdf | Execution time: 0.0583486557006
+ 10:15:25.127 [88] 836 seconds | df ~ 2time
+ [1] "TSDF READY A 4 TRUE"
+
+ 10:15:25.142 [89] 10:15:25.142 [89] Reactive tsdf | ts_variables original = NULL; p
+ 10:15:25.142 [89] reprocessed = NULL; complete = NULL; selected = NULL ready? FALSE
+ 10:15:25.142 [89] 
+ 
+ 10:15:25.157 [90] 10:15:25.157 [90] Update play_pause_button || TRUE -->
+ 
+ 10:15:25.157 [91] 10:15:25.157 [91] observeEvent input$play_pause | Run -->
+ 
+ 10:15:25.159 [92] 10:15:25.159 [92] --> observe update ts variables (1) || Tsdf mod
+ 10:15:25.159 [92] ified
+ 
+ 10:15:25.160 [93] 10:15:25.160 [93]  --> tsdf_variables_no_preprocess 
+ 
+ 10:15:25.162 [94] 10:15:25.162 [94] tsdf_variables_no_preprocess | original = volum
+ 10:15:25.162 [94] e; preprocessed = NULL; complete = volume; selected = volume--> g
+ 10:15:25.162 [94] eneric
+ 
+ 10:15:25.178 [95] 10:15:25.178 [95]  observe update ts variables (1) || ts variable
+ 10:15:25.178 [95] s original = volume; preprocessed = NULL; complete = volume; sele
+ 10:15:25.178 [95] cted = volume -->
+ 
+ 10:15:25.248 [97] 10:15:25.248 [97] --> eventReactive enc | load encoder 
+ 
+ 10:15:25.249 [98] 10:15:25.249 [98] eventReactive enc | load encoder | Check if the
+ 10:15:25.249 [98]  encoder file exists: /home/macu/data/wandb_artifacts/-7601696885
+ 10:15:25.249 [98] 029958941
+ 
+ 10:15:25.249 [99] 10:15:25.249 [99] eventReactive enc | load encoder -7601696885029
+ 10:15:25.249 [99] 958941 | --> Load from binary file 
+ 
+ 10:15:25.983 [100] 10:15:25.983 [100] eventReactive enc | load encoder | stride 1-->
+ 10:15:25.983 [100] 
+ 
+ 10:15:25.985 [101] 10:15:25.985 [101] --> observe X | Before req | tsdf_ready TRUE |
+ 10:15:25.985 [101]  wlen 17 | stride 1 | allow update embs FALSE | play_prjs FALSE |
+ 10:15:25.985 [101]  tsdf_ready_preprocessed TRUE | embs preprocess FALSE
+ 
+ 10:15:26.010 [102] 10:15:26.010 [102] --> update_preprocess_sliders
+ 
+ 10:15:26.010 [103] 10:15:26.010 [103] update_preprocess_sliders -->
+ 
+ 10:15:26.011 [104] 10:15:26.011 [104] --> propose sizes 
+ 
+ 10:15:26.017 [105] 10:15:26.017 [105] propose sizes || volume
+ Warning: Error in : TypeError: find_dominant_window_sizes_list() got an unexpected keyword argument 'verbose'
+
+  1: shiny::runApp
+
+ 10:15:26.038 [106] 10:15:26.038 [106] --> observe so_sections_count
+ 
+ 10:15:26.039 [107] 10:15:26.039 [107] observe so_sections_count -->
+ 
+ 10:15:26.041 [108] 10:15:26.041 [108] --> observe so_sections_size
+ 
+ 10:15:26.042 [109] 10:15:26.042 [109] observe so_sections_size -->
+ 
+ 10:15:26.044 [110] 10:15:26.044 [110] --> observe ss_text_rns
+ 
+ 10:15:26.045 [111] 10:15:26.045 [111] observe ss_text_rns -->
+ 
+ 10:15:26.047 [112] 10:15:26.047 [112] --> observe ss_text_rnsz
+ 
+ 10:15:26.048 [113] 10:15:26.048 [113] observe ss_text_rnsz-->
+ 
+ 10:15:26.049 [114] 10:15:26.049 [114] --> observe so_range_normalization_sections
+ 
+ 10:15:26.049 [115] 10:15:26.049 [115] observe so_range_normalization_sections -->
+ 
+ 10:15:26.051 [116] 10:15:26.051 [116] --> observe so_range_normalization_sections_si
+ 10:15:26.051 [116] ze
+ 
+ 10:15:26.051 [117] 10:15:26.051 [117] observe so_range_normalization_sections_size -
+ 10:15:26.051 [117] ->
+ 
+ 10:15:26.054 [118] 10:15:26.054 [118] --> observe ss_range_normalization_sections
+ 
+ 10:15:26.054 [119] 10:15:26.054 [119] observe ss_range_normalization_sections -->
+ 
+ 10:15:26.057 [120] 10:15:26.057 [120] --> observe ss_range_normalization_sections_si
+ 10:15:26.057 [120] ze
+ 
+ 10:15:26.057 [121] 10:15:26.057 [121] observe ss_range_normalization_sections_size -
+ 10:15:26.057 [121] ->
+ 
+ 10:15:26.058 [122] 10:15:26.058 [122] --> observeEvent ts_variables selected | updat
+ 10:15:26.058 [122] e select variables choices
+ 
+ 10:15:26.063 [123] 10:15:26.063 [123] observeEvent ts_variables selected | update se
+ 10:15:26.063 [123] lect variables choices | ts_variables:original = volume; preproce
+ 10:15:26.063 [123] ssed = NULL; complete = volume; selected = volume -->
+ 
+ 10:16:08.250 [124] 10:16:08.250 [124] Execution id: 453, Start Timestamp: 20/01/25 1
+ 10:16:08.250 [124] 0:16:08
+ 
+ 10:16:08.393 [125] 10:16:08.393 [125] observeEvent encoders list enc_l | update data
+ 10:16:08.393 [125] set list | after freeze
+ 
+ 10:16:08.413 [126] 10:16:08.413 [126] observeEvent encoders list encs_l | update dat
+ 10:16:08.413 [126] aset list -->
+ 
+ 10:16:08.419 [127] 10:16:08.419 [127] --> observeEvent input_encoder
+ 
+ 10:16:08.420 [128] 10:16:08.420 [128] observeEvent input_encoder | update wlen | Bef
+ 10:16:08.420 [128] ore enc_ar
+ 
+ 10:16:08.421 [129] 10:16:08.421 [129] eventReactive enc_ar | Enc. Artifact: 
+ 
+ 10:16:08.551 [130] 10:16:08.551 [130] eventReactive enc_ar | Error: wandb.errors.Com
+ 10:16:08.551 [130] mError: Attempted to fetch artifact without alias (e.g. "<artifac
+ 10:16:08.551 [130] t_name>:v3" or "<artifact_name>:latest")
+
+ 
+ 10:16:08.552 [131] 10:16:08.552 [131] envent reactive enc_ar -->
+ 
+ 10:16:08.552 [132] 10:16:08.552 [132] observeEvent input_encoder | update wlen | enc
+ 10:16:08.552 [132] _ar: | Set wlen slider values
+ 
+ 10:16:08.553 [133] 10:16:08.553 [133] observeEvent input_encoder | update wlen | Set
+ 10:16:08.553 [133]  wlen slider values from w | 
+ 
+ 10:16:08.553 [134] 10:16:08.553 [134] observeEvent input_encoder | update wlen | enc
+ 10:16:08.553 [134] _ar$metadata$mvp_ws 
+ 
+ 10:16:08.553 [135] 10:16:08.553 [135] observeEvent input_encoder | update wlen | Upd
+ 10:16:08.553 [135] ate slider input ws: (,  ) |  wlen: 
+ 
+ 10:16:08.602 [136] 10:16:08.602 [136] --> Observe clustering options
+ 
+ 10:16:08.603 [137] 10:16:08.603 [137] Observe clustering options -->
+ 
+ 10:16:08.620 [139] 10:16:08.620 [139] >>>> Toguether Log path: r_shiny_app_logs-453
+ 
+ 10:16:08.661 [140] 10:16:08.661 [140] --> prj_object
+ 
+ 10:16:08.661 [141] 10:16:08.661 [141] prj_object || Before prjs_comp
+ 
+ 10:16:08.662 [142] 10:16:08.662 [142] prjs_comp | Before req || DR: PCA_UMAP || embs
+ 10:16:08.662 [142] ? FALSE
+ 
+ 10:16:08.712 [144] 10:16:08.712 [144] mplot_start_computation |FALSE | Projections
+ 
+ 10:16:08.856 [145] 10:16:08.856 [145] --> observeEvent input_dataset | update encode
+ 10:16:08.856 [145] r list
+ 
+ 10:16:08.860 [146] 10:16:08.860 [146] observeEvent input_dataset | update encoders f
+ 10:16:08.860 [146] or dataset gtrends_kohls-denoised:v1
+ 
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | zeroshot-moment-small-embedding:v
+ 10:16:09.094 [147] 0
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | zeroshot-moirai-small:v0
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moment-small-reconstruction:v1
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moment-small-reconstruction:v0
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moment-small-embedding:v4
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moment-small-embedding:v3
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moment-small-embedding:v1
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moment-small-embedding:v0
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moment-large-embedding:v2
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moirai-small:v2
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moirai-small:v1
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moirai-small:v0
+
+ 10:16:09.094 [147] 10:16:09.094 [147] observeEvent input_dataset | Encoders for data
+ 10:16:09.094 [147] set gtrends_kohls-denoised:v1 | moirai:v0
+ 
+ 10:16:09.097 [148] 10:16:09.097 [148] observeEvent input_dataset | update encoder li
+ 10:16:09.097 [148] st -->
+ 
+ 10:16:09.099 [149] 10:16:09.099 [149] --> eventReactive ts_ar | Update dataset artif
+ 10:16:09.099 [149] act | hash gtrends_kohls-denoised:v1
+ [1] "TSDF READY A TRUE TRUE"
+
+ 10:16:09.228 [150] 10:16:09.228 [150] --> Update play_pause_button
+ 
+ 10:16:09.231 [151] 10:16:09.231 [151] Update play_pause_button || FALSE -->
+ 
+ 10:16:09.236 [152] 10:16:09.236 [152] --> Enable/disable embs
+ 
+ 10:16:09.236 [153] 10:16:09.236 [153] Enable/disable embs || disable embs
+ 
+ 10:16:09.239 [154] 10:16:09.239 [154] Enable/disable embs --> || Changes to FALSE
+ 
+ 10:16:09.240 [155] 10:16:09.240 [155] eventReactive ts_ar || tsdf_ready FALSE
+ 
+ 10:16:09.242 [156] 10:16:09.242 [156] eventReactive ts_ar tsdf_ready? FALSE -->
+ 
+ 10:16:09.245 [157] 10:16:09.245 [157] --> observeEvent input_wlen | update slide str
+ 10:16:09.245 [157] ide value | wlen 0
+ 
+ 10:16:09.248 [158] 10:16:09.248 [158] observeEvent input_wlen | update slide stride 
+ 10:16:09.248 [158] value | Error | 
+ 
+ 10:16:09.248 [159] 10:16:09.248 [159] observeEvent input_wlen | update slide stride 
+ 10:16:09.248 [159] value | Finally |  wlen min 1 max 0 current value 0 -->
+ 
+ 10:16:09.250 [160] 10:16:09.250 [160] --> observe X | Before req | tsdf_ready FALSE 
+ 10:16:09.250 [160] | wlen 0 | stride 0 | allow update embs FALSE | play_prjs FALSE |
+ 10:16:09.250 [160]  tsdf_ready_preprocessed TRUE | embs preprocess FALSE
+ 
+ 10:16:09.347 [161] 10:16:09.347 [161] eventReactive enc_ar | Enc. Artifact: zeroshot
+ 10:16:09.347 [161] -moment-small-embedding:v0
+ 
+ 10:16:09.491 [162] 10:16:09.491 [162] envent reactive enc_ar -->
+ 
+ 10:16:09.495 [163] 10:16:09.495 [163] --> observeEvent input_encoder
+ 
+ 10:16:09.498 [164] 10:16:09.498 [164] observeEvent input_encoder | update wlen | Bef
+ 10:16:09.498 [164] ore enc_ar
+ 
+ 10:16:09.499 [165] 10:16:09.499 [165] observeEvent input_encoder | update wlen | enc
+ 10:16:09.499 [165] _ar: <Artifact QXJ0aWZhY3Q6MTM1Mzc4Nzc3MQ==>| Set wlen slider val
+ 10:16:09.499 [165] ues
+ 
+ 10:16:09.500 [166] 10:16:09.500 [166] observeEvent input_encoder | update wlen | enc
+ 10:16:09.500 [166] _ar$metadata$mvp_ws 12
+
+ 10:16:09.500 [166] 10:16:09.500 [166] observeEvent input_encoder | update wlen | enc
+ 10:16:09.500 [166] _ar$metadata$mvp_ws 17
+ 
+ 10:16:09.501 [167] 10:16:09.501 [167] observeEvent input_encoder | update wlen | Upd
+ 10:16:09.501 [167] ate slider input ws: (12, 17 ) |  wlen: 17
+ 
+ 10:16:09.503 [168] 10:16:09.503 [168] --> reactive enc_ar_stride
+ 
+ 10:16:09.504 [169] 10:16:09.504 [169] reactive_enc_ar_stride | --> 1
+ 
+ 10:16:09.523 [171] 10:16:09.523 [171] --> observeEvent input_wlen | update slide str
+ 10:16:09.523 [171] ide value | wlen 17
+ 
+ 10:16:09.524 [172] 10:16:09.524 [172] enc_ar_stride: 1
+ 
+ 10:16:09.527 [173] 10:16:09.527 [173] oserveEvent input_wlen | update slide stride v
+ 10:16:09.527 [173] alue | Update stride to 1
+ 
+ 10:16:09.572 [176] 10:16:09.572 [176] --> observe X | Before req | tsdf_ready FALSE 
+ 10:16:09.572 [176] | wlen 17 | stride 1 | allow update embs FALSE | play_prjs FALSE 
+ 10:16:09.572 [176] | tsdf_ready_preprocessed TRUE | embs preprocess FALSE
+ 

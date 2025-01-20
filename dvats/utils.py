@@ -1152,8 +1152,10 @@ def find_dominant_window_sizes_list(
         nsizes          : int   = 1,
         offset          : float = 0.05, 
         min_distance    : int   = 1,
-        mssg            : Mssg  = Mssg()
+        mssg            : Mssg  = None,
+        verbose         : int   = 0
     ) -> List [ int ]:
+    if mssg is None: mssg = Mssg(verbose = verbose, level = -1)
     mssg.initial_(f"Find_dominant_window_sizes_list")
     if len(X.shape) == 1: 
         sizes = find_dominant_window_sizes_list_single(X,nsizes,offset, min_distance, mssg)

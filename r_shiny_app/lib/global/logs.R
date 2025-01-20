@@ -154,5 +154,8 @@ log_add <- function(
   )
   log_print(paste0("Log add | ", function_), debug_group = 'time')
   new_mssg = rbind(log_mssg, new_mssg)
+  #print("log add --- mssg ---")
+  #print(new_mssg)
+  #print("--- log add --- mssg ---")
   return(new_mssg) 
 }

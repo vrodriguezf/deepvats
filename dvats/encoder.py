@@ -2562,10 +2562,11 @@ def fine_tune_moment_train_(
                 )
                 
                 if hasattr(loss, 'item'):
-                    losses.append(loss)    
-                else:
                     losses.append(loss.item())
                     loss.backward()
+                else:
+                    losses.append(loss)
+                    
                 optimizer.zero_grad()  
                 optimizer.step()
             except Exception as e: 

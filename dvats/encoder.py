@@ -500,7 +500,7 @@ def plot_eval_stats(self, figsize=(10, 6), save_fig=False, save_path="./", fname
     # Iterar sobre las métricas (las claves del diccionario pre/post)
     for metric in metrics_pre.keys():
         # Crear lista de valores para esta métrica
-        values = metrics_pre[metric] + metrics_post[metric]
+        values = [metrics_pre[metric]] + metrics_post[metric]
         self.mssg.print_error(f"{metric}.values~{len(values)}: {values}")
         # Graficar la métrica
         plt.plot(epochs, values, label=metric)

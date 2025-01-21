@@ -2671,12 +2671,7 @@ def fine_tune_moment_single_(
         eval_results_post = fine_tune_moment_eval_(
             enc_learn       = self.model,
             dl_eval         = dl_eval,
-            num_epochs      = self.num_epochs,
-            cpu             = self.cpu,
-            verbose         = self.mssg.verbose-1,
-            print_to_path   = self.mssg.to_path, 
-            print_path      = self.mssg.path, 
-            print_mode      = 'a'
+            cpu             = self.cpu
         )
         if self.time_flag:
             timer.end()

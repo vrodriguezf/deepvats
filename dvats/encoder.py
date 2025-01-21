@@ -390,6 +390,8 @@ class Encoder():
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def show_eval_stats(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+    def fine_tune_moment_eval_(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
 
 # %% ../nbs/encoder.ipynb 10
 def set_fine_tune_single_(
@@ -1884,7 +1886,7 @@ def windowed_dataset(
     windows_min_distance = 1 if windows_min_distance is None else windows_min_distance
     full_dataset = False if full_dataset is None else full_dataset
     mssg = ut.Mssg() if mssg is None else mssg
-    mssg.level -= 1
+    mssg.level += 1
     mssg.initial(ut.funcname())
     dss = []
     if isinstance(X, list):
@@ -1916,7 +1918,7 @@ def windowed_dataset(
         dss = [X]
     mssg.print(f"Number of windows: {len(dss)}")
     mssg.final()
-    mssg.level += 1
+    mssg.level -= 1
     return dss
 
 
@@ -2023,6 +2025,8 @@ def _get_enc_input(
     ## -- Using Type
     enc_input                       : Optional [ EncoderInput ] = None
 ): 
+    mssg.level += 1
+    func = mssg.function
     mssg.initial_(func_name = ut.funcname())
     enc_input, _ = ut._check_value(enc_input, None, "enc_input", EncoderInput, True, False, False)
     mssg.print(f"is none enc_input? {enc_input is None}")
@@ -2050,7 +2054,8 @@ def _get_enc_input(
             window_mask_percent = window_mask_percent,
         )
         mssg.print(f"Enc input obtained | enc_input~{enc_input.shape}")
-    mssg.final()
+    mssg.final(func_name = func)
+    mssg.level -= 1
     return enc_input
 
 # %% ../nbs/encoder.ipynb 55
@@ -2325,25 +2330,24 @@ def fine_tune_moment_eval_step_(
 
 # %% ../nbs/encoder.ipynb 62
 def fine_tune_moment_eval_(
-    enc_learn : Learner,
-    dl_eval   : DataLoader,
-    cpu       : bool = False,
+    self      : Encoder,
+    dl_eval   : DataLoader
 ):
     # Select device
-    device = "cpu" if cpu else torch.cuda.current_device()
+    device = "cpu" if self.cpu else torch.cuda.current_device()
     # Load metric
     mse_metric  = EvalMSE
     rmse_metric = EvalRMSE
     mae_metric  = EvalMAE
     smape_metric= EvalSMAPE
     num_evaluation_steps = len(dl_eval)
-    enc_learn = enc_learn.to(device)
-    enc_learn.eval()
+    self.model = self.model.to(device)
+    self.model.eval()
     progress_bar = tqdm(range(num_evaluation_steps))
     for batch in dl_eval:
         batch = batch.to(device)
         mse_metric, rmse_metric, mae_metric, smape_metric = fine_tune_moment_eval_step_(
-            enc_learn   = enc_learn, 
+            enc_learn   = self.model, 
             batch       = batch, 
             mse_metric  = mse_metric, 
             rmse_metric = rmse_metric,
@@ -2357,13 +2361,15 @@ def fine_tune_moment_eval_(
     mae   = mae_metric.compute()
     smape = smape_metric.compute()
     eval_results = {
-        "mse": mse,
-        "rmse": rmse,
-        "mae": mae,
-        "smape": smape
+        "mse"   : mse['mse'],
+        "rmse"  : rmse['mse'],
+        "mae"   : mae['mae'],
+        "smape" : smape['smape']
     }
-    enc_learn.train()
+    self.mssg.print_error(f"Eval results: {eval_results}.")
+    self.model.train()
     return eval_results
+Encoder.fine_tune_moment_eval_ = fine_tune_moment_eval_
 
 # %% ../nbs/encoder.ipynb 63
 def fine_tune_moment_train_loop_step_(
@@ -2623,11 +2629,7 @@ def fine_tune_moment_single_(
     if eval_pre:
         self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
         if self.time_flag: timer.start()
-        eval_results_pre    = fine_tune_moment_eval_(
-            enc_learn       = self.model,
-            dl_eval         = dl_eval,
-            cpu             = self.cpu 
-        )
+        eval_results_pre    = self.fine_tune_moment_eval_(dl_eval = dl_eval)
         if self.time_flag: 
             timer.end()
             t_eval_1 = timer.duration()
@@ -2669,11 +2671,8 @@ def fine_tune_moment_single_(
     if eval_post:    
         self.mssg.print(f"fine_tune_moment_single | Eval Post | wlen {self.input.shape[2]}")
         if self.time_flag: timer.start()
-        eval_results_post = fine_tune_moment_eval_(
-            enc_learn       = self.model,
-            dl_eval         = dl_eval,
-            cpu             = self.cpu
-        )
+        eval_results_post = self.fine_tune_moment_eval_(dl_eval=dl_eval)
+        self.mssg.print_error(f"Eval_results_post = {eval_results_post}")
         if self.time_flag:
             timer.end()
             t_eval_2 = timer.duration()
@@ -2733,12 +2732,16 @@ def fine_tune_moment_(
         ) =  self.fine_tune_moment_single_(eval_pre, eval_post, shot, i, use_moment_masks)
         lossess.append(losses)
         if (eval_pre): eval_results_pre = eval_results_pre_
-        if eval_results_post == {}: eval_results_post = {key:[] for key in eval_results_post_.keys()}
-        #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
-        if (eval_post): 
-            for key in eval_results_post.keys():
-                eval_results_post[key] += eval_results_post_[key]
-        #self.mssg.print_error(f"After concat {eval_results_post}")
+        self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
+        if (eval_post):
+            if eval_results_post == {}: 
+                eval_results_post = {
+                    key:[eval_results_post_[key]] for key in eval_results_post_.keys()
+                }
+            else:
+                for key in eval_results_post.keys():
+                    eval_results_post[key] += [eval_results_post_[key]]
+        self.mssg.print_error(f"After concat {eval_results_post}")
         t_shots.append(t_shot_)
         if eval_pre: t_evals.append(t_eval_1)
         if eval_post: t_evals.append(t_eval_2)

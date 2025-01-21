@@ -319,19 +319,19 @@ class Mssg:
         self.ensure_function()
         self.mode       = self.mode if print_mode is None else print_mode
         verbose_level   = self.level if verbose_level is None else verbose_level
-        if self.verbose > verbose_level:
-            mssg = f" [ {self.function} ] {self.mssg}" if self.function is not None else self.mssg
-            red_mssg = f"\033[91m{mssg}\033[0m"  # ANSI escape for red text
-            print_flush(
-                red_mssg, 
-                print_to_path = self.to_path, 
-                print_path    = self.path, 
-                print_mode    = self.mode,
-                verbose       = self.verbose, 
-                print_time    = self.time, 
-                print_both    = print_both, 
-                **kwargs
-            )
+        #if self.verbose > verbose_level:
+        mssg = f" [ {self.function} ] {self.mssg}" if self.function is not None else self.mssg
+        red_mssg = f"\033[91m{mssg}\033[0m"  # ANSI escape for red text
+        print_flush(
+            red_mssg, 
+            print_to_path = self.to_path, 
+            print_path    = self.path, 
+            print_mode    = self.mode,
+            verbose       = self.verbose, 
+            print_time    = self.time, 
+            print_both    = print_both, 
+            **kwargs
+        )
         self.mode = 'a'
 
 
@@ -971,7 +971,7 @@ def find_dominant_window_sizes_list_single_old(
     mssg.print(  f"X ~ {X.shape}", verbose = mssg.verbose + 1)
     mssg.print(  f"Looking for - at most - the best {nsizes} window sizes", verbose = mssg.verbose - 1)
     mssg.print(  f"Offset {offset} max size: {offset*len(X)}", verbose = mssg.verbose - 1)
-    mssg.print(  f"Find_dominant_window_sizes_list | --> Freqs")
+    mssg.print(  f"--> Freqs")
         
     X = np.array(X)
     fourier = np.absolute(np.fft.fft(X))   
@@ -1049,7 +1049,9 @@ def find_dominant_window_sizes_list_single(
         # Print options
         mssg         : Mssg              = Mssg()
     ) -> List[int]:
-    mssg.initial("find_dominant_window_sizes_list_single")
+    func = mssg.function
+    mssg.level += 1
+    mssg.initial_("find_dominant_window_sizes_list_single")
     mssg.print( f"X ~ {X.shape}", verbose_level = mssg.level + 1)
     mssg.print( f"Looking for - at most - the best {nsizes} window sizes")
     mssg.print( f"Offset {offset} max size: {offset*len(X)}")
@@ -1061,10 +1063,10 @@ def find_dominant_window_sizes_list_single(
     freqs = np.fft.fftfreq(X.shape[0], 1)
     
     mssg.level += 2
-    mssg.print( f"Find_dominant_window_sizes_list | Freqs {freqs} -->")
-    mssg.print( f"Find_dominant_window_sizes_list | coefs {fourier} -->")
+    mssg.print( f"Freqs {freqs} -->")
+    mssg.print( f"coefs {fourier} -->")
     mssg.level -= 2
-    mssg.print( f"Find_dominant_window_sizes_list | Freqs -->")
+    mssg.print( f"Freqs -->")
 
     coefs = []
     window_sizes = []
@@ -1077,17 +1079,17 @@ def find_dominant_window_sizes_list_single(
     coefs = np.array(coefs)
     window_sizes = np.asarray(window_sizes, dtype=np.int64)
     
-    mssg.print( "Find_dominant_window_sizes_list | Coefs and window_sizes -->")
-    mssg.print( "Find_dominant_window_sizes_list | --> Find and return valid window_sizes")
+    mssg.print( "Coefs and window_sizes -->")
+    mssg.print( "--> Find and return valid window_sizes")
 
     idx = np.argsort(coefs)[::-1]
     
     mssg.level += 1
-    mssg.print(f"Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 0 ... {idx}")
+    mssg.print(f"Find and return valid window_sizes | ... 0 ... {idx}")
         
     sorted_window_sizes = window_sizes[idx]
     
-    mssg.print(f"Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 1 ... {idx}")
+    mssg.print(f"Find and return valid window_sizes | ... 1 ... {idx}")
 
     # Find and return all valid window sizes
     valid_window_sizes = [
@@ -1095,21 +1097,23 @@ def find_dominant_window_sizes_list_single(
         if window_size < int(len(X) * offset)
     ]
     
-    mssg.print(f"Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2 ... {idx}")
+    mssg.print(f"Find and return valid window_sizes | ... 2 ... {idx}")
 
     # Ensure sizes separated at least at "min_distance" 
     sizes = select_separated_sizes(valid_window_sizes, min_distance, nsizes)
 
     # If no valid window sizes are found, return the first from sorted list
     if not sizes:
-        mssg.print(f"Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2a ... {nsizes}")
+        mssg.print(f"Find and return valid window_sizes | ... 2a ... {nsizes}")
         sizes = sorted_window_sizes[0][:nsizes]
     else:
-        mssg.print(f"Find_dominant_window_sizes_list | Find and return valid window_sizes | ... 2b ... {nsizes}")
+        mssg.print(f"Find and return valid window_sizes | ... 2b ... {nsizes}")
     mssg.level -= 1
-    mssg.print(f"Find_dominant_window_sizes_list | Find and return valid window_sizes -->")
-    mssg.print(f"Find_dominant_window_sizes_list | Sizes: {sizes}", verbose_level=mssg.level + 1)
-    mssg.print(f"Find dominant_window_sizes_list --->")
+    mssg.print(f"Find and return valid window_sizes -->")
+    mssg.print(f"Sizes: {sizes}", verbose_level=mssg.level + 1)
+    mssg.final()
+    mssg.level -= 1
+    mssg.function = func
     return sizes
 
 # %% ../nbs/utils.ipynb 97
@@ -1155,7 +1159,12 @@ def find_dominant_window_sizes_list(
         mssg            : Mssg  = None,
         verbose         : int   = 0
     ) -> List [ int ]:
-    if mssg is None: mssg = Mssg(verbose = verbose, level = -1)
+    func = funcname()
+    if mssg is None: 
+        mssg = Mssg(verbose = verbose, level = -1)
+    else:
+        mssg.level += 1
+        func = mssg.function 
     mssg.initial_(f"Find_dominant_window_sizes_list")
     if len(X.shape) == 1: 
         sizes = find_dominant_window_sizes_list_single(X,nsizes,offset, min_distance, mssg)
@@ -1174,6 +1183,8 @@ def find_dominant_window_sizes_list(
         sizes = group_similar_sizes(vars_sizes, nsizes, tolerance = 2)
         mssg.print(f"Final selected window sizes: {sizes}", verbose_level = mssg.level + 1)
     mssg.final()
+    mssg.level -= 1
+    mssg.function = func
     return sizes
 
 # %% ../nbs/utils.ipynb 101

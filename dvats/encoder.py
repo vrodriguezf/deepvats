@@ -269,6 +269,7 @@ class Encoder():
     criterion                               = None
     scheduler_specific_kwargs : AttrDict    = None # Only for MOIRAI
     #mvp_ws              : Tuple [ int, int ]= 0,0
+    errors               : pd.DataFrame     = pd.DataFrame(columns=["window", "error"])
     
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
@@ -501,7 +502,7 @@ def plot_eval_stats(self, figsize=(10, 6), save_fig=False, save_path="./", fname
     for metric in metrics_pre.keys():
         # Crear lista de valores para esta métrica
         values = [metrics_pre[metric]] + metrics_post[metric]
-        self.mssg.print_error(f"{metric}.values~{len(values)}: {values}")
+        #self.mssg.print_error(f"{metric}.values~{len(values)}: {values}")
         # Graficar la métrica
         plt.plot(epochs, values, label=metric)
     
@@ -770,7 +771,8 @@ def sure_eval_moment(
     print_to_path   : bool          = False,
     print_path      : str           = "~/data/logs/logs.txt",
     print_mode      : str           = 'a',
-    continue_if_fail: bool          = False
+    continue_if_fail: bool          = False,
+    register_errors: bool           = True
 ):
     if verbose > 0: ut.print_flush(f"---> sure_eval_moment", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     device = "cpu" if cpu else torch.cuda.current_device()
@@ -2366,7 +2368,7 @@ def fine_tune_moment_eval_(
         "mae"   : mae['mae'],
         "smape" : smape['smape']
     }
-    self.mssg.print_error(f"Eval results: {eval_results}.")
+    #self.mssg.print_error(f"Eval results: {eval_results}.")
     self.model.train()
     return eval_results
 Encoder.fine_tune_moment_eval_ = fine_tune_moment_eval_
@@ -2583,7 +2585,6 @@ def fine_tune_moment_train_(
                     losses.append(np.nan)
                 optimizer.zero_grad()
                 optimizer.step()
-            
             if lr_scheduler_flag: lr_scheduler.step()
             progress_bar.update(1)
     progress_bar.close()
@@ -2599,7 +2600,8 @@ def fine_tune_moment_single_(
     eval_post           : bool = False,
     shot                : bool = True,
     sample_id           : int  = 0,
-    use_moment_masks    : bool = False
+    use_moment_masks    : bool = False,
+    register_errors      : bool = True
 ):
     self.mssg.level += 1
     func = self.mssg.function
@@ -2626,69 +2628,79 @@ def fine_tune_moment_single_(
         eval_post           = eval_post,
         mssg                = deepcopy(self.mssg)
     )
-    if eval_pre:
-        self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
-        if self.time_flag: timer.start()
-        eval_results_pre    = self.fine_tune_moment_eval_(dl_eval = dl_eval)
-        if self.time_flag: 
-            timer.end()
-            t_eval_1 = timer.duration()
-            timer.show(verbose = self.mssg.verbose)
-    if shot:
-        if self.time_flag: timer.start()
-        self.mssg.print(f"Train | wlen {self.input.data[sample_id].shape[2]}")
-        try:
-            losses, self.model                  = fine_tune_moment_train_(
-                enc_learn                       = self.model,
-                dl_train                        = dl_train,
-                ds_train                        = ds_train,
-                window_mask_percent             = self.input.window_mask_percent,
-                batch_size                      = self.input.batch_size,
-                num_epochs                      = self.num_epochs,
-                criterion                       = self.optim.criterion, 
-                optimizer                       = self.optim.optimizer, 
-                lr                              = self.optim.lr.lr      if isinstance(self.optim.lr, LRScheduler) else self.optim.lr, 
-                lr_scheduler_flag               = self.optim.lr.flag    if isinstance(self.optim.lr, LRScheduler) else False, 
-                lr_scheduler_name               = self.optim.lr.name    if isinstance(self.optim.lr, LRScheduler) else False,
-                lr_scheduler_num_warmup_steps   = self.optim.lr.num_warmup_steps if isinstance(self.optim.lr, LRScheduler) else 0,
-                cpu                             = self.cpu,
-                verbose                         = self.mssg.verbose-1,
-                print_to_path                   = self.mssg.to_path, 
-                print_path                      = self.mssg.path, 
-                print_mode                      = self.mssg.mode,
-                use_moment_masks                = use_moment_masks,
-                mask_stateful                   = self.mask_stateful,
-                mask_future                     = self.mask_future,
-                mask_sync                       = self.mask_sync
-            )
+    try:
+        if eval_pre:
+            self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
+            if self.time_flag: timer.start()
+            eval_results_pre    = self.fine_tune_moment_eval_(dl_eval = dl_eval)
+            if self.time_flag: 
+                timer.end()
+                t_eval_1 = timer.duration()
+                timer.show(verbose = self.mssg.verbose)
+        if shot:
+            if self.time_flag: timer.start()
+            self.mssg.print(f"Train | wlen {self.input.data[sample_id].shape[2]}")
+            try:
+                losses, self.model                  = fine_tune_moment_train_(
+                    enc_learn                       = self.model,
+                    dl_train                        = dl_train,
+                    ds_train                        = ds_train,
+                    window_mask_percent             = self.input.window_mask_percent,
+                    batch_size                      = self.input.batch_size,
+                    num_epochs                      = self.num_epochs,
+                    criterion                       = self.optim.criterion, 
+                    optimizer                       = self.optim.optimizer, 
+                    lr                              = self.optim.lr.lr      if isinstance(self.optim.lr, LRScheduler) else self.optim.lr, 
+                    lr_scheduler_flag               = self.optim.lr.flag    if isinstance(self.optim.lr, LRScheduler) else False, 
+                    lr_scheduler_name               = self.optim.lr.name    if isinstance(self.optim.lr, LRScheduler) else False,
+                    lr_scheduler_num_warmup_steps   = self.optim.lr.num_warmup_steps if isinstance(self.optim.lr, LRScheduler) else 0,
+                    cpu                             = self.cpu,
+                    verbose                         = self.mssg.verbose-1,
+                    print_to_path                   = self.mssg.to_path, 
+                    print_path                      = self.mssg.path, 
+                    print_mode                      = self.mssg.mode,
+                    use_moment_masks                = use_moment_masks,
+                    mask_stateful                   = self.mask_stateful,
+                    mask_future                     = self.mask_future,
+                    mask_sync                       = self.mask_sync
+                )
+                if self.time_flag:
+                    timer.end()
+                    t_shot = timer.duration()
+                    timer.show()
+            except Exception as e:
+                self.mssg.print(f"fine_tune_moment_single | Train | Window {self.input.shape[2]} not valid | {e}")
+                traceback.print_exc()
+        if eval_post:    
+            self.mssg.print(f"fine_tune_moment_single | Eval Post | wlen {self.input.shape[2]}")
+            if self.time_flag: timer.start()
+            eval_results_post = self.fine_tune_moment_eval_(dl_eval=dl_eval)
+            #self.mssg.print_error(f"Eval_results_post = {eval_results_post}")
             if self.time_flag:
                 timer.end()
-                t_shot = timer.duration()
-                timer.show()
-        except Exception as e:
-            self.mssg.print(f"fine_tune_moment_single | Train | Window {self.input.shape[2]} not valid | {e}")
-            traceback.print_exc()
-    if eval_post:    
-        self.mssg.print(f"fine_tune_moment_single | Eval Post | wlen {self.input.shape[2]}")
-        if self.time_flag: timer.start()
-        eval_results_post = self.fine_tune_moment_eval_(dl_eval=dl_eval)
-        self.mssg.print_error(f"Eval_results_post = {eval_results_post}")
-        if self.time_flag:
-            timer.end()
-            t_eval_2 = timer.duration()
-            if self.mssg.verbose > 0: 
-                timer.show()
-            if self.mssg.verbose > 0: 
-                self.show_eval_stats(
-                    # Wether computed or not pre & post errors
-                    eval_pre        = eval_pre, 
-                    eval_post       = eval_post, 
-                    # Results
-                    eval_stats_pre  = eval_results_pre,
-                    eval_stats_post = eval_results_post,
-                    # Function name
-                    func_name       = ut.funcname()
-                )
+                t_eval_2 = timer.duration()
+                if self.mssg.verbose > 0: 
+                    timer.show()
+                if self.mssg.verbose > 0: 
+                    self.show_eval_stats(
+                        # Wether computed or not pre & post errors
+                        eval_pre        = eval_pre, 
+                        eval_post       = eval_post, 
+                        # Results
+                        eval_stats_pre  = eval_results_pre,
+                        eval_stats_post = eval_results_post,
+                        # Function name
+                        func_name       = ut.funcname()
+                    )
+    except Exception as e: 
+        if register_errors:
+            window = self.input.data[sample_id].shape[2]
+            self.mssg.print_error(f"Registering error in DataFrame | window: {window} | error: {e}")
+            error = {"window": window, "error": e}
+            self.errors = pd.concat([self.errors, pd.DataFrame([error])])
+            display(self.errors)
+        else: 
+            raise(e)
     self.mssg.final(ut.funcname())
     self.mssg.level -= 1
     self.mssg.function = func
@@ -2703,7 +2715,8 @@ def fine_tune_moment_(
     eval_post           : bool = False, 
     shot                : bool = False,
     time_flag           : bool = None,
-    use_moment_masks    : bool = None
+    use_moment_masks    : bool = None,
+    register_errors     : bool = True
 ):   
     self.mssg.initial(ut.funcname())
     self.time_flag = self.time_flag if time_flag is None else time_flag
@@ -2729,19 +2742,19 @@ def fine_tune_moment_(
         self.mssg.print(f"Processing wlen {self.input.shape[2]}")
         ( 
             losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model
-        ) =  self.fine_tune_moment_single_(eval_pre, eval_post, shot, i, use_moment_masks)
+        ) =  self.fine_tune_moment_single_(eval_pre, eval_post, shot, i, use_moment_masks, register_errors)
         lossess.append(losses)
         if (eval_pre): eval_results_pre = eval_results_pre_
-        self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
+        #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
         if (eval_post):
             if eval_results_post == {}: 
                 eval_results_post = {
                     key:[eval_results_post_[key]] for key in eval_results_post_.keys()
                 }
             else:
-                for key in eval_results_post.keys():
+                for key in eval_results_post_.keys():
                     eval_results_post[key] += [eval_results_post_[key]]
-        self.mssg.print_error(f"After concat {eval_results_post}")
+        #self.mssg.print_error(f"After concat {eval_results_post}")
         t_shots.append(t_shot_)
         if eval_pre: t_evals.append(t_eval_1)
         if eval_post: t_evals.append(t_eval_2)
@@ -2751,6 +2764,7 @@ def fine_tune_moment_(
     self.eval_stats_pre = eval_results_pre
     self.eval_stats_post = eval_results_post
     self.mssg.final(ut.funcname())
+    if register_errors: return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.errors
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
@@ -3361,7 +3375,8 @@ def fine_tune_moirai_single_(
     shot            : bool  = False,
     show_plot       : bool  = False,
     sample_id       : int   = 0,
-    patch_size      : int   = 8
+    patch_size      : int   = 8,
+    register_errors  : bool  = True
 ):
     self.mssg.level+=1
     func = self.mssg.function
@@ -3403,35 +3418,42 @@ def fine_tune_moirai_single_(
     # Setup optimizer
     if self.optim.optimizer is None:
         self.configure_optimizer_moirai(dl_train)
+    try:
+        ##-- Eval - Pre
+        if eval_pre:
+            self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
+            if self.time_flag: timer.start()
+            eval_results_pre = self.fine_tune_moirai_eval_(dl_eval, eval_results_pre, patch_size)
+            if self.time_flag:
+                timer.end()
+                t_eval_1 = timer.duration()
+                timer.show(verbose = self.mssg.verbose)
+        ##-- Train
+        if shot:
+            if self.time_flag: timer.start()
+            self.mssg.print(f"Train | wlen {self.input.data[sample_id].shape[2]}")
+            losses, self.model = fine_tune_moirai_train_()
+            if self.time_flag: 
+                timer.end()
+                t_shot = timer.duration()
+                timer.show(verbose = self.mssg.verbose)
 
-    ##-- Eval - Pre
-    if eval_pre:
-        self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
-        if self.time_flag: timer.start()
-        eval_results_pre = self.fine_tune_moirai_eval_(dl_eval, eval_results_pre, patch_size)
-        if self.time_flag:
-            timer.end()
-            t_eval_1 = timer.duration()
-            timer.show(verbose = self.mssg.verbose)
-    ##-- Train
-    if shot:
-        if self.time_flag: timer.start()
-        self.mssg.print(f"Train | wlen {self.input.data[sample_id].shape[2]}")
-        losses, self.model = fine_tune_moirai_train_()
-        if self.time_flag: 
-            timer.end()
-            t_shot = timer.duration()
-            timer.show(verbose = self.mssg.verbose)
-
-    ##-- Eval - Post
-    if eval_post:
-        self.mssg.print(f"Eval Post | wlen {self.input.data[sample_id].shape[2]}")
-        if self.time_flag: timer.start()
-        eval_results_post = self.fine_tune_moirai_eval_(dl_eval, eval_results_post, patch_size)
-        if self.time_flag:
-            timer.end()
-            t_eval_2 = timer.duration()
-            timer.show(verbose = self.mssg.verbose)
+        ##-- Eval - Post
+        if eval_post:
+            self.mssg.print(f"Eval Post | wlen {self.input.data[sample_id].shape[2]}")
+            if self.time_flag: timer.start()
+            eval_results_post = self.fine_tune_moirai_eval_(dl_eval, eval_results_post, patch_size)
+            if self.time_flag:
+                timer.end()
+                t_eval_2 = timer.duration()
+                timer.show(verbose = self.mssg.verbose)
+    except Exception as e:
+        if register_errors:
+            self.mssg.print_error("Registering error in DataFrame")
+            error = {"window": self.input.data[sample_id].shape[2], "error": e}
+            self.errors = pd.concat([self.errors, pd.DataFrame([error])])
+        else: 
+            raise(e)
     self.mssg.final()   
     self.mssg.level += 1
     self.mssg.function = func
@@ -3445,7 +3467,8 @@ def fine_tune_moirai_(
     eval_post : bool = False, 
     shot      : bool = False,
     time_flag : bool = None,
-    show_plot : bool = False
+    show_plot : bool = False,
+    register_errors : bool = False
 ):  
     self.mssg.initial(ut.funcname())
     self.time_flag = self.time_flag if time_flag is None else time_flag
@@ -3488,7 +3511,7 @@ def fine_tune_moirai_(
         self.mssg.print(f"Processing wlen {self.input.shape[2]}")
         ( 
             losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model
-        ) =  self.fine_tune_moirai_single_(eval_pre, eval_post, shot, sample_id = i, show_plot = show_plot)
+        ) =  self.fine_tune_moirai_single_(eval_pre, eval_post, shot, sample_id = i, show_plot = show_plot, register_errors = register_errors)
     
         lossess.append(losses)
         if (eval_pre): eval_results_pre = eval_results_pre_
@@ -3507,6 +3530,8 @@ def fine_tune_moirai_(
     t_eval = sum(t_evals)
     self.mssg.final(ut.funcname())
 
+    if register_errors: 
+        return losses, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.errors
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
 
 Encoder.fine_tune_moirai_ = fine_tune_moirai_
@@ -3576,7 +3601,8 @@ def fine_tune(
     metrics_names                   : List [ str ]                  = None,
     metrics_args                    : List [ AttrDict ]             = None,
     metrics_dict                    : AttrDict                      = None,
-    scheduler_specific_kwargs       : AttrDict                      = None
+    scheduler_specific_kwargs       : AttrDict                      = None,
+    register_errors                 : bool                          = True
 ): 
     enc = _get_encoder(
         X                               = X,
@@ -3621,28 +3647,18 @@ def fine_tune(
     )
     enc.mssg.initial_("fine_tune")
     enc.mssg.print(f"Original enc_learn { enc_learn }  | Final model { enc.model }")
-    lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval = ( None, None, None, None, None, None, None )
     enc.set_fine_tune_()
     match enc.fine_tune_.__name__:
         case "fine_tune_moment_":
             enc.mssg.print("Use fine_tune_moment parameters")
-            ( 
-                lossess, eval_results_pre, eval_results_post, 
-                t_shots, t_shot, t_evals, t_eval, enc.model 
-            ) = enc.fine_tune_(
-                eval_pre, eval_post, shot, time_flag, use_moment_masks
+            result = enc.fine_tune_(
+                eval_pre, eval_post, shot, time_flag, use_moment_masks, register_errors
             )
         case "fine_tune_mvp_":
             enc.mssg.print("Use fine_tune_mvp parameters")
-            ( 
-                lossess, eval_results_pre, eval_results_post, 
-                t_shots, t_shot, t_evals, t_eval, enc.model 
-            ) = enc.fine_tune_(eval_pre, eval_post, shot, time_flag, use_wandb = use_wandb, analysis_mode = analysis_mode, norm_by_sample = norm_by_sample, norm_use_single_batch = norm_use_single_batch, show_plot = show_plot)
+            result = enc.fine_tune_(eval_pre, eval_post, shot, time_flag, use_wandb = use_wandb, analysis_mode = analysis_mode, norm_by_sample = norm_by_sample, norm_use_single_batch = norm_use_single_batch, show_plot = show_plot)
         case _:
             enc.mssg.print("Use generic fine_tune parameters")
-            ( 
-                lossess, eval_results_pre, eval_results_post, 
-                t_shots, t_shot, t_evals, t_eval, enc.model 
-            ) = enc.fine_tune_(eval_pre = eval_pre, eval_post = eval_post, shot = shot, time_flag = time_flag)
+            result = enc.fine_tune_(eval_pre = eval_pre, eval_post = eval_post, shot = shot, time_flag = time_flag)
     enc.mssg.final()
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, enc.model
+    return result

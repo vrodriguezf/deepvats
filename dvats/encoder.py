@@ -239,7 +239,7 @@ class Encoder():
                             Learner, 
                             MOMENTPipeline,
                             moirai.MoiraiModule
-    ]                                       = None,
+    ]                                       = None
     mssg                : ut.Mssg           = ut.Mssg()
     cpu                 : bool              = False
     to_numpy            : bool              = False
@@ -270,6 +270,7 @@ class Encoder():
     scheduler_specific_kwargs : AttrDict    = None # Only for MOIRAI
     #mvp_ws              : Tuple [ int, int ]= 0,0
     errors               : pd.DataFrame     = pd.DataFrame(columns=["window", "error"])
+    window_sizes         : List [int]       = None
     
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
@@ -291,7 +292,7 @@ class Encoder():
         self.model_class        = None # Must be computed through get_model_class to avoid errors
         self.time_flag      , _ = ut._check_value(self.time_flag, False, "time_flag", bool,  mssg = self.mssg)
         self.show_plot      , _ = ut._check_value(self.show_plot, False, "show_plot", bool, mssg = self.mssg)
-    
+        self.window_sizes       = [] if self.window_sizes is None else self.window_sizes
     @property
     def metrics_names(self):
         self._metrics_names = self.metrics_dict.keys() if self.metrics_dict else None
@@ -2612,7 +2613,7 @@ def fine_tune_moment_single_(
     losses              = []
     eval_results_pre    = {}
     eval_results_post   = {}
-
+    error_val           = 0
     if self.time_flag: timer = ut.Time(mssg = self.mssg)
     self.mssg.print(f"fine_tune_moment_single | Prepare the dataset | X ~ {self.input.data[sample_id].shape}")
     # Prepare the dataset
@@ -2629,6 +2630,7 @@ def fine_tune_moment_single_(
         mssg                = deepcopy(self.mssg)
     )
     try:
+        self.mssg.print(f"Processing wlen {self.input.data[sample_id].shape[2]} | Lengths list: {self.window_sizes}")
         if eval_pre:
             self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
             if self.time_flag: timer.start()
@@ -2692,8 +2694,9 @@ def fine_tune_moment_single_(
                         # Function name
                         func_name       = ut.funcname()
                     )
-    except Exception as e: 
+    except Exception as e:
         if register_errors:
+            error_val = 1
             window = self.input.data[sample_id].shape[2]
             self.mssg.print_error(f"Registering error in DataFrame | window: {window} | error: {e}")
             error = {"window": window, "error": e}
@@ -2704,7 +2707,7 @@ def fine_tune_moment_single_(
     self.mssg.final(ut.funcname())
     self.mssg.level -= 1
     self.mssg.function = func
-    return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
+    return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model, error_val
 
 Encoder.fine_tune_moment_single_ = fine_tune_moment_single_
 
@@ -2738,21 +2741,26 @@ def fine_tune_moment_(
         self.mssg.print(f"Setting up optimizer as AdamW")
         self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.optim.lr.lr)
     # Compute model for each window in the windowed dataset
+    
     for i in range(self.input.size):
-        self.mssg.print(f"Processing wlen {self.input.shape[2]}")
+        window_size = self.input._data[i].shape[2]
+        self.mssg.print_error(f"Processing wlen {window_size} | wlens {self.window_sizes} | i {i+1}/{self.input.size}")
+        self.window_sizes.append(window_size)
+        
         ( 
-            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model
+            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model, error_val
         ) =  self.fine_tune_moment_single_(eval_pre, eval_post, shot, i, use_moment_masks, register_errors)
-        lossess.append(losses)
-        if (eval_pre): eval_results_pre = eval_results_pre_
+        if (error_val == 0): lossess.append(losses)
+        if (eval_pre and error_val == 0): eval_results_pre = eval_results_pre_
         #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
-        if (eval_post):
+        if (eval_post and error_val == 0):
             if eval_results_post == {}: 
                 eval_results_post = {
                     key:[eval_results_post_[key]] for key in eval_results_post_.keys()
                 }
             else:
                 for key in eval_results_post_.keys():
+                    self.mssg.print_error(print(eval_results_post_[key]))
                     eval_results_post[key] += [eval_results_post_[key]]
         #self.mssg.print_error(f"After concat {eval_results_post}")
         t_shots.append(t_shot_)
@@ -2764,8 +2772,8 @@ def fine_tune_moment_(
     self.eval_stats_pre = eval_results_pre
     self.eval_stats_post = eval_results_post
     self.mssg.final(ut.funcname())
-    if register_errors: return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.errors
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
+    if register_errors: return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, self.errors
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
 

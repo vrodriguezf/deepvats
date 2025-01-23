@@ -6,8 +6,8 @@ __all__ = ['print_flush', 'styled_print', 'funcname', 'Mssg', 'generate_TS_df', 
            'py_function', 'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'update_patch',
            'show_sequence', 'plot_with_dots', 'Interpolator', 'PAATransformer', 'DownsampleError', 'DivisorsError',
            'divisors', 'downsample_propose_crop_', 'downsample', 'find_dominant_window_sizes_list_single_old',
-           'select_separated_sizes', 'find_dominant_window_sizes_list_single', 'group_similar_sizes',
-           'find_dominant_window_sizes_list']
+           'select_separated_sizes', 'find_dominant_window_sizes_list_single', 'group_similar_sizes_old',
+           'group_similar_sizes', 'find_dominant_window_sizes_list']
 
 # %% ../nbs/utils.ipynb 3
 ## -- Classes & types
@@ -1117,7 +1117,7 @@ def find_dominant_window_sizes_list_single(
     return sizes
 
 # %% ../nbs/utils.ipynb 97
-def group_similar_sizes(vars_sizes, nsizes, tolerance=2):
+def group_similar_sizes_old(vars_sizes, nsizes, tolerance=2):
     """
     Selects the best window sizes across multiple variables,
     ensuring no repetitions and that the sizes are sufficiently close.
@@ -1151,6 +1151,36 @@ def group_similar_sizes(vars_sizes, nsizes, tolerance=2):
 
 
 # %% ../nbs/utils.ipynb 98
+def group_similar_sizes(vars_sizes, nsizes, min_distance):
+    """
+    Selects the best window sizes across multiple variables,
+    ensuring no repetitions and that the sizes are sufficiently spaced.
+    """
+    indices = [0] * len(vars_sizes)  # Track indices for each variable
+    selected_sizes = set()  # Store unique selected sizes
+
+    while len(selected_sizes) < nsizes:
+        added = False  # Track if any value was added in this iteration
+        for i in range(len(vars_sizes)):
+            if indices[i] < len(vars_sizes[i]):
+                size = vars_sizes[i][indices[i]]
+                if all(abs(size - s) >= min_distance for s in selected_sizes):
+                    selected_sizes.add(size)
+                    indices[i] += 1  # Move to the next size for that variable
+                    added = True  # Mark that we added a value
+                else:
+                    indices[i] += 1  # Skip and check next value
+        
+        # Break if no values were added and all indices are exhausted
+        if not added or all(idx >= len(vars_sizes[i]) for i, idx in enumerate(indices)):
+            break
+
+    # Convert to sorted list and return first `nsizes` elements
+    selected_sizes = sorted(selected_sizes)
+    return selected_sizes[:nsizes]
+
+
+# %% ../nbs/utils.ipynb 100
 def find_dominant_window_sizes_list(
         X,
         nsizes          : int   = 1,
@@ -1180,14 +1210,15 @@ def find_dominant_window_sizes_list(
             mssg.print(f"Get sizes for var {var} | {var_sizes}")
         mssg.level -= 1
         mssg.print( f"Grouping sizes")
-        sizes = group_similar_sizes(vars_sizes, nsizes, tolerance = 2)
+        #sizes = group_similar_sizes(vars_sizes, nsizes, tolerance = 2)
+        sizes = group_similar_sizes(vars_sizes, nsizes, min_distance = min_distance)
         mssg.print(f"Final selected window sizes: {sizes}", verbose_level = mssg.level + 1)
     mssg.final()
     mssg.level -= 1
     mssg.function = func
     return sizes
 
-# %% ../nbs/utils.ipynb 101
+# %% ../nbs/utils.ipynb 103
 import warnings
 def _check_value(
     value       : Any,
@@ -1237,7 +1268,7 @@ def _check_value(
     mssg.level = level
     return res, valid
 
-# %% ../nbs/utils.ipynb 102
+# %% ../nbs/utils.ipynb 104
 def _validate_nested_list(value, default, name, valid_types, levels, 
     allow_none  : bool  = False,
     positive    : bool  = False,
@@ -1286,7 +1317,7 @@ def _validate_nested_list(value, default, name, valid_types, levels,
     return res, valid
 
 
-# %% ../nbs/utils.ipynb 103
+# %% ../nbs/utils.ipynb 105
 def _get_mssg(
     mssg : Mssg = None,
     verbose                         : int           = 0, 

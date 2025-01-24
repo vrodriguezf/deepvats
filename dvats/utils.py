@@ -6,8 +6,8 @@ __all__ = ['print_flush', 'styled_print', 'funcname', 'Mssg', 'generate_TS_df', 
            'py_function', 'exec_with_feather_k_output', 'exec_with_and_feather_k_output', 'Time', 'update_patch',
            'show_sequence', 'plot_with_dots', 'Interpolator', 'PAATransformer', 'DownsampleError', 'DivisorsError',
            'divisors', 'downsample_propose_crop_', 'downsample', 'find_dominant_window_sizes_list_single_old',
-           'select_separated_sizes', 'find_dominant_window_sizes_list_single', 'group_similar_sizes_old',
-           'group_similar_sizes', 'find_dominant_window_sizes_list']
+           'select_separated_sizes', 'find_dominant_window_sizes_list_single', 'group_similar_sizes',
+           'group_similar_sizes_', 'find_dominant_window_sizes_list']
 
 # %% ../nbs/utils.ipynb 3
 ## -- Classes & types
@@ -1117,7 +1117,7 @@ def find_dominant_window_sizes_list_single(
     return sizes
 
 # %% ../nbs/utils.ipynb 97
-def group_similar_sizes_old(vars_sizes, nsizes, tolerance=2):
+def group_similar_sizes(vars_sizes, nsizes, tolerance=2):
     """
     Selects the best window sizes across multiple variables,
     ensuring no repetitions and that the sizes are sufficiently close.
@@ -1151,7 +1151,7 @@ def group_similar_sizes_old(vars_sizes, nsizes, tolerance=2):
 
 
 # %% ../nbs/utils.ipynb 98
-def group_similar_sizes(vars_sizes, nsizes, min_distance):
+def group_similar_sizes_(vars_sizes, nsizes, min_distance):
     """
     Selects the best window sizes across multiple variables,
     ensuring no repetitions and that the sizes are sufficiently spaced.
@@ -1210,8 +1210,8 @@ def find_dominant_window_sizes_list(
             mssg.print(f"Get sizes for var {var} | {var_sizes}")
         mssg.level -= 1
         mssg.print( f"Grouping sizes")
-        #sizes = group_similar_sizes(vars_sizes, nsizes, tolerance = 2)
-        sizes = group_similar_sizes(vars_sizes, nsizes, min_distance = min_distance)
+        sizes = group_similar_sizes(vars_sizes, nsizes, tolerance = 2)
+        #sizes = group_similar_sizes_(vars_sizes, nsizes, min_distance = min_distance)
         mssg.print(f"Final selected window sizes: {sizes}", verbose_level = mssg.level + 1)
     mssg.final()
     mssg.level -= 1

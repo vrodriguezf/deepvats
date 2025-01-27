@@ -2351,13 +2351,13 @@ def moment_build_masks(
         if mask_future:
             mask = create_future_mask(
                 o       = o, 
-                r       = window_mask_percent, 
+                r       = float(window_mask_percent), 
                 sync    = mask_sync
             )[0,:,:].int() # As there is only 1 variable/variables are flattened, an extra dim is created by the masking function
         else:
             mask = create_subsequence_mask(
                 o       = o,
-                r       = window_mask_percent,
+                r       = float(window_mask_percent),
                 stateful= mask_stateful,
                 sync    = mask_sync
             )[0,:,:].int() # As there is only 1 variable/variables are flattened, an extra dim is created by the masking function
@@ -2506,7 +2506,7 @@ def fine_tune_moment_train_loop_step_(
     self.model = self.model.to(device)
     self.mssg.level += 1
     self.mssg.print(f"batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}")
-    self.mssg.print_error(f"Mask given to eval: {mask}")
+    self.mssg.print(f"Mask given to eval: {mask}", verbose = 5)
     for param in self.model.parameters():
         param = param.to(device)
     self.mssg.print(f"sure_eval_moment | b{batch.device} | m{mask.device} | bm{bms.device}")

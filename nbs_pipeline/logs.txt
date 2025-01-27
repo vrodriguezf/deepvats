@@ -4,14 +4,14 @@
 [8]  [ _get_enc_input ] is none enc_input? True
 [8]  [ _get_enc_input ] About to get the windows
 [8] [ --> windowed_dataset ]
-[8]  [ _get_enc_input ] X is a DataFrame, X~(440, 1) | window_sizes 0, n_window_sizes 5
+[8]  [ _get_enc_input ] X is a DataFrame, X~(440, 1) | window_sizes 0, n_window_sizes 1
 [8]  [ _get_enc_input ] X is a DataFrame | Selecting Fourier's dominant frequences
 [8] [ --> Find_dominant_window_sizes_list ]
 [8]  [ Find_dominant_window_sizes_list ] X ~ (440, 1)
 [8]  [ Find_dominant_window_sizes_list ] Get sizes for var 0
 [8] [ --> find_dominant_window_sizes_list_single ]
 [8]  [ find_dominant_window_sizes_list_single ] X ~ (440,)
-[8]  [ find_dominant_window_sizes_list_single ] Looking for - at most - the best 5 window sizes
+[8]  [ find_dominant_window_sizes_list_single ] Looking for - at most - the best 1 window sizes
 [8]  [ find_dominant_window_sizes_list_single ] Offset 0.05 max size: 22.0
 [8]  [ find_dominant_window_sizes_list_single ] --> Freqs
 [8]  [ find_dominant_window_sizes_list_single ] Freqs [ 0.          0.00227273  0.00454545  0.00681818  0.00909091  0.01136364
@@ -240,29 +240,21 @@
  171  13 107 166 187 163  90 156 180  84 135  44 149 128  86 139 158 179
  215 154  52 130 105 120  68 103 181 162 198 204 122 196 132  70  87 137
   46  73  88]
-[8]  [ find_dominant_window_sizes_list_single ] Find and return valid window_sizes | ... 2b ... 5
+[8]  [ find_dominant_window_sizes_list_single ] Find and return valid window_sizes | ... 2b ... 1
 [8]  [ find_dominant_window_sizes_list_single ] Find and return valid window_sizes -->
-[8]  [ find_dominant_window_sizes_list_single ] Sizes: [17, 12, 10, 16, 8]
+[8]  [ find_dominant_window_sizes_list_single ] Sizes: [17]
 [8] [find_dominant_window_sizes_list_single --> ]
-[8]  [ Find_dominant_window_sizes_list ] Get sizes for var 0 | [17, 12, 10, 16, 8]
+[8]  [ Find_dominant_window_sizes_list ] Get sizes for var 0 | [17]
 [8]  [ Find_dominant_window_sizes_list ] Grouping sizes
-[8]  [ Find_dominant_window_sizes_list ] Final selected window sizes: [17, 12, 10, 16, 8]
+[8]  [ Find_dominant_window_sizes_list ] Final selected window sizes: [17]
 [8] [Find_dominant_window_sizes_list --> ]
-[8]  [ windowed_dataset ] X is a DataFrame | Window sizes: 5
+[8]  [ windowed_dataset ] X is a DataFrame | Window sizes: 1
 [8]  [ windowed_dataset ] Building the windows
 [8]  [ windowed_dataset ] w = 17
 [8]  [ windowed_dataset ] w 17 | enc_input~(424, 1, 17) | dss~1
-[8]  [ windowed_dataset ] w = 12
-[8]  [ windowed_dataset ] w 12 | enc_input~(429, 1, 12) | dss~2
-[8]  [ windowed_dataset ] w = 10
-[8]  [ windowed_dataset ] w 10 | enc_input~(431, 1, 10) | dss~3
-[8]  [ windowed_dataset ] w = 16
-[8]  [ windowed_dataset ] w 16 | enc_input~(425, 1, 16) | dss~4
-[8]  [ windowed_dataset ] w = 8
-[8]  [ windowed_dataset ] w 8 | enc_input~(433, 1, 8) | dss~5
-[8]  [ windowed_dataset ] Number of windows: 5
+[8]  [ windowed_dataset ] Number of windows: 1
 [8] [windowed_dataset --> ]
-[8]  [ _get_enc_input ] About to get the encoder input | windows~5
+[8]  [ _get_enc_input ] About to get the encoder input | windows~1
 [8]  [ _get_enc_input ] Enc input obtained | enc_input~(424, 1, 17)
 [8] [_get_encoder --> ]
 [8]  [ _get_encoder ] enc_input~(424, 1, 17)
@@ -435,9 +427,9 @@
 [8] [set_fine_tune_ --> ]
 [8]  [ set_fine_tune_ ] Use fine_tune_moment parameters
 [8] [ --> fine_tune_moment_ ]
-[8]  [ set_fine_tune_ ] Processing 5 datasets : (424, 1, 17)
+[8]  [ set_fine_tune_ ] Processing 1 datasets : (424, 1, 17)
 [8]  [ set_fine_tune_ ] Setting up optimizer as AdamW
-[8] [91m [ set_fine_tune_ ] Processing wlen 17 | wlens [] | i 1/5[0m
+[8] [91m [ set_fine_tune_ ] Processing wlen 17 | wlens [] | i 1/1[0m
 [8] [ --> fine_tune_moment_single ]
 [8]  [ fine_tune_moment_single ] fine_tune_moment_single | Prepare the dataset | X ~ (424, 1, 17)
 [8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Selecting ds train | 106 windows
@@ -454,121 +446,1233 @@
 [8]  [ fine_tune_moment_single ] Start timer
 [8] [ --> fine_tune_moment_eval_step_ ]
 [8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
 [8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
 [8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
-[8]  [ moment_build_masks ] Using MVP masking generation style
-[8]  [ moment_build_masks ] o ~ torch.Size([16, 17]) | stateful = False | sync = False | r = 1
-[8] [91m [ moment_build_masks ] Registering error in DataFrame | window: 17 | error: "binomial_cpu" not implemented for 'Long'[0m
-[8] [fine_tune_moment_single_ --> ]
-[8] [91m [ set_fine_tune_ ] Processing wlen 12 | wlens [17] | i 2/5[0m
-[8] [ --> fine_tune_moment_single ]
-[8]  [ fine_tune_moment_single ] fine_tune_moment_single | Prepare the dataset | X ~ (429, 1, 12)
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Selecting ds train | 108 windows
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Selecting validation train | 322 windows
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Train DataLoader | Random windows
-[7] [ --> fine_tune_moment_single | prepare_train_and_eval_dataloaders | random_windows ]
-[7]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] N windows: None
-[7]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] windows~torch.Size([108, 1, 12])
-[7] [fine_tune_moment_single | prepare_train_and_eval_dataloaders --> ]
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Train DataLoader | DataLoader
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Validation DataLoader
-[8]  [ fine_tune_moment_single ] Processing wlen 12 | Lengths list: [17, 12]
+[8] [moment_build_masks --> ]
+[8] 2025-01-27 10:14:21.635 | ---> sure_eval_moment
+[8] 2025-01-27 10:14:21.635 | sure_eval_moment | cpu | False | device | 1
+[8] 2025-01-27 10:14:21.636 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[8] 2025-01-27 10:14:21.638 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[8] 2025-01-27 10:14:21.638 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[8] 2025-01-27 10:14:21.638 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[8] 2025-01-27 10:14:21.654 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[9] 2025-01-27 10:14:22.903 | ---> sure_eval_moment
+[9] 2025-01-27 10:14:22.903 | sure_eval_moment | cpu | False | device | 1
+[9] 2025-01-27 10:14:22.903 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[9] 2025-01-27 10:14:22.905 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[9] 2025-01-27 10:14:22.906 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[9] 2025-01-27 10:14:22.906 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[9] 2025-01-27 10:14:22.921 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[10] 2025-01-27 10:14:23.166 | ---> sure_eval_moment
+[10] 2025-01-27 10:14:23.166 | sure_eval_moment | cpu | False | device | 1
+[10] 2025-01-27 10:14:23.166 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[10] 2025-01-27 10:14:23.168 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[10] 2025-01-27 10:14:23.169 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[10] 2025-01-27 10:14:23.169 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[10] 2025-01-27 10:14:23.184 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[11] 2025-01-27 10:14:23.417 | ---> sure_eval_moment
+[11] 2025-01-27 10:14:23.417 | sure_eval_moment | cpu | False | device | 1
+[11] 2025-01-27 10:14:23.418 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[11] 2025-01-27 10:14:23.420 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[11] 2025-01-27 10:14:23.420 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[11] 2025-01-27 10:14:23.420 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[11] 2025-01-27 10:14:23.435 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[12] 2025-01-27 10:14:23.666 | ---> sure_eval_moment
+[12] 2025-01-27 10:14:23.667 | sure_eval_moment | cpu | False | device | 1
+[12] 2025-01-27 10:14:23.667 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[12] 2025-01-27 10:14:23.669 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[12] 2025-01-27 10:14:23.670 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[12] 2025-01-27 10:14:23.670 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[12] 2025-01-27 10:14:23.684 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[13] 2025-01-27 10:14:23.919 | ---> sure_eval_moment
+[13] 2025-01-27 10:14:23.920 | sure_eval_moment | cpu | False | device | 1
+[13] 2025-01-27 10:14:23.920 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[13] 2025-01-27 10:14:23.922 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[13] 2025-01-27 10:14:23.923 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[13] 2025-01-27 10:14:23.923 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[13] 2025-01-27 10:14:23.938 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[14] 2025-01-27 10:14:24.170 | ---> sure_eval_moment
+[14] 2025-01-27 10:14:24.171 | sure_eval_moment | cpu | False | device | 1
+[14] 2025-01-27 10:14:24.171 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[14] 2025-01-27 10:14:24.173 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[14] 2025-01-27 10:14:24.173 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[14] 2025-01-27 10:14:24.174 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[14] 2025-01-27 10:14:24.188 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[15] 2025-01-27 10:14:24.428 | ---> sure_eval_moment
+[15] 2025-01-27 10:14:24.428 | sure_eval_moment | cpu | False | device | 1
+[15] 2025-01-27 10:14:24.428 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[15] 2025-01-27 10:14:24.430 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[15] 2025-01-27 10:14:24.431 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[15] 2025-01-27 10:14:24.431 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[15] 2025-01-27 10:14:24.446 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[16] 2025-01-27 10:14:24.677 | ---> sure_eval_moment
+[16] 2025-01-27 10:14:24.678 | sure_eval_moment | cpu | False | device | 1
+[16] 2025-01-27 10:14:24.678 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[16] 2025-01-27 10:14:24.680 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[16] 2025-01-27 10:14:24.680 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[16] 2025-01-27 10:14:24.681 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[16] 2025-01-27 10:14:24.695 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[17] 2025-01-27 10:14:24.933 | ---> sure_eval_moment
+[17] 2025-01-27 10:14:24.933 | sure_eval_moment | cpu | False | device | 1
+[17] 2025-01-27 10:14:24.933 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[17] 2025-01-27 10:14:24.935 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[17] 2025-01-27 10:14:24.936 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[17] 2025-01-27 10:14:24.936 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[17] 2025-01-27 10:14:24.951 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[18] 2025-01-27 10:14:25.185 | ---> sure_eval_moment
+[18] 2025-01-27 10:14:25.186 | sure_eval_moment | cpu | False | device | 1
+[18] 2025-01-27 10:14:25.186 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[18] 2025-01-27 10:14:25.188 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[18] 2025-01-27 10:14:25.188 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[18] 2025-01-27 10:14:25.188 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[18] 2025-01-27 10:14:25.203 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[19] 2025-01-27 10:14:25.434 | ---> sure_eval_moment
+[19] 2025-01-27 10:14:25.434 | sure_eval_moment | cpu | False | device | 1
+[19] 2025-01-27 10:14:25.435 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[19] 2025-01-27 10:14:25.437 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[19] 2025-01-27 10:14:25.437 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[19] 2025-01-27 10:14:25.437 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[19] 2025-01-27 10:14:25.452 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[20] 2025-01-27 10:14:25.688 | ---> sure_eval_moment
+[20] 2025-01-27 10:14:25.689 | sure_eval_moment | cpu | False | device | 1
+[20] 2025-01-27 10:14:25.689 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[20] 2025-01-27 10:14:25.691 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[20] 2025-01-27 10:14:25.692 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[20] 2025-01-27 10:14:25.692 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[20] 2025-01-27 10:14:25.706 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[21] 2025-01-27 10:14:25.940 | ---> sure_eval_moment
+[21] 2025-01-27 10:14:25.940 | sure_eval_moment | cpu | False | device | 1
+[21] 2025-01-27 10:14:25.940 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[21] 2025-01-27 10:14:25.942 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[21] 2025-01-27 10:14:25.943 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[21] 2025-01-27 10:14:25.943 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[21] 2025-01-27 10:14:25.958 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[22] 2025-01-27 10:14:26.190 | ---> sure_eval_moment
+[22] 2025-01-27 10:14:26.191 | sure_eval_moment | cpu | False | device | 1
+[22] 2025-01-27 10:14:26.191 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[22] 2025-01-27 10:14:26.193 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[22] 2025-01-27 10:14:26.194 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[22] 2025-01-27 10:14:26.194 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[22] 2025-01-27 10:14:26.208 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[23] 2025-01-27 10:14:26.439 | ---> sure_eval_moment
+[23] 2025-01-27 10:14:26.440 | sure_eval_moment | cpu | False | device | 1
+[23] 2025-01-27 10:14:26.440 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[23] 2025-01-27 10:14:26.442 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[23] 2025-01-27 10:14:26.442 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[23] 2025-01-27 10:14:26.443 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[23] 2025-01-27 10:14:26.461 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[24] 2025-01-27 10:14:26.693 | ---> sure_eval_moment
+[24] 2025-01-27 10:14:26.693 | sure_eval_moment | cpu | False | device | 1
+[24] 2025-01-27 10:14:26.694 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[24] 2025-01-27 10:14:26.696 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[24] 2025-01-27 10:14:26.696 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[24] 2025-01-27 10:14:26.696 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[24] 2025-01-27 10:14:26.711 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[25] 2025-01-27 10:14:26.943 | ---> sure_eval_moment
+[25] 2025-01-27 10:14:26.944 | sure_eval_moment | cpu | False | device | 1
+[25] 2025-01-27 10:14:26.944 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[25] 2025-01-27 10:14:26.946 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[25] 2025-01-27 10:14:26.947 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[25] 2025-01-27 10:14:26.947 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[25] 2025-01-27 10:14:26.961 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[26] 2025-01-27 10:14:27.193 | ---> sure_eval_moment
+[26] 2025-01-27 10:14:27.194 | sure_eval_moment | cpu | False | device | 1
+[26] 2025-01-27 10:14:27.194 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[26] 2025-01-27 10:14:27.196 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[26] 2025-01-27 10:14:27.196 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[26] 2025-01-27 10:14:27.197 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[26] 2025-01-27 10:14:27.211 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([14, 1, 17]) | batch_masks ~ torch.Size([14, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([14, 1, 17])
+[8] [moment_build_masks --> ]
+[27] 2025-01-27 10:14:27.447 | ---> sure_eval_moment
+[27] 2025-01-27 10:14:27.447 | sure_eval_moment | cpu | False | device | 1
+[27] 2025-01-27 10:14:27.448 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([14, 1, 17])
+[27] 2025-01-27 10:14:27.450 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([14, 17]) device: cuda:1
+[27] 2025-01-27 10:14:27.450 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([14, 17]): cuda:1
+[27] 2025-01-27 10:14:27.450 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([14, 1, 17]) device: cuda:1
+[27] 2025-01-27 10:14:27.465 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([14, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([14, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([14, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([14, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([14, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([14, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8]  [ fine_tune_moment_single ] End timer -->
+[8]  [ fine_tune_moment_single ] Start: 1737972861.4046197 | End: 1737972867.618756 | Duration: 6.21 seconds
 [8]  [ fine_tune_moment_single ] Start timer
-[8]  [ fine_tune_moment_single ] Train | wlen 12
+[8]  [ fine_tune_moment_single ] Train | wlen 17
 [8] [ --> fine_tune_moment_train_ ]
 [8]  [ fine_tune_moment_train_ ] Training loop
-[8]  [ fine_tune_moment_train_ ] Fine tune loop | batch_masks~tensor([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]], device='cuda:1')
-[8]  [ fine_tune_moment_train_ ] num_epochs 5 | n_batches 7
-[8]  [ fine_tune_moment_train_ ] batch 0 ~ torch.Size([16, 1, 12]) | epoch 0 | train 0 of 35 | Before loop step
+[8]  [ fine_tune_moment_train_ ] Fine tune loop | batch_masks~torch.Size([16, 17])
+[8]  [ fine_tune_moment_train_ ] num_epochs 1 | n_batches 7
+[8]  [ fine_tune_moment_train_ ] batch 0 ~ torch.Size([16, 1, 17]) | epoch 0 | train 0 of 7 | Before loop step
 [8] [ --> fine_tune_moment_train_loop_step_ ]
 [8]  [ fine_tune_moment_train_loop_step_ ] Get the masks
 [8] [ --> moment_build_masks ]
-[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 12]) | batch_masks ~ torch.Size([16, 12])
-[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 12])
-[8]  [ moment_build_masks ] Using MVP masking generation style
-[8]  [ moment_build_masks ] o ~ torch.Size([16, 12]) | stateful = False | sync = False | r = 1
-[8]  [ moment_build_masks ] fine_tune_moment_single | Train | Window 17 not valid | "binomial_cpu" not implemented for 'Long'
-[8] [91m [ moment_build_masks ] Registering error in DataFrame | window: 12 | error: "binomial_cpu" not implemented for 'Long'[0m
-[8] [fine_tune_moment_single_ --> ]
-[8] [91m [ set_fine_tune_ ] Processing wlen 10 | wlens [17, 12] | i 3/5[0m
-[8] [ --> fine_tune_moment_single ]
-[8]  [ fine_tune_moment_single ] fine_tune_moment_single | Prepare the dataset | X ~ (431, 1, 10)
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Selecting ds train | 108 windows
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Selecting validation train | 324 windows
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Train DataLoader | Random windows
-[7] [ --> fine_tune_moment_single | prepare_train_and_eval_dataloaders | random_windows ]
-[7]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] N windows: None
-[7]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] windows~torch.Size([108, 1, 10])
-[7] [fine_tune_moment_single | prepare_train_and_eval_dataloaders --> ]
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Train DataLoader | DataLoader
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Validation DataLoader
-[8]  [ fine_tune_moment_single ] Processing wlen 10 | Lengths list: [17, 12, 10]
-[8]  [ fine_tune_moment_single ] Start timer
-[8]  [ fine_tune_moment_single ] Train | wlen 10
-[8] [ --> fine_tune_moment_train_ ]
-[8]  [ fine_tune_moment_train_ ] Training loop
-[8]  [ fine_tune_moment_train_ ] Fine tune loop | batch_masks~tensor([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]], device='cuda:1')
-[8]  [ fine_tune_moment_train_ ] num_epochs 5 | n_batches 7
-[8]  [ fine_tune_moment_train_ ] batch 0 ~ torch.Size([16, 1, 10]) | epoch 0 | train 0 of 35 | Before loop step
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[8]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17]) | mask ~ torch.Size([16, 17])
+[8] [91m [ fine_tune_moment_train_loop_step_ ] Mask given to eval: tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], device='cuda:1')[0m
+[8]  [ fine_tune_moment_train_loop_step_ ] sure_eval_moment | bcuda:1 | mcuda:1 | bmcuda:1
+[27] 2025-01-27 10:14:27.847 | ---> sure_eval_moment
+[27] 2025-01-27 10:14:27.847 | sure_eval_moment | cpu | False | device | 1
+[27] 2025-01-27 10:14:27.848 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[27] 2025-01-27 10:14:27.849 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[27] 2025-01-27 10:14:27.850 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[27] 2025-01-27 10:14:27.850 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[27] 2025-01-27 10:14:27.870 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] 2025-01-27 10:14:27.870 | --> fine_tune_moment_compute_loss
+[8] 2025-01-27 10:14:27.871 | --> fine_tune_moment_compute_loss_check_sizes_
+[8] 2025-01-27 10:14:27.871 |  Fine tune loop | TODO: Why? Original 17 > 16  Reconstruction
+[8] 2025-01-27 10:14:27.871 | ---------- Checking loss  ------- | reconstruction ~ torch.Size([16, 1, 16]) | original_ ~ torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:27.872 | fine_tune_moment_compute_loss_check_sizes_ -->
+[8] 2025-01-27 10:14:27.872 | fine_tune_moment_compute_loss | b~torch.Size([16, 1, 16]) | o~torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:27.873 | fine_tune_moment_compute_loss | batch ~ torch.Size([16, 1, 16]) | cuda:1
+[8] 2025-01-27 10:14:27.873 | fine_tune_moment_compute_loss | batch_masks ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:27.873 | fine_tune_moment_compute_loss | mask ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:27.874 | Loss type: <class 'torch.Tensor'>
+[8] 2025-01-27 10:14:27.874 | fine_tune_moment_compute_loss | loss: 0.0
+[8] 2025-01-27 10:14:27.874 | fine_tune_moment_compute_loss -->
+[8] [fine_tune_moment_train_loop_step_ --> ]
+[8]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 0 ~ torch.Size([16, 1, 17]) | epoch 0 | train 0 of 7 | Loss backward | After loop step 
+[8]  [ fine_tune_moment_train_ ] batch 1 ~ torch.Size([16, 1, 17]) | epoch 0 | train 1 of 7 | Before loop step
 [8] [ --> fine_tune_moment_train_loop_step_ ]
 [8]  [ fine_tune_moment_train_loop_step_ ] Get the masks
 [8] [ --> moment_build_masks ]
-[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 10]) | batch_masks ~ torch.Size([16, 10])
-[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 10])
-[8]  [ moment_build_masks ] Using MVP masking generation style
-[8]  [ moment_build_masks ] o ~ torch.Size([16, 10]) | stateful = False | sync = False | r = 1
-[8]  [ moment_build_masks ] fine_tune_moment_single | Train | Window 17 not valid | "binomial_cpu" not implemented for 'Long'
-[8] [91m [ moment_build_masks ] Registering error in DataFrame | window: 10 | error: "binomial_cpu" not implemented for 'Long'[0m
-[8] [fine_tune_moment_single_ --> ]
-[8] [91m [ set_fine_tune_ ] Processing wlen 16 | wlens [17, 12, 10] | i 4/5[0m
-[8] [ --> fine_tune_moment_single ]
-[8]  [ fine_tune_moment_single ] fine_tune_moment_single | Prepare the dataset | X ~ (425, 1, 16)
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Selecting ds train | 107 windows
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Selecting validation train | 319 windows
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Train DataLoader | Random windows
-[7] [ --> fine_tune_moment_single | prepare_train_and_eval_dataloaders | random_windows ]
-[7]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] N windows: None
-[7]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] windows~torch.Size([107, 1, 16])
-[7] [fine_tune_moment_single | prepare_train_and_eval_dataloaders --> ]
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Train DataLoader | DataLoader
-[8]  [ fine_tune_moment_single | prepare_train_and_eval_dataloaders ] Validation DataLoader
-[8]  [ fine_tune_moment_single ] Processing wlen 16 | Lengths list: [17, 12, 10, 16]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[8]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17]) | mask ~ torch.Size([16, 17])
+[8] [91m [ fine_tune_moment_train_loop_step_ ] Mask given to eval: tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], device='cuda:1')[0m
+[8]  [ fine_tune_moment_train_loop_step_ ] sure_eval_moment | bcuda:1 | mcuda:1 | bmcuda:1
+[28] 2025-01-27 10:14:28.031 | ---> sure_eval_moment
+[28] 2025-01-27 10:14:28.031 | sure_eval_moment | cpu | False | device | 1
+[28] 2025-01-27 10:14:28.032 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[28] 2025-01-27 10:14:28.033 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[28] 2025-01-27 10:14:28.034 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[28] 2025-01-27 10:14:28.034 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[28] 2025-01-27 10:14:28.053 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] 2025-01-27 10:14:28.054 | --> fine_tune_moment_compute_loss
+[8] 2025-01-27 10:14:28.054 | --> fine_tune_moment_compute_loss_check_sizes_
+[8] 2025-01-27 10:14:28.055 |  Fine tune loop | TODO: Why? Original 17 > 16  Reconstruction
+[8] 2025-01-27 10:14:28.055 | ---------- Checking loss  ------- | reconstruction ~ torch.Size([16, 1, 16]) | original_ ~ torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.055 | fine_tune_moment_compute_loss_check_sizes_ -->
+[8] 2025-01-27 10:14:28.055 | fine_tune_moment_compute_loss | b~torch.Size([16, 1, 16]) | o~torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.056 | fine_tune_moment_compute_loss | batch ~ torch.Size([16, 1, 16]) | cuda:1
+[8] 2025-01-27 10:14:28.056 | fine_tune_moment_compute_loss | batch_masks ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.057 | fine_tune_moment_compute_loss | mask ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.057 | Loss type: <class 'torch.Tensor'>
+[8] 2025-01-27 10:14:28.057 | fine_tune_moment_compute_loss | loss: 0.0
+[8] 2025-01-27 10:14:28.058 | fine_tune_moment_compute_loss -->
+[8] [fine_tune_moment_train_loop_step_ --> ]
+[8]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 1 ~ torch.Size([16, 1, 17]) | epoch 0 | train 1 of 7 | Loss backward | After loop step 
+[8]  [ fine_tune_moment_train_ ] batch 2 ~ torch.Size([16, 1, 17]) | epoch 0 | train 2 of 7 | Before loop step
+[8] [ --> fine_tune_moment_train_loop_step_ ]
+[8]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[8]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17]) | mask ~ torch.Size([16, 17])
+[8] [91m [ fine_tune_moment_train_loop_step_ ] Mask given to eval: tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], device='cuda:1')[0m
+[8]  [ fine_tune_moment_train_loop_step_ ] sure_eval_moment | bcuda:1 | mcuda:1 | bmcuda:1
+[29] 2025-01-27 10:14:28.214 | ---> sure_eval_moment
+[29] 2025-01-27 10:14:28.214 | sure_eval_moment | cpu | False | device | 1
+[29] 2025-01-27 10:14:28.215 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[29] 2025-01-27 10:14:28.216 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[29] 2025-01-27 10:14:28.217 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[29] 2025-01-27 10:14:28.217 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[29] 2025-01-27 10:14:28.237 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] 2025-01-27 10:14:28.237 | --> fine_tune_moment_compute_loss
+[8] 2025-01-27 10:14:28.238 | --> fine_tune_moment_compute_loss_check_sizes_
+[8] 2025-01-27 10:14:28.238 |  Fine tune loop | TODO: Why? Original 17 > 16  Reconstruction
+[8] 2025-01-27 10:14:28.238 | ---------- Checking loss  ------- | reconstruction ~ torch.Size([16, 1, 16]) | original_ ~ torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.238 | fine_tune_moment_compute_loss_check_sizes_ -->
+[8] 2025-01-27 10:14:28.239 | fine_tune_moment_compute_loss | b~torch.Size([16, 1, 16]) | o~torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.239 | fine_tune_moment_compute_loss | batch ~ torch.Size([16, 1, 16]) | cuda:1
+[8] 2025-01-27 10:14:28.240 | fine_tune_moment_compute_loss | batch_masks ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.240 | fine_tune_moment_compute_loss | mask ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.240 | Loss type: <class 'torch.Tensor'>
+[8] 2025-01-27 10:14:28.241 | fine_tune_moment_compute_loss | loss: 0.0
+[8] 2025-01-27 10:14:28.241 | fine_tune_moment_compute_loss -->
+[8] [fine_tune_moment_train_loop_step_ --> ]
+[8]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 2 ~ torch.Size([16, 1, 17]) | epoch 0 | train 2 of 7 | Loss backward | After loop step 
+[8]  [ fine_tune_moment_train_ ] batch 3 ~ torch.Size([16, 1, 17]) | epoch 0 | train 3 of 7 | Before loop step
+[8] [ --> fine_tune_moment_train_loop_step_ ]
+[8]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[8]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17]) | mask ~ torch.Size([16, 17])
+[8] [91m [ fine_tune_moment_train_loop_step_ ] Mask given to eval: tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], device='cuda:1')[0m
+[8]  [ fine_tune_moment_train_loop_step_ ] sure_eval_moment | bcuda:1 | mcuda:1 | bmcuda:1
+[30] 2025-01-27 10:14:28.397 | ---> sure_eval_moment
+[30] 2025-01-27 10:14:28.397 | sure_eval_moment | cpu | False | device | 1
+[30] 2025-01-27 10:14:28.398 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[30] 2025-01-27 10:14:28.399 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[30] 2025-01-27 10:14:28.400 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[30] 2025-01-27 10:14:28.400 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[30] 2025-01-27 10:14:28.420 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] 2025-01-27 10:14:28.420 | --> fine_tune_moment_compute_loss
+[8] 2025-01-27 10:14:28.421 | --> fine_tune_moment_compute_loss_check_sizes_
+[8] 2025-01-27 10:14:28.421 |  Fine tune loop | TODO: Why? Original 17 > 16  Reconstruction
+[8] 2025-01-27 10:14:28.421 | ---------- Checking loss  ------- | reconstruction ~ torch.Size([16, 1, 16]) | original_ ~ torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.421 | fine_tune_moment_compute_loss_check_sizes_ -->
+[8] 2025-01-27 10:14:28.422 | fine_tune_moment_compute_loss | b~torch.Size([16, 1, 16]) | o~torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.422 | fine_tune_moment_compute_loss | batch ~ torch.Size([16, 1, 16]) | cuda:1
+[8] 2025-01-27 10:14:28.423 | fine_tune_moment_compute_loss | batch_masks ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.423 | fine_tune_moment_compute_loss | mask ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.423 | Loss type: <class 'torch.Tensor'>
+[8] 2025-01-27 10:14:28.424 | fine_tune_moment_compute_loss | loss: 0.0
+[8] 2025-01-27 10:14:28.424 | fine_tune_moment_compute_loss -->
+[8] [fine_tune_moment_train_loop_step_ --> ]
+[8]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 3 ~ torch.Size([16, 1, 17]) | epoch 0 | train 3 of 7 | Loss backward | After loop step 
+[8]  [ fine_tune_moment_train_ ] batch 4 ~ torch.Size([16, 1, 17]) | epoch 0 | train 4 of 7 | Before loop step
+[8] [ --> fine_tune_moment_train_loop_step_ ]
+[8]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[8]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17]) | mask ~ torch.Size([16, 17])
+[8] [91m [ fine_tune_moment_train_loop_step_ ] Mask given to eval: tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], device='cuda:1')[0m
+[8]  [ fine_tune_moment_train_loop_step_ ] sure_eval_moment | bcuda:1 | mcuda:1 | bmcuda:1
+[31] 2025-01-27 10:14:28.579 | ---> sure_eval_moment
+[31] 2025-01-27 10:14:28.580 | sure_eval_moment | cpu | False | device | 1
+[31] 2025-01-27 10:14:28.580 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[31] 2025-01-27 10:14:28.582 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[31] 2025-01-27 10:14:28.582 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[31] 2025-01-27 10:14:28.583 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[31] 2025-01-27 10:14:28.602 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] 2025-01-27 10:14:28.602 | --> fine_tune_moment_compute_loss
+[8] 2025-01-27 10:14:28.603 | --> fine_tune_moment_compute_loss_check_sizes_
+[8] 2025-01-27 10:14:28.603 |  Fine tune loop | TODO: Why? Original 17 > 16  Reconstruction
+[8] 2025-01-27 10:14:28.603 | ---------- Checking loss  ------- | reconstruction ~ torch.Size([16, 1, 16]) | original_ ~ torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.604 | fine_tune_moment_compute_loss_check_sizes_ -->
+[8] 2025-01-27 10:14:28.604 | fine_tune_moment_compute_loss | b~torch.Size([16, 1, 16]) | o~torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.604 | fine_tune_moment_compute_loss | batch ~ torch.Size([16, 1, 16]) | cuda:1
+[8] 2025-01-27 10:14:28.605 | fine_tune_moment_compute_loss | batch_masks ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.605 | fine_tune_moment_compute_loss | mask ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.606 | Loss type: <class 'torch.Tensor'>
+[8] 2025-01-27 10:14:28.606 | fine_tune_moment_compute_loss | loss: 0.0
+[8] 2025-01-27 10:14:28.606 | fine_tune_moment_compute_loss -->
+[8] [fine_tune_moment_train_loop_step_ --> ]
+[8]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 4 ~ torch.Size([16, 1, 17]) | epoch 0 | train 4 of 7 | Loss backward | After loop step 
+[8]  [ fine_tune_moment_train_ ] batch 5 ~ torch.Size([16, 1, 17]) | epoch 0 | train 5 of 7 | Before loop step
+[8] [ --> fine_tune_moment_train_loop_step_ ]
+[8]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[8]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17]) | mask ~ torch.Size([16, 17])
+[8] [91m [ fine_tune_moment_train_loop_step_ ] Mask given to eval: tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], device='cuda:1')[0m
+[8]  [ fine_tune_moment_train_loop_step_ ] sure_eval_moment | bcuda:1 | mcuda:1 | bmcuda:1
+[32] 2025-01-27 10:14:28.763 | ---> sure_eval_moment
+[32] 2025-01-27 10:14:28.763 | sure_eval_moment | cpu | False | device | 1
+[32] 2025-01-27 10:14:28.763 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[32] 2025-01-27 10:14:28.765 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[32] 2025-01-27 10:14:28.766 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[32] 2025-01-27 10:14:28.766 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[32] 2025-01-27 10:14:28.785 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] 2025-01-27 10:14:28.786 | --> fine_tune_moment_compute_loss
+[8] 2025-01-27 10:14:28.786 | --> fine_tune_moment_compute_loss_check_sizes_
+[8] 2025-01-27 10:14:28.786 |  Fine tune loop | TODO: Why? Original 17 > 16  Reconstruction
+[8] 2025-01-27 10:14:28.787 | ---------- Checking loss  ------- | reconstruction ~ torch.Size([16, 1, 16]) | original_ ~ torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.787 | fine_tune_moment_compute_loss_check_sizes_ -->
+[8] 2025-01-27 10:14:28.787 | fine_tune_moment_compute_loss | b~torch.Size([16, 1, 16]) | o~torch.Size([16, 1, 16])
+[8] 2025-01-27 10:14:28.788 | fine_tune_moment_compute_loss | batch ~ torch.Size([16, 1, 16]) | cuda:1
+[8] 2025-01-27 10:14:28.788 | fine_tune_moment_compute_loss | batch_masks ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.788 | fine_tune_moment_compute_loss | mask ~ torch.Size([16, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.789 | Loss type: <class 'torch.Tensor'>
+[8] 2025-01-27 10:14:28.789 | fine_tune_moment_compute_loss | loss: 0.0
+[8] 2025-01-27 10:14:28.789 | fine_tune_moment_compute_loss -->
+[8] [fine_tune_moment_train_loop_step_ --> ]
+[8]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 5 ~ torch.Size([16, 1, 17]) | epoch 0 | train 5 of 7 | Loss backward | After loop step 
+[8]  [ fine_tune_moment_train_ ] batch 6 ~ torch.Size([10, 1, 17]) | epoch 0 | train 6 of 7 | Before loop step
+[8] [ --> fine_tune_moment_train_loop_step_ ]
+[8]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([10, 1, 17]) | batch_masks ~ torch.Size([10, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([10, 1, 17])
+[8] [moment_build_masks --> ]
+[8]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([10, 1, 17]) | batch_masks ~ torch.Size([10, 17]) | mask ~ torch.Size([10, 17])
+[8] [91m [ fine_tune_moment_train_loop_step_ ] Mask given to eval: tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], device='cuda:1')[0m
+[8]  [ fine_tune_moment_train_loop_step_ ] sure_eval_moment | bcuda:1 | mcuda:1 | bmcuda:1
+[33] 2025-01-27 10:14:28.943 | ---> sure_eval_moment
+[33] 2025-01-27 10:14:28.944 | sure_eval_moment | cpu | False | device | 1
+[33] 2025-01-27 10:14:28.944 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([10, 1, 17])
+[33] 2025-01-27 10:14:28.946 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([10, 17]) device: cuda:1
+[33] 2025-01-27 10:14:28.946 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([10, 17]): cuda:1
+[33] 2025-01-27 10:14:28.946 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([10, 1, 17]) device: cuda:1
+[33] 2025-01-27 10:14:28.966 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] 2025-01-27 10:14:28.966 | --> fine_tune_moment_compute_loss
+[8] 2025-01-27 10:14:28.967 | --> fine_tune_moment_compute_loss_check_sizes_
+[8] 2025-01-27 10:14:28.967 |  Fine tune loop | TODO: Why? Original 17 > 16  Reconstruction
+[8] 2025-01-27 10:14:28.967 | ---------- Checking loss  ------- | reconstruction ~ torch.Size([10, 1, 16]) | original_ ~ torch.Size([10, 1, 16])
+[8] 2025-01-27 10:14:28.968 | fine_tune_moment_compute_loss_check_sizes_ -->
+[8] 2025-01-27 10:14:28.968 | fine_tune_moment_compute_loss | b~torch.Size([10, 1, 16]) | o~torch.Size([10, 1, 16])
+[8] 2025-01-27 10:14:28.968 | fine_tune_moment_compute_loss | batch ~ torch.Size([10, 1, 16]) | cuda:1
+[8] 2025-01-27 10:14:28.969 | fine_tune_moment_compute_loss | batch_masks ~ torch.Size([10, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.969 | fine_tune_moment_compute_loss | mask ~ torch.Size([10, 17]) | cuda:1
+[8] 2025-01-27 10:14:28.969 | Loss type: <class 'torch.Tensor'>
+[8] 2025-01-27 10:14:28.970 | fine_tune_moment_compute_loss | loss: 0.0
+[8] 2025-01-27 10:14:28.970 | fine_tune_moment_compute_loss -->
+[8] [fine_tune_moment_train_loop_step_ --> ]
+[8]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 6 ~ torch.Size([10, 1, 17]) | epoch 0 | train 6 of 7 | Loss backward | After loop step 
+[8] [fine_tune_moment_train_ --> ]
+[8]  [ fine_tune_moment_single ] End timer -->
+[8]  [ fine_tune_moment_single ] Start: 1737972867.6198635 | End: 1737972868.9750032 | Duration: 1.36 seconds
+[8]  [ fine_tune_moment_single ] fine_tune_moment_single | Eval Post | wlen 17
 [8]  [ fine_tune_moment_single ] Start timer
-[8]  [ fine_tune_moment_single ] Train | wlen 16
-[8] [ --> fine_tune_moment_train_ ]
-[8]  [ fine_tune_moment_train_ ] Training loop
-[8]  [ fine_tune_moment_train_ ] num_epochs 5 | n_batches 7
-[8]  [ fine_tune_moment_train_ ] batch 0 ~ torch.Size([16, 1, 16]) | epoch 0 | train 0 of 35 | Before loop step
-[8] [91m [ moment_build_masks ] Registering error in DataFrame | window: 16 | error: "binomial_cpu" not implemented for 'Long'[0m
-[8] [91m [ set_fine_tune_ ] Processing wlen 8 | wlens [17, 12, 10, 16] | i 5/5[0m
-[8] [91m [ moment_build_masks ] Registering error in DataFrame | window: 8 | error: "binomial_cpu" not implemented for 'Long'[0m
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[35] 2025-01-27 10:14:29.127 | ---> sure_eval_moment
+[35] 2025-01-27 10:14:29.127 | sure_eval_moment | cpu | False | device | 1
+[35] 2025-01-27 10:14:29.128 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[35] 2025-01-27 10:14:29.130 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[35] 2025-01-27 10:14:29.130 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[35] 2025-01-27 10:14:29.131 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[35] 2025-01-27 10:14:29.145 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[36] 2025-01-27 10:14:30.396 | ---> sure_eval_moment
+[36] 2025-01-27 10:14:30.396 | sure_eval_moment | cpu | False | device | 1
+[36] 2025-01-27 10:14:30.396 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[36] 2025-01-27 10:14:30.399 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[36] 2025-01-27 10:14:30.399 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[36] 2025-01-27 10:14:30.399 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[36] 2025-01-27 10:14:30.414 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[37] 2025-01-27 10:14:30.645 | ---> sure_eval_moment
+[37] 2025-01-27 10:14:30.646 | sure_eval_moment | cpu | False | device | 1
+[37] 2025-01-27 10:14:30.646 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[37] 2025-01-27 10:14:30.648 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[37] 2025-01-27 10:14:30.648 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[37] 2025-01-27 10:14:30.649 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[37] 2025-01-27 10:14:30.663 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[38] 2025-01-27 10:14:30.905 | ---> sure_eval_moment
+[38] 2025-01-27 10:14:30.905 | sure_eval_moment | cpu | False | device | 1
+[38] 2025-01-27 10:14:30.906 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[38] 2025-01-27 10:14:30.908 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[38] 2025-01-27 10:14:30.908 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[38] 2025-01-27 10:14:30.908 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[38] 2025-01-27 10:14:30.923 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[39] 2025-01-27 10:14:31.155 | ---> sure_eval_moment
+[39] 2025-01-27 10:14:31.155 | sure_eval_moment | cpu | False | device | 1
+[39] 2025-01-27 10:14:31.156 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[39] 2025-01-27 10:14:31.158 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[39] 2025-01-27 10:14:31.158 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[39] 2025-01-27 10:14:31.158 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[39] 2025-01-27 10:14:31.173 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[40] 2025-01-27 10:14:31.405 | ---> sure_eval_moment
+[40] 2025-01-27 10:14:31.406 | sure_eval_moment | cpu | False | device | 1
+[40] 2025-01-27 10:14:31.406 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[40] 2025-01-27 10:14:31.408 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[40] 2025-01-27 10:14:31.408 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[40] 2025-01-27 10:14:31.409 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[40] 2025-01-27 10:14:31.423 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[41] 2025-01-27 10:14:31.654 | ---> sure_eval_moment
+[41] 2025-01-27 10:14:31.654 | sure_eval_moment | cpu | False | device | 1
+[41] 2025-01-27 10:14:31.654 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[41] 2025-01-27 10:14:31.656 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[41] 2025-01-27 10:14:31.657 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[41] 2025-01-27 10:14:31.657 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[41] 2025-01-27 10:14:31.672 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[42] 2025-01-27 10:14:31.909 | ---> sure_eval_moment
+[42] 2025-01-27 10:14:31.909 | sure_eval_moment | cpu | False | device | 1
+[42] 2025-01-27 10:14:31.909 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[42] 2025-01-27 10:14:31.912 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[42] 2025-01-27 10:14:31.912 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[42] 2025-01-27 10:14:31.912 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[42] 2025-01-27 10:14:31.927 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[43] 2025-01-27 10:14:32.158 | ---> sure_eval_moment
+[43] 2025-01-27 10:14:32.159 | sure_eval_moment | cpu | False | device | 1
+[43] 2025-01-27 10:14:32.159 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[43] 2025-01-27 10:14:32.161 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[43] 2025-01-27 10:14:32.161 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[43] 2025-01-27 10:14:32.162 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[43] 2025-01-27 10:14:32.176 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[44] 2025-01-27 10:14:32.407 | ---> sure_eval_moment
+[44] 2025-01-27 10:14:32.408 | sure_eval_moment | cpu | False | device | 1
+[44] 2025-01-27 10:14:32.408 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[44] 2025-01-27 10:14:32.410 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[44] 2025-01-27 10:14:32.410 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[44] 2025-01-27 10:14:32.410 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[44] 2025-01-27 10:14:32.425 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[45] 2025-01-27 10:14:32.660 | ---> sure_eval_moment
+[45] 2025-01-27 10:14:32.660 | sure_eval_moment | cpu | False | device | 1
+[45] 2025-01-27 10:14:32.661 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[45] 2025-01-27 10:14:32.663 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[45] 2025-01-27 10:14:32.663 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[45] 2025-01-27 10:14:32.663 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[45] 2025-01-27 10:14:32.678 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[46] 2025-01-27 10:14:32.909 | ---> sure_eval_moment
+[46] 2025-01-27 10:14:32.910 | sure_eval_moment | cpu | False | device | 1
+[46] 2025-01-27 10:14:32.910 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[46] 2025-01-27 10:14:32.912 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[46] 2025-01-27 10:14:32.912 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[46] 2025-01-27 10:14:32.913 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[46] 2025-01-27 10:14:32.927 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[47] 2025-01-27 10:14:33.159 | ---> sure_eval_moment
+[47] 2025-01-27 10:14:33.159 | sure_eval_moment | cpu | False | device | 1
+[47] 2025-01-27 10:14:33.159 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[47] 2025-01-27 10:14:33.161 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[47] 2025-01-27 10:14:33.162 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[47] 2025-01-27 10:14:33.162 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[47] 2025-01-27 10:14:33.176 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[48] 2025-01-27 10:14:33.407 | ---> sure_eval_moment
+[48] 2025-01-27 10:14:33.407 | sure_eval_moment | cpu | False | device | 1
+[48] 2025-01-27 10:14:33.408 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[48] 2025-01-27 10:14:33.410 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[48] 2025-01-27 10:14:33.410 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[48] 2025-01-27 10:14:33.411 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[48] 2025-01-27 10:14:33.425 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[49] 2025-01-27 10:14:33.666 | ---> sure_eval_moment
+[49] 2025-01-27 10:14:33.667 | sure_eval_moment | cpu | False | device | 1
+[49] 2025-01-27 10:14:33.667 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[49] 2025-01-27 10:14:33.669 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[49] 2025-01-27 10:14:33.669 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[49] 2025-01-27 10:14:33.670 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[49] 2025-01-27 10:14:33.685 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[50] 2025-01-27 10:14:33.915 | ---> sure_eval_moment
+[50] 2025-01-27 10:14:33.915 | sure_eval_moment | cpu | False | device | 1
+[50] 2025-01-27 10:14:33.916 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[50] 2025-01-27 10:14:33.918 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[50] 2025-01-27 10:14:33.918 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[50] 2025-01-27 10:14:33.919 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[50] 2025-01-27 10:14:33.933 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[51] 2025-01-27 10:14:34.165 | ---> sure_eval_moment
+[51] 2025-01-27 10:14:34.165 | sure_eval_moment | cpu | False | device | 1
+[51] 2025-01-27 10:14:34.166 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[51] 2025-01-27 10:14:34.168 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[51] 2025-01-27 10:14:34.168 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[51] 2025-01-27 10:14:34.168 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[51] 2025-01-27 10:14:34.183 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[52] 2025-01-27 10:14:34.416 | ---> sure_eval_moment
+[52] 2025-01-27 10:14:34.416 | sure_eval_moment | cpu | False | device | 1
+[52] 2025-01-27 10:14:34.416 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[52] 2025-01-27 10:14:34.418 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[52] 2025-01-27 10:14:34.419 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[52] 2025-01-27 10:14:34.419 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[52] 2025-01-27 10:14:34.434 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([16, 1, 17]) | batch_masks ~ torch.Size([16, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([16, 1, 17])
+[8] [moment_build_masks --> ]
+[53] 2025-01-27 10:14:34.667 | ---> sure_eval_moment
+[53] 2025-01-27 10:14:34.668 | sure_eval_moment | cpu | False | device | 1
+[53] 2025-01-27 10:14:34.668 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([16, 1, 17])
+[53] 2025-01-27 10:14:34.670 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([16, 17]) device: cuda:1
+[53] 2025-01-27 10:14:34.671 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([16, 17]): cuda:1
+[53] 2025-01-27 10:14:34.671 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([16, 1, 17]) device: cuda:1
+[53] 2025-01-27 10:14:34.686 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8] [ --> fine_tune_moment_eval_step_ ]
+[8] [ --> moment_build_masks ]
+[8]  [ moment_build_masks ] Using mask generator with mask ratio 1
+[8]  [ moment_build_masks ] moment_build_masks | batch ~ torch.Size([14, 1, 17]) | batch_masks ~ torch.Size([14, 17])
+[8]  [ moment_build_masks ] window_mask_percent 1 | batch ~ torch.Size([14, 1, 17])
+[8] [moment_build_masks --> ]
+[54] 2025-01-27 10:14:34.916 | ---> sure_eval_moment
+[54] 2025-01-27 10:14:34.916 | sure_eval_moment | cpu | False | device | 1
+[54] 2025-01-27 10:14:34.916 | sure_eval_moment | Trial 1 | x_enc ~ torch.Size([14, 1, 17])
+[54] 2025-01-27 10:14:34.918 | sure_eval_moment | Trial 1 | device 1 | input_mask~torch.Size([14, 17]) device: cuda:1
+[54] 2025-01-27 10:14:34.919 | sure_eval_moment | Trial 1 | device 1 | mask device~torch.Size([14, 17]): cuda:1
+[54] 2025-01-27 10:14:34.919 | sure_eval_moment | Trial 1 | device 1 | y~torch.Size([14, 1, 17]) device: cuda:1
+[54] 2025-01-27 10:14:34.934 | sure_eval_moment | output <class 'momentfm.data.base.TimeseriesOutputs'> -->
+[8] [ --> fine_tune_moment_eval_preprocess ]
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([14, 1, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([14, 1, 17])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([14, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([14, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([14, 16])
+[8]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([14, 16])
+[8] [fine_tune_moment_eval_preprocess --> ]
+[8] [fine_tune_moment_single --> ]
+[8]  [ fine_tune_moment_single ] End timer -->
+[8]  [ fine_tune_moment_single ] Start: 1737972868.9760587 | End: 1737972875.0897517 | Duration: 6.11 seconds
+[8]  [ fine_tune_moment_single ] fine_tune_moment_single_ | Evaluation summary
+[8]  [ fine_tune_moment_single ] Eval pre: 
+2025-01-27 10:14:35.165 | mse: 0.0
+2025-01-27 10:14:35.165 | rmse: 0.0
+2025-01-27 10:14:35.166 | mae: 0.0
+2025-01-27 10:14:35.166 | smape: 0.0
+[8]  [ fine_tune_moment_single ] Eval post: 
+2025-01-27 10:14:35.166 | mse: 0.0
+2025-01-27 10:14:35.167 | rmse: 0.0
+2025-01-27 10:14:35.167 | mae: 0.0
+2025-01-27 10:14:35.167 | smape: 0.0
+[8] [fine_tune_moment_single_ --> ]
+[8] [fine_tune_moment_ --> ]
+[8] [fine_tune_moment_ --> ]

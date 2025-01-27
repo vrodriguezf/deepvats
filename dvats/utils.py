@@ -1238,7 +1238,6 @@ def _check_value(
         valid = False
     if valid and value is not None:
         if percent:
-            positive = True
             valid_types = [ int, float]
         valid_types = valid_types if isinstance(valid_types, list) else [valid_types]
         #mssg.print(f"Checking if {value}'s type is one of {valid_types}", verbose_level = mssg.level + 5)
@@ -1258,8 +1257,8 @@ def _check_value(
             mssg.print_error(f"Value {value} is not positive")
             warnings.warn(f"'{name}' must be positive ({value}). Using default: {default}")
             valid = False
-        if valid and percent and value > 1:
-            mssg.print_error(f'Value {value} must be lower or equal than 1')
+        if valid and percent and ( value > 1 or value < 0):
+            mssg.print_error(f'Value {value} must be lower or equal than 1 and greater or equal than 0')
             warnings.warn(f"'{name}' must be lower or equal than 1 ({value}). Using default: {default}")
             valid = False
     if valid: res = value

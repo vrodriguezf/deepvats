@@ -2336,6 +2336,9 @@ def moment_build_masks(
     if bms.shape[0] > batch.shape[0]: bms = bms[:batch.shape[0]]
     mssg.level -= 1
     mssg.print(f"window_mask_percent {window_mask_percent} | batch ~ {batch.shape}")
+    device = batch.device if batch.device != "cpu" else bms.device
+    batch = batch.to(device)
+    bms = bms.to(device)
     if use_moment_masks:
         mask = mask_generator.generate_mask(
             x           = batch,
@@ -2503,6 +2506,7 @@ def fine_tune_moment_train_loop_step_(
     self.model = self.model.to(device)
     self.mssg.level += 1
     self.mssg.print(f"batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}")
+    self.mssg.print_error(f"Mask given to eval: {mask}")
     for param in self.model.parameters():
         param = param.to(device)
     self.mssg.print(f"sure_eval_moment | b{batch.device} | m{mask.device} | bm{bms.device}")
@@ -2570,7 +2574,7 @@ def fine_tune_moment_train_(
     # Training loop
     self.mssg.print("Training loop")
     self.mssg.level += 1
-    self.mssg.print(f"Fine tune loop | batch_masks~{batch_masks}")
+    self.mssg.print(f"Fine tune loop | batch_masks~{batch_masks.shape}")
     progress_bar = tqdm(range(num_training_steps))
     self.mssg.level -= 1
     self.mssg.print(f"num_epochs {self.num_epochs} | n_batches {len(dl_train)}")

@@ -4,12 +4,12 @@
 __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EvalMSE', 'EvalRMSE', 'EvalMAE', 'EvalSMAPE', 'EncoderInput',
            'LRScheduler', 'EncoderOptimizer', 'Encoder', 'set_fine_tune_single_', 'set_fine_tune_', 'show_eval_stats',
            'plot_eval_stats', 'DCAE_torch', 'CustomWandbCallback', 'kwargs_to_gpu_', 'kwargs_to_cpu_', 'get_acts',
-           'get_acts_moment', 'sure_eval_moment', 'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP',
-           'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
-           'get_past_target_moirai', 'get_forecast_model_moirai', 'get_enc_embs_moirai', 'get_dist_moirai',
-           'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size', 'rmse', 'smape', 'rmse_flat', 'smape_flat',
-           'mae_flat', 'mse_loss_flat', 'RMSELoss', 'RMSELossFlat', 'SMAPELoss', 'SMAPELossFlat',
-           'validate_with_metrics', 'validate_with_metrics_', 'get_metrics_dict',
+           'get_acts_moment', 'sure_eval_moment_old', 'sure_eval_moment', 'get_enc_embs_ensure_batch_size_',
+           'get_enc_embs_MVP', 'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment',
+           'get_enc_embs_moment_reconstruction', 'get_past_target_moirai', 'get_forecast_model_moirai',
+           'get_enc_embs_moirai', 'get_dist_moirai', 'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size', 'rmse',
+           'smape', 'rmse_flat', 'smape_flat', 'mae_flat', 'mse_loss_flat', 'RMSELoss', 'RMSELossFlat', 'SMAPELoss',
+           'SMAPELossFlat', 'validate_with_metrics', 'validate_with_metrics_', 'get_metrics_dict',
            'validate_with_metrics_format_results', 'random_windows', 'windowed_dataset', 'setup_scheduler',
            'prepare_train_and_eval_dataloaders', 'fine_tune_moment_compute_loss_check_sizes_',
            'fine_tune_moment_compute_loss', 'fine_tune_moment_eval_preprocess', 'moment_build_masks',
@@ -360,6 +360,8 @@ class Encoder():
     def config_optim(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     #--- Moment
+    def sure_eval_moment(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_moment_eval_preprocess(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_moment_single_(self):
@@ -493,10 +495,10 @@ Encoder.show_eval_stats = show_eval_stats
 # %% ../nbs/encoder.ipynb 17
 def plot_eval_stats(
     self, 
-    figsize=(10, 6), 
-    save_fig=False, 
-    save_path      ="./", 
-    fname         = "evaluation_metrics_plot"
+    figsize         = (10, 6), 
+    save_fig        = False, 
+    save_path       = "./", 
+    fname           = "evaluation_metrics_plot"
 ):
     """
     Plot evaluation metrics from eval_results_pre and eval_results_post across epochs.
@@ -776,7 +778,7 @@ def get_acts_moment(
     return embs
 
 # %% ../nbs/encoder.ipynb 30
-def sure_eval_moment(
+def sure_eval_moment_old(
     enc_learn, 
     cpu, 
     verbose, 
@@ -791,19 +793,23 @@ def sure_eval_moment(
     print_to_path   : bool          = False,
     print_path      : str           = "~/data/logs/logs.txt",
     print_mode      : str           = 'a',
-    continue_if_fail: bool          = False,
-    register_errors: bool           = True
+    continue_if_fail: bool          = False
 ):
     if verbose > 0: ut.print_flush(f"---> sure_eval_moment", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     device = "cpu" if cpu else torch.cuda.current_device()
     y_copy = y.clone()
-    y_copy.to("cpu")
+    try: 
+        y_copy.to("cpu")
+    except:
+        ut.print_flush(f"sure_eval_moment | Failed moving y to  {device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = 5, print_time = print_to_path) 
     if verbose > 0: ut.print_flush(f"sure_eval_moment | cpu | {cpu} | device | {device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path) 
     success = False 
     trial = 0
     output = None
+
+    ut.print_flush(f"sure_eval_moment | in | {enc_learn.head.linear.in_features} out | {enc_learn.head.linear.out_features} | y ~{y.shape}")
     
-    while not success and trial < max_trials:
+    while not success and (trial == 0 or (retry & trial < max_trials)):
         trial += 1
         try:
             if verbose > 0: ut.print_flush(f"sure_eval_moment | Trial {trial} | x_enc ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
@@ -815,7 +821,9 @@ def sure_eval_moment(
                 ut.print_flush(f"sure_eval_moment | Trial {trial} | device {device} | input_mask~{input_mask.shape} device: {input_mask.device if input_mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                 ut.print_flush(f"sure_eval_moment | Trial {trial} | device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
                 ut.print_flush(f"sure_eval_moment | Trial {trial} | device {device} | y~{y.shape} device: {y.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-            output = enc_learn(x_enc = y, input_mask = input_mask, mask = mask)
+            output = enc_learn(
+                x_enc = y, 
+                input_mask = input_mask, mask = mask)
             success = True
             if verbose > 0 and acts_indices == [0] : 
                 ut.print_flush(f"sure_eval_moment | Trial {trial} | embs ~ {embs.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
@@ -881,7 +889,41 @@ def sure_eval_moment(
     
     return output, enc_learn
 
-# %% ../nbs/encoder.ipynb 32
+# %% ../nbs/encoder.ipynb 31
+def sure_eval_moment(
+    self, 
+    batch, 
+    input_mask                      = None, 
+    mask                            = None, 
+    padd_step       : int           = 100,
+    retry           : bool          = False,
+    max_trials      : int           = 5,
+    acts_indices    : List [int]    = [0],
+    continue_if_fail: bool          = False
+):
+    func                = self.mssg.function
+    self.mssg.level     += 1
+    self.mssg.initial_(ut.funcname())
+    device              = "cpu" if self.cpu else torch.cuda.current_device()
+    batch_copy          = batch.clone()
+    batch_copy.to(device)
+    
+    self.mssg.print_error(f"Check input mask (should have same size than batch. If padd, with 0s): {input_mask.shape}: {input_mask}")
+    self.mssg.print_error(f"Check mask (is the one with the percentages in 0 to guess): {mask.shape}: {mask}")
+    self.mssg.print_error(f"Check batch | batch~{batch.shape}")
+    self.mssg.print("Get the embeddings")
+    output = self.model(
+        x_enc       = batch,
+        input_mask  = input_mask,
+        mask        = mask
+    )
+    self.mssg.final()
+    self.mssg.level     -= 1
+    self.mssg.function  = func
+    return output
+Encoder.sure_eval_moment = sure_eval_moment
+
+# %% ../nbs/encoder.ipynb 33
 def get_enc_embs_ensure_batch_size_(
     dls        : TSDataLoaders,
     batch_size : int = None,
@@ -901,7 +943,7 @@ def get_enc_embs_ensure_batch_size_(
         if verbose > 1: 
             ut.print_flush(f"[ Get Encoder Embeddings Ensure Batch Size ] Batch size proposed. Using {dls.bs}", verbose = verbose)
 
-# %% ../nbs/encoder.ipynb 33
+# %% ../nbs/encoder.ipynb 34
 def get_enc_embs_MVP(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -986,7 +1028,7 @@ def get_enc_embs_MVP(
     if to_numpy: embs = embs.numpy() if cpu else embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 34
+# %% ../nbs/encoder.ipynb 35
 def get_enc_embs_MVP_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -1134,7 +1176,7 @@ def get_enc_embs_MVP_set_stride_set_batch_size(
         ut.print_flush("get_enc_embs_MVP_set_stride_set_batch_size -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 35
+# %% ../nbs/encoder.ipynb 36
 def get_enc_embs_moment(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -1183,7 +1225,7 @@ def get_enc_embs_moment(
         ut.print_flush("get_enc_embs_moment -->", verbose = verbose)
     return embeddings
 
-# %% ../nbs/encoder.ipynb 36
+# %% ../nbs/encoder.ipynb 37
 def get_enc_embs_moment_reconstruction(
     X               : List [ List [ List [ float ] ] ], 
     enc_learn       : Learner, 
@@ -1226,7 +1268,7 @@ def get_enc_embs_moment_reconstruction(
         embs = embs.cpu().numpy()
     return embs
 
-# %% ../nbs/encoder.ipynb 38
+# %% ../nbs/encoder.ipynb 39
 def get_past_target_moirai(
     enc_input   : List [ List [ List [ Float ] ] ]
 ):
@@ -1251,7 +1293,7 @@ def get_forecast_model_moirai(
         past_feat_dynamic_real_dim  = 0
     )
 
-# %% ../nbs/encoder.ipynb 39
+# %% ../nbs/encoder.ipynb 40
 def get_enc_embs_moirai(
     enc_input       : List [ List [ List [ Float ] ] ], 
     enc_model       : moirai.MoiraiModule, 
@@ -1389,7 +1431,7 @@ def get_enc_embs_moirai(
         return embs, model_kwargs
     return embs
 
-# %% ../nbs/encoder.ipynb 40
+# %% ../nbs/encoder.ipynb 41
 def get_dist_moirai(
     enc_input       : List [ List [ List [ Float ] ] ], 
     enc_model       : moirai.MoiraiModule, 
@@ -1504,7 +1546,7 @@ def get_dist_moirai(
         return dist, model_kwargs
     return dist
 
-# %% ../nbs/encoder.ipynb 41
+# %% ../nbs/encoder.ipynb 42
 def get_enc_embs(
     X               , 
     enc_learn       : Learner, 
@@ -1541,7 +1583,7 @@ def get_enc_embs(
             ut.print_flush(f"Model embeddings implementation is not yet implemented for {enc_learn_class}.", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 42
+# %% ../nbs/encoder.ipynb 43
 def get_enc_embs_set_stride_set_batch_size(
     X                  : List [ List [ List [ float ] ] ], 
     enc_learn          : Learner, 
@@ -1617,7 +1659,7 @@ def get_enc_embs_set_stride_set_batch_size(
     if verbose > 0: ut.print_flush(f"get_enc_embs_set_stride_set_batch_size | embs~{embs.shape} -->", verbose = verbose)
     return embs
 
-# %% ../nbs/encoder.ipynb 45
+# %% ../nbs/encoder.ipynb 46
 def rmse(preds, targets):
     res = torch.sqrt(torch.nn.functional.mse_loss(preds, targets))
     return res
@@ -1654,7 +1696,7 @@ def mse_loss_flat(preds, targets):
     preds, targets = preds.view(-1), targets.view(-1)  # Flatten tensors
     return torch.mean((preds - targets) ** 2)
 
-# %% ../nbs/encoder.ipynb 46
+# %% ../nbs/encoder.ipynb 47
 class RMSELoss(_Loss):
     __constants__ = ["reduction"]
     def __init__(self, size_average = None, reduce = None, reduction: str = "mean") -> None:
@@ -1743,7 +1785,7 @@ EvalRMSE    = evaluate.load('mse', 'multilist')
 EvalMAE     = evaluate.load('mae', 'multilist')
 EvalSMAPE   = evaluate.load('smape', 'multilist')
 
-# %% ../nbs/encoder.ipynb 48
+# %% ../nbs/encoder.ipynb 49
 def validate_with_metrics(
     learner : Learner, 
     metrics        = None,
@@ -1816,7 +1858,7 @@ def validate_with_metrics_(
 
 Encoder.validate_with_metrics_ = validate_with_metrics_
 
-# %% ../nbs/encoder.ipynb 49
+# %% ../nbs/encoder.ipynb 50
 def get_metrics_dict(
     metrics: List[Callable],
     metrics_names: List[str] = None
@@ -1841,7 +1883,7 @@ def get_metrics_dict(
         raise ValueError("Length of metrics and metrics_names must match when metrics_names is provided.")
     return metrics_dict
 
-# %% ../nbs/encoder.ipynb 50
+# %% ../nbs/encoder.ipynb 51
 def validate_with_metrics_format_results(
     results, metrics, metrics_names = None
 ):
@@ -1862,7 +1904,7 @@ def validate_with_metrics_format_results(
         raise ValueError("Length of metrics and metrics_names must match when metrics_names is provided.")
     return metrics_dict
 
-# %% ../nbs/encoder.ipynb 54
+# %% ../nbs/encoder.ipynb 55
 def random_windows(
     X           : List [ List [ List [ float ]]], 
     n_windows   : int       = None, 
@@ -1891,7 +1933,7 @@ def random_windows(
     mssg_.final()
     return windows
 
-# %% ../nbs/encoder.ipynb 55
+# %% ../nbs/encoder.ipynb 56
 def windowed_dataset(
     X                               : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     stride                          : int           = 1,
@@ -1944,7 +1986,7 @@ def windowed_dataset(
     return dss
 
 
-# %% ../nbs/encoder.ipynb 56
+# %% ../nbs/encoder.ipynb 57
 def setup_scheduler(
     self : Encoder,
     dl_train,
@@ -1976,7 +2018,7 @@ def setup_scheduler(
     return lr_scheduler
 Encoder.setup_scheduler = setup_scheduler
 
-# %% ../nbs/encoder.ipynb 57
+# %% ../nbs/encoder.ipynb 58
 def prepare_train_and_eval_dataloaders(
     X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
     batch_size          : int,
@@ -2023,7 +2065,7 @@ def prepare_train_and_eval_dataloaders(
         dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
     return dl_eval, dl_train, ds_test, ds_train
 
-# %% ../nbs/encoder.ipynb 58
+# %% ../nbs/encoder.ipynb 59
 def _get_enc_input(
     mssg                            : ut.Mssg,
     # Encoder Input
@@ -2077,7 +2119,7 @@ def _get_enc_input(
     mssg.level -= 1
     return enc_input
 
-# %% ../nbs/encoder.ipynb 59
+# %% ../nbs/encoder.ipynb 60
 def _get_optimizer(
     mssg                            : ut.Mssg,
     optim                           : EncoderOptimizer = None,
@@ -2104,7 +2146,7 @@ def _get_optimizer(
     mssg.final()
     return optim
 
-# %% ../nbs/encoder.ipynb 60
+# %% ../nbs/encoder.ipynb 61
 def _get_encoder(
     ## -- Using all parammeters
     X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
@@ -2205,7 +2247,7 @@ def _get_encoder(
     enc.mssg.final(ut.funcname())
     return enc
 
-# %% ../nbs/encoder.ipynb 62
+# %% ../nbs/encoder.ipynb 63
 def fine_tune_moment_compute_loss_check_sizes_(
     batch           : List [ List [ List [ float ] ] ], 
     output, 
@@ -2232,7 +2274,7 @@ def fine_tune_moment_compute_loss_check_sizes_(
     if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss_check_sizes_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return b
 
-# %% ../nbs/encoder.ipynb 63
+# %% ../nbs/encoder.ipynb 64
 def fine_tune_moment_compute_loss(
     batch, 
     output, 
@@ -2270,7 +2312,7 @@ def fine_tune_moment_compute_loss(
     if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
     return loss
 
-# %% ../nbs/encoder.ipynb 64
+# %% ../nbs/encoder.ipynb 65
 def fine_tune_moment_eval_preprocess(
     self        : Encoder,
     predictions : List [ List [ float ]],
@@ -2312,7 +2354,7 @@ def fine_tune_moment_eval_preprocess(
 
 Encoder.fine_tune_moment_eval_preprocess = fine_tune_moment_eval_preprocess
 
-# %% ../nbs/encoder.ipynb 65
+# %% ../nbs/encoder.ipynb 66
 def moment_build_masks(
     batch, 
     batch_masks,
@@ -2344,16 +2386,25 @@ def moment_build_masks(
             x           = batch,
             input_mask  = bms
         )
+        mssg.print(f"Moment mode Mask: {mask}")
     else: 
         mssg.print("Using MVP masking generation style")
         o = torch.zeros(batch.shape[0], batch.shape[2])
         mssg.print(f"o ~ {o.shape} | stateful = {mask_stateful} | sync = {mask_sync} | r = {window_mask_percent}")
         if mask_future:
-            mask = create_future_mask(
-                o       = o, 
-                r       = float(window_mask_percent), 
-                sync    = mask_sync
-            )[0,:,:].int() # As there is only 1 variable/variables are flattened, an extra dim is created by the masking function
+            try:
+                mask = create_future_mask(
+                    o       = o, 
+                    r       = float(window_mask_percent), 
+                    sync    = mask_sync
+                )[0,:,:].int() # As there is only 1 variable/variables are flattened, an extra dim is created by the masking function
+            except Exception as e:
+                mssg.print(f"Create future mask failed | Error {e}")
+                mask = create_future_mask(
+                    o       = o,
+                    r       = float(window_mask_percent),
+                    sync    = mask_sync
+                ).int()
         else:
             mask = create_subsequence_mask(
                 o       = o,
@@ -2361,6 +2412,7 @@ def moment_build_masks(
                 stateful= mask_stateful,
                 sync    = mask_sync
             )[0,:,:].int() # As there is only 1 variable/variables are flattened, an extra dim is created by the masking function
+        mssg.print_error(f"MVP mode Mask: {mask}")
         mssg.print(f"Before shape adjustment | batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}")
     if mask.shape[0] < bms.shape[0]:  bms = batch_masks[:mask.shape[0]]
     if mask.shape[1]  < batch_masks.shape[1] :
@@ -2368,9 +2420,11 @@ def moment_build_masks(
     mssg.final()
     mssg.level -= 1
     mssg.function = func
+    if mask is None:
+        raise ValueError("Mask is none after building")
     return mask, bms
 
-# %% ../nbs/encoder.ipynb 66
+# %% ../nbs/encoder.ipynb 67
 def fine_tune_moment_eval_step_(
     self : Encoder, 
     batch,
@@ -2397,19 +2451,28 @@ def fine_tune_moment_eval_step_(
         mask_sync           = self.mask_sync
     )
     with torch.no_grad():
-        output, self.model = sure_eval_moment(
-            enc_learn       = self.model, 
-            cpu             = self.cpu,
-            verbose         = self.mssg.verbose-self.mssg.level+1,
-            y               = batch, 
-            input_mask      = bms,
-            mask            = mask,
-            padd_step       = 100, 
-            max_trials      = 5, 
-            acts_indices    = None,
-            print_to_path   = self.mssg.to_path, 
-            print_path      = self.mssg.path, 
-            print_mode      = self.mssg.mode
+        ##output, self.model = sure_eval_moment(
+        ##    enc_learn       = self.model, 
+        ##    cpu             = self.cpu,
+        ##    verbose         = self.mssg.verbose-self.mssg.level+1,
+        ##    y               = batch, 
+        ##    input_mask      = bms,
+        ##    mask            = mask,
+        ##    padd_step       = 100, 
+        ##    max_trials      = 5, 
+        ##    acts_indices    = None,
+        ##    print_to_path   = self.mssg.to_path, 
+        ##    print_path      = self.mssg.path, 
+        ##    print_mode      = self.mssg.mode
+        ##)
+        output = self.sure_eval_moment(
+            batch                   = batch, 
+            input_mask              = bms, 
+            mask                    = mask, 
+            padd_step               = 100, 
+            max_trials              = 5, 
+            acts_indices            = None, 
+            continue_if_fail        = False
         )
         #loss = self.model.criterion(output.logits, batch)
         #total_loss += loss.item()
@@ -2428,22 +2491,28 @@ def fine_tune_moment_eval_step_(
     return mse_metric, rmse_metric, mae_metric, smape_metric#, total_loss
 Encoder.fine_tune_moment_eval_step_ = fine_tune_moment_eval_step_
 
-# %% ../nbs/encoder.ipynb 67
+# %% ../nbs/encoder.ipynb 68
 def fine_tune_moment_eval_(
     self      : Encoder,
     dl_eval   : DataLoader
 ):
+    func = self.mssg.function 
+    self.mssg.initial_(ut.funcname())
     # Select device
     device = "cpu" if self.cpu else torch.cuda.current_device()
+    self.mssg.print_error(f"Device?: {device} | cpu? {self.cpu}")
     # Load metric
     mse_metric  = EvalMSE
     rmse_metric = EvalRMSE
     mae_metric  = EvalMAE
     smape_metric= EvalSMAPE
-    total_loss  = 0.0
+    #total_loss  = 0.0
 
     num_evaluation_steps = len(dl_eval)
-    self.model = self.model.to(device)
+    try: 
+        self.model = self.model.to(device)
+    except: 
+        self.mssg.print_error(f"Could not move model to {device}")
     self.model.eval()
     progress_bar = tqdm(range(num_evaluation_steps))
     for batch in dl_eval:
@@ -2477,10 +2546,12 @@ def fine_tune_moment_eval_(
     }
     #self.mssg.print_error(f"Eval results: {eval_results}.")
     self.model.train()
+    self.mssg.final()
+    self.mssg.function = func
     return eval_results
 Encoder.fine_tune_moment_eval_ = fine_tune_moment_eval_
 
-# %% ../nbs/encoder.ipynb 68
+# %% ../nbs/encoder.ipynb 69
 def fine_tune_moment_train_loop_step_(
     self : Encoder,
     batch, 
@@ -2499,9 +2570,9 @@ def fine_tune_moment_train_loop_step_(
     batch   = batch.to(device)
     bms     = bms.to(device) 
     
-    batch = batch.to(device)
-    mask = mask.to(device)
-    bms = bms.to(device)
+    batch   = batch.to(device)
+    mask    = mask.to(device)
+    bms     = bms.to(device)
     
     self.model = self.model.to(device)
     self.mssg.level += 1
@@ -2511,18 +2582,27 @@ def fine_tune_moment_train_loop_step_(
         param = param.to(device)
     self.mssg.print(f"sure_eval_moment | b{batch.device} | m{mask.device} | bm{bms.device}")
     self.mssg.level -= 1
-    output, self.model = sure_eval_moment(
-        enc_learn           = self.model, 
-        cpu                 = self.cpu,
-        verbose             = self.mssg.verbose-self.mssg.level + 1, 
-        y                   = batch, 
-        input_mask          = bms,  # None
-        mask                = mask, # None
-        padd_step           = 100, 
-        max_trials          = 5, 
-        acts_indices        = None,
-        print_to_path       = self.mssg.to_path, print_path = self.mssg.path, print_mode = 'a',
-        continue_if_fail    = True
+    #output, self.model = sure_eval_moment(
+    #    enc_learn           = self.model, 
+    #    cpu                 = self.cpu,
+    #    verbose             = self.mssg.verbose-self.mssg.level + 1, 
+    #    y                   = batch, 
+    #    input_mask          = bms,  # None
+    #    mask                = mask, # None
+    #    padd_step           = 100, 
+    #    max_trials          = 5, 
+    #    acts_indices        = None,
+    #    print_to_path       = self.mssg.to_path, print_path = self.mssg.path, print_mode = 'a',
+    #    continue_if_fail    = True
+    #)
+    output = self.sure_eval_moment(
+        batch           = batch,
+        input_mask      = bms,
+        mask            = mask, # Cambiado None a mask
+        padd_step       = 100,
+        max_trials      = 5,
+        acts_indices    = None,
+        continue_if_fail= False 
     )
     # Compute output loss
     if output is None:
@@ -2536,7 +2616,7 @@ def fine_tune_moment_train_loop_step_(
     return loss
 Encoder.fine_tune_moment_train_loop_step_ = fine_tune_moment_train_loop_step_
 
-# %% ../nbs/encoder.ipynb 69
+# %% ../nbs/encoder.ipynb 70
 def config_optim(
     self : Encoder, dl_train, num_training_steps
 ):
@@ -2552,7 +2632,7 @@ def config_optim(
         self.optim.lr.scheduler = None
 Encoder.config_optim = config_optim
 
-# %% ../nbs/encoder.ipynb 70
+# %% ../nbs/encoder.ipynb 71
 def fine_tune_moment_train_(
     self                            : Encoder,
     dl_train                        : DataLoader,
@@ -2609,7 +2689,7 @@ def fine_tune_moment_train_(
     return losses, self.model
 Encoder.fine_tune_moment_train_ = fine_tune_moment_train_
 
-# %% ../nbs/encoder.ipynb 71
+# %% ../nbs/encoder.ipynb 72
 def fine_tune_moment_single_(
     self                : Encoder,
     eval_pre            : bool = False,
@@ -2709,7 +2789,7 @@ def fine_tune_moment_single_(
 
 Encoder.fine_tune_moment_single_ = fine_tune_moment_single_
 
-# %% ../nbs/encoder.ipynb 72
+# %% ../nbs/encoder.ipynb 73
 def fine_tune_moment_(
     self                : Encoder, 
     eval_pre            : bool = False, 
@@ -2775,7 +2855,7 @@ def fine_tune_moment_(
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
 
-# %% ../nbs/encoder.ipynb 74
+# %% ../nbs/encoder.ipynb 75
 def fit_fastai(
     self     : Encoder,
     dl_train : DataLoader,
@@ -2910,7 +2990,7 @@ def fit_fastai(
     self.mssg.level -= 1
 Encoder.fit_fastai = fit_fastai    
 
-# %% ../nbs/encoder.ipynb 75
+# %% ../nbs/encoder.ipynb 76
 def fine_tune_mvp_single_(
     self            : Encoder,
     eval_pre        : bool  = False,
@@ -3057,7 +3137,7 @@ def fine_tune_mvp_single_(
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_mvp_single_ = fine_tune_mvp_single_
 
-# %% ../nbs/encoder.ipynb 76
+# %% ../nbs/encoder.ipynb 77
 def fine_tune_mvp_(
     self                    : Encoder,
     eval_pre                : bool  = True,
@@ -3132,7 +3212,7 @@ def fine_tune_mvp_(
 
 Encoder.fine_tune_mvp_ = fine_tune_mvp_ 
 
-# %% ../nbs/encoder.ipynb 78
+# %% ../nbs/encoder.ipynb 79
 def configure_optimizer_moirai(
     self                : Encoder, 
     dl_train            : DataLoader,
@@ -3228,7 +3308,7 @@ def configure_optimizer_moirai(
     self.mssg.level -= 1
 Encoder.configure_optimizer_moirai = configure_optimizer_moirai
 
-# %% ../nbs/encoder.ipynb 79
+# %% ../nbs/encoder.ipynb 80
 def get_enc_embs_moirai_(# Obtain the embeddings
     self            : Encoder,
     enc_input       : List [ List [ List [ float ] ] ],
@@ -3250,7 +3330,7 @@ def get_enc_embs_moirai_(# Obtain the embeddings
 
 Encoder.get_enc_embs_moirai_ = get_enc_embs_moirai_
 
-# %% ../nbs/encoder.ipynb 80
+# %% ../nbs/encoder.ipynb 81
 def get_dist_moirai_(# "Normal" execution
     self            : Encoder,
     enc_input       : List [ List [ List [ float ] ] ],
@@ -3269,7 +3349,7 @@ def get_dist_moirai_(# "Normal" execution
 
 Encoder.get_dist_moirai_ = get_dist_moirai_
 
-# %% ../nbs/encoder.ipynb 81
+# %% ../nbs/encoder.ipynb 82
 def fine_tune_moirai_eval_step_(
     self        : Encoder, 
     enc_input   : List [ List [ List [ float ] ] ],
@@ -3293,7 +3373,7 @@ def fine_tune_moirai_eval_step_(
         
 Encoder.fine_tune_moirai_eval_step_ = fine_tune_moirai_eval_step_
 
-# %% ../nbs/encoder.ipynb 82
+# %% ../nbs/encoder.ipynb 83
 def fine_tune_moirai_eval_(
     self    : Encoder,
     dl_eval,
@@ -3323,7 +3403,7 @@ def fine_tune_moirai_eval_(
 
 Encoder.fine_tune_moirai_eval_ = fine_tune_moirai_eval_
 
-# %% ../nbs/encoder.ipynb 83
+# %% ../nbs/encoder.ipynb 84
 def fine_tune_moirai_train_loop_step_(
     self        : Encoder,
     enc_input   : List[ List [ List [ float ] ] ],
@@ -3338,7 +3418,7 @@ def fine_tune_moirai_train_loop_step_(
     loss = loss_func(pred = distr,**args)
     return loss 
 
-# %% ../nbs/encoder.ipynb 84
+# %% ../nbs/encoder.ipynb 85
 def fine_tune_moirai_train_(
     self                : Encoder,
     dl_train            : DataLoader
@@ -3373,7 +3453,7 @@ def fine_tune_moirai_train_(
     self.mssg.level -= 1
 Encoder.fine_tune_moirai_train_ = fine_tune_moirai_train_
 
-# %% ../nbs/encoder.ipynb 85
+# %% ../nbs/encoder.ipynb 86
 def fine_tune_moirai_single_(
     self            : Encoder,
     eval_pre        : bool  = False,
@@ -3466,7 +3546,7 @@ def fine_tune_moirai_single_(
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_moirai_single_ = fine_tune_moirai_single_
 
-# %% ../nbs/encoder.ipynb 88
+# %% ../nbs/encoder.ipynb 89
 def fine_tune_moirai_(
     self      : Encoder, 
     eval_pre  : bool = False, 
@@ -3542,7 +3622,7 @@ def fine_tune_moirai_(
 
 Encoder.fine_tune_moirai_ = fine_tune_moirai_
 
-# %% ../nbs/encoder.ipynb 90
+# %% ../nbs/encoder.ipynb 91
 def fine_tune(
     # Optional parameters
     ## Encoder Input

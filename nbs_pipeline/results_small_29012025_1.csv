@@ -1,1 +1,2 @@
-model_size,n_epochs,dataset_percent,maskared_percent,n_windows,time,first_train_loss,first_mse,first_rmse,first_mae,first_smape,last_train_loss,last_mse,last_rmse,last_mae,last_smape
+model_size,n_epochs,dataset_percent,maskared_percent,n_windows,time,first_train_loss,first_mse,first_rmse,first_mae,first_smape,last_train_loss,last_mse,last_rmse,last_mae,last_smape,windows
+small,5,0.25,0.25,1,11.141377449035645,0.0,"(0.002454809814336528,)",,"(0.026265043253258156,)",0.24129083247827335,0.0,"(0.002202464800526116,)",,"(0.025052543789184152,)",0.23023455641092438,[8]

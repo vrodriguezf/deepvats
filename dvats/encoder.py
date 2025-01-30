@@ -2500,17 +2500,20 @@ def fine_tune_moment_eval_step_(
         #loss = self.model.criterion(output.logits, batch)
         #total_loss += loss.item()
         if output is not None:
+            self.mssg.print("Output is not None")
             predictions = output.reconstruction
             references  = batch
             predictions = predictions.to(device)
             references  = references.to(device)
+            self.mssg.print("Preprocess predictions and references")
             predictions, references = self.fine_tune_moment_eval_preprocess(predictions = predictions, references = references)
+            self.mssg.print("Add metrics")
             mse_metric.add_batch(predictions=predictions, references = references)
             rmse_metric.add_batch(predictions=predictions, references = references)
             mae_metric.add_batch(predictions=predictions, references = references)
             smape_metric.add_batch(predictions=predictions, references = references)
         else:
-            self.mssg.print("Output vacío.")
+            self.mssg.print("Output None.")
     self.mssg.final()
     self.mssg.level -= 1
     self.mssg.function = func
@@ -2553,17 +2556,26 @@ def fine_tune_moment_eval_(
         )
         progress_bar.update(1)
     progress_bar.close()
-    mse   = mse_metric.compute(squared = False)
-    rmse  = rmse_metric.compute(squared = True)
-    mae   = mae_metric.compute()
-    smape = smape_metric.compute()
-    eval_results = {
-        #"loss"  : total_loss,
-        "mse"   : mse['mse'],
-        "rmse"  : rmse['mse'],
-        "mae"   : mae['mae'],
-        "smape" : smape['smape']
-    }
+    try:
+        mse   = mse_metric.compute(squared = False)
+        rmse  = rmse_metric.compute(squared = True)
+        mae   = mae_metric.compute()
+        smape = smape_metric.compute()
+        eval_results = {
+            #"loss"  : total_loss,
+            "mse"   : mse['mse'],
+            "rmse"  : rmse['mse'],
+            "mae"   : mae['mae'],
+            "smape" : smape['smape']
+        }
+    except:
+        eval_results = {
+            "mse": np.nan,
+            "rmse": np.nan,
+            "mae": np.nan,
+            "smape": np.nan
+        }
+        self.mssg.print_error("Could not compute metrics. Already used add?")
     #self.mssg.print_error(f"Eval results: {eval_results}.")
     self.model.train()
     return eval_results

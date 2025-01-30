@@ -272,7 +272,7 @@ class Encoder():
     #mvp_ws              : Tuple [ int, int ]= 0,0
     errors               : pd.DataFrame     = pd.DataFrame(columns=["window", "error"])
     window_sizes         : List [int]       = None
-    
+    best_epoch           : int              = -1
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
         self.model              = self.set_model_(self.model)
@@ -2214,7 +2214,11 @@ def moment_compute_loss(
     # Compute loss
     self.mssg.print_error(f"Criterion: {self.optim.criterion}")
     recon_loss      = self.optim.criterion(predictions, references)
+    self.mssg.print_error(f"Reconstruction loss: {recon_loss}")
+    self.mssg.print_error(f"Batch mask: {batch_masks}")
+    self.mssg.print_error(f"Mask: {mask}")
     observed_mask   = batch_masks * (1-mask)
+    self.mssg.print_error(f"Observed mask: {observed_mask}")
     masked_loss     = observed_mask * recon_loss
     loss            = masked_loss.nansum() / (observed_mask.nansum() + 1e-7)
     self.mssg.print(f"Loss type: {type(loss)}")
@@ -2288,12 +2292,16 @@ def get_mask_moment(
     """
     mssg.print(f"Using mask generator with mask ratio {r}")
     # Create mask generator with percentage of unknown values 'r'
-    mask_generator = Masking(mask_ratio = r)
+    mask_generator = Masking(
+        mask_ratio = r,
+        patch_len   = 1 #Tratando de enmascarar a nivel de elementos.
+    )
     # Generate mask
     mask = mask_generator.generate_mask(
         x           = batch,
         input_mask  = batch_masks
     )
+    mssg.print(f"Mask~{mask.shape}")
     return mask
 
 def get_mask_tsai(
@@ -2428,6 +2436,8 @@ def moment_set_masks(
     mask    = check_mask(batch, bms, mask, mssg)
     mssg.print(f"mask~{mask.shape}")
     mssg.print(f"batch_masks~{bms.shape}")
+    mssg.print_error(f"mask: {mask}")
+    mssg.print_error(f"batch_masks: {batch_masks}")
     mssg.final()
     # Restore mssg
     mssg.level -= 1
@@ -2550,9 +2560,9 @@ def fine_tune_moment_eval_(
         rmse  = rmse_metric.compute(squared = True)
         mae   = mae_metric.compute()
         smape = smape_metric.compute()
-        eval_results ["mse"]    = mse['mse'],
-        eval_results ["mse"]    = rmse['mse'],
-        eval_results ["mae"]    = mae['mae'],
+        eval_results ["mse"]    = mse['mse']
+        eval_results ["mse"]    = rmse['mse']
+        eval_results ["mae"]    = mae['mae']
         eval_results ["smape"]  = smape['smape']
     except:
         raise ValueError("Could not compute metrics. Already used add?")
@@ -2670,6 +2680,11 @@ def fine_tune_moment_train_(
     progress_bar = tqdm(range(num_training_steps))
     self.mssg.level -= 1
     self.mssg.print(f"num_epochs {self.num_epochs} | n_batches {len(dl_train)}")
+    if save_best_or_last:
+        best_loss           = np.inf
+        best_model_state    = None
+        epoch_loss_mean     = np.nan
+
     for epoch in range(self.num_epochs):
         epoch_losses = []
         for i, batch in enumerate(dl_train):
@@ -2697,9 +2712,19 @@ def fine_tune_moment_train_(
             if self.optim.lr.flag: self.optim.lr.scheduler.step()
             progress_bar.update(1)
         # Attatch the mean in all batches
-        epoch_losses = np.array(epoch_losses)
-        losses.append(np.nanmean(epoch_losses))
+        epoch_losses    = np.array(epoch_losses)
+        epoch_loss_mean = np.nanmean(epoch_losses)
+        losses.append(epoch_loss_mean)
+        if save_best_or_last and epoch_loss_mean < best_loss:
+            self.best_epoch = epoch
+            best_loss       = epoch_loss_mean 
+            best_model_state= self.model.state_dict().copy()
     progress_bar.close()
+    # Get the best version of the model
+    if save_best_or_last and best_model_state:
+        self.model.load_state_dict(best_model_state)
+        self.best_epoch = -1
+    self.mssg.print(f"Best epoch: {self.best_epoch}")
     self.mssg.final()
     # Restore mssg
     self.mssg.level -= 1
@@ -2836,6 +2861,7 @@ def fine_tune_moment_(
     self.use_moment_masks = self.use_moment_masks if use_moment_masks is None else use_moment_masks
     # Return & aux values
     lossess             = []
+    best_epochs         = []
     eval_results_pre    = {}
     eval_results_post   = {}
     t_shots             = []
@@ -2876,6 +2902,7 @@ def fine_tune_moment_(
         if eval_pre: t_evals.append(t_eval_1)
         if eval_post: t_evals.append(t_eval_2)
         eval_pre = False
+        best_epochs.append(self.best_epoch)
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
     self.eval_stats_pre = eval_results_pre
@@ -2885,7 +2912,7 @@ def fine_tune_moment_(
     self.mssg.function = func
     self.mssg.level -= 1
     if register_errors: return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, self.errors
-    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes
+    return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, best_epochs
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
 
@@ -3194,12 +3221,13 @@ def fine_tune_mvp_(
     func = self.mssg.function 
     self.mssg.level += 1
     self.mssg.initial_("fine_tune_mvp_")
+    # Setup encoder computation configuration
     self.time_flag      = self.time_flag if time_flag is None else time_flag
     self.use_wandb      = self.use_wandb if use_wandb is None else use_wandb
     self.analysis_mode  = self.analysis_mode if analysis_mode is None else analysis_mode
     self.norm_by_sample = self.norm_by_sample if norm_by_sample is None else norm_by_sample
     self.norm_use_single_batch = self.norm_use_single_batch if norm_use_single_batch is None else norm_use_single_batch
-    # Return values
+    # Return & aux values
     lossess             = []
     eval_results_pre    = {} # Only 1 (before fine-tune)
     eval_results_post   = {} # One per window size (after training)
@@ -3207,7 +3235,7 @@ def fine_tune_mvp_(
     t_shot              = 0
     t_evals             = []
     t_eval              = 0
-    
+    # Check
     if self.input.size is None:
         self.mssg.print(f"Windows: {len(self.input._data)}")
         raise ValueError(f"Invalid number of windows: {self.input.size}")
@@ -3277,10 +3305,11 @@ def configure_optimizer_moirai(
     Returns:
         dict: Dictionary with optimizer and learning rate scheduler configuration.
     """
+    # Setup mssg
     self.mssg.level += 1
     func = self.mssg.function
     self.mssg.initial_(ut.funcname())
-    
+    # Configure optimizer
     if self.optim.optimizer is None:
         decay = set()
         no_decay = set()
@@ -3327,6 +3356,7 @@ def configure_optimizer_moirai(
         optimizer = torch.optim.AdamW(optim_groups, lr=self.optim.lr.lr)
     else: 
         self.mssg.print("Optimizer already configured.")
+    # Configure Learning Rate scheduler
     try:
         scheduler = None
         if self.optim.lr.flag:
@@ -3340,16 +3370,18 @@ def configure_optimizer_moirai(
                 num_training_steps          = self.num_epochs*steps_per_epoch,
                 scheduler_specific_kwargs   = self.scheduler_specific_kwargs
             )
+    # Check errors
     except Exception as e:
         scheds = [ "linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup", "inverse_sqrt", "reduce_lr_on_plateau"]
         self.mssg.print_error(
             f"Please check that lr_scheduler_name is one of the following: {scheds}. Check https://github.com/SalesforceAIResearch/uni2ts/blob/main/src/uni2ts/optim/lr_scheduler.py for updates."
         )
         raise e
-
+    # Setup optimizer & scheduler
     self.optim.optimizer = optimizer
     self.optim.lr.scheduler = scheduler
     self.mssg.final()
+    # Restore mssg
     self.mssg.function = func
     self.mssg.level -= 1
 Encoder.configure_optimizer_moirai = configure_optimizer_moirai
@@ -3455,7 +3487,7 @@ def fine_tune_moirai_train_loop_step_(
     enc_input   : List[ List [ List [ float ] ] ],
     patch_size  : int 
 ):
-    loss = 0
+    loss = np.nan
     #device = "cpu" if self.cpu else torch.cuda.current_device()
     #embs, moirai_args = self.get_enc_embs_moirai_(enc_input, patch_size, True)
     #mask = moirai_args['observed_mask']
@@ -3592,7 +3624,7 @@ def fine_tune_moirai_single_(
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_moirai_single_ = fine_tune_moirai_single_
 
-# %% ../nbs/encoder.ipynb 90
+# %% ../nbs/encoder.ipynb 88
 def fine_tune_moirai_(
     self      : Encoder, 
     eval_pre  : bool = False, 
@@ -3668,7 +3700,7 @@ def fine_tune_moirai_(
 
 Encoder.fine_tune_moirai_ = fine_tune_moirai_
 
-# %% ../nbs/encoder.ipynb 92
+# %% ../nbs/encoder.ipynb 90
 def fine_tune(
     # Optional parameters
     ## Encoder Input

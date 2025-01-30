@@ -2158,28 +2158,25 @@ def _set_encoder(
 # %% ../nbs/encoder.ipynb 62
 def fine_tune_moment_compute_loss_check_sizes_(
     batch           : List [ List [ List [ float ] ] ], 
-    output, 
-    verbose         : int   = 0,
-    # Print options
-    print_to_path   : bool  = False,
-    print_path      : str   = "~/data/logs/logs.txt",
-    print_mode      : str   = 'a'
+    output,
+    mssg
 ):
-    if verbose > 0: ut.print_flush("--> fine_tune_moment_compute_loss_check_sizes_", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
+    mssg.print("--> fine_tune_moment_compute_loss_check_sizes_")
     b = batch.clone()
     b_2 = batch.shape[2]
     re_2 = output.reconstruction.shape[2]
+    mssg.level += 1
     if b_2 > re_2:
-        if verbose > 0: ut.print_flush(f" Fine tune loop | TODO: Why? Original {b_2} > {re_2}  Reconstruction", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        mssg.print(f" Fine tune loop | TODO: Why? Original {b_2} > {re_2}  Reconstruction")
         b = b[...,:re_2]
     elif re_2 > b_2:
-        if verbose > 1: ut.print_flush(f" Fine tune loop | Why ? Original {b_2} < {re_2} Reconstruction ? Padding", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        mssg.print(f" Fine tune loop | Why ? Original {b_2} < {re_2} Reconstruction ? Padding")
         output.reconstruction = output.reconstruction[...,:b_2]
     else: 
-        if verbose > 1: ut.print_flush(f" Fine tune loop | re_2 {re_2} == {b_2} y_2", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    if verbose > 1: 
-        ut.print_flush(f"---------- Checking loss  ------- | reconstruction ~ {output.reconstruction.shape} | original_ ~ {b.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss_check_sizes_ -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+        mssg.print(f" Fine tune loop | re_2 {re_2} == {b_2} y_2")
+    mssg.print(f"---------- Checking loss  ------- | reconstruction ~ {output.reconstruction.shape} | original_ ~ {b.shape}")
+    mssg.level -= 1
+    mssg.print("fine_tune_moment_compute_loss_check_sizes_ -->")
     return b
 
 # %% ../nbs/encoder.ipynb 63
@@ -2195,7 +2192,11 @@ def moment_compute_loss(
     self.mssg.level += 1
     self.mssg.initial_(ut.funcname())
     #Check sizes
-    #references = fine_tune_moment_compute_loss_check_sizes_(batch = batch, output = output, verbose = verbose, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
+    #references = fine_tune_moment_compute_loss_check_sizes_(
+    #    batch   = batch, 
+    #    output  = output, 
+    #    mssg    = self.mssg
+    #)
     references  = batch
     predictions = output.reconstruction
     self.mssg.print(f"b~{references.shape} | o~{predictions.shape}")
@@ -2213,6 +2214,11 @@ def moment_compute_loss(
     self.mssg.print(f"mask ~ {mask.shape} | {mask.device}")
     # Compute loss
     self.mssg.print_error(f"Criterion: {self.optim.criterion}")
+    # Check sizes
+    min_len = min(predictions.shape[2], references.shape[2])
+    references  = references[:,:,:min_len]
+    predictions = predictions[:,:,:min_len]
+    ####
     recon_loss      = self.optim.criterion(predictions, references)
     self.mssg.print_error(f"Reconstruction loss: {recon_loss}")
     self.mssg.print_error(f"Batch mask: {batch_masks}")

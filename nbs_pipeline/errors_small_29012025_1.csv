@@ -1,1 +1,2 @@
-model_size,n_epochs,dataset_percent,maskared_percent,n_windows,windows,error
+model_size,n_epochs,dataset_percent,maskared_percent,n_windows,windows,error,window
+small,5,0.25,0.25,,[8],'NoneType' object is not callable,8

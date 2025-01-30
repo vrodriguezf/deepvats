@@ -1317,7 +1317,7 @@ def _validate_nested_list(value, default, name, valid_types, levels,
 
 
 # %% ../nbs/utils.ipynb 105
-def _get_mssg(
+def _set_mssg(
     mssg : Mssg = None,
     verbose                         : int           = 0, 
     print_to_path                   : bool          = False,

@@ -11,9 +11,9 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EvalMSE', 'EvalRMSE', 'Ev
            'mae_flat', 'mse_loss_flat', 'RMSELoss', 'RMSELossFlat', 'SMAPELoss', 'SMAPELossFlat',
            'validate_with_metrics', 'validate_with_metrics_', 'get_metrics_dict',
            'validate_with_metrics_format_results', 'random_windows', 'windowed_dataset', 'setup_scheduler',
-           'prepare_train_and_eval_dataloaders', 'fine_tune_moment_compute_loss_check_sizes_',
-           'fine_tune_moment_compute_loss', 'fine_tune_moment_eval_preprocess', 'get_mask_moment', 'get_mask_tsai',
-           'check_batch_masks', 'check_mask', 'moment_build_masks', 'fine_tune_moment_eval_step_',
+           'prepare_train_and_eval_dataloaders', 'fine_tune_moment_compute_loss_check_sizes_', 'moment_compute_loss',
+           'fine_tune_moment_eval_preprocess', 'get_mask_moment', 'get_mask_tsai', 'check_batch_masks', 'check_mask',
+           'moment_set_masks', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
            'fine_tune_moment_train_loop_step_', 'config_optim', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
            'fine_tune_moment_', 'fit_fastai', 'fine_tune_mvp_single_', 'fine_tune_mvp_', 'configure_optimizer_moirai',
            'get_enc_embs_moirai_', 'get_dist_moirai_', 'fine_tune_moirai_eval_step_', 'fine_tune_moirai_eval_',
@@ -360,6 +360,8 @@ class Encoder():
     def config_optim(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     #--- Moment
+    def moment_compute_loss(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def moment_safe_forward_pass(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_moment_eval_preprocess(self):
@@ -783,15 +785,16 @@ def moment_safe_forward_pass(
     batch, 
     input_mask              = None, 
     mask                    = None, 
-    register_errors: bool   = True
+    register_errors: bool   = True,
+    continue_if_fail: bool  = True
 ): 
     # mssg configuration
     func    = self.mssg.function 
     self.mssg.level += 1
     self.mssg.initial_(ut.funcname())
-    self.mssg.print(f"Cpu | {cpu} | device | {device}")
     # Move all tensors to the device
     device  = "cpu" if self.cpu else torch.cuda.current_device()
+    self.mssg.print(f"Cpu | {self.cpu} | device | {device}")
     if input_mask is not None: input_mask = input_mask.to(device)
     if mask is not None: mask = mask.to(device)
     batch       = batch.to(device)
@@ -819,12 +822,14 @@ def moment_safe_forward_pass(
         self.mssg.print_error(f"Device {device} | batch~{batch.shape} device: {batch.device}")
         raise ValueError(mssg)
     else: 
-       self.mssg(f"Computation done | output is None? {output is None}")
+       self.mssg.print(f"Computation done | output is None? {output is None}")
     # --- Recompose mssg
     self.mssg.final()
     self.mssg.level     -= 1
     self.mssg.function  = func
     return output, success
+
+Encoder.moment_safe_forward_pass = moment_safe_forward_pass
 
 # %% ../nbs/encoder.ipynb 32
 def get_enc_embs_ensure_batch_size_(
@@ -1969,7 +1974,7 @@ def prepare_train_and_eval_dataloaders(
     return dl_eval, dl_train, ds_test, ds_train
 
 # %% ../nbs/encoder.ipynb 58
-def _get_enc_input(
+def _set_enc_input(
     mssg                            : ut.Mssg,
     # Encoder Input
     ## -- Using all parammeters
@@ -2023,7 +2028,7 @@ def _get_enc_input(
     return enc_input
 
 # %% ../nbs/encoder.ipynb 59
-def _get_optimizer(
+def _set_optimizer(
     mssg                            : ut.Mssg,
     optim                           : EncoderOptimizer = None,
     criterion                       : _Loss         = torch.nn.MSELoss, 
@@ -2050,7 +2055,7 @@ def _get_optimizer(
     return optim
 
 # %% ../nbs/encoder.ipynb 60
-def _get_encoder(
+def _set_encoder(
     ## -- Using all parammeters
     X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
     stride                          : Optional [ int ]          = None,
@@ -2105,7 +2110,7 @@ def _get_encoder(
     enc,_ = ut._check_value(enc, None, "enc", Encoder, True)
     
     if enc is None: 
-        mssg = ut._get_mssg(
+        mssg = ut._set_mssg(
             mssg          = mssg,
             verbose       = verbose, 
             print_to_path = print_to_path, 
@@ -2113,11 +2118,11 @@ def _get_encoder(
             print_mode    = print_mode
         )
         mssg.initial(ut.funcname())
-        mssg.print("About to exec _get_enc_input")
-        enc_input = _get_enc_input(mssg, X, stride, batch_size, n_windows, n_windows_percent, validation_percent, training_percent, window_mask_percent, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, enc_input)
+        mssg.print("About to exec _set_enc_input")
+        enc_input = _set_enc_input(mssg, X, stride, batch_size, n_windows, n_windows_percent, validation_percent, training_percent, window_mask_percent, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, enc_input)
         mssg.print(f"enc_input~{enc_input.shape}")
-        mssg.print("About to exec _get_optimizer")
-        optim = _get_optimizer(mssg, optim, criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name, lr_scheduler_num_warmup_steps)
+        mssg.print("About to exec _set_optimizer")
+        optim = _set_optimizer(mssg, optim, criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name, lr_scheduler_num_warmup_steps)
         
         if metrics_dict is None and (
                 metrics and metrics_names and metrics_args and 
@@ -2132,20 +2137,20 @@ def _get_encoder(
             }
             
         enc = Encoder(
-            model           = enc_learn,
-            input           = enc_input,
-            mssg            = mssg,
-            cpu             = cpu,
-            to_numpy        = to_numpy, 
-            num_epochs      = num_epochs, 
-            optim           = optim,
-            mask_stateful   = mask_stateful,
-            mask_future     = mask_future,
-            mask_sync       = mask_sync,
-            eval_stats_pre  = None,
-            eval_stats_post = None,
-            metrics_dict    = metrics_dict,
-            scheduler_specific_kwargs=scheduler_specific_kwargs
+            model                       = enc_learn,
+            input                       = enc_input,
+            mssg                        = mssg,
+            cpu                         = cpu,
+            to_numpy                    = to_numpy, 
+            num_epochs                  = num_epochs, 
+            optim                       = optim,
+            mask_stateful               = mask_stateful,
+            mask_future                 = mask_future,
+            mask_sync                   = mask_sync,
+            eval_stats_pre              = None,
+            eval_stats_post             = None,
+            metrics_dict                = metrics_dict,
+            scheduler_specific_kwargs   = scheduler_specific_kwargs
         )
     enc.mssg.final(ut.funcname())
     return enc
@@ -2178,42 +2183,49 @@ def fine_tune_moment_compute_loss_check_sizes_(
     return b
 
 # %% ../nbs/encoder.ipynb 63
-def fine_tune_moment_compute_loss(
+def moment_compute_loss(
+    self        : Encoder,
     batch, 
     output, 
-    criterion   = torch.nn.MSELoss, 
-    verbose     = 0, 
     input_mask  = None, 
-    mask        = None,
-    # Print options
-    print_to_path   : bool          = False,
-    print_path      : str           = "~/data/logs/logs.txt",
-    print_mode      : str           = 'a'
+    mask        = None
 ):
-    if verbose > 0: ut.print_flush("--> fine_tune_moment_compute_loss", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
-    b = fine_tune_moment_compute_loss_check_sizes_(batch = batch, output = output, verbose = verbose, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
-    if verbose > 0: ut.print_flush(f"fine_tune_moment_compute_loss | b~{b.shape} | o~{output.reconstruction.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    o = output.reconstruction
-    device = b.device if b.device != "cpu" else o.device
-    b = b.to(device)
-    o = o.to(device)
-    compute_loss = criterion()
-    recon_loss = compute_loss(o, b)
+    #Configure mssg
+    func = self.mssg.function 
+    self.mssg.level += 1
+    self.mssg.initial_(ut.funcname())
+    #Check sizes
+    #references = fine_tune_moment_compute_loss_check_sizes_(batch = batch, output = output, verbose = verbose, print_to_path = print_to_path, print_path = print_path, print_mode = 'a')
+    references  = batch
+    predictions = output.reconstruction
+    self.mssg.print(f"b~{references.shape} | o~{predictions.shape}")
+    # Get Masks
     batch_masks = output.input_mask if input_mask is None else input_mask
-    mask = output.pretrain_mask if mask is None else mask
+    mask        = output.pretrain_mask if mask is None else mask
+    # Move tensors to device
+    device      = predictions.device if references.device != "cpu" else references.device
+    references  = references.to(device)
+    predictions = predictions.to(device)
     batch_masks = batch_masks.to(device)
-    mask = mask.to(device)
-    if verbose > 1: ut.print_flush(f"fine_tune_moment_compute_loss | batch ~ {b.shape} | {b.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    if verbose > 1: ut.print_flush(f"fine_tune_moment_compute_loss | batch_masks ~ {batch_masks.shape} | {batch_masks.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    if verbose > 1: ut.print_flush(f"fine_tune_moment_compute_loss | mask ~ {mask.shape} | {mask.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    
-    observed_mask = batch_masks * (1-mask)
-    masked_loss = observed_mask * recon_loss
-    loss = masked_loss.nansum() / (observed_mask.nansum() + 1e-7)
-    if verbose > 2: ut.print_flush(f"Loss type: {type(loss)}",print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)  # Debe ser <class 'torch.Tensor'>
-    if verbose > 1: ut.print_flush(f"fine_tune_moment_compute_loss | loss: {loss.item()}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-    if verbose > 0: ut.print_flush("fine_tune_moment_compute_loss -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    mask        = mask.to(device)
+    self.mssg.print(f"batch ~ {batch.shape} | {batch.device}")
+    self.mssg.print(f"batch_masks ~ {batch_masks.shape} | {batch_masks.device}")
+    self.mssg.print(f"mask ~ {mask.shape} | {mask.device}")
+    # Compute loss
+    self.mssg.print_error(f"Criterion: {self.optim.criterion}")
+    recon_loss      = self.optim.criterion(predictions, references)
+    observed_mask   = batch_masks * (1-mask)
+    masked_loss     = observed_mask * recon_loss
+    loss            = masked_loss.nansum() / (observed_mask.nansum() + 1e-7)
+    self.mssg.print(f"Loss type: {type(loss)}")
+    self.mssg.print(f"loss: {loss.item()}")
+    self.mssg.final()
+    # Restore mssg
+    self.mssg.function = func 
+    self.mssg.level -= 1
     return loss
+
+Encoder.moment_compute_loss = moment_compute_loss
 
 # %% ../nbs/encoder.ipynb 64
 def fine_tune_moment_eval_preprocess(
@@ -2236,14 +2248,15 @@ def fine_tune_moment_eval_preprocess(
     #--- Go!
     self.mssg.print(f"Before reshape | preds~{predictions.shape}")
     self.mssg.print(f"Before reshape | refs~{references.shape}")
+    # Valid shape
     predictions = einops.rearrange(predictions, "b v w -> (b v) w")
-    references = einops.rearrange(references, "b v w -> (b v) w")
-    # Avoid NaN 
+    references  = einops.rearrange(references, "b v w -> (b v) w")
+    # Common shape 
     if predictions.shape[1] > references.shape[1]: predictions = predictions[:,:references.shape[1]]
     if predictions.shape[1] < references.shape[1]: references = references[:,:predictions.shape[1]]
     self.mssg.print(f"After reshape | preds~{predictions.shape}")
     self.mssg.print(f"After reshape | refs~{references.shape}")
-        
+    # Avoid Nans    
     nan_mask    = torch.isnan(predictions) | torch.isnan(references)
     predictions = torch.where(nan_mask, torch.tensor(0.0), predictions)
     references  = torch.where(nan_mask, torch.tensor(0.0), references)
@@ -2261,8 +2274,22 @@ Encoder.fine_tune_moment_eval_preprocess = fine_tune_moment_eval_preprocess
 def get_mask_moment(
     batch, batch_masks, r, mssg
 ):
+    """
+    Generates a mask using the MOMENT-style masking approach.
+    
+    Parameters:
+    - batch: Input tensor.
+    - batch_masks: Existing batch masks.
+    - r: Mask ratio (percentage of masked values).
+    - mssg: Message handler for logging.
+    
+    Returns:
+    - mask: Generated mask.
+    """
     mssg.print(f"Using mask generator with mask ratio {r}")
+    # Create mask generator with percentage of unknown values 'r'
     mask_generator = Masking(mask_ratio = r)
+    # Generate mask
     mask = mask_generator.generate_mask(
         x           = batch,
         input_mask  = batch_masks
@@ -2272,6 +2299,21 @@ def get_mask_moment(
 def get_mask_tsai(
     batch, batch_masks, r, mask_stateful, mask_future, mask_sync, mssg
 ):
+    """
+    Generates a mask using the TSAI-style masking approach.
+    
+    Parameters:
+    - batch: Input tensor.
+    - batch_masks: Existing batch masks.
+    - r: Mask ratio (percentage of masked values).
+    - mask_stateful: Whether to use a stateful mask.
+    - mask_future: Whether to mask future values.
+    - mask_sync: Whether to synchronise masking across samples.
+    - mssg: Message handler for logging.
+    
+    Returns:
+    - mask: Generated mask.
+    """
     mssg.print("Using MVP masking generation style")
     o = torch.zeros(batch.shape[0], batch.shape[2])
     mssg.print(f"o ~ {o.shape} | stateful = {mask_stateful} | sync = {mask_sync} | r = {window_mask_percent}")
@@ -2321,8 +2363,6 @@ def check_mask(
     batch, batch_masks,mask, mssg
 ):
     # Should have as masks as batch_masks
-    
-    # Mask should have same size than batch mask
     if mask.shape[1] < batch_masks.shape[1]:
         # Should be bigger
         mssg.print_error(f"Invalid mask shape {mask.shape}")
@@ -2340,7 +2380,7 @@ def check_mask(
     return mask
 
 # %% ../nbs/encoder.ipynb 67
-def moment_build_masks(
+def moment_set_masks(
     batch, 
     batch_masks,
     window_mask_percent     : float     = 0.3,
@@ -2350,27 +2390,31 @@ def moment_build_masks(
     mask_future             : bool      = False,
     mask_sync               : bool      = False
 ):
+    # Configure mssg
     func = mssg.function
     mssg.initial_(ut.funcname())
     mssg.level = mssg.verbose - 1 # quitar
+    # Ensure batch sizes
     bms = check_batch_masks(batch, batch_masks, mssg)
     mssg.level += 1
-    mssg.print(f"moment_build_masks | batch ~ {batch.shape} | batch_masks ~ {bms.shape}")
+    mssg.print(f"batch ~ {batch.shape} | batch_masks ~ {bms.shape}")
     if bms.shape[0] > batch.shape[0]: bms = bms[:batch.shape[0]]
     mssg.level -= 1
     mssg.print(f"window_mask_percent {window_mask_percent} | batch ~ {batch.shape}")
+    # Move tensors to the same computation device
     device = batch.device if batch.device != "cpu" else bms.device
     batch = batch.to(device)
     bms = bms.to(device)
+    # Get masks
     window_mask_percent = float(window_mask_percent)
-    if use_moment_masks:
+    if use_moment_masks: # Use moment generator
         mask = get_mask_moment(
             batch       = batch,
             batch_masks = bms, 
             r           = window_mask_percent,
             mssg        = mssg
         )
-    else: 
+    else: # Use tsai mask generators
         mask = get_mask_tsai(
             batch           = batch,
             batch_masks     = bms,
@@ -2380,10 +2424,12 @@ def moment_build_masks(
             mask_sync       = mask_sync,
             mssg            = mssg
         )
+    # Check sizes
     mask    = check_mask(batch, bms, mask, mssg)
     mssg.print(f"mask~{mask.shape}")
     mssg.print(f"batch_masks~{bms.shape}")
     mssg.final()
+    # Restore mssg
     mssg.level -= 1
     mssg.function = func
     return mask, bms
@@ -2397,13 +2443,15 @@ def fine_tune_moment_eval_step_(
     mae_metric,
     smape_metric
 ):
+    # Setup mssg
     func = self.mssg.function 
     self.mssg.level += 1
     self.mssg.initial(ut.funcname())
+    # Setup masks
     window_size = self.input.shape[2]
     device = "cpu" if self.cpu else torch.cuda.current_device()
     batch_masks = torch.ones((self.input.batch_size, window_size), device = device).long()
-    mask, bms = moment_build_masks(
+    mask, bms = moment_set_masks(
         batch               = batch,
         batch_masks         = batch_masks,
         window_mask_percent = self.input.window_mask_percent,
@@ -2413,20 +2461,20 @@ def fine_tune_moment_eval_step_(
         mask_future         = self.mask_future,
         mask_sync           = self.mask_sync
     )
+    # -- Model evaluation
     with torch.no_grad():
+        # Exec forward pass
         output, success = self.moment_safe_forward_pass(batch = batch, input_mask = bms, mask = mask)
+        # If the execution of the forward pass was ok, compute the evaluation metrics
         if output is not None and success:
             self.mssg.print("Output is not None")
+            # Compute loss
+            loss = self.moment_compute_loss(batch, output, bms, mask)
+            loss = loss if not hasattr(loss, 'item') else loss.item()
             # Get predictions/output and references / original
             predictions = output.reconstruction
             references  = batch
-            # Save loss just as in the example
-            recon_loss      = self.criterion(prediction, batch)
-            observed_mask   = bms * (1-mask)
-            masked_loss     = observed_mask * loss
-            loss            = masked_loss.nansum()/(observed_mask.nansum()+1e-7)
-            loss            = loss if not hasattr(loss, 'item') else loss.item()
-            # Ensure to take into account the maskared part
+            # Ensure to avoid nan errors & ensure valid shape for metrics
             predictions, references = self.fine_tune_moment_eval_preprocess(predictions = predictions, references = references)
             # Move tensors to the computation device (cpu/gpu)
             predictions = predictions.to(device)
@@ -2437,8 +2485,9 @@ def fine_tune_moment_eval_step_(
             mae_metric.add_batch(predictions=predictions, references = references)
             smape_metric.add_batch(predictions=predictions, references = references)
         else:
-            self.mssg.print("Output None.")
+            self.mssg.print("Output None or not successfull forward pass computation.")
     self.mssg.final()
+    # Restore mssg
     self.mssg.level -= 1
     self.mssg.function = func
     return mse_metric, rmse_metric, mae_metric, smape_metric, loss
@@ -2449,6 +2498,11 @@ def fine_tune_moment_eval_(
     self      : Encoder,
     dl_eval   : DataLoader
 ):
+    # Setup mssg
+    func = self.mssg.function
+    self.mssg.level += 1
+    self.mssg.initial()
+    # Evaluation metrics dict
     eval_results = {
         "mse": np.nan,
         "rmse": np.nan,
@@ -2466,6 +2520,8 @@ def fine_tune_moment_eval_(
     total_loss  = 0.0
     num_evaluation_steps = len(dl_eval)
     self.model = self.model.to(device)
+    
+    # Evaluation loop
     self.model.eval()
     progress_bar = tqdm(range(num_evaluation_steps))
     for batch in dl_eval:
@@ -2474,7 +2530,7 @@ def fine_tune_moment_eval_(
             mse_metric, 
             rmse_metric, 
             mae_metric, 
-            smape_metric
+            smape_metric,
             loss
         ) = self.fine_tune_moment_eval_step_(
             batch       = batch, 
@@ -2487,8 +2543,8 @@ def fine_tune_moment_eval_(
         progress_bar.update(1)
     progress_bar.close()
     
+    # Update evaluation metrics
     eval_results ["loss"]   = np.nanmean(losss)
-
     try:
         mse   = mse_metric.compute(squared = False)
         rmse  = rmse_metric.compute(squared = True)
@@ -2500,9 +2556,13 @@ def fine_tune_moment_eval_(
         eval_results ["smape"]  = smape['smape']
     except:
         raise ValueError("Could not compute metrics. Already used add?")
-        
+
     self.mssg.print_error(f"Eval results: {eval_results}.")
     self.model.train()
+    self.mssg.final()
+    # Restore mssg
+    self.mssg.function = func
+    self.mssg.level -= 1
     return eval_results
 Encoder.fine_tune_moment_eval_ = fine_tune_moment_eval_
 
@@ -2520,8 +2580,8 @@ def fine_tune_moment_train_loop_step_(
     self.mssg.initial_(ut.funcname())
     # Get masks
     self.mssg.print("Get the masks")    
-    mask, bms = moment_build_masks(batch, batch_masks, self.input.window_mask_percent, self.mssg, use_moment_masks, self.mask_stateful, self.mask_future, self.mask_sync)
-    # Move tensors to the debice
+    mask, bms = moment_set_masks(batch, batch_masks, self.input.window_mask_percent, self.mssg, use_moment_masks, self.mask_stateful, self.mask_future, self.mask_sync)
+    # Move tensors to the device
     device = torch.cuda.current_device() if not self.cpu else "cpu"
     batch   = batch.to(device)
     bms     = bms.to(device) 
@@ -2549,17 +2609,13 @@ def fine_tune_moment_train_loop_step_(
     else: 
         # Compute the loss
         self.mssg.print("Output correctly obtained, compute loss")
-        loss = fine_tune_moment_compute_loss(
-            batch,
-            output,
-            criterion,
-            verbose = self.mssg.verbose,
-            input_mask = bms,
-            mask = mask,
-            print_to_path = self.mssg.to_path,
-            print_path = self.mssg.path,
-            print_mode = 'a'
+        loss = self.moment_compute_loss(
+            batch       = batch,
+            output      = output,
+            input_mask  = bms,
+            mask        = mask
         )
+    # Restore mssg
     self.mssg.final()
     self.mssg.level -= 1
     self.mssg.function = func
@@ -2568,7 +2624,9 @@ Encoder.fine_tune_moment_train_loop_step_ = fine_tune_moment_train_loop_step_
 
 # %% ../nbs/encoder.ipynb 71
 def config_optim(
-    self : Encoder, dl_train, num_training_steps
+    self : Encoder,
+    dl_train,
+    num_training_steps
 ):
     if self.optim.optimizer is None: 
         self.optim.optimizer    = torch.optim.AdamW(self.model.parameters(), self.optim.lr.lr)
@@ -2587,12 +2645,16 @@ def fine_tune_moment_train_(
     self                            : Encoder,
     dl_train                        : DataLoader,
     ds_train                        : pd.DataFrame,
-    use_moment_masks                : bool      = False
+    use_moment_masks                : bool      = False,
+    save_best_or_last               : bool                          = True #If true, save best else save last
 ):
+    # Setup mssg
     self.mssg.level += 1
     func = self.mssg.function
     self.mssg.initial_(ut.funcname())
+    # Output param
     losses = []
+    epoch_losses = []
     # Select device
     device = "cpu" if self.cpu else torch.cuda.current_device()
     # Optimizer and learning rate scheduler
@@ -2609,31 +2671,37 @@ def fine_tune_moment_train_(
     self.mssg.level -= 1
     self.mssg.print(f"num_epochs {self.num_epochs} | n_batches {len(dl_train)}")
     for epoch in range(self.num_epochs):
+        epoch_losses = []
         for i, batch in enumerate(dl_train):
+            # Loop step
             self.mssg.print(f"batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Before loop step")
             loss  = self.fine_tune_moment_train_loop_step_(
                     batch            = batch,
                     batch_masks      = batch_masks, 
                     use_moment_masks = use_moment_masks,
                 )
+            # Execute optimizer and get loss
             try: 
                 self.mssg.print(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward | After loop step ")
                 self.optim.optimizer.zero_grad()
                 if hasattr(loss, 'item'):
-                    losses.append(loss.item())
+                    epoch_losses.append(loss.item())
                     loss.backward()
                 else:
-                    losses.append(loss)
+                    epoch_losses.append(loss)
                 self.optim.optimizer.step()
             except Exception as e: 
                 self.mssg.print(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}")
-                losses.append(np.nan)
                 self.optim.optimizer.zero_grad()
                 self.optim.optimizer.step()
             if self.optim.lr.flag: self.optim.lr.scheduler.step()
             progress_bar.update(1)
+        # Attatch the mean in all batches
+        epoch_losses = np.array(epoch_losses)
+        losses.append(np.nanmean(epoch_losses))
     progress_bar.close()
     self.mssg.final()
+    # Restore mssg
     self.mssg.level -= 1
     self.mssg.function = func 
     return losses, self.model
@@ -2647,11 +2715,14 @@ def fine_tune_moment_single_(
     shot                : bool = True,
     sample_id           : int  = 0,
     use_moment_masks    : bool = False,
-    register_errors      : bool = True
+    register_errors     : bool = True,
+    save_best_or_last   : bool = True #If true, save best else save last
 ):
+    # Setup mssg
     self.mssg.level += 1
     func = self.mssg.function
-    self.mssg.initial_("fine_tune_moment_single")
+    self.mssg.initial_(ut.funcname())
+    # Output & aux parameters
     t_shot              = 0
     t_eval_1            = 0
     t_eval_2            = 0
@@ -2674,8 +2745,10 @@ def fine_tune_moment_single_(
         eval_post           = eval_post,
         mssg                = deepcopy(self.mssg)
     )
+    # Evaluation % training
     try:
         self.mssg.print(f"Processing wlen {self.input.data[sample_id].shape[2]} | Lengths list: {self.window_sizes}")
+        # Previous evaluation
         if eval_pre:
             self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
             if self.time_flag: timer.start()
@@ -2684,6 +2757,7 @@ def fine_tune_moment_single_(
                 timer.end()
                 t_eval_1 = timer.duration()
                 timer.show(verbose = self.mssg.verbose)
+        # Training (fine-tuning)
         if shot:
             if self.time_flag: timer.start()
             self.mssg.print(f"Train | wlen {self.input.data[sample_id].shape[2]}")
@@ -2692,6 +2766,7 @@ def fine_tune_moment_single_(
                     dl_train                        = dl_train,
                     ds_train                        = ds_train,
                     use_moment_masks                = use_moment_masks,
+                    save_best_or_last               = save_best_or_last
                 )
                 if self.time_flag:
                     timer.end()
@@ -2701,6 +2776,7 @@ def fine_tune_moment_single_(
                 self.mssg.print(f"fine_tune_moment_single | Train | Window {self.input.shape[2]} not valid | {e}")
                 traceback.print_exc()
                 raise(e)
+        # After evaluation
         if eval_post:    
             self.mssg.print(f"fine_tune_moment_single | Eval Post | wlen {self.input.shape[2]}")
             if self.time_flag: timer.start()
@@ -2723,6 +2799,7 @@ def fine_tune_moment_single_(
                         func_name       = ut.funcname()
                     )
     except Exception as e:
+        # Save error if failed
         if register_errors:
             error_val = 1
             window = self.input.data[sample_id].shape[2]
@@ -2732,7 +2809,8 @@ def fine_tune_moment_single_(
             display(self.errors)
         else: 
             raise(e)
-    self.mssg.final(ut.funcname())
+    self.mssg.final()
+    # Restore mssg
     self.mssg.level -= 1
     self.mssg.function = func
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model, error_val
@@ -2747,12 +2825,16 @@ def fine_tune_moment_(
     shot                : bool = False,
     time_flag           : bool = None,
     use_moment_masks    : bool = None,
-    register_errors     : bool = True
+    register_errors     : bool = True,
+    save_best_or_last   : bool = True #If true, save best else save last
 ):   
+    # Setup mmsg & use_moment_masks
+    func = self.mssg.function 
+    self.mssg.level += 1
     self.mssg.initial(ut.funcname())
     self.time_flag = self.time_flag if time_flag is None else time_flag
     self.use_moment_masks = self.use_moment_masks if use_moment_masks is None else use_moment_masks
-    # Return values
+    # Return & aux values
     lossess             = []
     eval_results_pre    = {}
     eval_results_post   = {}
@@ -2760,6 +2842,7 @@ def fine_tune_moment_(
     t_shot              = 0
     t_evals             = []
     t_eval              = 0
+    # Check
     if self.input.size is None:
         self.mssg.print(f"Windows: {len(self.input._data)}")
         raise ValueError(f"Invalid number of windows: {self.input.size}")
@@ -2768,16 +2851,14 @@ def fine_tune_moment_(
     if self.optim.optimizer is None: 
         self.mssg.print(f"Setting up optimizer as AdamW")
         self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.optim.lr.lr)
-    # Compute model for each window in the windowed dataset
-    
+    # Evaluate the model for each window in the windowed dataset
     for i in range(self.input.size):
         window_size = self.input._data[i].shape[2]
         self.mssg.print_error(f"Processing wlen {window_size} | wlens {self.window_sizes} | i {i+1}/{self.input.size}")
         self.window_sizes.append(window_size)
-        
         ( 
             losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model, error_val
-        ) =  self.fine_tune_moment_single_(eval_pre, eval_post, shot, i, use_moment_masks, register_errors)
+        ) =  self.fine_tune_moment_single_(eval_pre, eval_post, shot, i, use_moment_masks, register_errors, save_best_or_last)
         if (error_val == 0): lossess.append(losses)
         if (eval_pre and error_val == 0): eval_results_pre = eval_results_pre_
         #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
@@ -2799,7 +2880,10 @@ def fine_tune_moment_(
     t_eval = sum(t_evals)
     self.eval_stats_pre = eval_results_pre
     self.eval_stats_post = eval_results_post
-    self.mssg.final(ut.funcname())
+    self.mssg.final()
+    # Restore mssg
+    self.mssg.function = func
+    self.mssg.level -= 1
     if register_errors: return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, self.errors
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes
 
@@ -2856,6 +2940,7 @@ def fit_fastai(
         >>> dl_train = DataLoader(...)
         >>> encoder.fit_fastai(dl_train, lr_funcs=(valley,), show_plot=True, n_cycles=3, cycle_len=2)
     """
+    # Setup mssg
     self.mssg.level += 1
     self.mssg.initial_("fit_fastai")
     # Callbacks
@@ -2936,6 +3021,7 @@ def fit_fastai(
                 )
             case _:
                 self.model.fit(self.num_epochs)
+    # Restore mssg
     self.mssg.final()
     self.mssg.level -= 1
 Encoder.fit_fastai = fit_fastai    
@@ -2949,6 +3035,8 @@ def fine_tune_mvp_single_(
     show_plot       : bool  = False,
     sample_id       : int   = 0
 ):
+    # Setup mssg
+    func = self.mssg.func
     self.mssg.level+=1
     self.mssg.initial_(ut.funcname())
     #--- Setup object parameters ---
@@ -2991,7 +3079,7 @@ def fine_tune_mvp_single_(
         bs          = self.input.batch_size, 
         batch_tfms  = batch_tfms
     )
-
+    # Configure callbacks
     if self.show_plot: 
         self.mssg.print("Show plot")
         display(dls.show_at(0))
@@ -3083,7 +3171,9 @@ def fine_tune_mvp_single_(
             t_eval_2 = timer.duration()
             timer.show(verbose = self.mssg.verbose)
     self.mssg.final()
+    # Restore mssg
     self.mssg.level += 1
+    self.mssg.function = func
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_mvp_single_ = fine_tune_mvp_single_
 
@@ -3100,6 +3190,9 @@ def fine_tune_mvp_(
     norm_use_single_batch   : bool  = None,
     show_plot               : bool  = None
 ):
+    # Setup mssg
+    func = self.mssg.function 
+    self.mssg.level += 1
     self.mssg.initial_("fine_tune_mvp_")
     self.time_flag      = self.time_flag if time_flag is None else time_flag
     self.use_wandb      = self.use_wandb if use_wandb is None else use_wandb
@@ -3157,7 +3250,10 @@ def fine_tune_mvp_(
         eval_pre = False
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
-    self.mssg.final(ut.funcname())
+    self.mssg.final()
+    # Restore mssg
+    self.mssg.function = func
+    self.mssg.level -= 1
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model
 
 Encoder.fine_tune_mvp_ = fine_tune_mvp_ 
@@ -3638,9 +3734,10 @@ def fine_tune(
     metrics_args                    : List [ AttrDict ]             = None,
     metrics_dict                    : AttrDict                      = None,
     scheduler_specific_kwargs       : AttrDict                      = None,
-    register_errors                 : bool                          = True
+    register_errors                 : bool                          = True,
+    save_best_or_last               : bool                          = True #If true, save best else save last
 ): 
-    enc = _get_encoder(
+    enc = _set_encoder(
         X                               = X,
         stride                          = stride,
         batch_size                      = batch_size,
@@ -3688,7 +3785,7 @@ def fine_tune(
         case "fine_tune_moment_":
             enc.mssg.print("Use fine_tune_moment parameters")
             result = enc.fine_tune_(
-                eval_pre, eval_post, shot, time_flag, use_moment_masks, register_errors
+                eval_pre, eval_post, shot, time_flag, use_moment_masks, register_errors, save_best_or_last
             )
         case "fine_tune_mvp_":
             enc.mssg.print("Use fine_tune_mvp parameters")

@@ -4,7 +4,7 @@
 __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EvalMSE', 'EvalRMSE', 'EvalMAE', 'EvalSMAPE', 'EncoderInput',
            'LRScheduler', 'EncoderOptimizer', 'Encoder', 'set_fine_tune_single_', 'set_fine_tune_', 'show_eval_stats',
            'plot_eval_stats', 'DCAE_torch', 'CustomWandbCallback', 'kwargs_to_gpu_', 'kwargs_to_cpu_', 'get_acts',
-           'get_acts_moment', 'sure_eval_moment', 'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP',
+           'get_acts_moment', 'moment_safe_forward_pass', 'get_enc_embs_ensure_batch_size_', 'get_enc_embs_MVP',
            'get_enc_embs_MVP_set_stride_set_batch_size', 'get_enc_embs_moment', 'get_enc_embs_moment_reconstruction',
            'get_past_target_moirai', 'get_forecast_model_moirai', 'get_enc_embs_moirai', 'get_dist_moirai',
            'get_enc_embs', 'get_enc_embs_set_stride_set_batch_size', 'rmse', 'smape', 'rmse_flat', 'smape_flat',
@@ -14,11 +14,11 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EvalMSE', 'EvalRMSE', 'Ev
            'prepare_train_and_eval_dataloaders', 'fine_tune_moment_compute_loss_check_sizes_',
            'fine_tune_moment_compute_loss', 'fine_tune_moment_eval_preprocess', 'get_mask_moment', 'get_mask_tsai',
            'check_batch_masks', 'check_mask', 'moment_build_masks', 'fine_tune_moment_eval_step_',
-           'fine_tune_moment_eval_', 'fine_tune_moment_train_loop_step_', 'config_optim', 'fine_tune_moment_train_',
-           'fine_tune_moment_single_', 'fine_tune_moment_', 'fit_fastai', 'fine_tune_mvp_single_', 'fine_tune_mvp_',
-           'configure_optimizer_moirai', 'get_enc_embs_moirai_', 'get_dist_moirai_', 'fine_tune_moirai_eval_step_',
-           'fine_tune_moirai_eval_', 'fine_tune_moirai_train_loop_step_', 'fine_tune_moirai_train_',
-           'fine_tune_moirai_single_', 'fine_tune_moirai_', 'fine_tune']
+           'fine_tune_moment_train_loop_step_', 'config_optim', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
+           'fine_tune_moment_', 'fit_fastai', 'fine_tune_mvp_single_', 'fine_tune_mvp_', 'configure_optimizer_moirai',
+           'get_enc_embs_moirai_', 'get_dist_moirai_', 'fine_tune_moirai_eval_step_', 'fine_tune_moirai_eval_',
+           'fine_tune_moirai_train_loop_step_', 'fine_tune_moirai_train_', 'fine_tune_moirai_single_',
+           'fine_tune_moirai_', 'fine_tune']
 
 # %% ../nbs/encoder.ipynb 2
 #-- Global
@@ -360,6 +360,8 @@ class Encoder():
     def config_optim(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     #--- Moment
+    def moment_safe_forward_pass(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_moment_eval_preprocess(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_moment_single_(self):
@@ -776,123 +778,53 @@ def get_acts_moment(
     return embs
 
 # %% ../nbs/encoder.ipynb 30
-def sure_eval_moment(
-    enc_learn, 
-    cpu, 
-    verbose, 
-    y, 
-    input_mask      = None, 
-    mask            = None, 
-    padd_step       = 100, 
-    retry           = False, 
-    max_trials      = 5, 
-    acts_indices    = [0],
-    #- Printing options for debugging
-    print_to_path   : bool          = False,
-    print_path      : str           = "~/data/logs/logs.txt",
-    print_mode      : str           = 'a',
-    continue_if_fail: bool          = False,
-    register_errors: bool           = True
-):
-    if verbose > 0: ut.print_flush(f"---> sure_eval_moment", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
-    device = "cpu" if cpu else torch.cuda.current_device()
-    y_copy = y.clone()
-    y_copy.to("cpu")
-    if verbose > 0: ut.print_flush(f"sure_eval_moment | cpu | {cpu} | device | {device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path) 
-    success = False 
-    trial = 0
-    output = None
-
+def moment_safe_forward_pass(
+    self           : Encoder,
+    batch, 
+    input_mask              = None, 
+    mask                    = None, 
+    register_errors: bool   = True
+): 
+    # mssg configuration
+    func    = self.mssg.function 
+    self.mssg.level += 1
+    self.mssg.initial_(ut.funcname())
+    self.mssg.print(f"Cpu | {cpu} | device | {device}")
+    # Move all tensors to the device
+    device  = "cpu" if self.cpu else torch.cuda.current_device()
     if input_mask is not None: input_mask = input_mask.to(device)
     if mask is not None: mask = mask.to(device)
-
-    while not success and trial < max_trials:
-        trial += 1
-        try:
-            if verbose > 0: ut.print_flush(f"sure_eval_moment | Trial {trial} | x_enc ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-            y = y.to(device)
-            enc_learn = enc_learn.to(device)
-            if verbose > 0: 
-                ut.print_flush(f"sure_eval_moment | Trial {trial} | device {device} | input_mask~{input_mask.shape} device: {input_mask.device if input_mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                ut.print_flush(f"sure_eval_moment | Trial {trial} | device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                ut.print_flush(f"sure_eval_moment | Trial {trial} | device {device} | y~{y.shape} device: {y.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-            print(f"sure_eval_moment | Trial {trial} | device {device} | input_mask~{input_mask.shape} device: {input_mask.device if input_mask is not None else 'None'}")
-            print(f"sure_eval_moment | Trial {trial} | device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}")
-            print(f"sure_eval_moment | Trial {trial} | device {device} | y~{y.shape} device: {y.device}")
-
-            output = enc_learn(x_enc = y, input_mask = input_mask, mask = mask)
-            success = True
-            if verbose > 0 and acts_indices == [0] : 
-                ut.print_flush(f"sure_eval_moment | Trial {trial} | embs ~ {embs.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-        except Exception as e:
-            if verbose > 0:
-                ut.print_flush(f"sure_eval_moment | Trial {trial} | About to pad X (encoder input) | exception {e} | padd step: {padd_step}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                ut.print_flush(f"sure_eval_moment | Trial {trial} | y ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                traceback.print_exc()
-            if "tensor a" in str(e) and "tensor b" in str(e) and "dimension" in str(e):
-                match = re.search(r'tensor a \((\d+)\) must match the size of tensor b \((\d+)\) at non-singleton dimension (\d+)', str(e))
-                tensor_a_size = int(match.group(1))
-                tensor_b_size = int(match.group(2))
-                dimension = int(match.group(3))
-                match dimension:
-                    case 2 | 1:
-                        padd = True
-                        if trial > 1: 
-                            if verbose > 0: ut.print_flush(f"------------------- Trial {trial}  -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                            if tensor_a_size > tensor_a_size_old:
-                                if verbose > 0: ut.print_flush(f"------------------- Trial {trial} | a > a_old -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                                padd = False
-                                y = y [ ..., : tensor_a_size - tensor_b_size]
-                                if verbose > 0: ut.print_flush(f"------------------- Trial {trial} |a > a_old | Reduced |  y ~ {y.shape} -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                        if padd:
-                            if verbose > 0: ut.print_flush(f"------------------- Trial {trial} | Padd -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                            if tensor_a_size > tensor_b_size: 
-                                if verbose > 0: ut.print_flush(f"------------------- Trial {trial} | Padd | a > b -----------------", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                                padd_step = tensor_a_size - tensor_b_size
-                            y = torch.nn.functional.pad(y,(0,padd_step))
-                        tensor_a_size_old = tensor_a_size
-                    #case 1: 
-                    #    if verbose > 0:
-                    #        ut.print_flush(f"sure_eval_moment | Trial {trial} | Error dimension 0 | mask ~ {mask.shape} | mask_input ~ {input_mask.shape} | batch ~ {y.shape}")
-                    #        if mask.shape[1] < y.shape[2]: mask = torch.nn.functional.pad(mask,(0,y.shape[2]-mask.shape[1]))
-                    #        if input_mask.shape[2] < y.shape[2]: mask = torch.nn.functional.pad(input_mask,(0,y.shape[2]-input_mask.shape[2]))
-
-                    case 0:
-                        if verbose > 0: 
-                            ut.print_flush(f"sure_eval_moment | Trial {trial} | Error dimension 0 | mask ~ {mask.shape} | mask_input ~ {input_mask.shape} | batch ~ {y.shape}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)                    
-                        if mask.shape[0] > y.shape[0]:
-                            mask = mask[:y.shape[0]]
-                        if input_mask.shape[0] > y.shape[0]:
-                            input_mask = input_mask[:y.shape[0]]
-                        
-                        if mask.shape[0] < y.shape[0]:
-                            extra_rows_shape = (-mask.shape[0]+y.shape[0],mask.shape[1])
-                            if verbose > 0: ut.print_flush(f"sure_eval_moment | Trial {trial} | Mask lower than batch | rows to add: {extra_rows_shape }", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                            extra_rows = torch.zeros(extra_rows_shape, dtype = torch.float32)
-                            mask = torch.cat((mask, extra_rows), dim=0)
-                        if input_mask.shape[0] < y.shape[0]:
-                            extra_rows_shape = (-input_mask.shape[0]+y.shape[0],y.shape[1], y.shape[2])
-                            if verbose > 0: ut.print_flush(f"sure_eval_moment | Trial {trial} | Mask lower than batch | rows to add: {extra_rows_shape }", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                            extra_rows = torch.zeros(extra_rows_shape, dtype = torch.float32)
-                            input_mask = torch.cat((input_mask, extra_rows), dim=0)
-            else:
-                if verbose > 0: 
-                    ut.print_flush("Not the usual error. No padding, just fail", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-                if not continue_if_fail: raise
-        #if verbose > 0: ut.print_flush(f"sure_eval_moment | output {output.__class__} | enc_learn {enc_learn.__class__} -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
-        if verbose > 0: ut.print_flush(f"sure_eval_moment | output {output.__class__} -->", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = verbose, print_time = print_to_path)
+    batch       = batch.to(device)
+    self.model  = self.model.to(device)
+    # Checking values depending on the verbosity level
+    self.mssg.print(f"Device {device} | input_mask~{input_mask.shape} device: {input_mask.device if input_mask is not None else 'None'}")
+    self.mssg.print(f"Device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}")
+    self.mssg.print(f"Device {device} | batch~{batch.shape} device: {batch.device}")
+    # Compute the output and raise or not errors depending on the configuration for the training loop
+    success = False
+    try:
+        output  = self.model(x_enc = batch, input_mask = input_mask, mask = mask)
+        success = True
+    except Exception as e:        
+        traceback.print_exc()
+        self.mssg.print("Error computing Moment forward pass.")
+        success = False
+        if not continue_if_fail: raise
+    # Print error message if failed and continue_if_fail = True
     if not success:
-        ut.print_flush(f"sure_eval_moment | Trial {trial} | device {device} | input_mask~{input_mask.shape} device: {input_mask.device if input_mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = 10000, print_time = print_to_path)
-        ut.print_flush(f"sure_eval_moment | Trial {trial} | device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose =10000, print_time = print_to_path)
-        ut.print_flush(f"sure_eval_moment | Trial {trial} | device {device} | y~{y.shape} device: {y.device}", print_to_path = print_to_path, print_path = print_path, print_mode = 'a', verbose = 10000, print_time = print_to_path)
-        print(f"sure_eval_moment | Trial {trial} | device {device} | input_mask~{input_mask.shape} device: {input_mask.device if input_mask is not None else 'None'}")
-        print(f"sure_eval_moment | Trial {trial} | device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}")
-        print(f"sure_eval_moment | Trial {trial} | device {device} | y~{y.shape} device: {y.device}")
-        raise ValueError("Sure eval moment execution failed.")
-    y = y_copy
-    if not cpu: y.to("cuda")
-    
-    return output, enc_learn
+        mssg = "Sure eval moment execution failed."
+        self.mssg.print_error(mssg)
+        self.mssg.print_error(f"Device {device} | input_mask~{input_mask.shape} device: {input_mask.device if input_mask is not None else 'None'}")
+        self.mssg.print_error(f"Device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}")
+        self.mssg.print_error(f"Device {device} | batch~{batch.shape} device: {batch.device}")
+        raise ValueError(mssg)
+    else: 
+       self.mssg(f"Computation done | output is None? {output is None}")
+    # --- Recompose mssg
+    self.mssg.final()
+    self.mssg.level     -= 1
+    self.mssg.function  = func
+    return output, success
 
 # %% ../nbs/encoder.ipynb 32
 def get_enc_embs_ensure_batch_size_(
@@ -2463,8 +2395,7 @@ def fine_tune_moment_eval_step_(
     mse_metric, 
     rmse_metric,
     mae_metric,
-    smape_metric#,
-#    total_loss
+    smape_metric
 ):
     func = self.mssg.function 
     self.mssg.level += 1
@@ -2483,31 +2414,24 @@ def fine_tune_moment_eval_step_(
         mask_sync           = self.mask_sync
     )
     with torch.no_grad():
-        output, self.model = sure_eval_moment(
-            enc_learn       = self.model, 
-            cpu             = self.cpu,
-            verbose         = self.mssg.verbose-self.mssg.level+1,
-            y               = batch, 
-            input_mask      = bms,
-            mask            = mask,
-            padd_step       = 100, 
-            max_trials      = 5, 
-            acts_indices    = None,
-            print_to_path   = self.mssg.to_path, 
-            print_path      = self.mssg.path, 
-            print_mode      = self.mssg.mode
-        )
-        #loss = self.model.criterion(output.logits, batch)
-        #total_loss += loss.item()
-        if output is not None:
+        output, success = self.moment_safe_forward_pass(batch = batch, input_mask = bms, mask = mask)
+        if output is not None and success:
             self.mssg.print("Output is not None")
+            # Get predictions/output and references / original
             predictions = output.reconstruction
             references  = batch
+            # Save loss just as in the example
+            recon_loss      = self.criterion(prediction, batch)
+            observed_mask   = bms * (1-mask)
+            masked_loss     = observed_mask * loss
+            loss            = masked_loss.nansum()/(observed_mask.nansum()+1e-7)
+            loss            = loss if not hasattr(loss, 'item') else loss.item()
+            # Ensure to take into account the maskared part
+            predictions, references = self.fine_tune_moment_eval_preprocess(predictions = predictions, references = references)
+            # Move tensors to the computation device (cpu/gpu)
             predictions = predictions.to(device)
             references  = references.to(device)
-            self.mssg.print("Preprocess predictions and references")
-            predictions, references = self.fine_tune_moment_eval_preprocess(predictions = predictions, references = references)
-            self.mssg.print("Add metrics")
+            # Compute the different metrics
             mse_metric.add_batch(predictions=predictions, references = references)
             rmse_metric.add_batch(predictions=predictions, references = references)
             mae_metric.add_batch(predictions=predictions, references = references)
@@ -2517,7 +2441,7 @@ def fine_tune_moment_eval_step_(
     self.mssg.final()
     self.mssg.level -= 1
     self.mssg.function = func
-    return mse_metric, rmse_metric, mae_metric, smape_metric#, total_loss
+    return mse_metric, rmse_metric, mae_metric, smape_metric, loss
 Encoder.fine_tune_moment_eval_step_ = fine_tune_moment_eval_step_
 
 # %% ../nbs/encoder.ipynb 69
@@ -2525,6 +2449,12 @@ def fine_tune_moment_eval_(
     self      : Encoder,
     dl_eval   : DataLoader
 ):
+    eval_results = {
+        "mse": np.nan,
+        "rmse": np.nan,
+        "mae": np.nan,
+        "smape": np.nan
+    }
     # Select device
     device = "cpu" if self.cpu else torch.cuda.current_device()
     # Load metric
@@ -2532,8 +2462,8 @@ def fine_tune_moment_eval_(
     rmse_metric = EvalRMSE
     mae_metric  = EvalMAE
     smape_metric= EvalSMAPE
+    losss       = []
     total_loss  = 0.0
-
     num_evaluation_steps = len(dl_eval)
     self.model = self.model.to(device)
     self.model.eval()
@@ -2545,38 +2475,33 @@ def fine_tune_moment_eval_(
             rmse_metric, 
             mae_metric, 
             smape_metric
-            #total_loss
+            loss
         ) = self.fine_tune_moment_eval_step_(
             batch       = batch, 
             mse_metric  = mse_metric, 
             rmse_metric = rmse_metric,
             mae_metric  = mae_metric,
             smape_metric= smape_metric
-            #total_loss  = total_loss
         )
+        losss.append(loss)
         progress_bar.update(1)
     progress_bar.close()
+    
+    eval_results ["loss"]   = np.nanmean(losss)
+
     try:
         mse   = mse_metric.compute(squared = False)
         rmse  = rmse_metric.compute(squared = True)
         mae   = mae_metric.compute()
         smape = smape_metric.compute()
-        eval_results = {
-            #"loss"  : total_loss,
-            "mse"   : mse['mse'],
-            "rmse"  : rmse['mse'],
-            "mae"   : mae['mae'],
-            "smape" : smape['smape']
-        }
+        eval_results ["mse"]    = mse['mse'],
+        eval_results ["mse"]    = rmse['mse'],
+        eval_results ["mae"]    = mae['mae'],
+        eval_results ["smape"]  = smape['smape']
     except:
-        eval_results = {
-            "mse": np.nan,
-            "rmse": np.nan,
-            "mae": np.nan,
-            "smape": np.nan
-        }
-        self.mssg.print_error("Could not compute metrics. Already used add?")
-    #self.mssg.print_error(f"Eval results: {eval_results}.")
+        raise ValueError("Could not compute metrics. Already used add?")
+        
+    self.mssg.print_error(f"Eval results: {eval_results}.")
     self.model.train()
     return eval_results
 Encoder.fine_tune_moment_eval_ = fine_tune_moment_eval_
@@ -2589,48 +2514,52 @@ def fine_tune_moment_train_loop_step_(
     criterion                   = torch.nn.MSELoss,
     use_moment_masks    : bool  = False,
 ): 
+    # Configure mssg
     func = self.mssg.function
     self.mssg.level += 1
     self.mssg.initial_(ut.funcname())
-    
-    device = torch.cuda.current_device() if not self.cpu else "cpu"
+    # Get masks
     self.mssg.print("Get the masks")    
     mask, bms = moment_build_masks(batch, batch_masks, self.input.window_mask_percent, self.mssg, use_moment_masks, self.mask_stateful, self.mask_future, self.mask_sync)
-    
+    # Move tensors to the debice
+    device = torch.cuda.current_device() if not self.cpu else "cpu"
     batch   = batch.to(device)
     bms     = bms.to(device) 
-    
-    batch = batch.to(device)
-    mask = mask.to(device)
-    bms = bms.to(device)
-    
+    mask    = mask.to(device)
     self.model = self.model.to(device)
     self.mssg.level += 1
     self.mssg.print(f"batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}")
-    self.mssg.print(f"Mask given to eval: {mask}", verbose = 5)
-    for param in self.model.parameters():
-        param = param.to(device)
-    self.mssg.print(f"sure_eval_moment | b{batch.device} | m{mask.device} | bm{bms.device}")
+    for param in self.model.parameters(): param = param.to(device)
+    self.mssg.print(f"Batch device: {batch.device} | mask device: {mask.device} | batch_masks device: {bms.device}")
     self.mssg.level -= 1
-    output, self.model = sure_eval_moment(
-        enc_learn           = self.model, 
-        cpu                 = self.cpu,
-        verbose             = self.mssg.verbose-self.mssg.level + 1, 
-        y                   = batch, 
-        input_mask          = bms,  # None
-        mask                = mask, # None
-        padd_step           = 100, 
-        max_trials          = 5, 
-        acts_indices        = None,
-        print_to_path       = self.mssg.to_path, print_path = self.mssg.path, print_mode = 'a',
+    # Compute a forward pass
+    output, success  = self.moment_safe_forward_pass(
+        batch               = batch, 
+        input_mask          = bms,  
+        mask                = mask, 
         continue_if_fail    = True
     )
     # Compute output loss
-    if output is None:
-        self.mssg.print(f"fine_tune_moment_train_loop_step_ | Execution failed | Output none ")
-        loss = 0
+    if output is None or not success:
+        # If fail, put to nan & raise error | TODO: Check
+        mssg = f"Execution failed: Output is None? {output} | Success {success}"
+        loss = np.nan
+        self.mssg.print(mssg)
+        raise ValueError(f"Execution failed: Output is None.")
     else: 
-        loss = fine_tune_moment_compute_loss(batch, output, criterion, verbose = self.mssg.verbose, input_mask = bms, mask = mask, print_to_path = self.mssg.to_path, print_path = self.mssg.path, print_mode = 'a')
+        # Compute the loss
+        self.mssg.print("Output correctly obtained, compute loss")
+        loss = fine_tune_moment_compute_loss(
+            batch,
+            output,
+            criterion,
+            verbose = self.mssg.verbose,
+            input_mask = bms,
+            mask = mask,
+            print_to_path = self.mssg.to_path,
+            print_path = self.mssg.path,
+            print_mode = 'a'
+        )
     self.mssg.final()
     self.mssg.level -= 1
     self.mssg.function = func
@@ -2689,12 +2618,12 @@ def fine_tune_moment_train_(
                 )
             try: 
                 self.mssg.print(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward | After loop step ")
+                self.optim.optimizer.zero_grad()
                 if hasattr(loss, 'item'):
                     losses.append(loss.item())
                     loss.backward()
                 else:
                     losses.append(loss)
-                self.optim.optimizer.zero_grad()  
                 self.optim.optimizer.step()
             except Exception as e: 
                 self.mssg.print(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}")

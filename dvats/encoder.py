@@ -2214,17 +2214,17 @@ def moment_compute_loss(
     self.mssg.print(f"mask ~ {mask.shape} | {mask.device}")
     # Compute loss
     self.mssg.print_error(f"Criterion: {self.optim.criterion}")
-    # Check sizes
+    # Ensure sizes
     min_len = min(predictions.shape[2], references.shape[2])
     references  = references[:,:,:min_len]
     predictions = predictions[:,:,:min_len]
     ####
     recon_loss      = self.optim.criterion(predictions, references)
-    self.mssg.print_error(f"Reconstruction loss: {recon_loss}")
-    self.mssg.print_error(f"Batch mask: {batch_masks}")
-    self.mssg.print_error(f"Mask: {mask}")
+    #self.mssg.print_error(f"Reconstruction loss: {recon_loss}")
+    #self.mssg.print_error(f"Batch mask: {batch_masks}")
+    #self.mssg.print_error(f"Mask: {mask}")
     observed_mask   = batch_masks * (1-mask)
-    self.mssg.print_error(f"Observed mask: {observed_mask}")
+    #self.mssg.print_error(f"Observed mask: {observed_mask}")
     masked_loss     = observed_mask * recon_loss
     loss            = masked_loss.nansum() / (observed_mask.nansum() + 1e-7)
     self.mssg.print(f"Loss type: {type(loss)}")
@@ -2303,6 +2303,8 @@ def get_mask_moment(
         patch_len   = 1 #Tratando de enmascarar a nivel de elementos.
     )
     # Generate mask
+    # [batch size x n_features x window_sizes] -> [batch_size x window_size]
+    # Randomness is given at mask_generator.patch_len blocks (no matter the dimension)
     mask = mask_generator.generate_mask(
         x           = batch,
         input_mask  = batch_masks
@@ -2442,8 +2444,8 @@ def moment_set_masks(
     mask    = check_mask(batch, bms, mask, mssg)
     mssg.print(f"mask~{mask.shape}")
     mssg.print(f"batch_masks~{bms.shape}")
-    mssg.print_error(f"mask: {mask}")
-    mssg.print_error(f"batch_masks: {batch_masks}")
+    #mssg.print_error(f"mask: {mask}")
+    #mssg.print_error(f"batch_masks: {batch_masks}")
     mssg.final()
     # Restore mssg
     mssg.level -= 1
@@ -2567,11 +2569,12 @@ def fine_tune_moment_eval_(
         mae   = mae_metric.compute()
         smape = smape_metric.compute()
         eval_results ["mse"]    = mse['mse']
-        eval_results ["mse"]    = rmse['mse']
+        eval_results ["rmse"]   = rmse['mse']
         eval_results ["mae"]    = mae['mae']
         eval_results ["smape"]  = smape['smape']
     except:
-        raise ValueError("Could not compute metrics. Already used add?")
+        #raise ValueError("Could not compute metrics. Already used add?")
+        warnings.warn("Could not compute metrics. Already used add?")
 
     self.mssg.print_error(f"Eval results: {eval_results}.")
     self.model.train()
@@ -2729,7 +2732,6 @@ def fine_tune_moment_train_(
     # Get the best version of the model
     if save_best_or_last and best_model_state:
         self.model.load_state_dict(best_model_state)
-        self.best_epoch = -1
     self.mssg.print(f"Best epoch: {self.best_epoch}")
     self.mssg.final()
     # Restore mssg
@@ -2889,8 +2891,23 @@ def fine_tune_moment_(
         self.mssg.print_error(f"Processing wlen {window_size} | wlens {self.window_sizes} | i {i+1}/{self.input.size}")
         self.window_sizes.append(window_size)
         ( 
-            losses, eval_results_pre_, eval_results_post_, t_shot_, t_eval_1, t_eval_2, self.model, error_val
-        ) =  self.fine_tune_moment_single_(eval_pre, eval_post, shot, i, use_moment_masks, register_errors, save_best_or_last)
+            losses, 
+            eval_results_pre_, 
+            eval_results_post_, 
+            t_shot_, 
+            t_eval_1, 
+            t_eval_2, 
+            self.model,
+            error_val
+        ) =  self.fine_tune_moment_single_(
+            eval_pre            = eval_pre, 
+            eval_post           = eval_post, 
+            shot                = shot, 
+            sample_id           = i, 
+            use_moment_masks    = use_moment_masks, 
+            register_errors     = register_errors, 
+            save_best_or_last   = save_best_or_last
+        )
         if (error_val == 0): lossess.append(losses)
         if (eval_pre and error_val == 0): eval_results_pre = eval_results_pre_
         #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
@@ -2908,7 +2925,9 @@ def fine_tune_moment_(
         if eval_pre: t_evals.append(t_eval_1)
         if eval_post: t_evals.append(t_eval_2)
         eval_pre = False
-        best_epochs.append(self.best_epoch)
+        if save_best_or_last:
+            self.mssg.print_error("best_epoch: ", self.best_epoch)
+            best_epochs.append(self.best_epoch)
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
     self.eval_stats_pre = eval_results_pre
@@ -2917,7 +2936,7 @@ def fine_tune_moment_(
     # Restore mssg
     self.mssg.function = func
     self.mssg.level -= 1
-    if register_errors: return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, self.errors
+    if register_errors: return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, best_epochs, self.errors
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, best_epochs
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
@@ -2926,7 +2945,7 @@ Encoder.fine_tune_moment_ = fine_tune_moment_
 def fit_fastai(
     self     : Encoder,
     dl_train : DataLoader,
-    lr_funcs : Tuple[Callable, ...] = (valley,),  # steep
+    lr_funcs : Tuple[Callable, ...] = (valley),  # steep
     show_plot: bool = False,
     n_cycles : Optional[int] = None,  # Allow dynamic calculation
     cycle_len : Optional[int] = None

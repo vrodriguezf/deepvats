@@ -328,7 +328,8 @@ class Encoder():
         return self.model_class
     def set_model_(self, model):
         if model is not None:
-            self.model          = model
+            device  = "cpu" if self.cpu else torch.cuda.current_device()
+            self.model          = deepcopy(model).to(device)
             self.model_class    = self.get_model_class() 
             try: # Initially it may not be defined and that would result in an execution error
                 self.fine_tune_     = self.set_fine_tune_()
@@ -785,7 +786,7 @@ def moment_safe_forward_pass(
     batch, 
     input_mask              = None, 
     mask                    = None, 
-    register_errors: bool   = True,
+    register_errors : bool  = True,
     continue_if_fail: bool  = True
 ): 
     # mssg configuration
@@ -794,7 +795,8 @@ def moment_safe_forward_pass(
     self.mssg.initial_(ut.funcname())
     # Move all tensors to the device
     device  = "cpu" if self.cpu else torch.cuda.current_device()
-    self.mssg.print(f"Cpu | {self.cpu} | device | {device}")
+    self.mssg.print(f"cpu | {self.cpu} | device | {device}")
+
     if input_mask is not None: input_mask = input_mask.to(device)
     if mask is not None: mask = mask.to(device)
     batch       = batch.to(device)
@@ -806,6 +808,12 @@ def moment_safe_forward_pass(
     # Compute the output and raise or not errors depending on the configuration for the training loop
     success = False
     try:
+        #--- Añadidos comentarios para revisar el uso de CUDA (quitar el _error y aumentar verbose cuando se termine la depuración)
+        self.mssg.print_error(f"Using device: {torch.cuda.current_device()}")
+        self.mssg.print_error(f"CUDA is available: {torch.cuda.is_available()}")
+        self.mssg.print_error(f"Model device: {next(self.model.parameters()).device}")
+        self.mssg.print_error(f"Devices: batch - {batch.device} | input_mask - {batch.device} | mask - {mask.device}.")
+        #---
         output  = self.model(x_enc = batch, input_mask = input_mask, mask = mask)
         success = True
     except Exception as e:        

@@ -1,6 +1,6 @@
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
-[1]  [ _set_encoder ] enc_input~(429, 1, 12)
+[1]  [ _set_encoder ] enc_input~(433, 1, 8)
 [1]  [ _set_encoder ] About to exec _set_optimizer
 [1] [ --> _set_optimizer ]
 [1] [_set_encoder --> ]
@@ -156,4 +156,1087 @@
 [1]  [ set_fine_tune_ ] Moment
 [1] [set_fine_tune_ --> ]
 [1]  [ set_fine_tune_ ] Use fine_tune_moment parameters
-[1] [91m [ set_fine_tune_ ] Processing wlen 12 | wlens [] | i 1/1[0m
+[1] [91m [ set_fine_tune_ ] Processing wlen 8 | wlens [] | i 1/5[0m
+[1] [91m [ set_train_and_eval_dataloaders ] Total: 433[0m
+[1] [91m [ set_train_and_eval_dataloaders ] Eval: 130 | 130[0m
+[1] [91m [ set_train_and_eval_dataloaders ] Total: 324[0m
+[1] [91m [ set_train_and_eval_dataloaders ] Eval: 76 | 76[0m
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ set_train_and_eval_dataloaders ] Output is not None
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.0022669686004519463
+[1] [moment_compute_loss --> ]
+[1] [ --> fine_tune_moment_eval_preprocess ]
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 8])
+[1] [fine_tune_moment_eval_preprocess --> ]
+[1] [set_train_and_eval_dataloaders --> ]
+[1] [ --> fine_tune_moment_eval_step_ ]
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ set_train_and_eval_dataloaders ] Output is not None
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.0024654946755617857
+[1] [moment_compute_loss --> ]
+[1] [ --> fine_tune_moment_eval_preprocess ]
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 8])
+[1] [fine_tune_moment_eval_preprocess --> ]
+[1] [set_train_and_eval_dataloaders --> ]
+[1] [ --> fine_tune_moment_eval_step_ ]
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ set_train_and_eval_dataloaders ] Output is not None
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.0037976517342031
+[1] [moment_compute_loss --> ]
+[1] [ --> fine_tune_moment_eval_preprocess ]
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 8])
+[1] [fine_tune_moment_eval_preprocess --> ]
+[1] [set_train_and_eval_dataloaders --> ]
+[1] [ --> fine_tune_moment_eval_step_ ]
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ set_train_and_eval_dataloaders ] Output is not None
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.0007223858265206218
+[1] [moment_compute_loss --> ]
+[1] [ --> fine_tune_moment_eval_preprocess ]
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 8])
+[1] [fine_tune_moment_eval_preprocess --> ]
+[1] [set_train_and_eval_dataloaders --> ]
+[1] [ --> fine_tune_moment_eval_step_ ]
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ set_train_and_eval_dataloaders ] Output is not None
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.0022447225637733936
+[1] [moment_compute_loss --> ]
+[1] [ --> fine_tune_moment_eval_preprocess ]
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 8])
+[1] [fine_tune_moment_eval_preprocess --> ]
+[1] [set_train_and_eval_dataloaders --> ]
+[1] [ --> fine_tune_moment_eval_step_ ]
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ set_train_and_eval_dataloaders ] Output is not None
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.0013741718139499426
+[1] [moment_compute_loss --> ]
+[1] [ --> fine_tune_moment_eval_preprocess ]
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 8])
+[1] [fine_tune_moment_eval_preprocess --> ]
+[1] [set_train_and_eval_dataloaders --> ]
+[1] [ --> fine_tune_moment_eval_step_ ]
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ set_train_and_eval_dataloaders ] Output is not None
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.0026801652275025845
+[1] [moment_compute_loss --> ]
+[1] [ --> fine_tune_moment_eval_preprocess ]
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 8])
+[1] [fine_tune_moment_eval_preprocess --> ]
+[1] [set_train_and_eval_dataloaders --> ]
+[1] [ --> fine_tune_moment_eval_step_ ]
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ set_train_and_eval_dataloaders ] Output is not None
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.00359230674803257
+[1] [moment_compute_loss --> ]
+[1] [ --> fine_tune_moment_eval_preprocess ]
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([16, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([16, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([16, 8])
+[1] [fine_tune_moment_eval_preprocess --> ]
+[1] [set_train_and_eval_dataloaders --> ]
+[1] [ --> fine_tune_moment_eval_step_ ]
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([2, 1, 8]) | batch_masks~torch.Size([2, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([2, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([2, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([2, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([2, 8])
+[1] [moment_set_masks --> ]
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([2, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([2, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([2, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ set_train_and_eval_dataloaders ] Output is not None
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([2, 1, 8]) | o~torch.Size([2, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([2, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([2, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([2, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.00018628317047841847
+[1] [moment_compute_loss --> ]
+[1] [ --> fine_tune_moment_eval_preprocess ]
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | preds~torch.Size([2, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] Before reshape | refs~torch.Size([2, 1, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | preds~torch.Size([2, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After reshape | refs~torch.Size([2, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | preds~torch.Size([2, 8])
+[1]  [ fine_tune_moment_eval_preprocess ] After NaN | refs~torch.Size([2, 8])
+[1] [fine_tune_moment_eval_preprocess --> ]
+[1] [set_train_and_eval_dataloaders --> ]
+[1] [91m [ set_train_and_eval_dataloaders ] Eval results: {'mse': 0.04667463394167133, 'rmse': 0.002359034225749893, 'mae': 0.02431917543021532, 'smape': 0.17818617481409288, 'loss': 0.0021477944844971513}.[0m
+[1] [set_train_and_eval_dataloaders --> ]
+[1]  [ set_train_and_eval_dataloaders ] Train | wlen 8
+[1] [ --> fine_tune_moment_train_ ]
+[1]  [ fine_tune_moment_train_ ] Training loop
+[1]  [ fine_tune_moment_train_ ] Fine tune loop | batch_masks~torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_ ] num_epochs 5 | n_batches 5
+[1]  [ fine_tune_moment_train_ ] batch 0 ~ torch.Size([16, 1, 8]) | epoch 0 | train 0 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.005638571456074715
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 0 ~ torch.Size([16, 1, 8]) | epoch 0 | train 0 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 1 ~ torch.Size([16, 1, 8]) | epoch 0 | train 1 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 1.1517977714538574
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 1 ~ torch.Size([16, 1, 8]) | epoch 0 | train 1 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 2 ~ torch.Size([16, 1, 8]) | epoch 0 | train 2 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.058248840272426605
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 2 ~ torch.Size([16, 1, 8]) | epoch 0 | train 2 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 3 ~ torch.Size([16, 1, 8]) | epoch 0 | train 3 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.08029713481664658
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 3 ~ torch.Size([16, 1, 8]) | epoch 0 | train 3 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 4 ~ torch.Size([12, 1, 8]) | epoch 0 | train 4 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([12, 1, 8]) | batch_masks~torch.Size([12, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([12, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([12, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([12, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([12, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([12, 1, 8]) | batch_masks ~ torch.Size([12, 8]) | mask ~ torch.Size([12, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([12, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([12, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([12, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([12, 1, 8]) | o~torch.Size([12, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([12, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([12, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([12, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.670032799243927
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 4 ~ torch.Size([12, 1, 8]) | epoch 0 | train 4 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 0 ~ torch.Size([16, 1, 8]) | epoch 1 | train 1 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.920354962348938
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 0 ~ torch.Size([16, 1, 8]) | epoch 1 | train 1 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 1 ~ torch.Size([16, 1, 8]) | epoch 1 | train 2 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.4988882541656494
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 1 ~ torch.Size([16, 1, 8]) | epoch 1 | train 2 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 2 ~ torch.Size([16, 1, 8]) | epoch 1 | train 3 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.03125594183802605
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 2 ~ torch.Size([16, 1, 8]) | epoch 1 | train 3 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 3 ~ torch.Size([16, 1, 8]) | epoch 1 | train 4 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.059045564383268356
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 3 ~ torch.Size([16, 1, 8]) | epoch 1 | train 4 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 4 ~ torch.Size([12, 1, 8]) | epoch 1 | train 5 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([12, 1, 8]) | batch_masks~torch.Size([12, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([12, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([12, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([12, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([12, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([12, 1, 8]) | batch_masks ~ torch.Size([12, 8]) | mask ~ torch.Size([12, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([12, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([12, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([12, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([12, 1, 8]) | o~torch.Size([12, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([12, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([12, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([12, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.1746090203523636
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 4 ~ torch.Size([12, 1, 8]) | epoch 1 | train 5 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 0 ~ torch.Size([16, 1, 8]) | epoch 2 | train 2 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.556902289390564
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 0 ~ torch.Size([16, 1, 8]) | epoch 2 | train 2 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 1 ~ torch.Size([16, 1, 8]) | epoch 2 | train 3 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.6854960918426514
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 1 ~ torch.Size([16, 1, 8]) | epoch 2 | train 3 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 2 ~ torch.Size([16, 1, 8]) | epoch 2 | train 4 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.23813700675964355
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 2 ~ torch.Size([16, 1, 8]) | epoch 2 | train 4 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 3 ~ torch.Size([16, 1, 8]) | epoch 2 | train 5 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.03974171727895737
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 3 ~ torch.Size([16, 1, 8]) | epoch 2 | train 5 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 4 ~ torch.Size([12, 1, 8]) | epoch 2 | train 6 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([12, 1, 8]) | batch_masks~torch.Size([12, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([12, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([12, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([12, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([12, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([12, 1, 8]) | batch_masks ~ torch.Size([12, 8]) | mask ~ torch.Size([12, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([12, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([12, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([12, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([12, 1, 8]) | o~torch.Size([12, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([12, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([12, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([12, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.05214877054095268
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 4 ~ torch.Size([12, 1, 8]) | epoch 2 | train 6 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 0 ~ torch.Size([16, 1, 8]) | epoch 3 | train 3 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.09405922889709473
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 0 ~ torch.Size([16, 1, 8]) | epoch 3 | train 3 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 1 ~ torch.Size([16, 1, 8]) | epoch 3 | train 4 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.26521992683410645
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 1 ~ torch.Size([16, 1, 8]) | epoch 3 | train 4 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 2 ~ torch.Size([16, 1, 8]) | epoch 3 | train 5 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.1060834750533104
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 2 ~ torch.Size([16, 1, 8]) | epoch 3 | train 5 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 3 ~ torch.Size([16, 1, 8]) | epoch 3 | train 6 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([16, 1, 8]) | batch_masks~torch.Size([16, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([16, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([16, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([16, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([16, 1, 8]) | batch_masks ~ torch.Size([16, 8]) | mask ~ torch.Size([16, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([16, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([16, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([16, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([16, 1, 8]) | o~torch.Size([16, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([16, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([16, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([16, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.17199623584747314
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 3 ~ torch.Size([16, 1, 8]) | epoch 3 | train 6 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 4 ~ torch.Size([12, 1, 8]) | epoch 3 | train 7 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks
+[1] [ --> moment_set_masks ]
+[1]  [ moment_set_masks ] batch~torch.Size([12, 1, 8]) | batch_masks~torch.Size([12, 8]).
+[1]  [ moment_set_masks ] window_mask_percent 0.25 | batch ~ torch.Size([12, 1, 8])
+[1]  [ moment_set_masks ] Using mask generator with mask ratio 0.25
+[1]  [ moment_set_masks ] Mask~torch.Size([12, 8])
+[1]  [ moment_set_masks ] mask~torch.Size([12, 8])
+[1]  [ moment_set_masks ] batch_masks~torch.Size([12, 8])
+[1] [moment_set_masks --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] batch ~ torch.Size([12, 1, 8]) | batch_masks ~ torch.Size([12, 8]) | mask ~ torch.Size([12, 8])
+[1]  [ fine_tune_moment_train_loop_step_ ] Batch device: cuda:0 | mask device: cuda:0 | batch_masks device: cuda:0
+[1] [ --> moment_safe_forward_pass ]
+[1]  [ moment_safe_forward_pass ] cpu | False | device | 0
+[1]  [ moment_safe_forward_pass ] Device 0 | input_mask~torch.Size([12, 8]) device: cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | mask device~torch.Size([12, 8]): cuda:0
+[1]  [ moment_safe_forward_pass ] Device 0 | batch~torch.Size([12, 1, 8]) device: cuda:0
+[1] [91m [ moment_safe_forward_pass ] Using device: 0[0m
+[1] [91m [ moment_safe_forward_pass ] CUDA is available: True[0m
+[1] [91m [ moment_safe_forward_pass ] Model device: cuda:0[0m
+[1] [91m [ moment_safe_forward_pass ] Devices: batch - cuda:0 | input_mask - cuda:0 | mask - cuda:0.[0m
+[1]  [ moment_safe_forward_pass ] Computation done | output is None? False
+[1] [moment_safe_forward_pass --> ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Output correctly obtained, compute loss
+[1] [ --> moment_compute_loss ]
+[1]  [ moment_compute_loss ] b~torch.Size([12, 1, 8]) | o~torch.Size([12, 1, 8])
+[1]  [ moment_compute_loss ] batch ~ torch.Size([12, 1, 8]) | cuda:0
+[1]  [ moment_compute_loss ] batch_masks ~ torch.Size([12, 8]) | cuda:0
+[1]  [ moment_compute_loss ] mask ~ torch.Size([12, 8]) | cuda:0
+[1] [91m [ moment_compute_loss ] Criterion: MSELoss()[0m
+[1]  [ moment_compute_loss ] Loss type: <class 'torch.Tensor'>
+[1]  [ moment_compute_loss ] loss: 0.17283891141414642
+[1] [moment_compute_loss --> ]
+[1] [fine_tune_moment_train_loop_step_ --> ]
+[1]  [ fine_tune_moment_train_ ] fine_tune_moment_train | batch 4 ~ torch.Size([12, 1, 8]) | epoch 3 | train 7 of 25 | Loss backward | After loop step 
+[1]  [ fine_tune_moment_train_ ] batch 0 ~ torch.Size([16, 1, 8]) | epoch 4 | train 4 of 25 | Before loop step
+[1] [ --> fine_tune_moment_train_loop_step_ ]
+[1]  [ fine_tune_moment_train_loop_step_ ] Get the masks

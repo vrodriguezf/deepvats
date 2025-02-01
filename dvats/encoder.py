@@ -382,6 +382,14 @@ class Encoder():
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_moment_eval_step_(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+    def set_train_size(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+    def set_train_and_eval_sizes(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+    def set_train_dataset(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+    def set_random_dataset(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     #--- MVP
     def fine_tune_mvp_single_(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
@@ -1866,7 +1874,10 @@ def random_windows(
         )
         windows = X[ random_indices ]
         # Convert to torch.tensor with dtype float
-        windows = torch.from_numpy(windows).float()
+        if isinstance(windows, torch.Tensor):
+            windows = windows.float()
+        else:
+            windows = torch.from_numpy(windows).float()
     mssg.print(f"windows~{windows.shape}")
     mssg.final()
     # Restore mssg
@@ -1967,7 +1978,7 @@ def set_train_size(
 ):
     # Compute sizes / percent
     total_size  = self.input.data[sample_id].shape[0]
-    if self.input.validation_percent >= 0.3:
+    if self.input.validation_percent > 0.3:
         raise ValueError("Validation percent is too big. Please give a value lower or equal than 0.3.")
     if self.input.validation_percent is None: 
         self.input.validation_percent = 0.3
@@ -1983,6 +1994,7 @@ def set_train_size(
             total_windows = self.input.n_windows
         train_size  = np.ceil(total_windows-eval_size)*self.input.training_percent
     return int(train_size)
+Encoder.set_train_size = set_train_size
 
 # %% ../nbs/encoder.ipynb 58
 def set_train_and_eval_sizes(
@@ -1991,7 +2003,7 @@ def set_train_and_eval_sizes(
 ):
     # Compute sizes / percent
     total_size  = self.input.data[sample_id].shape[0]
-    if self.input.validation_percent >= 0.3:
+    if self.input.validation_percent > 0.3:
         raise ValueError("Validation percent is too big. Please give a value lower or equal than 0.3.")
     if self.input.validation_percent is None: 
         self.input.validation_percent = 0.3
@@ -2009,6 +2021,7 @@ def set_train_and_eval_sizes(
         eval_size   = np.ceil(total_windows*self.input.validation_percent)
         train_size  = np.ceil(total_windows-eval_size)*self.input.training_percent
     return int(eval_size), int(train_size)
+Encoder.set_train_and_eval_sizes = set_train_and_eval_sizes
 
 # %% ../nbs/encoder.ipynb 59
 def set_random_dataset(
@@ -2023,9 +2036,10 @@ def set_random_dataset(
         percent     = None, # Unneccesary
         mssg        = self.mssg
     )
-    self.mssg.error.print(f"Total: {dataset.shape[0]}")
-    self.mssg.error.print(f"Eval: {rand_size} | {ds_rand.shape[0]}")
+    self.mssg.print_error(f"Total: {dataset.shape[0]}")
+    self.mssg.print_error(f"Eval: {rand_size} | {ds_rand.shape[0]}")
     return ds_rand, rand_indices
+Encoder.set_random_dataset = set_random_dataset
 
 # %% ../nbs/encoder.ipynb 60
 def set_train_dataset(
@@ -2038,10 +2052,11 @@ def set_train_dataset(
     mask                        = torch.ones(ds.shape[0], dtype = bool)
     mask[dl_eval_indices]       = False
     ds_diff                     = ds[mask]
-    ds_train, train_indices  = set_random_dataset(
-        self, train_size, ds_diff
+    ds_train, train_indices  = self.set_random_dataset(
+        train_size, ds_diff
     )
     return ds_train, train_indices
+Encoder.set_train_dataset = set_train_dataset
 
 # %% ../nbs/encoder.ipynb 61
 def set_train_and_eval_dataloaders(
@@ -2067,22 +2082,22 @@ def set_train_and_eval_dataloaders(
         eval_indices = self.eval_indices_dict[_case_]
         ds_eval             = ds[eval_indices]
         eval_size           = ds_eval.shape[0]
-        train_size          = set_train_size(self, sample_id, eval_size)
-        ds_train, _         = set_train_dataset(
-            self            = self, 
+        train_size          = self.set_train_size(sample_id, eval_size)
+        ds_train, _         = self.set_train_dataset(
+            ds              = ds,
             dl_eval_indices = eval_indices, 
             train_size      = train_size
         )
     else:
         self.mssg.print(f"Computing indices for case = {_case_}")
-        eval_size, train_size = set_train_and_eval_sizes(self, sample_id)
+        eval_size, train_size = self.set_train_and_eval_sizes(sample_id)
         ds = torch.from_numpy(self.input.data[sample_id]).float()
         self.mssg.print(f"Selecting validation dataset | windows")
-        ds_eval, eval_indices = set_random_dataset(self, eval_size, ds)
-        ds_train, _ = set_train_dataset(
-            self        = self, 
-            eval_indices= eval_indices, 
-            train_size  = train_size
+        ds_eval, eval_indices = self.set_random_dataset(eval_size, ds)
+        ds_train, _ = self.set_train_dataset(
+            ds              = ds,
+            dl_eval_indices = eval_indices, 
+            train_size      = train_size
         )
         self.eval_indices_dict[_case_] = eval_indices
     dl_eval  = DataLoader(

@@ -275,7 +275,7 @@ class Encoder():
     errors              : pd.DataFrame      = pd.DataFrame(columns=["window", "error"])
     window_sizes        : List [int]        = None
     best_epoch          : int               = -1
-    eval_indices_dict     : AttrDict        = AttrDict()
+    eval_indices_dict     : AttrDict        = None
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
         self.model              = self.set_model_(self.model)
@@ -2055,12 +2055,13 @@ def set_train_and_eval_dataloaders(
     _case_ = (
         # Ensure that you always get the same validation set
         # no matters training or batch sizes
-        self.input.data.shape[2], # window
+        self.input.shape[2], # window
         self.input.validation_percent,
         self.input.n_windows,
         self.input.n_windows_percent
     )
     # Go!
+    if self.eval_indices_dict is None: self.eval_indices_dict = {}
     if _case_ in self.eval_indices_dict:
         self.mssg.print(f"Use cached indices for case = {_case_}")
         eval_indices = self.eval_indices_dict[_case_]
@@ -2225,6 +2226,7 @@ def _set_encoder(
     mask_future                     : Optional [ bool ]             = False,
     mask_sync                       : Optional [ bool ]             = False,
     #- Loss criterions
+    
     metrics                         : Optional [ List [ Callable ]] = None,
     metrics_names                   : Optional [ List [ str ] ]     = None,
     metrics_args                    : Optional [ AttrDict ]         = None,
@@ -2944,19 +2946,10 @@ def fine_tune_moment_single_(
     if self.time_flag: timer = ut.Time(mssg = self.mssg)
     self.mssg.print(f"fine_tune_moment_single | Prepare the dataset | X ~ {self.input.data[sample_id].shape}")
     # Prepare the dataset
-    dl_eval, dl_train, ds_eval, ds_train = self.set_train_and_eval_dataloaders(
-        sample_id           = sample_id,
-        X                   = self.input.data[sample_id], 
-        batch_size          = self.input.batch_size, 
-        n_windows           = self.input.n_windows, 
-        n_windows_percent   = self.input.n_windows_percent,
-        training_percent    = self.input.training_percent, 
-        validation_percent  = self.input.validation_percent, 
-        shot                = shot, 
-        eval_pre            = eval_pre, 
-        eval_post           = eval_post,
-        mssg                = deepcopy(self.mssg)
-    )
+    (
+        dl_eval, dl_train, 
+        ds_eval, ds_train 
+    ) = self.set_train_and_eval_dataloaders(sample_id)
     # Evaluation % training
     try:
         self.mssg.print(f"Processing wlen {self.input.data[sample_id].shape[2]} | Lengths list: {self.window_sizes}")
@@ -3770,18 +3763,10 @@ def fine_tune_moirai_single_(
     self.mssg.print(f"Model Class {self.model.__class__} | Type: {type(self.model)}")
     # Get dataloaders
     self.mssg.print(f"fine_tune_moirai_single | Prepare the dataset | X ~ {self.input.data[sample_id].shape}")
-    dl_eval, dl_train, ds_eval, ds_train = set_train_and_eval_dataloaders(
-        X                   = self.input.data[sample_id], 
-        batch_size          = self.input.batch_size, 
-        n_windows           = self.input.n_windows, 
-        n_windows_percent   = self.input.n_windows_percent,
-        training_percent    = self.input.training_percent, 
-        validation_percent  = self.input.validation_percent, 
-        shot                = shot, 
-        eval_pre            = eval_pre, 
-        eval_post           = eval_post,
-        mssg                = deepcopy(self.mssg)
-    )
+    ( 
+        dl_eval, dl_train, 
+        ds_eval, ds_train 
+    ) = set_train_and_eval_dataloaders(sample_id)
     
     # Setup optimizer
     if self.optim.optimizer is None:

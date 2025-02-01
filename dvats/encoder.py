@@ -276,6 +276,7 @@ class Encoder():
     window_sizes        : List [int]        = None
     best_epoch          : int               = -1
     eval_indices_dict     : AttrDict        = None
+    ws                  : int               = None #Current window size
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
         self.model              = self.set_model_(self.model)
@@ -1842,56 +1843,66 @@ def validate_with_metrics_format_results(
 
 # %% ../nbs/encoder.ipynb 54
 def random_windows(
-    X           : List [ List [ List [ float ]]], 
+    X           : List[List[List[float]]], 
     n_windows   : int       = None, 
     percent     : float     = None, 
     mssg        : ut.Mssg   = ut.Mssg()
 ):
     """
     Parameters: 
-    - X: Numpy array of windows. Expected shape: [batch_size or n_samples, n_vars, window_len]
-    Given a numpy array of windows, selects:
-    - n_windows random windows from the array, if n_windows is given.
-    - ceil(percent*len(X)) random windows otherwise
+    - X: Windows array. Expected shape: [batch_size or n_samples, n_vars, window_len]
+    
+    Given a window array, selects:
+    - n_windows random windows from the array if n_windows is provided.
+    - ceil(percent * len(X)) random windows otherwise.
+    
+    Indices are selected without repetition and are sorted in ascending order.
     """
     # Setup mssg
     func = mssg.function
     mssg.level += 1
     mssg.initial(ut.funcname())
-    # Go!
+    
     mssg.print(f"N windows: {n_windows}")
+    
     if n_windows is None and percent is None:
-        # Get everything as a tensor
-        if isinstance(X, torch.tensor):
+        # Retrieve everything as a tensor
+        if isinstance(X, torch.Tensor):  # Ensure correct type checking
             windows = X.float()
         else:
             windows = torch.from_numpy(X).float()
     else: 
         if n_windows is None:
-            if percent is None: raise ValueError("One n_windows of percent must be given as float values.")
-            n_windows = np.ceil(percent*X.shape[0])
+            if percent is None:
+                raise ValueError("Either n_windows or percent must be provided as a float value.")
+            n_windows = int(np.ceil(percent * X.shape[0]))
         else: 
             n_windows = int(min(X.shape[0], n_windows))
+        
         mssg.print(f"n_windows: {n_windows}")
-        #-- Get random values
-        random_indices = np.random.randint(
-            low     = 0,
-            high    = int(X.shape[0])-1,
-            size    = n_windows
-        )
-        mssg.print_error(f"Indices (last): {random_indices[-1]}")
-        windows = X[ random_indices ]
-        # Convert to torch.tensor with dtype float
+        
+        # Get unique random indices
+        random_indices = np.random.choice(X.shape[0]-1, size=n_windows, replace=False)
+        # Sort indices in ascending order
+        random_indices = np.sort(random_indices)
+        mssg.print_error(f"Index (smallest): {random_indices[0]}")
+        mssg.print_error(f"Index (largest): {random_indices[-1]}")
+        windows = X[random_indices]
+        # Ensure torch tensor
         if isinstance(windows, torch.Tensor):
             windows = windows.float()
         else:
             windows = torch.from_numpy(windows).float()
+    
     mssg.print(f"windows~{windows.shape}")
     mssg.final()
+    
     # Restore mssg
     mssg.level      -= 1
     mssg.function   = func
+    
     return windows, random_indices
+
 
 # %% ../nbs/encoder.ipynb 55
 def windowed_dataset(
@@ -2078,7 +2089,7 @@ def set_train_and_eval_dataloaders(
     _case_ = (
         # Ensure that you always get the same validation set
         # no matters training or batch sizes
-        self.input.shape[2], # window
+        self.ws, 
         self.input.validation_percent,
         self.input.n_windows,
         self.input.n_windows_percent
@@ -2087,8 +2098,9 @@ def set_train_and_eval_dataloaders(
     # Go!
     if self.eval_indices_dict is None: self.eval_indices_dict = {}
     if _case_ in self.eval_indices_dict:
-        self.mssg.print(f"Use cached indices for case = {_case_}")
+        self.mssg.print_error(f"Use cached indices for case = {_case_}")
         eval_indices = self.eval_indices_dict[_case_]
+        self.mssg.print_error(f"Eval indices: {eval_indices[0]}-{eval_indices[1]}")
         ds_eval             = ds[eval_indices]
         eval_size           = ds_eval.shape[0]
         train_size          = self.set_train_size(sample_id, eval_size)
@@ -2103,12 +2115,14 @@ def set_train_and_eval_dataloaders(
         ds = torch.from_numpy(self.input.data[sample_id]).float()
         self.mssg.print(f"Selecting validation dataset | windows")
         ds_eval, eval_indices = self.set_random_dataset(eval_size, ds)
+        self.eval_indices_dict[_case_] = eval_indices
+        self.mssg.print_error(f"Saved indices {eval_indices} for case {_case_}")
         ds_train, _ = self.set_train_dataset(
             ds              = ds,
             dl_eval_indices = eval_indices, 
             train_size      = train_size
         )
-        self.eval_indices_dict[_case_] = eval_indices
+        self.mssg.print_error(f"Saved indices after train dataset {eval_indices} for case {_case_}")
     dl_eval  = DataLoader(
         dataset     = ds_eval, 
         batch_size  = self.input.batch_size, 
@@ -2119,6 +2133,10 @@ def set_train_and_eval_dataloaders(
         batch_size  = self.input.batch_size, 
         shuffle     = False
     )
+    self.mssg.final()
+    # Restore mssg
+    self.mssg.level -= 1
+    self.mssg.function = func
     return dl_eval, dl_train, ds_eval, ds_train
 Encoder.set_train_and_eval_dataloaders = set_train_and_eval_dataloaders
 
@@ -2234,6 +2252,7 @@ def _set_encoder(
     ## -- Using all parameters
     verbose                         : Optional[ int ]               = 0, 
     print_to_path                   : Optional[ bool ]              = False,
+    print_both                      : Optional[bool]                = False,
     print_path                      : Optional[ str ]               = "~/data/logs/logs.txt",
     print_mode                      : Optional[ str ]               = 'a',
     ## -- Using Type
@@ -2265,8 +2284,9 @@ def _set_encoder(
             verbose       = verbose, 
             print_to_path = print_to_path, 
             print_path    = print_path, 
-            print_mode    = print_mode
+            print_mode    = print_mode,
         )
+        mssg.both = print_both
         mssg.initial(ut.funcname())
         mssg.print("About to exec _set_enc_input")
         enc_input = _set_enc_input(mssg, X, stride, batch_size, n_windows, n_windows_percent, validation_percent, training_percent, window_mask_percent, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, enc_input)
@@ -2564,8 +2584,8 @@ def moment_set_masks(
 ):
     # Configure mssg
     func = mssg.function
+    mssg.level +=1
     mssg.initial_(ut.funcname())
-    mssg.level = mssg.verbose - 1 # quitar
     # Ensure batch sizes
     bms = check_batch_masks(batch, batch_masks, mssg)
     mssg.level += 1
@@ -2849,7 +2869,7 @@ def fine_tune_moment_train_(
         best_loss           = np.inf
         best_model_state    = None
         epoch_loss_mean     = np.nan
-
+    self.best_epoch = -1
     for epoch in range(self.num_epochs):
         epoch_losses = []
         for i, batch in enumerate(dl_train):
@@ -2888,7 +2908,7 @@ def fine_tune_moment_train_(
     # Get the best version of the model
     if save_best_or_last and best_model_state:
         self.model.load_state_dict(best_model_state)
-    self.mssg.print(f"Best epoch: {self.best_epoch}")
+        self.mssg.print(f"Best epoch: {self.best_epoch}")
     self.mssg.final()
     # Restore mssg
     self.mssg.level -= 1
@@ -3085,6 +3105,7 @@ def fine_tune_moment_(
     for i in range(self.input.size):
         window_size = self.input._data[i].shape[2]
         self.mssg.print_error(f"Processing wlen {window_size} | wlens {self.window_sizes} | i {i+1}/{self.input.size}")
+        self.ws = window_size
         self.window_sizes.append(window_size)
         ( 
             losses, 
@@ -3946,6 +3967,7 @@ def fine_tune(
     ## -- Using all parameters
     verbose                         : Optional[ int ]               = 0, 
     print_to_path                   : Optional[ bool ]              = False,
+    print_both                      : Optional[bool]                = False,
     print_path                      : Optional[ str ]               = "~/data/logs/logs.txt",
     print_mode                      : Optional[ str ]               = 'a',
     ## -- Using Type
@@ -4006,6 +4028,7 @@ def fine_tune(
         lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps,
         verbose                         = verbose,
         print_to_path                   = print_to_path,
+        print_both                      = print_both,
         print_path                      = print_path,
         print_mode                      = print_mode,
         mssg                            = mssg,

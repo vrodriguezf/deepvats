@@ -827,7 +827,14 @@ def moment_safe_forward_pass(
         self.mssg.print_error(f"Model device: {next(self.model.parameters()).device}")
         self.mssg.print_error(f"Devices: batch - {batch.device} | input_mask - {batch.device} | mask - {mask.device}.")
         #---
-        output  = self.model(x_enc = batch, input_mask = input_mask, mask = mask)
+        batch       = batch.float()
+        input_mask  = input_mask.float()
+        mask        = mask.float()
+        output  = self.model(
+            x_enc       = batch, 
+            input_mask = input_mask, 
+            mask        = mask
+        )
         success = True
     except Exception as e:        
         traceback.print_exc()
@@ -1868,10 +1875,11 @@ def random_windows(
         mssg.print(f"n_windows: {n_windows}")
         #-- Get random values
         random_indices = np.random.randint(
-            low     = 0, # From init
-            high    = int(X.shape[0]), # to end (gets the [low,high) interval])
-            size    = n_windows # get the specified number of indices
+            low     = 0,
+            high    = int(X.shape[0])-1,
+            size    = n_windows
         )
+        mssg.print_error(f"Indices (last): {random_indices[-1]}")
         windows = X[ random_indices ]
         # Convert to torch.tensor with dtype float
         if isinstance(windows, torch.Tensor):
@@ -2075,6 +2083,7 @@ def set_train_and_eval_dataloaders(
         self.input.n_windows,
         self.input.n_windows_percent
     )
+    ds = self.input.data[sample_id]
     # Go!
     if self.eval_indices_dict is None: self.eval_indices_dict = {}
     if _case_ in self.eval_indices_dict:

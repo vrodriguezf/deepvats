@@ -11,12 +11,14 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EvalMSE', 'EvalRMSE', 'Ev
            'mae_flat', 'mse_loss_flat', 'RMSELoss', 'RMSELossFlat', 'SMAPELoss', 'SMAPELossFlat',
            'validate_with_metrics', 'validate_with_metrics_', 'get_metrics_dict',
            'validate_with_metrics_format_results', 'random_windows', 'windowed_dataset', 'setup_scheduler',
-           'prepare_train_and_eval_dataloaders', 'fine_tune_moment_compute_loss_check_sizes_', 'moment_compute_loss',
+           'set_train_size', 'set_train_and_eval_sizes', 'set_random_dataset', 'set_train_dataset',
+           'set_train_and_eval_dataloaders', 'fine_tune_moment_compute_loss_check_sizes_', 'moment_compute_loss',
            'fine_tune_moment_eval_preprocess', 'get_mask_moment', 'get_mask_tsai', 'check_batch_masks', 'check_mask',
            'moment_set_masks', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
-           'fine_tune_moment_train_loop_step_', 'config_optim', 'fine_tune_moment_train_', 'fine_tune_moment_single_',
-           'fine_tune_moment_', 'fit_fastai', 'fine_tune_mvp_single_', 'fine_tune_mvp_', 'configure_optimizer_moirai',
-           'get_enc_embs_moirai_', 'get_dist_moirai_', 'fine_tune_moirai_eval_step_', 'fine_tune_moirai_eval_',
+           'fine_tune_moment_train_loop_step_', 'config_optim', 'fine_tune_moment_train_',
+           'prepare_train_and_eval_dataloaders', 'fine_tune_moment_single_', 'fine_tune_moment_', 'fit_fastai',
+           'fine_tune_mvp_single_', 'fine_tune_mvp_', 'configure_optimizer_moirai', 'get_enc_embs_moirai_',
+           'get_dist_moirai_', 'fine_tune_moirai_eval_step_', 'fine_tune_moirai_eval_',
            'fine_tune_moirai_train_loop_step_', 'fine_tune_moirai_train_', 'fine_tune_moirai_single_',
            'fine_tune_moirai_', 'fine_tune']
 
@@ -269,10 +271,11 @@ class Encoder():
     default_metric                          = MSELossFlat #-- Default for MVP
     criterion                               = None
     scheduler_specific_kwargs : AttrDict    = None # Only for MOIRAI
-    #mvp_ws              : Tuple [ int, int ]= 0,0
-    errors               : pd.DataFrame     = pd.DataFrame(columns=["window", "error"])
-    window_sizes         : List [int]       = None
-    best_epoch           : int              = -1
+    #mvp_ws             : Tuple [ int, int ]= 0,0
+    errors              : pd.DataFrame      = pd.DataFrame(columns=["window", "error"])
+    window_sizes        : List [int]        = None
+    best_epoch          : int               = -1
+    eval_indices_dict     : AttrDict        = AttrDict()
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
         self.model              = self.set_model_(self.model)
@@ -359,6 +362,8 @@ class Encoder():
     def setup_scheduler(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def config_optim(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+    def set_train_and_eval_dataloaders(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     #--- Moment
     def moment_compute_loss(self):
@@ -664,7 +669,7 @@ def get_acts(
                 model_kwargs[key] = model_kwargs[key].cpu()
             except:
                 continue
-        model.to("cpu")
+        model = model.to("cpu")
     else:
         if verbose > 0: ut.print_flush(f"get acts | Moving to gpu", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
         for key in model_kwargs:
@@ -672,7 +677,7 @@ def get_acts(
                 model_kwargs[key] = model_kwargs[key].to("cuda")
             except:
                 continue
-        model.to("cuda")
+        model = model.to("cuda")
     if verbose > 0: ut.print_flush(f"get acts | Add hooks", print_to_path = print_to_path, print_path = print_path, print_mode = print_mode, verbose = verbose, print_time = print_to_path)
     h_act = hook_outputs([module], detach = True, cpu = cpu, grad = False)
     with torch.no_grad():
@@ -1112,7 +1117,7 @@ def get_enc_embs_moment(
     else:
         if verbose > 0: 
             ut.print_flush("get_enc_embs_moment | Using CUDA", verbose = verbose)
-        enc_learn.to("cuda")
+        enc_learn = enc_learn.to("cuda")
     if verbose > 0: ut.print_flush("get_enc_embs_moment | Convert y", verbose = verbose)
     enc_learn.eval()
     if cpu:
@@ -1162,10 +1167,10 @@ def get_enc_embs_moment_reconstruction(
     It should only get one iteration as it seems to be some MOMENT internal configuration for patches.
     """
     if cpu:
-        enc_learn.cpu()
+        enc_learn = enc_learn.cpu()
         y = torch.from_numpy(X).cpu().float()
     else:
-        enc_learn.to("cuda")
+        enc_learn = enc_learn.to("cuda")
         y = torch.from_numpy(X).to("cuda").float()
     embs = get_acts_moment(
         enc_learn       = enc_learn, 
@@ -1236,8 +1241,8 @@ def get_enc_embs_moirai(
         past_target.cpu()
     else:
         if verbose > 0: ut.print_flush("get_enc_embs_moirai | Using CUDA", verbose = verbose)
-        enc_model.to("cuda")
-        past_target.to("cuda")
+        enc_model   = enc_model.to("cuda")
+        past_target = past_target.to("cuda")
         
     if verbose > 0: ut.print_flush("get_enc_embs_moirai | Get Outputs", verbose = verbose)
 
@@ -1834,20 +1839,40 @@ def random_windows(
     - n_windows random windows from the array, if n_windows is given.
     - ceil(percent*len(X)) random windows otherwise
     """
-    mssg_ = deepcopy(mssg)
-    mssg_.initial(func_name=f"{mssg.function} | {ut.funcname()}")
-    mssg_.print(f"N windows: {n_windows}")
+    # Setup mssg
+    func = mssg.function
+    mssg.level += 1
+    mssg.initial(ut.funcname())
+    # Go!
+    mssg.print(f"N windows: {n_windows}")
     if n_windows is None and percent is None:
-        windows = torch.from_numpy(X)
+        # Get everything as a tensor
+        if isinstance(X, torch.tensor):
+            windows = X.float()
+        else:
+            windows = torch.from_numpy(X).float()
     else: 
-        n_windows = int(min(X.shape[0], n_windows) if n_windows is not None else np.ceil(percent*X.shape[0]))
-        mssg_.print(f"n_windows: {n_windows}")
-        random_indices = np.random.randint(0, int(X.shape[0]), n_windows)
+        if n_windows is None:
+            if percent is None: raise ValueError("One n_windows of percent must be given as float values.")
+            n_windows = np.ceil(percent*X.shape[0])
+        else: 
+            n_windows = int(min(X.shape[0], n_windows))
+        mssg.print(f"n_windows: {n_windows}")
+        #-- Get random values
+        random_indices = np.random.randint(
+            low     = 0, # From init
+            high    = int(X.shape[0]), # to end (gets the [low,high) interval])
+            size    = n_windows # get the specified number of indices
+        )
         windows = X[ random_indices ]
-        windows = torch.from_numpy(windows)
+        # Convert to torch.tensor with dtype float
+        windows = torch.from_numpy(windows).float()
     mssg.print(f"windows~{windows.shape}")
-    mssg_.final()
-    return windows
+    mssg.final()
+    # Restore mssg
+    mssg.level      -= 1
+    mssg.function   = func
+    return windows, random_indices
 
 # %% ../nbs/encoder.ipynb 55
 def windowed_dataset(
@@ -1935,53 +1960,144 @@ def setup_scheduler(
 Encoder.setup_scheduler = setup_scheduler
 
 # %% ../nbs/encoder.ipynb 57
-def prepare_train_and_eval_dataloaders(
-    X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
-    batch_size          : int,
-    n_windows           : int       = None,
-    n_windows_percent   : int       = None,
-    training_percent    : int       = 0.4,
-    validation_percent  : int       = 0.3,
-    shot                : bool      = False,
-    eval_pre            : bool      = False,
-    eval_post           : bool      = False,
-    mssg                : ut.Mssg   = ut.Mssg()
+def set_train_size(
+    self        : Encoder,
+    sample_id   : int,
+    eval_size   : int
 ):
-    dl_eval  = None
-    ds_train = None,
-    dl_train = None
-    mssg.function = f"{mssg.function} | prepare_train_and_eval_dataloaders"
-    if n_windows is None and n_windows_percent is None:
-        train_split_index = min(X.shape[0], np.ceil(training_percent * X.shape[0]))
-        eval_split_index = min(X.shape[0], np.ceil(validation_percent * X.shape[0]))
+    # Compute sizes / percent
+    total_size  = self.input.data[sample_id].shape[0]
+    if self.input.validation_percent >= 0.3:
+        raise ValueError("Validation percent is too big. Please give a value lower or equal than 0.3.")
+    if self.input.validation_percent is None: 
+        self.input.validation_percent = 0.3
+    if (
+        self.input.n_windows is None 
+        and self.input.n_windows_percent is None
+    ):
+        train_size  = np.ceil(self.input.training_percent * (total_size-eval_size))
     else:
-        train_split_index = min(X.shape[0], np.ceil(training_percent * n_windows)) if n_windows is not None else np.ceil(training_percent * n_windows_percent * X.shape[0])
-        eval_split_index = min(X.shape[0], np.ceil(validation_percent * n_windows)) if n_windows is not None else np.ceil(validation_percent * n_windows_percent * X.shape[0])
-    
-    train_split_index = int(train_split_index)
-    eval_split_index = int(eval_split_index)
-    if shot: 
-        mssg.print(f"Selecting ds train | {train_split_index} windows")
-        ds_train = X[:train_split_index]
-    if eval_pre or eval_post: 
-        mssg.print(f"Selecting validation train | {eval_split_index} windows")
-        ds_test  = torch.from_numpy(X[:eval_split_index]).float()
-    # -- Select only the small percentage for few-shot
-    if shot:
-        mssg.print(f"Train DataLoader | Random windows")
-        mssg.verbose -= 1
-        ds_train = random_windows(ds_train, n_windows, n_windows_percent, mssg = mssg)
-        mssg.verbose += 1
-        ds_train = ds_train.float()
-        # Create the dataloader
-        mssg.print(f"Train DataLoader | DataLoader")
-        dl_train = DataLoader(ds_train, batch_size = batch_size, shuffle = True)
-    if eval_pre or eval_post: 
-        mssg.print(f"Validation DataLoader")
-        dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
-    return dl_eval, dl_train, ds_test, ds_train
+        if self.input.n_windows is None:
+            total_windows = total_size*self.input.n_windows_percent
+        else:
+            total_windows = self.input.n_windows
+        train_size  = np.ceil(total_windows-eval_size)*self.input.training_percent
+    return int(train_size)
 
 # %% ../nbs/encoder.ipynb 58
+def set_train_and_eval_sizes(
+    self        : Encoder,
+    sample_id   : int
+):
+    # Compute sizes / percent
+    total_size  = self.input.data[sample_id].shape[0]
+    if self.input.validation_percent >= 0.3:
+        raise ValueError("Validation percent is too big. Please give a value lower or equal than 0.3.")
+    if self.input.validation_percent is None: 
+        self.input.validation_percent = 0.3
+    if (
+        self.input.n_windows is None 
+        and self.input.n_windows_percent is None
+    ):
+        eval_size   = np.ceil(self.input.validation_percent * total_size)
+        train_size  = np.ceil(self.input.training_percent * (total_size-eval_size))
+    else:
+        if self.input.n_windows is None:
+            total_windows = total_size*self.input.n_windows_percent
+        else:
+            total_windows = self.input.n_windows
+        eval_size   = np.ceil(total_windows*self.input.validation_percent)
+        train_size  = np.ceil(total_windows-eval_size)*self.input.training_percent
+    return int(eval_size), int(train_size)
+
+# %% ../nbs/encoder.ipynb 59
+def set_random_dataset(
+    self        : Encoder,
+    rand_size   : int,
+    dataset
+):  
+    ds_rand = None
+    ds_rand, rand_indices = random_windows(
+        X           = dataset,
+        n_windows   = rand_size,
+        percent     = None, # Unneccesary
+        mssg        = self.mssg
+    )
+    self.mssg.error.print(f"Total: {dataset.shape[0]}")
+    self.mssg.error.print(f"Eval: {rand_size} | {ds_rand.shape[0]}")
+    return ds_rand, rand_indices
+
+# %% ../nbs/encoder.ipynb 60
+def set_train_dataset(
+    self,
+    ds,
+    dl_eval_indices,
+    train_size
+):
+    self.mssg.print(f"Train DataLoader | Random windows")
+    mask                        = torch.ones(ds.shape[0], dtype = bool)
+    mask[dl_eval_indices]       = False
+    ds_diff                     = ds[mask]
+    ds_train, train_indices  = set_random_dataset(
+        self, train_size, ds_diff
+    )
+    return ds_train, train_indices
+
+# %% ../nbs/encoder.ipynb 61
+def set_train_and_eval_dataloaders(
+    self                : Encoder,
+    sample_id           : int
+):
+    # Setup mssg
+    func = self.mssg.function
+    self.mssg.level += 1
+    self.mssg.initial_(ut.funcname())
+    _case_ = (
+        # Ensure that you always get the same validation set
+        # no matters training or batch sizes
+        self.input.data.shape[2], # window
+        self.input.validation_percent,
+        self.input.n_windows,
+        self.input.n_windows_percent
+    )
+    # Go!
+    if _case_ in self.eval_indices_dict:
+        self.mssg.print(f"Use cached indices for case = {_case_}")
+        eval_indices = self.eval_indices_dict[_case_]
+        ds_eval             = ds[eval_indices]
+        eval_size           = ds_eval.shape[0]
+        train_size          = set_train_size(self, sample_id, eval_size)
+        ds_train, _         = set_train_dataset(
+            self            = self, 
+            dl_eval_indices = eval_indices, 
+            train_size      = train_size
+        )
+    else:
+        self.mssg.print(f"Computing indices for case = {_case_}")
+        eval_size, train_size = set_train_and_eval_sizes(self, sample_id)
+        ds = torch.from_numpy(self.input.data[sample_id]).float()
+        self.mssg.print(f"Selecting validation dataset | windows")
+        ds_eval, eval_indices = set_random_dataset(self, eval_size, ds)
+        ds_train, _ = set_train_dataset(
+            self        = self, 
+            eval_indices= eval_indices, 
+            train_size  = train_size
+        )
+        self.eval_indices_dict[_case_] = eval_indices
+    dl_eval  = DataLoader(
+        dataset     = ds_eval, 
+        batch_size  = self.input.batch_size, 
+        shuffle     = False
+    )
+    dl_train  = DataLoader(
+        dataset     = ds_train, 
+        batch_size  = self.input.batch_size, 
+        shuffle     = False
+    )
+    return dl_eval, dl_train, ds_eval, ds_train
+Encoder.set_train_and_eval_dataloaders = set_train_and_eval_dataloaders
+
+# %% ../nbs/encoder.ipynb 62
 def _set_enc_input(
     mssg                            : ut.Mssg,
     # Encoder Input
@@ -2035,7 +2151,7 @@ def _set_enc_input(
     mssg.level -= 1
     return enc_input
 
-# %% ../nbs/encoder.ipynb 59
+# %% ../nbs/encoder.ipynb 63
 def _set_optimizer(
     mssg                            : ut.Mssg,
     optim                           : EncoderOptimizer = None,
@@ -2062,7 +2178,7 @@ def _set_optimizer(
     mssg.final()
     return optim
 
-# %% ../nbs/encoder.ipynb 60
+# %% ../nbs/encoder.ipynb 64
 def _set_encoder(
     ## -- Using all parammeters
     X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
@@ -2163,31 +2279,37 @@ def _set_encoder(
     enc.mssg.final(ut.funcname())
     return enc
 
-# %% ../nbs/encoder.ipynb 62
+# %% ../nbs/encoder.ipynb 66
 def fine_tune_moment_compute_loss_check_sizes_(
     batch           : List [ List [ List [ float ] ] ], 
     output,
     mssg
 ):
-    mssg.print("--> fine_tune_moment_compute_loss_check_sizes_")
-    b = batch.clone()
-    b_2 = batch.shape[2]
-    re_2 = output.reconstruction.shape[2]
+    # setup mssg
+    func = mssg.function
     mssg.level += 1
+    mssg.initial_(ut.funcname())
+    #b = batch.clone()
+    B    = batch
+    b_2  = batch.shape[2]
+    re_2 = output.reconstruction.shape[2]
+    
     if b_2 > re_2:
-        mssg.print(f" Fine tune loop | TODO: Why? Original {b_2} > {re_2}  Reconstruction")
+        mssg.print(f" TODO: Why? Original {b_2} > {re_2}  Reconstruction")
         b = b[...,:re_2]
     elif re_2 > b_2:
-        mssg.print(f" Fine tune loop | Why ? Original {b_2} < {re_2} Reconstruction ? Padding")
+        mssg.print(f" Why ? Original {b_2} < {re_2} Reconstruction ? Padding")
         output.reconstruction = output.reconstruction[...,:b_2]
     else: 
-        mssg.print(f" Fine tune loop | re_2 {re_2} == {b_2} y_2")
+        mssg.print(f" re_2 {re_2} == {b_2} y_2")
     mssg.print(f"---------- Checking loss  ------- | reconstruction ~ {output.reconstruction.shape} | original_ ~ {b.shape}")
+    # Restore mssg
     mssg.level -= 1
-    mssg.print("fine_tune_moment_compute_loss_check_sizes_ -->")
+    mssg.final()
+    mssg.function = func
     return b
 
-# %% ../nbs/encoder.ipynb 63
+# %% ../nbs/encoder.ipynb 67
 def moment_compute_loss(
     self        : Encoder,
     batch, 
@@ -2245,7 +2367,7 @@ def moment_compute_loss(
 
 Encoder.moment_compute_loss = moment_compute_loss
 
-# %% ../nbs/encoder.ipynb 64
+# %% ../nbs/encoder.ipynb 68
 def fine_tune_moment_eval_preprocess(
     self        : Encoder,
     predictions : List [ List [ float ]],
@@ -2288,7 +2410,7 @@ def fine_tune_moment_eval_preprocess(
 
 Encoder.fine_tune_moment_eval_preprocess = fine_tune_moment_eval_preprocess
 
-# %% ../nbs/encoder.ipynb 65
+# %% ../nbs/encoder.ipynb 69
 def get_mask_moment(
     batch, batch_masks, r, mssg
 ):
@@ -2307,7 +2429,7 @@ def get_mask_moment(
     mssg.print(f"Using mask generator with mask ratio {r}")
     # Create mask generator with percentage of unknown values 'r'
     mask_generator = Masking(
-        mask_ratio = r,
+        mask_ratio  = r,
         patch_len   = 1 #Tratando de enmascarar a nivel de elementos.
     )
     # Generate mask
@@ -2357,7 +2479,7 @@ def get_mask_tsai(
     mssg.print(f"Before shape adjustment | batch ~ {batch.shape} | batch_masks ~ {bms.shape} | mask ~ {mask.shape}")
     return mask
 
-# %% ../nbs/encoder.ipynb 66
+# %% ../nbs/encoder.ipynb 70
 def check_batch_masks(
     batch,
     batch_masks,
@@ -2403,7 +2525,7 @@ def check_mask(
     # All right!
     return mask
 
-# %% ../nbs/encoder.ipynb 67
+# %% ../nbs/encoder.ipynb 71
 def moment_set_masks(
     batch, 
     batch_masks,
@@ -2460,7 +2582,7 @@ def moment_set_masks(
     mssg.function = func
     return mask, bms
 
-# %% ../nbs/encoder.ipynb 68
+# %% ../nbs/encoder.ipynb 72
 def fine_tune_moment_eval_step_(
     self : Encoder, 
     batch,
@@ -2519,7 +2641,7 @@ def fine_tune_moment_eval_step_(
     return mse_metric, rmse_metric, mae_metric, smape_metric, loss
 Encoder.fine_tune_moment_eval_step_ = fine_tune_moment_eval_step_
 
-# %% ../nbs/encoder.ipynb 69
+# %% ../nbs/encoder.ipynb 73
 def fine_tune_moment_eval_(
     self      : Encoder,
     dl_eval   : DataLoader
@@ -2593,7 +2715,7 @@ def fine_tune_moment_eval_(
     return eval_results
 Encoder.fine_tune_moment_eval_ = fine_tune_moment_eval_
 
-# %% ../nbs/encoder.ipynb 70
+# %% ../nbs/encoder.ipynb 74
 def fine_tune_moment_train_loop_step_(
     self : Encoder,
     batch, 
@@ -2649,7 +2771,7 @@ def fine_tune_moment_train_loop_step_(
     return loss
 Encoder.fine_tune_moment_train_loop_step_ = fine_tune_moment_train_loop_step_
 
-# %% ../nbs/encoder.ipynb 71
+# %% ../nbs/encoder.ipynb 75
 def config_optim(
     self : Encoder,
     dl_train,
@@ -2667,7 +2789,7 @@ def config_optim(
         self.optim.lr.scheduler = None
 Encoder.config_optim = config_optim
 
-# %% ../nbs/encoder.ipynb 72
+# %% ../nbs/encoder.ipynb 76
 def fine_tune_moment_train_(
     self                            : Encoder,
     dl_train                        : DataLoader,
@@ -2748,7 +2870,55 @@ def fine_tune_moment_train_(
     return losses, self.model
 Encoder.fine_tune_moment_train_ = fine_tune_moment_train_
 
-# %% ../nbs/encoder.ipynb 73
+# %% ../nbs/encoder.ipynb 77
+#-- moving to set_train_and_eval_dataloaders
+def prepare_train_and_eval_dataloaders(
+    X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
+    batch_size          : int,
+    n_windows           : int       = None,
+    n_windows_percent   : int       = None,
+    training_percent    : int       = 0.4,
+    validation_percent  : int       = 0.3,
+    shot                : bool      = False,
+    eval_pre            : bool      = False,
+    eval_post           : bool      = False,
+    mssg                : ut.Mssg   = ut.Mssg()
+):
+    dl_eval  = None
+    ds_train = None,
+    dl_train = None
+    mssg.function = f"{mssg.function} | prepare_train_and_eval_dataloaders"
+    if n_windows is None and n_windows_percent is None:
+        train_split_index = min(X.shape[0], np.ceil(training_percent * X.shape[0]))
+        eval_split_index = min(X.shape[0], np.ceil(validation_percent * X.shape[0]))
+    else:
+        train_split_index = min(X.shape[0], np.ceil(training_percent * n_windows)) if n_windows is not None else np.ceil(training_percent * n_windows_percent * X.shape[0])
+        eval_split_index = min(X.shape[0], np.ceil(validation_percent * n_windows)) if n_windows is not None else np.ceil(validation_percent * n_windows_percent * X.shape[0])
+    
+    train_split_index = int(train_split_index)
+    eval_split_index = int(eval_split_index)
+    if shot: 
+        mssg.print(f"Selecting ds train | {train_split_index} windows")
+        ds_train = X[:train_split_index]
+    if eval_pre or eval_post: 
+        mssg.print(f"Selecting validation train | {eval_split_index} windows")
+        ds_test  = torch.from_numpy(X[:eval_split_index]).float()
+    # -- Select only the small percentage for few-shot
+    if shot:
+        mssg.print(f"Train DataLoader | Random windows")
+        mssg.verbose -= 1
+        ds_train = random_windows(ds_train, n_windows, n_windows_percent, mssg = mssg)
+        mssg.verbose += 1
+        ds_train = ds_train.float()
+        # Create the dataloader
+        mssg.print(f"Train DataLoader | DataLoader")
+        dl_train = DataLoader(ds_train, batch_size = batch_size, shuffle = True)
+    if eval_pre or eval_post: 
+        mssg.print(f"Validation DataLoader")
+        dl_eval  = DataLoader(ds_test, batch_size = batch_size, shuffle = False)
+    return dl_eval, dl_train, ds_test, ds_train
+
+# %% ../nbs/encoder.ipynb 78
 def fine_tune_moment_single_(
     self                : Encoder,
     eval_pre            : bool = False,
@@ -2774,7 +2944,8 @@ def fine_tune_moment_single_(
     if self.time_flag: timer = ut.Time(mssg = self.mssg)
     self.mssg.print(f"fine_tune_moment_single | Prepare the dataset | X ~ {self.input.data[sample_id].shape}")
     # Prepare the dataset
-    dl_eval, dl_train, ds_eval, ds_train = prepare_train_and_eval_dataloaders(
+    dl_eval, dl_train, ds_eval, ds_train = self.set_train_and_eval_dataloaders(
+        sample_id           = sample_id,
         X                   = self.input.data[sample_id], 
         batch_size          = self.input.batch_size, 
         n_windows           = self.input.n_windows, 
@@ -2858,7 +3029,7 @@ def fine_tune_moment_single_(
 
 Encoder.fine_tune_moment_single_ = fine_tune_moment_single_
 
-# %% ../nbs/encoder.ipynb 74
+# %% ../nbs/encoder.ipynb 79
 def fine_tune_moment_(
     self                : Encoder, 
     eval_pre            : bool = False, 
@@ -2949,7 +3120,7 @@ def fine_tune_moment_(
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
 
-# %% ../nbs/encoder.ipynb 76
+# %% ../nbs/encoder.ipynb 81
 def fit_fastai(
     self     : Encoder,
     dl_train : DataLoader,
@@ -3086,7 +3257,7 @@ def fit_fastai(
     self.mssg.level -= 1
 Encoder.fit_fastai = fit_fastai    
 
-# %% ../nbs/encoder.ipynb 77
+# %% ../nbs/encoder.ipynb 82
 def fine_tune_mvp_single_(
     self            : Encoder,
     eval_pre        : bool  = False,
@@ -3237,7 +3408,7 @@ def fine_tune_mvp_single_(
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_mvp_single_ = fine_tune_mvp_single_
 
-# %% ../nbs/encoder.ipynb 78
+# %% ../nbs/encoder.ipynb 83
 def fine_tune_mvp_(
     self                    : Encoder,
     eval_pre                : bool  = True,
@@ -3272,7 +3443,7 @@ def fine_tune_mvp_(
     if self.input.size is None:
         self.mssg.print(f"Windows: {len(self.input._data)}")
         raise ValueError(f"Invalid number of windows: {self.input.size}")
-    self.mssg.print(f"Processing {self.input.size} datasets: {self.input.shapes}")
+    self.mssg.print(f"Processing {self.input.size} datasets: {self.input.shape}")
     # Build optimizer
     if self.optim.optimizer is None: 
         self.mssg.print(f"Setting up optimizer as Adam")
@@ -3319,7 +3490,7 @@ def fine_tune_mvp_(
 
 Encoder.fine_tune_mvp_ = fine_tune_mvp_ 
 
-# %% ../nbs/encoder.ipynb 80
+# %% ../nbs/encoder.ipynb 85
 def configure_optimizer_moirai(
     self                : Encoder, 
     dl_train            : DataLoader,
@@ -3419,7 +3590,7 @@ def configure_optimizer_moirai(
     self.mssg.level -= 1
 Encoder.configure_optimizer_moirai = configure_optimizer_moirai
 
-# %% ../nbs/encoder.ipynb 81
+# %% ../nbs/encoder.ipynb 86
 def get_enc_embs_moirai_(# Obtain the embeddings
     self            : Encoder,
     enc_input       : List [ List [ List [ float ] ] ],
@@ -3441,7 +3612,7 @@ def get_enc_embs_moirai_(# Obtain the embeddings
 
 Encoder.get_enc_embs_moirai_ = get_enc_embs_moirai_
 
-# %% ../nbs/encoder.ipynb 82
+# %% ../nbs/encoder.ipynb 87
 def get_dist_moirai_(# "Normal" execution
     self            : Encoder,
     enc_input       : List [ List [ List [ float ] ] ],
@@ -3460,7 +3631,7 @@ def get_dist_moirai_(# "Normal" execution
 
 Encoder.get_dist_moirai_ = get_dist_moirai_
 
-# %% ../nbs/encoder.ipynb 83
+# %% ../nbs/encoder.ipynb 88
 def fine_tune_moirai_eval_step_(
     self        : Encoder, 
     enc_input   : List [ List [ List [ float ] ] ],
@@ -3484,7 +3655,7 @@ def fine_tune_moirai_eval_step_(
         
 Encoder.fine_tune_moirai_eval_step_ = fine_tune_moirai_eval_step_
 
-# %% ../nbs/encoder.ipynb 84
+# %% ../nbs/encoder.ipynb 89
 def fine_tune_moirai_eval_(
     self    : Encoder,
     dl_eval,
@@ -3514,7 +3685,7 @@ def fine_tune_moirai_eval_(
 
 Encoder.fine_tune_moirai_eval_ = fine_tune_moirai_eval_
 
-# %% ../nbs/encoder.ipynb 85
+# %% ../nbs/encoder.ipynb 90
 def fine_tune_moirai_train_loop_step_(
     self        : Encoder,
     enc_input   : List[ List [ List [ float ] ] ],
@@ -3529,7 +3700,7 @@ def fine_tune_moirai_train_loop_step_(
     loss = loss_func(pred = distr,**args)
     return loss 
 
-# %% ../nbs/encoder.ipynb 86
+# %% ../nbs/encoder.ipynb 91
 def fine_tune_moirai_train_(
     self                : Encoder,
     dl_train            : DataLoader
@@ -3564,7 +3735,7 @@ def fine_tune_moirai_train_(
     self.mssg.level -= 1
 Encoder.fine_tune_moirai_train_ = fine_tune_moirai_train_
 
-# %% ../nbs/encoder.ipynb 87
+# %% ../nbs/encoder.ipynb 92
 def fine_tune_moirai_single_(
     self            : Encoder,
     eval_pre        : bool  = False,
@@ -3599,7 +3770,7 @@ def fine_tune_moirai_single_(
     self.mssg.print(f"Model Class {self.model.__class__} | Type: {type(self.model)}")
     # Get dataloaders
     self.mssg.print(f"fine_tune_moirai_single | Prepare the dataset | X ~ {self.input.data[sample_id].shape}")
-    dl_eval, dl_train, ds_eval, ds_train = prepare_train_and_eval_dataloaders(
+    dl_eval, dl_train, ds_eval, ds_train = set_train_and_eval_dataloaders(
         X                   = self.input.data[sample_id], 
         batch_size          = self.input.batch_size, 
         n_windows           = self.input.n_windows, 
@@ -3657,7 +3828,7 @@ def fine_tune_moirai_single_(
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_moirai_single_ = fine_tune_moirai_single_
 
-# %% ../nbs/encoder.ipynb 88
+# %% ../nbs/encoder.ipynb 93
 def fine_tune_moirai_(
     self      : Encoder, 
     eval_pre  : bool = False, 
@@ -3733,7 +3904,7 @@ def fine_tune_moirai_(
 
 Encoder.fine_tune_moirai_ = fine_tune_moirai_
 
-# %% ../nbs/encoder.ipynb 90
+# %% ../nbs/encoder.ipynb 97
 def fine_tune(
     # Optional parameters
     ## Encoder Input

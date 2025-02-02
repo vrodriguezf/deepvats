@@ -2678,8 +2678,9 @@ def fine_tune_moment_eval_step_(
         mask_sync           = self.mask_sync
     )
     # -- Model evaluation
+    device = batch.device
     with torch.no_grad(), torch.cuda.device(device):
-        self,mssg.print_errorf("Executing in device{device}")
+        self.mssg.print_errorf("Executing in device{device}")
         # Exec forward pass
         output, success = self.moment_safe_forward_pass(batch = batch, input_mask = bms, mask = mask)
         # If the execution of the forward pass was ok, compute the evaluation metrics

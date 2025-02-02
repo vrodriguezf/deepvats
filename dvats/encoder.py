@@ -2678,7 +2678,8 @@ def fine_tune_moment_eval_step_(
         mask_sync           = self.mask_sync
     )
     # -- Model evaluation
-    with torch.no_grad():
+    with torch.no_grad(), torch.cuda.device(device):
+        self,mssg.print_errorf("Executing in device{device}")
         # Exec forward pass
         output, success = self.moment_safe_forward_pass(batch = batch, input_mask = bms, mask = mask)
         # If the execution of the forward pass was ok, compute the evaluation metrics
@@ -2810,12 +2811,15 @@ def fine_tune_moment_train_loop_step_(
     self.mssg.print(f"Batch device: {batch.device} | mask device: {mask.device} | batch_masks device: {bms.device}")
     self.mssg.level -= 1
     # Compute a forward pass
-    output, success  = self.moment_safe_forward_pass(
-        batch               = batch, 
-        input_mask          = bms,  
-        mask                = mask, 
-        continue_if_fail    = True
-    )
+    device = batch.device
+    with torch.cuda.device(device):
+        self,mssg.print_errorf("Executing in device{device}")
+        output, success  = self.moment_safe_forward_pass(
+            batch               = batch, 
+            input_mask          = bms,  
+            mask                = mask, 
+            continue_if_fail    = True
+        )
     # Compute output loss
     if output is None or not success:
         # If fail, put to nan & raise error | TODO: Check
@@ -3021,6 +3025,8 @@ def fine_tune_moment_single_(
         self.mssg.print(f"Processing wlen {self.input.data[sample_id].shape[2]} | Lengths list: {self.window_sizes}")
         # Previous evaluation
         if eval_pre:
+            torch.cuda.synchronize()
+
             self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
             if self.time_flag: timer.start()
             eval_results_pre    = self.fine_tune_moment_eval_(dl_eval = dl_eval)
@@ -3028,8 +3034,11 @@ def fine_tune_moment_single_(
                 timer.end()
                 t_eval_1 = timer.duration()
                 timer.show(verbose = self.mssg.verbose)
+        torch.cuda.synchronize()
+
         # Training (fine-tuning)
         if shot:
+            torch.cuda.synchronize()
             if self.time_flag: timer.start()
             self.mssg.print(f"Train | wlen {self.input.data[sample_id].shape[2]}")
             try:
@@ -3039,6 +3048,8 @@ def fine_tune_moment_single_(
                     use_moment_masks                = use_moment_masks,
                     save_best_or_last               = save_best_or_last
                 )
+                torch.cuda.synchronize()
+
                 if self.time_flag:
                     timer.end()
                     t_shot = timer.duration()
@@ -3049,6 +3060,8 @@ def fine_tune_moment_single_(
                 raise(e)
         # After evaluation
         if eval_post:    
+            torch.cuda.synchronize()
+
             self.mssg.print(f"fine_tune_moment_single | Eval Post | wlen {self.input.shape[2]}")
             if self.time_flag: timer.start()
             eval_results_post = self.fine_tune_moment_eval_(dl_eval=dl_eval)
@@ -3069,6 +3082,8 @@ def fine_tune_moment_single_(
                         # Function name
                         func_name       = ut.funcname()
                     )
+            torch.cuda.synchronize()
+
     except Exception as e:
         # Save error if failed
         if register_errors:

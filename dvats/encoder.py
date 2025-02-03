@@ -2235,13 +2235,13 @@ def set_train_and_eval_dataloaders(
         self.mssg.print(f"Selecting validation dataset | windows")
         ds_eval, eval_indices = self.set_random_dataset(eval_size, ds)
         self.eval_indices_dict[_case_] = eval_indices
-        self.mssg.print_error(f"Saved indices {eval_indices} for case {_case_}")
+        self.mssg.print(f"Saved indices {eval_indices} for case {_case_}")
         ds_train, _ = self.set_train_dataset(
             ds              = ds,
             dl_eval_indices = eval_indices, 
             train_size      = train_size
         )
-        self.mssg.print_error(f"Saved indices after train dataset {eval_indices} for case {_case_}")
+        self.mssg.print(f"Saved indices after train dataset {eval_indices} for case {_case_}")
     dl_eval  = DataLoader(
         dataset     = ds_eval, 
         batch_size  = self.input.batch_size, 
@@ -2682,7 +2682,7 @@ def check_batch_masks(
     # Setup mssg 
     func = mssg.function
     mssg.level += 1
-    mssg.initial_(ut.func_name())
+    mssg.initial_(ut.funcname())
     # Ensure same number of masks than batches
     batch_masks = batch_masks[:batch.shape[0]]
     # Ensure same size for mask and batch
@@ -2713,7 +2713,7 @@ def check_mask(
     # Setup mssg 
     func = mssg.function
     mssg.level += 1
-    mssg.initial_(ut.func_name())
+    mssg.initial_(ut.funcname())
     
     # Should have as masks as batch_masks
     if mask.shape[1] < batch_masks.shape[1]:

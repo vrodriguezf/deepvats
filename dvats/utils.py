@@ -59,7 +59,7 @@ def print_flush(
         with open(print_path, print_mode) as f:
             print(mssg_, file=f, **kwargs)
     if (not print_to_path) or (print_to_path and print_both):
-        if print_both: mssg_ += " | " + print_path
+        if print_both: mssg_ += mssg + " | " + print_path
         print(mssg_, **kwargs)
     sys.stdout.flush()
 

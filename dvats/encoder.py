@@ -2814,7 +2814,7 @@ def fine_tune_moment_train_loop_step_(
     # Compute a forward pass
     device = batch.device
     with torch.cuda.device(device):
-        self.mssg.print_error("Executing in device{device}")
+        self.mssg.print_error(f"Executing in device {device}")
         output, success  = self.moment_safe_forward_pass(
             batch               = batch, 
             input_mask          = bms,  
@@ -2928,14 +2928,15 @@ def fine_tune_moment_train_(
         epoch_loss_mean = np.nanmean(epoch_losses)
         losses.append(epoch_loss_mean)
         if save_best_or_last and epoch_loss_mean < best_loss:
+            self.mssg.print_error("Best Loss {best_loss} -> {epoch_loss_mean}")
             self.best_epoch = epoch
             best_loss       = epoch_loss_mean 
-            best_model_state= self.model.state_dict().copy()
+            best_model_state = {k: v.clone().detach() for k, v in self.model.state_dict().items()}
     progress_bar.close()
     # Get the best version of the model
     if save_best_or_last and best_model_state:
         self.model.load_state_dict(best_model_state)
-        self.mssg.print(f"Best epoch: {self.best_epoch}")
+        self.mssg.print_error(f"Best epoch: {self.best_epoch}")
     self.mssg.final()
     # Restore mssg
     self.mssg.level -= 1
@@ -4085,7 +4086,7 @@ def fine_tune(
         scheduler_specific_kwargs       = scheduler_specific_kwargs
     )
     enc.mssg.initial_("fine_tune")
-    enc.mssg.print(f"Original enc_learn { enc_learn }  | Final model { enc.model }")
+    #enc.mssg.print(f"Original enc_learn { enc_learn }  | Final model { enc.model }")
     enc.set_fine_tune_()
     match enc.fine_tune_.__name__:
         case "fine_tune_moment_":

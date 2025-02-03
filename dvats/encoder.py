@@ -275,6 +275,8 @@ class Encoder():
     errors              : pd.DataFrame      = pd.DataFrame(columns=["window", "error"])
     window_sizes        : List [int]        = None
     best_epoch          : int               = -1
+    best_loss           : int               = np.inf
+    best_model_state                        = None
     eval_indices_dict     : AttrDict        = None
     ws                  : int               = None #Current window size
     def __post_init__(self):
@@ -917,10 +919,10 @@ def moment_safe_forward_pass(
     success = False
     try:
         #--- Añadidos comentarios para revisar el uso de CUDA (quitar el _error y aumentar verbose cuando se termine la depuración)
-        self.mssg.print_error(f"Using device: {torch.cuda.current_device()}")
-        self.mssg.print_error(f"CUDA is available: {torch.cuda.is_available()}")
-        self.mssg.print_error(f"Model device: {next(self.model.parameters()).device}")
-        self.mssg.print_error(f"Devices: batch - {batch.device} | input_mask - {batch.device} | mask - {mask.device}.")
+        self.mssg.print(f"Using device: {torch.cuda.current_device()}")
+        self.mssg.print(f"CUDA is available: {torch.cuda.is_available()}")
+        self.mssg.print(f"Model device: {next(self.model.parameters()).device}")
+        self.mssg.print(f"Devices: batch - {batch.device} | input_mask - {batch.device} | mask - {mask.device}.")
         #---
         batch       = batch.float()
         input_mask  = input_mask.float()
@@ -2519,21 +2521,23 @@ def moment_compute_loss(
     self.mssg.print(f"batch_masks ~ {batch_masks.shape} | {batch_masks.device}")
     self.mssg.print(f"mask ~ {mask.shape} | {mask.device}")
     # Compute loss
-    self.mssg.print_error(f"Criterion: {self.optim.criterion}")
+    self.mssg.print(f"Criterion: {self.optim.criterion}")
     # Ensure sizes
     min_len = min(predictions.shape[2], references.shape[2])
     references  = references[:,:,:min_len]
     predictions = predictions[:,:,:min_len]
     ####
     recon_loss      = self.optim.criterion(predictions, references)
-    #self.mssg.print_error(f"Reconstruction loss: {recon_loss}")
-    #self.mssg.print_error(f"Batch mask: {batch_masks}")
-    #self.mssg.print_error(f"Mask: {mask}")
+    self.mssg.level += 1
+    self.mssg.print(f"Reconstruction loss: {recon_loss}")
+    self.mssg.print(f"Batch mask: {batch_masks}")
+    self.mssg.print(f"Mask: {mask}")
     observed_mask   = batch_masks * (1-mask)
-    #self.mssg.print_error(f"Observed mask: {observed_mask}")
+    self.mssg.print(f"Observed mask: {observed_mask}")
     masked_loss     = observed_mask * recon_loss
     loss            = masked_loss.nansum() / (observed_mask.nansum() + 1e-7)
     self.mssg.print(f"Loss type: {type(loss)}")
+    self.mssg.level -= 1
     self.mssg.print(f"loss: {loss.item()}")
     self.mssg.final()
     # Restore mssg
@@ -2822,7 +2826,7 @@ def fine_tune_moment_eval_step_(
     # -- Model evaluation
     device = batch.device
     with torch.no_grad(), torch.cuda.device(device):
-        self.mssg.print_error(f"Executing in device{device}")
+        self.mssg.print(f"Executing in device {device}")
         # Exec forward pass
         output, success = self.moment_safe_forward_pass(batch = batch, input_mask = bms, mask = mask)
         # If the execution of the forward pass was ok, compute the evaluation metrics
@@ -2858,6 +2862,7 @@ def fine_tune_moment_eval_(
     self      : Encoder,
     dl_eval   : DataLoader
 ):
+    self.mssg.print_error("COMPUTING FINE TUNE MOMENT EVAL") #quitar al acabar depuración
     # Setup mssg
     func = self.mssg.function
     self.mssg.level += 1
@@ -2904,7 +2909,7 @@ def fine_tune_moment_eval_(
     progress_bar.close()
     
     # Update evaluation metrics
-    eval_results ["loss"]   = np.nanmean(losss)
+    eval_results ["loss"]   = np.nanmean(np.array(losss))
     try:
         mse   = mse_metric.compute(squared = False)
         rmse  = rmse_metric.compute(squared = True)
@@ -2956,7 +2961,7 @@ def fine_tune_moment_train_loop_step_(
     # Compute a forward pass
     device = batch.device
     with torch.cuda.device(device):
-        self.mssg.print_error(f"Executing in device {device}")
+        self.mssg.print(f"Executing in device {device}")
         output, success  = self.moment_safe_forward_pass(
             batch               = batch, 
             input_mask          = bms,  
@@ -3035,8 +3040,8 @@ def fine_tune_moment_train_(
     self.mssg.level -= 1
     self.mssg.print(f"num_epochs {self.num_epochs} | n_batches {len(dl_train)}")
     if save_best_or_last:
-        best_loss           = np.inf
-        best_model_state    = None
+        #best_loss           = np.inf
+        #best_model_state    = None
         epoch_loss_mean     = np.nan
     self.best_epoch = -1
     for epoch in range(self.num_epochs):
@@ -3069,16 +3074,16 @@ def fine_tune_moment_train_(
         epoch_losses    = np.array(epoch_losses)
         epoch_loss_mean = np.nanmean(epoch_losses)
         losses.append(epoch_loss_mean)
-        if save_best_or_last and epoch_loss_mean < best_loss:
-            self.mssg.print_error(f"Best Loss {best_loss} -> {epoch_loss_mean}")
+        if save_best_or_last and epoch_loss_mean < self.best_loss:
+            self.mssg.print_error(f"Best Loss {self.best_loss} -> {epoch_loss_mean}")
             self.mssg.print_error(f"Best epoch {epoch}")
             self.best_epoch = epoch
-            best_loss       = epoch_loss_mean 
-            best_model_state = {k: v.clone().detach() for k, v in self.model.state_dict().items()}
+            self.best_loss  = epoch_loss_mean 
+            self.best_model_state = {k: v.clone().detach() for k, v in self.model.state_dict().items()}
     progress_bar.close()
     # Get the best version of the model
-    if save_best_or_last and best_model_state:
-        self.model.load_state_dict(best_model_state)
+    if save_best_or_last and self.best_model_state:
+        self.model.load_state_dict(self.best_model_state)
         self.mssg.print_error(f"Best epoch: {self.best_epoch}")
     self.mssg.final()
     # Restore mssg
@@ -3171,20 +3176,19 @@ def fine_tune_moment_single_(
     ) = self.set_train_and_eval_dataloaders(sample_id)
     # Evaluation % training
     try:
-        self.mssg.print(f"Processing wlen {self.input.data[sample_id].shape[2]} | Lengths list: {self.window_sizes}")
+        self.mssg.print(f"Eval wlen {self.input.data[sample_id].shape[2]} | Lengths list: {self.window_sizes}")
         # Previous evaluation
         if eval_pre:
             torch.cuda.synchronize()
-
-            self.mssg.print(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
+            self.mssg.print_error(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
             if self.time_flag: timer.start()
             eval_results_pre    = self.fine_tune_moment_eval_(dl_eval = dl_eval)
             if self.time_flag: 
                 timer.end()
                 t_eval_1 = timer.duration()
                 timer.show(verbose = self.mssg.verbose)
-        torch.cuda.synchronize()
-
+            torch.cuda.synchronize()
+            #self.mssg.print_error(f"Eval pre after computation: {eval_results_pre}")
         # Training (fine-tuning)
         if shot:
             torch.cuda.synchronize()
@@ -3220,18 +3224,19 @@ def fine_tune_moment_single_(
                 t_eval_2 = timer.duration()
                 if self.mssg.verbose > 0: 
                     timer.show()
-                if self.mssg.verbose > 0: 
-                    self.show_eval_stats(
-                        # Wether computed or not pre & post errors
-                        eval_pre        = eval_pre, 
-                        eval_post       = eval_post, 
-                        # Results
-                        eval_stats_pre  = eval_results_pre,
-                        eval_stats_post = eval_results_post,
-                        # Function name
-                        func_name       = ut.funcname()
-                    )
             torch.cuda.synchronize()
+        
+        if self.mssg.verbose > 0 and (eval_pre or eval_post): 
+            self.show_eval_stats(
+                # Wether computed or not pre & post errors
+                eval_pre        = eval_pre, 
+                eval_post       = eval_post, 
+                # Results
+                eval_stats_pre  = eval_results_pre,
+                eval_stats_post = eval_results_post,
+                # Function name
+                func_name       = ut.funcname()
+            )
 
     except Exception as e:
         # Save error if failed
@@ -3244,6 +3249,7 @@ def fine_tune_moment_single_(
             display(self.errors)
         else: 
             raise(e)
+    #self.mssg.print_error(f"Final Eval pre: {eval_results_pre}")
     self.mssg.final()
     # Restore mssg
     self.mssg.level -= 1
@@ -3312,7 +3318,16 @@ def fine_tune_moment_(
             save_best_or_last   = save_best_or_last
         )
         if (error_val == 0): lossess.append(losses)
-        if (eval_pre and error_val == 0): eval_results_pre = eval_results_pre_
+        
+        if (eval_pre and error_val == 0): 
+            if eval_results_pre == {}: 
+                eval_results_pre = {
+                    key:[eval_results_pre_[key]] for key in eval_results_pre_.keys()
+                }
+            else:
+                for key in eval_results_pre_.keys():
+                    self.mssg.print(eval_results_pre_[key])
+                    eval_results_pre[key] += [eval_results_pre_[key]]
         #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
         if (eval_post and error_val == 0):
             if eval_results_post == {}: 
@@ -3321,7 +3336,7 @@ def fine_tune_moment_(
                 }
             else:
                 for key in eval_results_post_.keys():
-                    self.mssg.print_error(print(eval_results_post_[key]))
+                    self.mssg.print(eval_results_post_[key])
                     eval_results_post[key] += [eval_results_post_[key]]
         #self.mssg.print_error(f"After concat {eval_results_post}")
         t_shots.append(t_shot_)

@@ -3040,7 +3040,7 @@ def fine_tune_moment_train_(
     self.mssg.level -= 1
     self.mssg.print(f"num_epochs {self.num_epochs} | n_batches {len(dl_train)}")
     if save_best_or_last:
-        #best_loss           = np.inf
+        self.best_loss      = np.inf
         #best_model_state    = None
         epoch_loss_mean     = np.nan
     self.best_epoch = -1
@@ -3342,7 +3342,7 @@ def fine_tune_moment_(
         t_shots.append(t_shot_)
         if eval_pre: t_evals.append(t_eval_1)
         if eval_post: t_evals.append(t_eval_2)
-        eval_pre = False
+        #eval_pre = False
         if save_best_or_last:
             self.mssg.print_error("best_epoch: ", self.best_epoch)
             best_epochs.append(self.best_epoch)

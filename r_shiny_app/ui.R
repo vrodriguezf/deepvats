@@ -137,7 +137,7 @@ shinyUI(fluidPage(
             textInput("ft_batch_size", "Batch Size", value = 32),
             textOutput("ft_batch_size_value"),
             textInput("ft_mask_window_percent", "Percentage of windows/dataset to use for the training", value = 0.75), # mask
-            textInput("ft_window_percent", "Maskared windows percent", value = 0.75), # mask
+            textInput("ft_window_percent", "masked windows percent", value = 0.75), # mask
             textOutput("ft_window_percent_value"),
             textInput("ft_training_percent", "Training windows percent", value = 0.1),
             textInput("ft_validation_percent", "Validation windows percent", value = 0.3),

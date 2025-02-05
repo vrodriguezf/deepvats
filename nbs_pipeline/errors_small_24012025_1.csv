@@ -1,4 +1,4 @@
-model_size,n_epochs,dataset_percent,maskared_percent,n_windows,windows,error,window
+model_size,n_epochs,dataset_percent,masked_percent,n_windows,windows,error,window
 small,1,0.25,1.0,,[17],"""binomial_cpu"" not implemented for 'Long'",17
 small,1,0.25,1.0,,"[17, 12, 10, 16, 8]","""binomial_cpu"" not implemented for 'Long'",17
 small,1,0.25,1.0,,"[17, 12, 10, 16, 8]","""binomial_cpu"" not implemented for 'Long'",12

@@ -15,8 +15,9 @@ __all__ = ['ENCODER_EMBS_MODULE_NAME', 'MAELossFlat', 'EncoderInput', 'LRSchedul
            'set_train_and_eval_dataloaders', 'fine_tune_moment_compute_loss_check_sizes_', 'moment_compute_loss',
            'fine_tune_moment_eval_preprocess', 'get_mask_moment', 'get_mask_tsai', 'check_batch_masks', 'check_mask',
            'moment_set_masks', 'fine_tune_moment_eval_step_', 'fine_tune_moment_eval_',
-           'fine_tune_moment_train_loop_step_', 'config_optim', 'fine_tune_moment_train_',
-           'prepare_train_and_eval_dataloaders', 'fine_tune_moment_single_', 'fine_tune_moment_', 'fit_fastai',
+           'fine_tune_moment_eval_mix_windows_', 'fine_tune_moment_train_loop_step_', 'config_optim',
+           'fine_tune_moment_train_', 'prepare_train_and_eval_dataloaders', 'fine_tune_moment_single_',
+           'fine_tune_moment_train_mix_windows_', 'fine_tune_moment_mix_windows', 'fine_tune_moment_', 'fit_fastai',
            'fine_tune_mvp_single_', 'fine_tune_mvp_', 'configure_optimizer_moirai', 'get_enc_embs_moirai_',
            'get_dist_moirai_', 'fine_tune_moirai_eval_step_', 'fine_tune_moirai_eval_',
            'fine_tune_moirai_train_loop_step_', 'fine_tune_moirai_train_', 'fine_tune_moirai_single_',
@@ -124,7 +125,11 @@ class EncoderInput:
 
     @property
     def size(self):
-        if self._data is not None and ( self._update_size or self._size is None or self._size == 0):
+        if  ( 
+                self._data is not None 
+            and ( self._update_size or self._size is None or self._size == 0) 
+            and self._data.__class__ != ut.WindowedDataset
+        ):
             self._size          = len(self._data)
             self._update_size   = False
             self._size,_ = ut._check_value(self._size, 0, "_size", int)
@@ -138,7 +143,8 @@ class EncoderInput:
     def shape(self) -> Tuple[int, ...]:
         if (
                 self._data is not None and 
-                ( self._update_shape or self._shape is None or self._shape == 0 )
+                ( self._update_shape or self._shape is None or self._shape == 0 ) and
+                not self._data.__class__ == ut.WindowedDataset
         ):
             try: 
                 self._shape     = self._data.shape
@@ -156,7 +162,8 @@ class EncoderInput:
     def shapes(self) -> List [ Tuple [ int, ... ]]:
         if (
             self._data is not None and 
-            ( self._update_shape or self._shapes is None or self._shapes ==[])
+            ( self._update_shape or self._shapes is None or self._shapes ==[]) and 
+            not self._data.__class__ == ut.WindowedDataset
         ):
             try: 
                 self._shape     = self._data.shape
@@ -395,6 +402,8 @@ class Encoder():
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def set_random_dataset(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+    def fine_tune_moment_mix_windows(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     #--- MVP
     def fine_tune_mvp_single_(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
@@ -429,6 +438,10 @@ class Encoder():
     def show_eval_stats(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
     def fine_tune_moment_eval_(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+    def fine_tune_moment_eval_mix_windows_(self):
+        raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
+    def fine_tune_moment_train_mix_windows_(self):
         raise NotImplementedError(f"Encoder.{ut.funcname()} not yet implemented")
 
 # %% ../nbs/encoder.ipynb 14
@@ -2032,6 +2045,10 @@ def windowed_dataset(
     window_sizes_offset             : int           = 0.05,
     windows_min_distance            : int           = 1,
     full_dataset                    : bool          = False,
+    mix_windows                     : bool          = False,
+    validation_percent              : float         = 0.3,
+    training_percent                : float         = 1.0,
+    cpu                             : bool          = False,
     mssg                            : ut.Mssg       = ut.Mssg()
 ): 
     stride = 1 if stride is None else stride 
@@ -2043,36 +2060,46 @@ def windowed_dataset(
     mssg.level += 1
     mssg.initial(ut.funcname())
     dss = []
+    if window_sizes is None or n_window_sizes > len(window_sizes):
+        mssg.print("X is a DataFrame | Selecting Fourier's dominant frequences")
+        mssg.level += 1
+        # Select Fourier's dominant frequences
+        window_sizes_ = find_dominant_window_sizes_list(
+            X               = X, 
+            nsizes          = n_window_sizes, 
+            offset          = window_sizes_offset, 
+            min_distance    = windows_min_distance,
+            mssg            = mssg
+        )
+        mssg.level -= 1
+        window_sizes = window_sizes_ if window_sizes is None else list(set(window_sizes + window_sizes_))[:n_window_sizes]
+    if mix_windows:
+        dss = ut.WindowedDataset(
+            dataset             = X,
+            window_sizes        = window_sizes,
+            validation_percent  = validation_percent,
+            training_percent    = training_percent,
+            device              = "cpu" if cpu else torch.cuda.current_device(),
+            stride              = stride
+        )
     if isinstance(X, list):
         mssg_print("X is a list. Converting to dataFrame")
         X = np.array(X)
         X = pd.DataFrame(X)        
     if ( isinstance(X,pd.DataFrame) or full_dataset): 
         mssg.print(f"X is a DataFrame, X~{X.shape} | window_sizes {len(window_sizes) if window_sizes is not None else 0}, n_window_sizes {n_window_sizes}")
-        if window_sizes is None or n_window_sizes > len(window_sizes):
-            mssg.print("X is a DataFrame | Selecting Fourier's dominant frequences")
-            mssg.level += 1
-            # Select Fourier's dominant frequences
-            window_sizes_ = find_dominant_window_sizes_list(
-                X               = X, 
-                nsizes          = n_window_sizes, 
-                offset          = window_sizes_offset, 
-                min_distance    = windows_min_distance,
-                mssg            = mssg
-            )
-            mssg.level -= 1
-            window_sizes = window_sizes_ if window_sizes is None else list(set(window_sizes + window_sizes_))[:n_window_sizes]
-            mssg.print(f"X is a DataFrame | Window sizes: {len(window_sizes)}", func_name = ut.funcname())
+        mssg.print(f"X is a DataFrame | Window sizes: {len(window_sizes)}", func_name = ut.funcname())
         mssg.print(f"Building the windows")
-        for w in window_sizes:
-            mssg.print(f"w = {w}", verbose_level = mssg.level+1)
-            enc_input, _ = SlidingWindow(window_len = w, stride = stride, get_y=[])(X)
-            dss.append(enc_input)
-            mssg.print(f"w {w} | enc_input~{enc_input.shape} | dss~{len(dss)}",  verbose_level = mssg.level+1, func_name = ut.funcname())
+        if not mix_windows:
+            for w in window_sizes:
+                mssg.print(f"w = {w}", verbose_level = mssg.level+1)
+                enc_input, _ = SlidingWindow(window_len = w, stride = stride, get_y=[])(X)
+                dss.append(enc_input)
+                mssg.print(f"w {w} | enc_input~{enc_input.shape} | dss~{len(dss)}",  verbose_level = mssg.level+1, func_name = ut.funcname())
     else: 
         mssg.print("X is already windowed")
         dss = [X]
-    mssg.print(f"Number of windows: {len(dss)}")
+    if not mix_windows: mssg.print(f"Number of windows: {len(dss)}")
     mssg.final()
     mssg.level -= 1
     return dss
@@ -2280,7 +2307,9 @@ def _set_enc_input(
     windows_min_distance            : Optional [ int ]          = 1,
     full_dataset                    : Optional [ bool ]         = False,
     ## -- Using Type
-    enc_input                       : Optional [ EncoderInput ] = None
+    enc_input                       : Optional [ EncoderInput ] = None,
+    mix_windows                     : bool                      = False,
+    cpu                             : bool                      = False
 ): 
     # Setup mssg
     mssg.level += 1
@@ -2299,9 +2328,13 @@ def _set_enc_input(
             window_sizes_offset     = window_sizes_offset,
             windows_min_distance    = windows_min_distance,
             full_dataset            = full_dataset,
+            mix_windows             = mix_windows,
+            validation_percent      = validation_percent,
+            training_percent        = training_percent,
+            cpu                     = cpu,
             mssg                    = mssg
         )
-        mssg.print(f"About to get the encoder input | windows~{len(enc_input)}", func_name = ut.funcname())
+        mssg.print(f"About to get the encoder input", func_name = ut.funcname())
         enc_input = EncoderInput(
             _data               = enc_input, 
             stride              = stride,
@@ -2310,9 +2343,9 @@ def _set_enc_input(
             n_windows_percent   = n_windows_percent,
             validation_percent  = validation_percent,
             training_percent    = training_percent,
-            window_mask_percent = window_mask_percent,
+            window_mask_percent = window_mask_percent
         )
-        mssg.print(f"Enc input obtained | enc_input~{enc_input.shape}")
+        if not mix_windows: mssg.print(f"Enc input obtained | enc_input~{enc_input.shape}")
     mssg.final()
     # Restore mssg
     mssg.function = func
@@ -2406,7 +2439,8 @@ def _set_encoder(
     metrics_names                   : Optional [ List [ str ] ]     = None,
     metrics_args                    : Optional [ AttrDict ]         = None,
     metrics_dict                    : Optional [ AttrDict ]         = None,
-    scheduler_specific_kwargs       : Optional [ AttrDict ]         = None
+    scheduler_specific_kwargs       : Optional [ AttrDict ]         = None,
+    mix_windows                     : Optional [ bool ]             = False
 ):
     enc,_ = ut._check_value(enc, None, "enc", Encoder, True)
     
@@ -2421,7 +2455,7 @@ def _set_encoder(
         mssg.both = print_both
         mssg.initial(ut.funcname())
         mssg.print("About to exec _set_enc_input")
-        enc_input = _set_enc_input(mssg, X, stride, batch_size, n_windows, n_windows_percent, validation_percent, training_percent, window_mask_percent, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, enc_input)
+        enc_input = _set_enc_input(mssg, X, stride, batch_size, n_windows, n_windows_percent, validation_percent, training_percent, window_mask_percent, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, enc_input, mix_windows, cpu = cpu)
         mssg.print(f"enc_input~{enc_input.shape}")
         mssg.print("About to exec _set_optimizer")
         optim = _set_optimizer(mssg, optim, criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name, lr_scheduler_num_warmup_steps)
@@ -2810,7 +2844,7 @@ def fine_tune_moment_eval_step_(
     self.mssg.level += 1
     self.mssg.initial(ut.funcname())
     # Setup masks
-    window_size = self.input.shape[2]
+    window_size = batch.shape[2]
     device = "cpu" if self.cpu else torch.cuda.current_device()
     batch_masks = torch.ones((self.input.batch_size, window_size), device = device).long()
     mask, bms = moment_set_masks(
@@ -2933,6 +2967,81 @@ def fine_tune_moment_eval_(
 Encoder.fine_tune_moment_eval_ = fine_tune_moment_eval_
 
 # %% ../nbs/encoder.ipynb 75
+def fine_tune_moment_eval_mix_windows_(
+    self      : Encoder
+):
+    self.mssg.print_error("COMPUTING FINE TUNE MOMENT EVAL") #quitar al acabar depuración
+    # Setup mssg
+    func = self.mssg.function
+    self.mssg.level += 1
+    self.mssg.initial()
+    # Evaluation metrics dict
+    eval_results = {
+        "loss"  : np.nan,
+        "mse"   : np.nan,
+        "rmse"  : np.nan,
+        "mae"   : np.nan,
+        "smape" : np.nan
+    }
+    # Select device
+    device = "cpu" if self.cpu else torch.cuda.current_device()
+    # Load metric
+    mse_metric  = EvalMSE
+    rmse_metric = EvalRMSE
+    mae_metric  = EvalMAE
+    smape_metric= EvalSMAPE
+    losss       = []
+    total_loss  = 0.0
+    self.model = self.model.to(device)
+    
+    # Evaluation loop
+    self.model.eval()
+    num_batches = sum(1 for _ in self.input.data.valid_batches())
+    progress_bar = tqdm(range(num_batches))
+    for batch in self.input.data.valid_batches():
+        batch = batch.to(device)
+        (
+            mse_metric, 
+            rmse_metric, 
+            mae_metric, 
+            smape_metric,
+            loss
+        ) = self.fine_tune_moment_eval_step_(
+            batch       = batch, 
+            mse_metric  = mse_metric, 
+            rmse_metric = rmse_metric,
+            mae_metric  = mae_metric,
+            smape_metric= smape_metric
+        )
+        losss.append(loss)
+        progress_bar.update(1)
+    progress_bar.close()
+    
+    # Update evaluation metrics
+    eval_results ["loss"]   = np.nanmean(np.array(losss))
+    try:
+        mse   = mse_metric.compute(squared = False)
+        rmse  = rmse_metric.compute(squared = True)
+        mae   = mae_metric.compute()
+        smape = smape_metric.compute()
+        eval_results ["mse"]    = mse['mse']
+        eval_results ["rmse"]   = rmse['mse']
+        eval_results ["mae"]    = mae['mae']
+        eval_results ["smape"]  = smape['smape']
+    except:
+        #raise ValueError("Could not compute metrics. Already used add?")
+        warnings.warn("Could not compute metrics. Already used add?")
+
+    self.mssg.print_error(f"Eval results: {eval_results}.")
+    self.model.train()
+    self.mssg.final()
+    # Restore mssg
+    self.mssg.function = func
+    self.mssg.level -= 1
+    return eval_results
+Encoder.fine_tune_moment_eval_mix_windows_ = fine_tune_moment_eval_mix_windows_
+
+# %% ../nbs/encoder.ipynb 76
 def fine_tune_moment_train_loop_step_(
     self : Encoder,
     batch, 
@@ -2991,7 +3100,7 @@ def fine_tune_moment_train_loop_step_(
     return loss
 Encoder.fine_tune_moment_train_loop_step_ = fine_tune_moment_train_loop_step_
 
-# %% ../nbs/encoder.ipynb 76
+# %% ../nbs/encoder.ipynb 77
 def config_optim(
     self : Encoder,
     dl_train,
@@ -3009,13 +3118,13 @@ def config_optim(
         self.optim.lr.scheduler = None
 Encoder.config_optim = config_optim
 
-# %% ../nbs/encoder.ipynb 77
+# %% ../nbs/encoder.ipynb 78
 def fine_tune_moment_train_(
     self                            : Encoder,
     dl_train                        : DataLoader,
     ds_train                        : pd.DataFrame,
-    use_moment_masks                : bool      = False,
-    save_best_or_last               : bool                          = True #If true, save best else save last
+    use_moment_masks                : bool = True,
+    save_best_or_last               : bool = True #If true, save best else save last
 ):
     # Setup mssg
     self.mssg.level += 1
@@ -3092,7 +3201,7 @@ def fine_tune_moment_train_(
     return losses, self.model
 Encoder.fine_tune_moment_train_ = fine_tune_moment_train_
 
-# %% ../nbs/encoder.ipynb 78
+# %% ../nbs/encoder.ipynb 79
 #-- moving to set_train_and_eval_dataloaders
 def prepare_train_and_eval_dataloaders(
     X                   : Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ],
@@ -3144,7 +3253,7 @@ def prepare_train_and_eval_dataloaders(
     mssg.function = func
     return dl_eval, dl_train, ds_test, ds_train
 
-# %% ../nbs/encoder.ipynb 79
+# %% ../nbs/encoder.ipynb 80
 def fine_tune_moment_single_(
     self                : Encoder,
     eval_pre            : bool = False,
@@ -3258,7 +3367,176 @@ def fine_tune_moment_single_(
 
 Encoder.fine_tune_moment_single_ = fine_tune_moment_single_
 
-# %% ../nbs/encoder.ipynb 80
+# %% ../nbs/encoder.ipynb 81
+def fine_tune_moment_train_mix_windows_(
+    self                : Encoder,
+    use_moment_masks    : bool = True,
+    save_best_or_last   : bool = True
+):
+    # Setup mssg
+    self.mssg.level += 1
+    func = self.mssg.function
+    self.mssg.initial_(ut.funcname())
+    # Output param
+    losses = []
+    epoch_losses = []
+    # Select device
+    device = "cpu" if self.cpu else torch.cuda.current_device()
+    # Optimizer and learning rate scheduler
+    num_batches = sum(1 for _ in self.input.data.train_batches())
+    num_training_steps = self.num_epochs * num_batches
+    if self.optim.optimizer is None:
+        self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), self.optim.lr.lr)
+    if self.optim.lr.flag:
+        if not self.optim.lr.num_warmup_steps:
+            lr_scheduler_num_warmup_steps = 0.02*num_training_steps 
+        lr_scheduler_max_lr = 5-10*self.optim.lr.lr if lr_scheduler_max_lr is None else lr_scheduler_max_lr
+        match self.optim.lr.name:
+            case "OneCycleLR": 
+                lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                    optimizer           = self.optim.optimizer,
+                    max_lr              = lr_scheduler_max_lr,
+                    epochs              = self.num_epochs,
+                    steps_per_epoch     = len(dl_train)
+                )
+            case _:
+                lr_scheduler = get_scheduler(
+                    name                = self.optim.lr.name,
+                    optimizer           = self.optim.optimizer,
+                    num_warmup_steps    = lr_scheduler_num_warmup_steps,
+                    num_training_steps  = num_training_steps
+                )
+    else:
+        self.optim.lr.scheduler = None
+    progress_bar = tqdm(range(num_training_steps))
+    for epoch in range (self.num_epochs):
+        epoch_losses = []
+        for i, batch in self.input.data.train_batches(return_ids = True):
+            window_size = batch.shape[2]
+            batch_masks = torch.ones((self.input.batch_size, window_size), device = device).long()
+            loss  = self.fine_tune_moment_train_loop_step_(
+                batch            = batch,
+                batch_masks      = batch_masks, 
+                use_moment_masks = use_moment_masks,
+            )
+            # Execute optimizer and get loss
+            try: 
+                self.mssg.print(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward | After loop step ")
+                self.optim.optimizer.zero_grad()
+                if hasattr(loss, 'item'):
+                    epoch_losses.append(loss.item())
+                    loss.backward()
+                else:
+                    epoch_losses.append(loss)
+                self.optim.optimizer.step()
+            except Exception as e: 
+                self.mssg.print(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}")
+                self.optim.optimizer.zero_grad()
+                self.optim.optimizer.step()
+            if self.optim.lr.flag: self.optim.lr.scheduler.step()
+            progress_bar.update(1)
+        epoch_loss_mean = np.nanmean(np.array(epoch_losses))
+        losses.append(epoch_loss_mean)
+        if save_best_or_last and epoch_loss_mean < self.best_loss:
+            self.mssg.print_error(f"Best Loss {self.best_loss} -> {epoch_loss_mean}")
+            self.mssg.print_error(f"Best epoch {epoch}")
+            self.best_epoch = epoch
+            self.best_loss  = epoch_loss_mean 
+            self.best_model_state = {k: v.clone().detach() for k, v in self.model.state_dict().items()}
+    progress_bar.close()
+    # Get the best version of the model 
+    if save_best_or_last and self.best_model_state:
+        self.model.load_state_dict(self.best_model_state)
+        self.mssg.print_error(f"Best epoch: {self.best_epoch}")
+    self.mssg.final()
+    # Restore mssg
+    self.mssg.level -= 1
+    self.mssg.function = func
+    return losses, self.model 
+
+
+Encoder.fine_tune_moment_train_mix_windows_ = fine_tune_moment_train_mix_windows_
+
+# %% ../nbs/encoder.ipynb 82
+def fine_tune_moment_mix_windows(
+    self                : Encoder,
+    eval_pre            : bool = False,
+    eval_post           : bool = False,
+    shot                : bool = True,
+    sample_id           : int  = 0,
+    use_moment_masks    : bool = False,
+    register_errors     : bool = True,
+    save_best_or_last   : bool = True #If true, save best else save last
+):
+    # Setup mssg 
+    self.mssg.level += 1
+    func = self.mssg.function
+    self.mssg.initial_(ut.funcname())
+    # Return parameters
+    losses              = []
+    eval_results_pre    = {}
+    eval_results_post   = {} 
+    t_shot              = 0.0
+    t_eval_1            = 0.0
+    t_eval_2            = 0.0
+    error_val           = 0
+    
+    if self.time_flag: timer = ut.Time(mssg = deepcopy(self.mssg))
+    
+    # Go!
+    try: 
+        self.window_sizes = set()
+        # Pre-validation
+        if eval_pre: 
+            if self.cpu != "cpu" and self.time_flag:
+                torch.cuda.synchronize()
+            if self.time_flag: timer.start()
+            eval_results_pre = self.fine_tune_moment_eval_mix_windows_()
+            if self.cpu != "cpu" and self.time_flag:
+                torch.cuda.synchronize()
+            if self.time_flag: 
+                timer.end()
+                t_eval_1 = timer.duration()
+        # Training 
+        if shot: 
+            if self.cpu != "cpu" and self.time_flag:
+                torch.cuda.synchronize()
+            if self.time_flag: timer.start()
+            losses, self.model = self.fine_tune_moment_train_mix_windows_()
+            if self.cpu != "cpu" and self.time_flag:
+                torch.cuda.synchronize()
+            if self.time_flag: 
+                timer.end()
+                t_shot = timer.duration()
+        # Post-validation
+        if eval_post: 
+            if self.cpu != "cpu" and self.time_flag:
+                torch.cuda.synchronize()
+            if self.time_flag: timer.start()
+            eval_results_post = self.fine_tune_moment_eval_mix_windows_()
+            if self.cpu != "cpu" and self.time_flag:
+                torch.cuda.synchronize()
+            if self.time_flag: 
+                timer.end()
+                t_eval_2 = timer.duration()
+    except Exception as e:
+        if register_errors:
+            error_val = 1
+            self.mssg.print_error(f"Registering error | {e}")
+            error = {"window": self.input.data.window_sizes, "error": e}
+            self.errors = pd.concat([self.errors, ])
+            display(self.errors)
+        else: 
+            raise(e)
+    self.mssg.final()
+    # Restore mssg 
+    self.mssg.function = func 
+    self.mssg.level -= 1
+    return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model, error_val
+
+Encoder.fine_tune_moment_mix_windows = fine_tune_moment_mix_windows
+
+# %% ../nbs/encoder.ipynb 83
 def fine_tune_moment_(
     self                : Encoder, 
     eval_pre            : bool = False, 
@@ -3267,7 +3545,8 @@ def fine_tune_moment_(
     time_flag           : bool = None,
     use_moment_masks    : bool = None,
     register_errors     : bool = True,
-    save_best_or_last   : bool = True #If true, save best else save last
+    save_best_or_last   : bool = True, #If true, save best else save last
+    mix_windows         : bool = True
 ):   
     # Setup mmsg & use_moment_masks
     func = self.mssg.function 
@@ -3285,7 +3564,7 @@ def fine_tune_moment_(
     t_evals             = []
     t_eval              = 0
     # Check
-    if self.input.size is None:
+    if self.input._data.__class__ != ut.WindowedDataset and self.input.size is None:
         self.mssg.print(f"Windows: {len(self.input._data)}")
         raise ValueError(f"Invalid number of windows: {self.input.size}")
     self.mssg.print(f"Processing {self.input.size} datasets : {self.input.shape}")
@@ -3293,51 +3572,71 @@ def fine_tune_moment_(
     if self.optim.optimizer is None: 
         self.mssg.print(f"Setting up optimizer as AdamW")
         self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.optim.lr.lr)
-    # Evaluate the model for each window in the windowed dataset
-    for i in range(self.input.size):
-        window_size = self.input._data[i].shape[2]
-        self.mssg.print_error(f"Processing wlen {window_size} | wlens {self.window_sizes} | i {i+1}/{self.input.size}")
-        self.ws = window_size
-        self.window_sizes.append(window_size)
+    
+    if mix_windows:
         ( 
             losses, 
-            eval_results_pre_, 
-            eval_results_post_, 
-            t_shot_, 
-            t_eval_1, 
+            eval_results_pre,
+            eval_results_post_,
+            t_shot_,
+            t_eval_1,
             t_eval_2, 
-            self.model,
-            error_val
-        ) =  self.fine_tune_moment_single_(
+            self.model, 
+            error_val 
+        ) = self.fine_tune_moment_mix_windows(
             eval_pre            = eval_pre, 
             eval_post           = eval_post, 
             shot                = shot, 
-            sample_id           = i, 
             use_moment_masks    = use_moment_masks, 
             register_errors     = register_errors, 
             save_best_or_last   = save_best_or_last
         )
-        if (error_val == 0): lossess.append(losses)
-        
-        if (eval_pre and error_val == 0): 
-            if eval_results_pre == {}: 
-                eval_results_pre = {
-                    key:[eval_results_pre_[key]] for key in eval_results_pre_.keys()
-                }
-            else:
-                for key in eval_results_pre_.keys():
-                    self.mssg.print(eval_results_pre_[key])
-                    eval_results_pre[key] += [eval_results_pre_[key]]
-        #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
-        if (eval_post and error_val == 0):
-            if eval_results_post == {}: 
-                eval_results_post = {
-                    key:[eval_results_post_[key]] for key in eval_results_post_.keys()
-                }
-            else:
-                for key in eval_results_post_.keys():
-                    self.mssg.print(eval_results_post_[key])
-                    eval_results_post[key] += [eval_results_post_[key]]
+    else:
+        # Evaluate the model for each window in the windowed dataset
+        for i in range(self.input.size):
+            window_size = self.input._data[i].shape[2]
+            self.mssg.print_error(f"Processing wlen {window_size} | wlens {self.window_sizes} | i {i+1}/{self.input.size}")
+            self.ws = window_size
+            self.window_sizes.append(window_size)
+            ( 
+                losses, 
+                eval_results_pre_, 
+                eval_results_post_, 
+                t_shot_, 
+                t_eval_1, 
+                t_eval_2, 
+                self.model,
+                error_val
+            ) =  self.fine_tune_moment_single_(
+                eval_pre            = eval_pre, 
+                eval_post           = eval_post, 
+                shot                = shot, 
+                sample_id           = i, 
+                use_moment_masks    = use_moment_masks, 
+                register_errors     = register_errors, 
+                save_best_or_last   = save_best_or_last
+            )
+            if (error_val == 0): lossess.append(losses)
+
+            if (eval_pre and error_val == 0): 
+                if eval_results_pre == {}: 
+                        eval_results_pre = {
+                        key:[eval_results_pre_[key]] for key in eval_results_pre_.keys()
+                    }
+                else:
+                    for key in eval_results_pre_.keys():
+                        self.mssg.print(eval_results_pre_[key])
+                        eval_results_pre[key] += [eval_results_pre_[key]]
+            #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
+            if (eval_post and error_val == 0):
+                if eval_results_post == {}: 
+                    eval_results_post = {
+                        key:[eval_results_post_[key]] for key in eval_results_post_.keys()
+                    }
+                else:
+                    for key in eval_results_post_.keys():
+                        self.mssg.print(eval_results_post_[key])
+                        eval_results_post[key] += [eval_results_post_[key]]
         #self.mssg.print_error(f"After concat {eval_results_post}")
         t_shots.append(t_shot_)
         if eval_pre: t_evals.append(t_eval_1)
@@ -3359,7 +3658,7 @@ def fine_tune_moment_(
 
 Encoder.fine_tune_moment_ = fine_tune_moment_
 
-# %% ../nbs/encoder.ipynb 82
+# %% ../nbs/encoder.ipynb 85
 def fit_fastai(
     self     : Encoder,
     dl_train : DataLoader,
@@ -3496,7 +3795,7 @@ def fit_fastai(
     self.mssg.level -= 1
 Encoder.fit_fastai = fit_fastai    
 
-# %% ../nbs/encoder.ipynb 83
+# %% ../nbs/encoder.ipynb 86
 def fine_tune_mvp_single_(
     self            : Encoder,
     eval_pre        : bool  = False,
@@ -3647,7 +3946,7 @@ def fine_tune_mvp_single_(
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_mvp_single_ = fine_tune_mvp_single_
 
-# %% ../nbs/encoder.ipynb 84
+# %% ../nbs/encoder.ipynb 87
 def fine_tune_mvp_(
     self                    : Encoder,
     eval_pre                : bool  = True,
@@ -3679,7 +3978,7 @@ def fine_tune_mvp_(
     t_evals             = []
     t_eval              = 0
     # Check
-    if self.input.size is None:
+    if self.input._data.__class__ != ut.WindowedDataset and self.input.size is None:
         self.mssg.print(f"Windows: {len(self.input._data)}")
         raise ValueError(f"Invalid number of windows: {self.input.size}")
     self.mssg.print(f"Processing {self.input.size} datasets: {self.input.shape}")
@@ -3729,7 +4028,7 @@ def fine_tune_mvp_(
 
 Encoder.fine_tune_mvp_ = fine_tune_mvp_ 
 
-# %% ../nbs/encoder.ipynb 86
+# %% ../nbs/encoder.ipynb 89
 def configure_optimizer_moirai(
     self                : Encoder, 
     dl_train            : DataLoader,
@@ -3829,7 +4128,7 @@ def configure_optimizer_moirai(
     self.mssg.level -= 1
 Encoder.configure_optimizer_moirai = configure_optimizer_moirai
 
-# %% ../nbs/encoder.ipynb 87
+# %% ../nbs/encoder.ipynb 90
 def get_enc_embs_moirai_(# Obtain the embeddings
     self            : Encoder,
     enc_input       : List [ List [ List [ float ] ] ],
@@ -3851,7 +4150,7 @@ def get_enc_embs_moirai_(# Obtain the embeddings
 
 Encoder.get_enc_embs_moirai_ = get_enc_embs_moirai_
 
-# %% ../nbs/encoder.ipynb 88
+# %% ../nbs/encoder.ipynb 91
 def get_dist_moirai_(# "Normal" execution
     self            : Encoder,
     enc_input       : List [ List [ List [ float ] ] ],
@@ -3870,7 +4169,7 @@ def get_dist_moirai_(# "Normal" execution
 
 Encoder.get_dist_moirai_ = get_dist_moirai_
 
-# %% ../nbs/encoder.ipynb 89
+# %% ../nbs/encoder.ipynb 92
 def fine_tune_moirai_eval_step_(
     self        : Encoder, 
     enc_input   : List [ List [ List [ float ] ] ],
@@ -3894,7 +4193,7 @@ def fine_tune_moirai_eval_step_(
         
 Encoder.fine_tune_moirai_eval_step_ = fine_tune_moirai_eval_step_
 
-# %% ../nbs/encoder.ipynb 90
+# %% ../nbs/encoder.ipynb 93
 def fine_tune_moirai_eval_(
     self    : Encoder,
     dl_eval,
@@ -3924,7 +4223,7 @@ def fine_tune_moirai_eval_(
 
 Encoder.fine_tune_moirai_eval_ = fine_tune_moirai_eval_
 
-# %% ../nbs/encoder.ipynb 91
+# %% ../nbs/encoder.ipynb 94
 def fine_tune_moirai_train_loop_step_(
     self        : Encoder,
     enc_input   : List[ List [ List [ float ] ] ],
@@ -3939,7 +4238,7 @@ def fine_tune_moirai_train_loop_step_(
     loss = loss_func(pred = distr,**args)
     return loss 
 
-# %% ../nbs/encoder.ipynb 92
+# %% ../nbs/encoder.ipynb 95
 def fine_tune_moirai_train_(
     self                : Encoder,
     dl_train            : DataLoader
@@ -3974,7 +4273,7 @@ def fine_tune_moirai_train_(
     self.mssg.level -= 1
 Encoder.fine_tune_moirai_train_ = fine_tune_moirai_train_
 
-# %% ../nbs/encoder.ipynb 93
+# %% ../nbs/encoder.ipynb 96
 def fine_tune_moirai_single_(
     self            : Encoder,
     eval_pre        : bool  = False,
@@ -4059,7 +4358,7 @@ def fine_tune_moirai_single_(
     return losses, eval_results_pre, eval_results_post, t_shot, t_eval_1, t_eval_2, self.model
 Encoder.fine_tune_moirai_single_ = fine_tune_moirai_single_
 
-# %% ../nbs/encoder.ipynb 94
+# %% ../nbs/encoder.ipynb 97
 def fine_tune_moirai_(
     self      : Encoder, 
     eval_pre  : bool = False, 
@@ -4096,7 +4395,7 @@ def fine_tune_moirai_(
         }
     
     ### ----- Start ----
-    if self.input.size is None:
+    if self.input._data.__class__ != ut.WindowedDataset and self.input.size is None:
         self.mssg.print(f"Windows: {len(self.input._data)}")
         raise ValueError(f"Invalid number of windows: {self.input.size}")
 
@@ -4135,7 +4434,7 @@ def fine_tune_moirai_(
 
 Encoder.fine_tune_moirai_ = fine_tune_moirai_
 
-# %% ../nbs/encoder.ipynb 98
+# %% ../nbs/encoder.ipynb 101
 def fine_tune(
     # Optional parameters
     ## Encoder Input
@@ -4203,7 +4502,8 @@ def fine_tune(
     metrics_dict                    : AttrDict                      = None,
     scheduler_specific_kwargs       : AttrDict                      = None,
     register_errors                 : bool                          = True,
-    save_best_or_last               : bool                          = True #If true, save best else save last
+    save_best_or_last               : bool                          = True, #If true, save best else save last
+    mix_windows                     : bool                          = True
 ): 
     enc = _set_encoder(
         X                               = X,
@@ -4245,7 +4545,8 @@ def fine_tune(
         metrics_names                   = metrics_names,
         metrics_args                    = metrics_args,
         metrics_dict                    = metrics_dict,
-        scheduler_specific_kwargs       = scheduler_specific_kwargs
+        scheduler_specific_kwargs       = scheduler_specific_kwargs,
+        mix_windows                     = mix_windows
     )
     func = enc.mssg.function
     enc.mssg.initial_("fine_tune")
@@ -4255,7 +4556,7 @@ def fine_tune(
         case "fine_tune_moment_":
             enc.mssg.print("Use fine_tune_moment parameters")
             result = enc.fine_tune_(
-                eval_pre, eval_post, shot, time_flag, use_moment_masks, register_errors, save_best_or_last
+                eval_pre, eval_post, shot, time_flag, use_moment_masks, register_errors, save_best_or_last, mix_windows
             )
         case "fine_tune_mvp_":
             enc.mssg.print("Use fine_tune_mvp parameters")

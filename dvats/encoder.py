@@ -3412,9 +3412,11 @@ def fine_tune_moment_train_mix_windows_(
     else:
         self.optim.lr.scheduler = None
     progress_bar = tqdm(range(num_training_steps))
+    i = 0
     for epoch in range (self.num_epochs):
         epoch_losses = []
         for batch in self.input.data.train_batches():
+            i+=1
             window_size = batch.shape[2]
             batch_masks = torch.ones((self.input.batch_size, window_size), device = device).long()
             loss  = self.fine_tune_moment_train_loop_step_(
@@ -3424,7 +3426,7 @@ def fine_tune_moment_train_mix_windows_(
             )
             # Execute optimizer and get loss
             try: 
-                self.mssg.print(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward | After loop step ")
+                self.mssg.print(f"fine_tune_moment_train | batch ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward | After loop step ")
                 self.optim.optimizer.zero_grad()
                 if hasattr(loss, 'item'):
                     epoch_losses.append(loss.item())

@@ -2998,6 +2998,7 @@ def fine_tune_moment_eval_mix_windows_(
     self.model.eval()
     num_batches = sum(1 for _ in self.input.data.valid_batches())
     progress_bar = tqdm(range(num_batches))
+    self.mssg.print(f"Num validation steps: {num_batches}")
     for batch in self.input.data.valid_batches():
         batch = batch.to(device)
         (
@@ -3385,6 +3386,8 @@ def fine_tune_moment_train_mix_windows_(
     # Optimizer and learning rate scheduler
     num_batches = sum(1 for _ in self.input.data.train_batches())
     num_training_steps = self.num_epochs * num_batches
+    self.mssg.print_error(f"Num training steps: {self.num_epochs}*{num_batches} = {num_training_steps}")
+
     if self.optim.optimizer is None:
         self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), self.optim.lr.lr)
     if self.optim.lr.flag:
@@ -3411,7 +3414,7 @@ def fine_tune_moment_train_mix_windows_(
     progress_bar = tqdm(range(num_training_steps))
     for epoch in range (self.num_epochs):
         epoch_losses = []
-        for i, batch in self.input.data.train_batches(return_ids = True):
+        for batch in self.input.data.train_batches():
             window_size = batch.shape[2]
             batch_masks = torch.ones((self.input.batch_size, window_size), device = device).long()
             loss  = self.fine_tune_moment_train_loop_step_(
@@ -3430,12 +3433,14 @@ def fine_tune_moment_train_mix_windows_(
                     epoch_losses.append(loss)
                 self.optim.optimizer.step()
             except Exception as e: 
-                self.mssg.print(f"fine_tune_moment_train | batch {i} ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}")
+                self.mssg.print(f"fine_tune_moment_train | batch ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}")
                 self.optim.optimizer.zero_grad()
                 self.optim.optimizer.step()
             if self.optim.lr.flag: self.optim.lr.scheduler.step()
             progress_bar.update(1)
-        epoch_loss_mean = np.nanmean(np.array(epoch_losses))
+        self.mssg.print(f"Epoch losses: {epoch_losses}")
+        epoch_losses = np.array(epoch_losses)
+        epoch_loss_mean = np.nanmean(epoch_losses)
         losses.append(epoch_loss_mean)
         if save_best_or_last and epoch_loss_mean < self.best_loss:
             self.mssg.print_error(f"Best Loss {self.best_loss} -> {epoch_loss_mean}")

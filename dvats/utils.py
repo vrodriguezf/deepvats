@@ -1364,14 +1364,19 @@ class WindowedDataset:
         # División del dataset en entrenamiento y validación
         self.split()
 
-    def split(self):
+    def split(self, pct_full: bool = True):
         """
         Splits the dataset into training (initial part) and validation (final part).
         """
         dataset_size = len(self.dataset)
+        print("total: ", dataset_size)
         self.val_size = int(np.ceil(dataset_size * self.validation_percent))
-        self.train_size = int(np.floor((dataset_size - self.val_size) * self.training_percent))
-
+        print(f"Validation: {self.validation_percent}*{dataset_size} = {self.val_size}")
+        if pct_full:
+            self.train_size = int(np.floor(dataset_size*self.training_percent))
+        else:
+            self.train_size = int(np.ceil((dataset_size - self.val_size) * self.training_percent))
+        print(f"Training: {self.training_percent}*({dataset_size}-{self.val_size}) = {self.train_size}")
         if self.val_size <= 0 or self.train_size <= 0:
             raise ValueError("Invalid validation/training percentage")
 
@@ -1386,8 +1391,9 @@ class WindowedDataset:
         """
         available = size    
         current_idx = start_idx
-
+        print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
         while available >= self.batch_size * min(self.window_sizes):
+            print(f"available {available} | current {current_idx}")
             batch = []
             bs = 0  # Contador de elementos en el batch
             window_size = np.random.choice(self.window_sizes)
@@ -1395,11 +1401,10 @@ class WindowedDataset:
             while bs < self.batch_size and available >= window_size:
                 window = self.dataset[current_idx : current_idx + window_size]  # Extraer datos
                 batch.append(window)
-
                 # Mover el índice
                 #current_idx += window_size
                 current_idx += self.stride
-                available -= window_size
+                available -= self.stride
                 bs += 1  # Aumentar el número de ventanas en el batch
                 if return_ids: batch_indices.append((current_idx, current_idx + window_size))
             if bs == self.batch_size:  # Solo devolver batches completos

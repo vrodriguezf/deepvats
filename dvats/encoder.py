@@ -3583,7 +3583,7 @@ def fine_tune_moment_(
     if mix_windows:
         ( 
             losses, 
-            eval_results_pre,
+            eval_results_pre_,
             eval_results_post_,
             t_shot_,
             t_eval_1,
@@ -3623,35 +3623,34 @@ def fine_tune_moment_(
                 register_errors     = register_errors, 
                 save_best_or_last   = save_best_or_last
             )
-            if (error_val == 0): lossess.append(losses)
-
-            if (eval_pre and error_val == 0): 
-                if eval_results_pre == {}: 
-                        eval_results_pre = {
-                        key:[eval_results_pre_[key]] for key in eval_results_pre_.keys()
-                    }
-                else:
-                    for key in eval_results_pre_.keys():
-                        self.mssg.print(eval_results_pre_[key])
-                        eval_results_pre[key] += [eval_results_pre_[key]]
-            #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
-            if (eval_post and error_val == 0):
-                if eval_results_post == {}: 
-                    eval_results_post = {
-                        key:[eval_results_post_[key]] for key in eval_results_post_.keys()
-                    }
-                else:
-                    for key in eval_results_post_.keys():
-                        self.mssg.print(eval_results_post_[key])
-                        eval_results_post[key] += [eval_results_post_[key]]
+    if (error_val == 0): lossess.append(losses)
+    if (eval_pre and error_val == 0): 
+        if eval_results_pre == {}: 
+                eval_results_pre = {
+                key:[eval_results_pre_[key]] for key in eval_results_pre_.keys()
+            }
+        else:
+            for key in eval_results_pre_.keys():
+                self.mssg.print(eval_results_pre_[key])
+                eval_results_pre[key] += [eval_results_pre_[key]]
+        #self.mssg.print_error(f"About to concat {eval_results_post_} to {eval_results_post}")
+    if (eval_post and error_val == 0):
+        if eval_results_post == {}: 
+            eval_results_post = {
+                key:[eval_results_post_[key]] for key in eval_results_post_.keys()
+            }
+        else:
+            for key in eval_results_post_.keys():
+                self.mssg.print(eval_results_post_[key])
+                eval_results_post[key] += [eval_results_post_[key]]
         #self.mssg.print_error(f"After concat {eval_results_post}")
-        t_shots.append(t_shot_)
-        if eval_pre: t_evals.append(t_eval_1)
-        if eval_post: t_evals.append(t_eval_2)
-        #eval_pre = False
-        if save_best_or_last:
-            self.mssg.print_error("best_epoch: ", self.best_epoch)
-            best_epochs.append(self.best_epoch)
+    t_shots.append(t_shot_)
+    if eval_pre: t_evals.append(t_eval_1)
+    if eval_post: t_evals.append(t_eval_2)
+    #eval_pre = False
+    if save_best_or_last:
+        self.mssg.print_error("best_epoch: ", self.best_epoch)
+        best_epochs.append(self.best_epoch)
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)
     self.eval_stats_pre = eval_results_pre

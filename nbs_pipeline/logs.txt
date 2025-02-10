@@ -6,10 +6,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019193534360965713, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019885321671608835, 'mse': 0.041957623005072706, 'rmse': 0.0019885320318299054, 'mae': 0.02549115454312414, 'smape': 0.13123106163642778}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020843643229454755, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021489224018296227, 'mse': 0.04425808038020069, 'rmse': 0.0021489225183074457, 'mae': 0.026194941136054695, 'smape': 0.1333859905926394}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -20,10 +20,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001468200294766575, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020352040213765577, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019846933893859385, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001350906805600971, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -34,10 +34,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005205933274867546, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006561320979796749, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005612289753376639, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006570703535024742, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -48,13 +48,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005307407904183492, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004346967247935633, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*1 = 1[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 7.791372627252713e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.471827509813011e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0036945192389086718, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003791686781268153, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -65,11 +65,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -79,17 +79,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007233564410573588, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0003197258381987922[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -99,10 +93,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001919715147232637, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020873813453363256, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019617214595200492, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020012597902677952, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -113,10 +107,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003512683359440416, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0034374785842373966, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0032423305208794774, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002096379129216075, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -127,10 +121,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007503976667067036, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00669697871074147, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005000397677317129, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005610777522503797, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -141,13 +135,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004528553907423177, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0037715128370715925, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*1 = 1[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.984073504805565e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 7.036382157821208e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004078770295665082, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004552079914396422, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -158,17 +152,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007723365797294089, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00010789802472572773[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -178,11 +166,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -192,10 +180,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021123225160408765, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002171163825551048, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002037013857625425, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019416961469687522, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -206,10 +194,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002299388241954148, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003045861836289987, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0025361192791024225, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004410246631596238, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -220,10 +208,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005733874279290571, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007455899837493364, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007296747640274199, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005321143641984756, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -234,13 +222,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005764506878525329, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004411173111293465, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*1 = 1[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 7.26572034182027e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 9.390882769366726e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0049714197957655415, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005357864101016376, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -251,13 +239,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007682863191943257, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -267,11 +253,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -281,10 +267,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019671597314300016, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019698097574291753, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019642791303340346, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019401269499212503, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -295,10 +281,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001453667736495845, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020082741568330674, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003939131469815038, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003268799977377057, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -309,13 +295,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005180585724052175, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006189262610860169, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*2 = 2[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.421668149414472e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.392750947270542e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006936645783883121, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005065256272376116, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -326,13 +312,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004089223078659011, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005220407736487687, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*4 = 4[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.698416407540208e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.19968559476547e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006043154594307352, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005452951464879637, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -343,11 +329,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -357,11 +343,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -371,10 +357,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0018859840696677566, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020853619498666376, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002054098618100397, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021301339700585233, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -385,10 +371,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0014521426695864648, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0042811012302991, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001507002901053056, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00327103526215069, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -399,13 +385,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005193705100932026, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006243576624131363, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*2 = 2[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.668575042567682e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.162630052131135e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005074354838663047, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00529417631540647, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -416,13 +402,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005571369964551802, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005171284370590001, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*4 = 4[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00011409093167458195[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0001366519545626943[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004061895509948954, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004471658138855774, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -433,11 +419,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -447,11 +433,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -461,10 +447,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002446748566580936, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002188749168999493, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001981227906071581, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021338696125894783, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -475,10 +461,10 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0015043538005556911, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0037353724095737562, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021433027286548167, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0022182036744197832, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -489,13 +475,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007692366060967158, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006645756071001025, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*2 = 2[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.051107084203977e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.158859468996525e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006967961087606714, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006062803985384692, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -506,13 +492,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005139579034423352, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005259617564863422, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*4 = 4[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.472298744280124e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.79566003580112e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005093416102075328, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0050506539264461026, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -523,11 +509,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -537,11 +523,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -551,13 +537,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002005578647367656, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001899635116569698, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*2 = 2[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.762021646660287e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.879766285943333e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019626928580692036, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019911116687580943, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -568,13 +554,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0038504623342305424, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0038991005683783444, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*2 = 2[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.645556666422635e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.163262332847808e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003331363803590648, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0038239310582866893, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -585,13 +571,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006421253621478432, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0062973813432368585, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*4 = 4[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00010156835924135521[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 9.331359069619793e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0044601806605766925, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005547477693263707, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -602,13 +588,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004424295992875058, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004122284947597008, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*6 = 6[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00045633257044149406[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00033193943939598586[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004634725253304673, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004233666320538355, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -619,11 +605,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -633,13 +619,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.009617277226285435, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*10 = 10[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -649,13 +633,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019447717146249487, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002112128952285275, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*2 = 2[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.104358726588544e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.357896407076623e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020733846962684766, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019260188622865827, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -666,13 +650,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0014978243183577434, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003431852671201341, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*2 = 2[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.454757021856494e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.148508873593528e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0014186581160174684, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0032208593940595163, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -683,13 +667,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00524465595455175, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007709977603683781, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*4 = 4[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.782091830042191e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.506590514414711e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00445491772344602, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005531196274595069, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -700,13 +684,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0053129032215413945, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005713351460548842, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*6 = 6[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00043418728394802503[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0006693606840902552[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00400917246103442, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0037543099638747256, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -717,11 +701,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -731,13 +715,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007560679438309028, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*10 = 10[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -747,13 +729,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020566914114169776, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020309314131736755, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*2 = 2[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 7.654364162590355e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 7.896193346823566e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021216306311544033, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00202569855900947, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -764,13 +746,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0031469777546590193, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002096520410850644, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*2 = 2[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.773160384909716e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.9657302699633874e-05[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00299277079757303, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0035319179994985463, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -781,13 +763,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007663983610525195, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006530272720348356, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*4 = 4[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 9.657117334427312e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00020100542405998567[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006022118753337834, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007658802080966, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -798,13 +780,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005386101157960689, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004398254200673869, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*6 = 6[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0004315506491063085[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0004342697836060931[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004216876448481344, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005869068192421562, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -815,43 +797,49 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00821440616541972, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.008122706332449945, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*10 = 10[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
-[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
-[1] [91m [ fine_tune ] best_epoch: [0m
-[1] [ --> _set_encoder ]
-[1]  [ _set_encoder ] About to exec _set_enc_input
-[1]  [ _set_encoder ] enc_input~(0,)
-[1]  [ _set_encoder ] About to exec _set_optimizer
-[1] [_set_encoder --> ]
-[1] [ --> fine_tune ]
-[1]  [ fine_tune ] Use fine_tune_moment parameters
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
-[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
-[1] [91m [ fine_tune ] best_epoch: [0m
-[1] [ --> _set_encoder ]
-[1]  [ _set_encoder ] About to exec _set_enc_input
-[1]  [ _set_encoder ] enc_input~(0,)
-[1]  [ _set_encoder ] About to exec _set_optimizer
-[1] [_set_encoder --> ]
-[1] [ --> fine_tune ]
-[1]  [ fine_tune ] Use fine_tune_moment parameters
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020012275519547982, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0001859663454524707[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0004407377218740294[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002036957142991014, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007415296046439415, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*10 = 10[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_train_loop_step_ ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002010858149151318, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00022734457888873294[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019475535809760913, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -862,13 +850,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003368616008083336, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001992489956319332, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00016134651086758823[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00032923979160841553[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003593411296606064, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019557973544579, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -879,13 +867,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006537528500692653, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006702504526141898, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0005378519256607563[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0006159075887158646[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006494600537865024, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006422173560297649, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -896,13 +884,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0055618369272754835, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004841839454861151, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*9 = 9[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00043216891774338565[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00042765628394489695[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004406947733110024, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00396009762900778, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -913,11 +901,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -927,11 +915,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -941,13 +929,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002005868931883015, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0018115848273737357, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0002809147619700525[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0002735268652031664[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019435542490100488, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0018924430158222094, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -958,13 +946,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003942461055703461, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0034366394655080514, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00019503912262734956[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00038196463719941676[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004020746611058712, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003930416551884264, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -975,13 +963,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006603409856325015, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006788760334269942, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0006320838749940906[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.000589305365013258[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006870182632285703, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005626886293092477, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -992,13 +980,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00419486258761026, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004496045527048409, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*9 = 9[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00044269590903746174[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00041276326778137847[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0043080444156657904, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003703137235586635, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -1009,11 +997,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -1023,13 +1011,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007696178168631517, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*13 = 13[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -1039,13 +1025,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0022297110874205826, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002226913635968231, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00015423992881551384[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0003084173491515685[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002463363582501188, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021681579848518593, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -1056,13 +1042,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0018986565759405495, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004222127504181117, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*5 = 5[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0002705487182538491[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0004174780522589572[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0033362110320013017, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0033537680632434786, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -1073,13 +1059,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007612849319619792, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00593725016681544, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0005335421228664927[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0007496856690392763[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005483852212949257, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006046065353854958, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -1090,13 +1076,13 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006142151896104527, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003821627852933792, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*9 = 9[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0004476298365463865[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0005039428959005616[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006138946233679437, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005937351246959426, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -1107,11 +1093,11 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ moment_safe_forward_pass ] Sure eval moment execution failed.[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
-[1] [91m [ moment_safe_forward_pass ] Registering error | Sure eval moment execution failed.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
 [1] [91m [ fine_tune ] best_epoch: [0m
 [1] [ --> _set_encoder ]
 [1]  [ _set_encoder ] About to exec _set_enc_input
@@ -1121,3 +1107,1242 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0018832217669114471, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019006177637493238, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001376687435549684, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019304733606986702, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006101699392144967, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005351454435315516, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004597342626463312, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*1 = 10[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.311037577688694e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.311037577688694e-05 -> 6.134348222985864e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.134348222985864e-05 -> 5.6463471992174163e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 4[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 4[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004618503890621166, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.008378739182192545, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*5 = 50[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0001644953568757046[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_train_loop_step_ ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021260096837067977, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002122011504252441, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021547234966419635, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0015656773030059412, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00656739209080115, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006645885707777259, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0038086706578421095, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*1 = 10[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.9421487094368786e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.9421487094368786e-05 -> 5.622343815048225e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 4[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 4[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004966100910678506, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020278069481719286, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019719410222023724, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002106036205077544, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003480122203473002, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006679141232910167, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006473988814312699, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005311771207036347, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*1 = 10[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.231279985513538e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.231279985513538e-05 -> 5.768653500126675e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.768653500126675e-05 -> 5.692563718184829e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 8[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 8[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004491649028043159, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019291578355478123, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019163073506206275, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019068243535002693, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0014404947753064335, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0064353163345783415, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*2 = 20[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.411318463506177e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.411318463506177e-05 -> 5.9427760788821615e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.9427760788821615e-05 -> 5.7561359426472336e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 8[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 8[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00631666517749961, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005429910457072158, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*4 = 40[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.73685074414243e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.73685074414243e-05 -> 5.60540220249095e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 5[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.60540220249095e-05 -> 5.249949390417896e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 6[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 6[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0043262130865413286, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019433444133028388, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020525876781903206, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0034961971396114677, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001407555871992372, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006760452851137545, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*2 = 20[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.000784560455941e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.000784560455941e-05 -> 5.9106341723236255e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 8[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 8[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0054180440742389434, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004771576285646815, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*4 = 40[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.8116388572670985e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.8116388572670985e-05 -> 5.365936794987647e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 2[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00422837003134191, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020083062758203597, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002056850487133488, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002130749449133873, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*0 = 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0030532818607753144, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005905437609596577, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*2 = 20[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 7.827140143490396e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 7.827140143490396e-05 -> 5.5705268096062355e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00719524328139544, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004939565514279012, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*4 = 40[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.557061442435952e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.557061442435952e-05 -> 6.0372422012733296e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.0372422012733296e-05 -> 5.849772151123034e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 5[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 5[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004580344658784775, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.01032095797171888, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*8 = 80[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_train_loop_step_ ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020043031399836764, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*2 = 20[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.341579708328936e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002017503819661215, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0015510791126871482, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*2 = 20[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.668047535640653e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.668047535640653e-05 -> 6.126725020294543e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.126725020294543e-05 -> 5.767391121480614e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.767391121480614e-05 -> 5.732793579227291e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 7[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 7[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0035737507685553284, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005195307597335029, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*4 = 40[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00011812869797722669[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00011812869797722669 -> 5.2580343435693067e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006274937589686098, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003990055797556933, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*6 = 60[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0004566910520225065[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0004566910520225065 -> 0.0003739398877466253[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 7[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 7[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00478402124847182, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002025381621206179, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*2 = 20[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 7.112775165296625e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 7.112775165296625e-05 -> 6.512654908874538e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.512654908874538e-05 -> 5.992859405523632e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 3[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 3[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019826064322842284, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0014063104667002336, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*2 = 20[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.181886601552833e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.181886601552833e-05 -> 6.14555519860005e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 4[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.14555519860005e-05 -> 6.0727365053026006e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 5[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.0727365053026006e-05 -> 5.7422435929765925e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 7[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 7[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021098241035360844, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005189820639705951, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*4 = 40[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.8014077694679145e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0048190559443485525, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004364031193997814, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*6 = 60[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0005122986979889296[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0005122986979889296 -> 0.000405472226702841[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 4[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.000405472226702841 -> 0.0003766108014436516[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 9[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 9[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004626147558964375, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.009888485682984957, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*10 = 100[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_train_loop_step_ ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021387534769019114, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*2 = 20[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 6.894763100717682e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 6.894763100717682e-05 -> 5.719980617868714e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.719980617868714e-05 -> 5.587943087448366e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 7[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 7[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019714144640602172, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001734983822098002, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*2 = 20[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.870506356586702e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.870506356586702e-05 -> 5.757063081546221e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 5[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.757063081546221e-05 -> 5.747240356868133e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 8[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 5.747240356868133e-05 -> 4.8829671868588775e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 9[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 9[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00435134147410281, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007401009753396336, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*4 = 40[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 5.819547004648484e-05[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007033985950069369, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005072591394612876, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*6 = 60[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0006760706922553558[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0006760706922553558 -> 0.0005302192663900011[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0005302192663900011 -> 0.0004366940496159562[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0004366940496159562 -> 0.00039916883482267923[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 5[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 5[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004188693057383514, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0024154850165359677, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*5 = 50[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00021263539747451432[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00021263539747451432 -> 0.00018234703165944665[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 2[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019033973396290094, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019308994145831094, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*5 = 50[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00040065989014692605[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00040065989014692605 -> 0.0002298771280038636[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0002298771280038636 -> 0.00022576943956664763[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 9[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 9[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0015153007465414704, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005429008297921557, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*7 = 70[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0006140851297199593[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0006140851297199593 -> 0.0005250817282233454[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0005250817282233454 -> 0.0004906507014571357[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 6[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0004906507014571357 -> 0.00047206843373714946[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 8[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 8[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005467051798145154, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005461940968719621, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*9 = 90[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0005100479385065329[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0005100479385065329 -> 0.0003832072276660862[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005472079533824904, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007010416019161662, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*13 = 130[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_train_loop_step_ ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0020480237115407364, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*5 = 50[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.000278269167029066[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.000278269167029066 -> 0.00024634878573124295[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00024634878573124295 -> 0.0001690683558990713[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 2[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0021051691699540244, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0014457693498115987, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*5 = 50[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.000455558695102809[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.000455558695102809 -> 0.00018772803523461334[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00018772803523461334 -> 0.00018419248808640987[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 3[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00018419248808640987 -> 0.00015688572166254743[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 4[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 4[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0037785280495882035, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005708068719416458, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*7 = 70[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0004311587737382589[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005998955449155931, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005133354153561716, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*9 = 90[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00039474934682301764[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00039474934682301764 -> 0.00035474155730399716[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003493903520090195, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0024144111754139884, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*5 = 50[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0003965871372201946[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0003965871372201946 -> 0.00017510453981230966[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.001929868190200068, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004706401261501014, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*5 = 50[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.00022960780042922125[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00022960780042922125 -> 0.00020106768351979554[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00020106768351979554 -> 0.00017685461571090855[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 9[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 9[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0037230642541544513, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007787741743543718, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*7 = 70[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0006934202787566132[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0006934202787566132 -> 0.0006714415410117779[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 1[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0006714415410117779 -> 0.000655493783727122[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.000655493783727122 -> 0.0005238451272556891[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 3[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0005238451272556891 -> 0.000513861004687247[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 6[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 6[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00741965978107016, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.005394592200496441, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*9 = 90[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss inf -> 0.0005648775711759097[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0005648775711759097 -> 0.0005119110331482565[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 2[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0005119110331482565 -> 0.0004619256829351394[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 3[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0004619256829351394 -> 0.00042917274792368215[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 5[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00042917274792368215 -> 0.0003928304593298688[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 9[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 9[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.004075107012694288, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1]  [ _set_encoder ] enc_input~(0,)
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Registering error | local variable 'output' referenced before assignment[0m
+[1] [91m [ fine_tune ] best_epoch: [0m

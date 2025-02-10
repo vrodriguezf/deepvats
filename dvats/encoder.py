@@ -3414,6 +3414,8 @@ def fine_tune_moment_train_mix_windows_(
         self.optim.lr.scheduler = None
     progress_bar = tqdm(range(num_training_steps))
     i = 0
+    self.best_epoch = -1
+    self.best_loss  = np.inf
     for epoch in range (self.num_epochs):
         epoch_losses = []
         for batch in self.input.data.train_batches():
@@ -3450,7 +3452,7 @@ def fine_tune_moment_train_mix_windows_(
             self.mssg.print_error(f"Best epoch {epoch}")
             self.best_epoch = epoch
             self.best_loss  = epoch_loss_mean 
-            self.best_model_state = {k: v.clone().detach() for k, v in self.model.state_dict().items()}
+            self.best_model_state = {k: v.clone().detach().cpu() for k, v in self.model.state_dict().items()}
     progress_bar.close()
     # Get the best version of the model 
     if save_best_or_last and self.best_model_state:

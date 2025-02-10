@@ -154,9 +154,9 @@ class EncoderInput:
                 self._shapes = [ self._data[i].shape for i in range(len(self._data))]
             self._update_shape = False
         elif self._update_shape: 
-            self._shape = 0,
-            self._shapes = []
-            self._update_shape = True
+            self._shape         = 0
+            self._shapes        = []
+            self._update_shape  = True
         return self._shape
     @property
     def shapes(self) -> List [ Tuple [ int, ... ]]:
@@ -173,7 +173,7 @@ class EncoderInput:
                 self._shapes    = [ self._data[i].shape for i in range(len(self._data))]
             self._update_shape  = False
         elif self._update_shape: 
-            self._shape         = 0,
+            self._shape         = 0
             self._shapes        = []
             self._update_shape  = True
         return self._shapes
@@ -3024,7 +3024,7 @@ def fine_tune_moment_eval_mix_windows_(
     
     # Evaluation loop
     self.model.eval()
-    num_batches = sum(1 for _ in self.input.data.valid_batches())
+    num_batches = self.input.data.num_batches('valid')
     progress_bar = tqdm(range(num_batches))
     self.mssg.print(f"Num validation steps: {num_batches}")
     for batch in self.input.data.valid_batches():
@@ -3152,8 +3152,9 @@ def fine_tune_moment_train_(
     self                            : Encoder,
     dl_train                        : DataLoader,
     ds_train                        : pd.DataFrame,
-    use_moment_masks                : bool = True,
-    save_best_or_last               : bool = True #If true, save best else save last
+    use_moment_masks                : bool              = True,
+    save_best_or_last               : bool              = True, #If true, save best else save last
+    loss_pre                        : Optional[float]   = None
 ):
     # Setup mssg
     self.mssg.level += 1
@@ -3178,10 +3179,15 @@ def fine_tune_moment_train_(
     self.mssg.level -= 1
     self.mssg.print(f"num_epochs {self.num_epochs} | n_batches {len(dl_train)}")
     if save_best_or_last:
-        self.best_loss      = np.inf
-        #best_model_state    = None
-        epoch_loss_mean     = np.nan
-    self.best_epoch = -1
+        epoch_loss_mean         = np.nan
+        self.best_epoch         = -1
+        self.best_model_state   = {k: v.clone().detach().cpu() for k, v in self.model.state_dict().items()}
+        if loss_pre is not None:
+            self.best_loss  = loss_pre
+            losses.append(self.best_loss)
+        else:
+            self.best_loss = np.inf
+
     for epoch in range(self.num_epochs):
         epoch_losses = []
         for i, batch in enumerate(dl_train):
@@ -3215,14 +3221,14 @@ def fine_tune_moment_train_(
         if save_best_or_last and epoch_loss_mean < self.best_loss:
             self.mssg.print_error(f"Best Loss {self.best_loss} -> {epoch_loss_mean}")
             self.mssg.print_error(f"Best epoch {epoch}")
-            self.best_epoch = epoch
-            self.best_loss  = epoch_loss_mean 
-            self.best_model_state = {k: v.clone().detach().cpu() for k, v in self.model.state_dict().items()}
+            self.best_epoch         = epoch
+            self.best_loss          = epoch_loss_mean 
+            self.best_model_state   = {k: v.clone().detach().cpu() for k, v in self.model.state_dict().items()}
     progress_bar.close()
     # Get the best version of the model
-    if save_best_or_last and self.best_model_state:
+    if save_best_or_last:
         self.model.load_state_dict(self.best_model_state)
-        self.mssg.print_error(f"Best epoch: {self.best_epoch}")
+        self.mssg.print_error(f"Loaded status in the best epoch ({self.best_epoch})")
     self.mssg.final()
     # Restore mssg
     self.mssg.level -= 1
@@ -3316,6 +3322,7 @@ def fine_tune_moment_single_(
     try:
         self.mssg.print(f"Eval wlen {self.input.data[sample_id].shape[2]} | Lengths list: {self.window_sizes}")
         # Previous evaluation
+        loss_pre = None
         if eval_pre:
             torch.cuda.synchronize()
             self.mssg.print_error(f"Eval Pre | wlen {self.input.data[sample_id].shape[2]}")
@@ -3329,6 +3336,7 @@ def fine_tune_moment_single_(
             #self.mssg.print_error(f"Eval pre after computation: {eval_results_pre}")
         # Training (fine-tuning)
         if shot:
+            if eval_pre: loss_pre = eval_results_pre["loss"]
             torch.cuda.synchronize()
             if self.time_flag: timer.start()
             self.mssg.print(f"Train | wlen {self.input.data[sample_id].shape[2]}")
@@ -3337,7 +3345,8 @@ def fine_tune_moment_single_(
                     dl_train                        = dl_train,
                     ds_train                        = ds_train,
                     use_moment_masks                = use_moment_masks,
-                    save_best_or_last               = save_best_or_last
+                    save_best_or_last               = save_best_or_last,
+                    loss_pre                        = loss_pre
                 )
                 torch.cuda.synchronize()
 
@@ -3379,10 +3388,10 @@ def fine_tune_moment_single_(
     except Exception as e:
         # Save error if failed
         if register_errors:
-            error_val = 1
-            window = self.input.data[sample_id].shape[2]
+            error_val   = 1
+            window      = self.input.data[sample_id].shape[2]
             self.mssg.print_error(f"Registering error in DataFrame | window: {window} | error: {e}")
-            error = {"window": window, "error": e}
+            error       = {"window": window, "error": e}
             self.errors = pd.concat([self.errors, pd.DataFrame([error])])
             display(self.errors)
         else: 
@@ -3399,8 +3408,9 @@ Encoder.fine_tune_moment_single_ = fine_tune_moment_single_
 # %% ../nbs/encoder.ipynb 81
 def fine_tune_moment_train_mix_windows_(
     self                : Encoder,
-    use_moment_masks    : bool = True,
-    save_best_or_last   : bool = True
+    use_moment_masks    : Optional[bool]    = True,
+    save_best_or_last   : Optional[bool]    = True,
+    loss_pre            : Optional[float]   = None
 ):
     # Setup mssg
     self.mssg.level += 1
@@ -3419,20 +3429,22 @@ def fine_tune_moment_train_mix_windows_(
         raise ValueError("Please check the configuration, the train dataset results in 0 batches.")
     if self.optim.optimizer is None:
         self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), self.optim.lr.lr)
+    
+    steps_per_epoch = self.input.data.num_batches('train')
     if self.optim.lr.flag:
         if not self.optim.lr.num_warmup_steps:
             lr_scheduler_num_warmup_steps = 0.02*num_training_steps 
         lr_scheduler_max_lr = 5-10*self.optim.lr.lr if lr_scheduler_max_lr is None else lr_scheduler_max_lr
         match self.optim.lr.name:
-            case "OneCycleLR": 
-                lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(
+            case "OneCycleLR":
+                self.optim.lr.scheduler = torch.optim.lr_scheduler.OneCycleLR(
                     optimizer           = self.optim.optimizer,
                     max_lr              = lr_scheduler_max_lr,
                     epochs              = self.num_epochs,
-                    steps_per_epoch     = len(dl_train)
+                    steps_per_epoch     = steps_per_epoch
                 )
             case _:
-                lr_scheduler = get_scheduler(
+                self.optim.lr.scheduler = get_scheduler(
                     name                = self.optim.lr.name,
                     optimizer           = self.optim.optimizer,
                     num_warmup_steps    = lr_scheduler_num_warmup_steps,
@@ -3441,9 +3453,16 @@ def fine_tune_moment_train_mix_windows_(
     else:
         self.optim.lr.scheduler = None
     progress_bar = tqdm(range(num_training_steps))
+    
+    if save_best_or_last:
+        epoch_loss_mean         = np.nan
+        self.best_epoch         = -1
+        self.best_model_state   = {k: v.clone().detach().cpu() for k, v in self.model.state_dict().items()}
+        if loss_pre is not None:
+            self.best_loss      = loss_pre
+            losses.append(self.best_loss)
+    
     i = 0
-    self.best_epoch = -1
-    self.best_loss  = np.inf
     for epoch in range (self.num_epochs):
         epoch_losses = []
         for batch in self.input.data.train_batches():
@@ -3495,7 +3514,6 @@ def fine_tune_moment_train_mix_windows_(
     self.mssg.function = func
     return losses, self.model 
 
-
 Encoder.fine_tune_moment_train_mix_windows_ = fine_tune_moment_train_mix_windows_
 
 # %% ../nbs/encoder.ipynb 82
@@ -3543,12 +3561,16 @@ def fine_tune_moment_mix_windows(
             if self.cpu != "cpu" and self.time_flag:
                 torch.cuda.synchronize()
             if self.time_flag: timer.start()
-            losses, self.model = self.fine_tune_moment_train_mix_windows_()
+            loss_pre = None if not eval_pre else eval_results_pre["loss"]
+            losses, self.model = self.fine_tune_moment_train_mix_windows_(use_moment_masks, save_best_or_last, loss_pre = loss_pre)
             if self.cpu != "cpu" and self.time_flag:
                 torch.cuda.synchronize()
             if self.time_flag: 
                 timer.end()
                 t_shot = timer.duration()
+        
+        
+        
         # Post-validation
         if eval_post: 
             if self.cpu != "cpu" and self.time_flag:

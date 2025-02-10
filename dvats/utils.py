@@ -1363,6 +1363,8 @@ class WindowedDataset:
         self.device             = device  # 'cpu' o 'cuda'
         self.stride             = stride
         self.allow_incomplete   = allow_incomplete
+        self.valid_size         = 0
+        self.train_size         = 0
         # División del dataset en entrenamiento y validación
         self.split()
 
@@ -1430,4 +1432,22 @@ class WindowedDataset:
         """ Returns validation batches dynamically as PyTorch tensors. """
         #print("Validation batches")
         return self.generate_batches(self.val_start, self.val_size, return_ids)
+    def num_batches(self, type = 'train'):
+        batches = 0
+        match type:
+            case 'train':
+                if (self.train_size > 0):
+                    batches = self.train_size
+                else:
+                    batches         = sum(1 for _ in self.train_batches())
+                    self.train_size = batches
+            case 'valid':
+                if (self.valid_size > 0):
+                    batches = self.valid_size
+                else:
+                    batches         = sum(1 for _ in self.valid_batches())
+                    self.valid_size = batches
+            case _:
+                raise ValueError("Invalid type for WindowedDataset type")
+        return batches
 

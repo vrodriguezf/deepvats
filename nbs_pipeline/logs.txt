@@ -6,33 +6,5 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019264406728325412, 'mse': 0.041419243355081625, 'rmse': 0.0019264408030882727, 'mae': 0.025411244947463274, 'smape': 0.1308832348165293}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019128199288388713, 'mse': 0.04124930209636835, 'rmse': 0.0019128197965547317, 'mae': 0.025168383377604187, 'smape': 0.13018293171002743}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [][0m
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.002005290152737871, 'mse': 0.041895734672465317, 'rmse': 0.0020052904444907084, 'mae': 0.02508293320424855, 'smape': 0.1290354752049907}.[0m
-[1] [91m [ fine_tune ] best_epoch: -1[0m
-[1] [fine_tune --> ]
-[1] [ --> _set_encoder ]
-[1]  [ _set_encoder ] About to exec _set_enc_input
-[1]  [ _set_encoder ] enc_input~(0,)
-[1]  [ _set_encoder ] About to exec _set_optimizer
-[1] [_set_encoder --> ]
-[1] [ --> fine_tune ]
-[1]  [ fine_tune ] Use fine_tune_moment parameters
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.003907348157372326, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [][0m
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0037901175441220404, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
-[1] [91m [ fine_tune ] best_epoch: -1[0m
-[1] [fine_tune --> ]
-[1] [ --> _set_encoder ]
-[1]  [ _set_encoder ] About to exec _set_enc_input
-[1]  [ _set_encoder ] enc_input~(0,)
-[1]  [ _set_encoder ] About to exec _set_optimizer
-[1] [_set_encoder --> ]
-[1] [ --> fine_tune ]
-[1]  [ fine_tune ] Use fine_tune_moment parameters
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m

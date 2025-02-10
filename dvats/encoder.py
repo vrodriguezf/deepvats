@@ -2084,7 +2084,7 @@ def windowed_dataset(
             stride              = stride
         )
     if isinstance(X, list):
-        mssg_print("X is a list. Converting to dataFrame")
+        mssg.print("X is a list. Converting to dataFrame")
         X = np.array(X)
         X = pd.DataFrame(X)        
     if ( isinstance(X,pd.DataFrame) or full_dataset): 
@@ -3415,7 +3415,8 @@ def fine_tune_moment_train_mix_windows_(
     num_batches = sum(1 for _ in self.input.data.train_batches())
     num_training_steps = self.num_epochs * num_batches
     self.mssg.print_error(f"Num training steps: {self.num_epochs}*{num_batches} = {num_training_steps}")
-
+    if (num_training_steps == 0): 
+        raise ValueError("Please check the configuration, the train dataset results in 0 batches.")
     if self.optim.optimizer is None:
         self.optim.optimizer = torch.optim.AdamW(self.model.parameters(), self.optim.lr.lr)
     if self.optim.lr.flag:
@@ -3471,6 +3472,8 @@ def fine_tune_moment_train_mix_windows_(
                 self.optim.optimizer.step()
             if self.optim.lr.flag: self.optim.lr.scheduler.step()
             progress_bar.update(1)
+            if np.isnan(loss): 
+                raise ValueError("Loss is NaN")
         self.mssg.print_error(f"Epoch losses: {epoch_losses}")
         epoch_losses = np.array(epoch_losses)
         epoch_loss_mean = np.nanmean(epoch_losses)

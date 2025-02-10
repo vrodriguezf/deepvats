@@ -1391,9 +1391,10 @@ class WindowedDataset:
         """
         available = size    
         current_idx = start_idx
-        #print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
+        print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
+        print(f"batch * window = {self.batch_size} * {min(self.window_sizes)} = {self.batch_size * min(self.window_sizes)}")
         while available >= self.batch_size * min(self.window_sizes):
-            #print(f"available {available} | current {current_idx}")
+            print(f"available {available} | current {current_idx}")
             batch = []
             bs = 0  # Contador de elementos en el batch
             window_size = np.random.choice(self.window_sizes)
@@ -1417,9 +1418,11 @@ class WindowedDataset:
 
     def train_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns training batches dynamically as PyTorch tensors. """
+        print("Training batches")
         return self.generate_batches(self.train_start, self.train_size, return_ids)
 
     def valid_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns validation batches dynamically as PyTorch tensors. """
+        print("Validation batches")
         return self.generate_batches(self.val_start, self.val_size, return_ids)
 

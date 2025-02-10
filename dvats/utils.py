@@ -1369,14 +1369,14 @@ class WindowedDataset:
         Splits the dataset into training (initial part) and validation (final part).
         """
         dataset_size = len(self.dataset)
-        print("total: ", dataset_size)
+        #print("total: ", dataset_size)
         self.val_size = int(np.ceil(dataset_size * self.validation_percent))
-        print(f"Validation: {self.validation_percent}*{dataset_size} = {self.val_size}")
+        #print(f"Validation: {self.validation_percent}*{dataset_size} = {self.val_size}")
         if pct_full:
             self.train_size = int(np.floor(dataset_size*self.training_percent))
         else:
             self.train_size = int(np.ceil((dataset_size - self.val_size) * self.training_percent))
-        print(f"Training: {self.training_percent}*({dataset_size}-{self.val_size}) = {self.train_size}")
+        #print(f"Training: {self.training_percent}*({dataset_size}-{self.val_size}) = {self.train_size}")
         if self.val_size <= 0 or self.train_size <= 0:
             raise ValueError("Invalid validation/training percentage")
 
@@ -1391,9 +1391,9 @@ class WindowedDataset:
         """
         available = size    
         current_idx = start_idx
-        print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
+        #print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
         while available >= self.batch_size * min(self.window_sizes):
-            print(f"available {available} | current {current_idx}")
+            #print(f"available {available} | current {current_idx}")
             batch = []
             bs = 0  # Contador de elementos en el batch
             window_size = np.random.choice(self.window_sizes)

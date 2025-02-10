@@ -942,7 +942,7 @@ def moment_safe_forward_pass(
         mask        = mask.float()
         output  = self.model(
             x_enc       = batch, 
-            input_mask = input_mask, 
+            input_mask  = input_mask, 
             mask        = mask
         )
         success = True
@@ -950,15 +950,16 @@ def moment_safe_forward_pass(
         traceback.print_exc()
         self.mssg.print("Error computing Moment forward pass.")
         success = False
-        if not continue_if_fail: raise
+        if not continue_if_fail: raise ValueError("Error computing Moment forward pass.")
     # Print error message if failed and continue_if_fail = True
     if not success:
-        mssg = "Sure eval moment execution failed."
+        mssg = "Error computing safe moment forward pass."
         self.mssg.print_error(mssg)
         self.mssg.print_error(f"Device {device} | input_mask~{input_mask.shape} device: {input_mask.device if input_mask is not None else 'None'}")
         self.mssg.print_error(f"Device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}")
         self.mssg.print_error(f"Device {device} | batch~{batch.shape} device: {batch.device}")
-        raise ValueError(mssg)
+        traceback.print_exc()
+        if not continue_if_fail: raise ValueError(mssg)
     else: 
        self.mssg.print(f"Computation done | output is None? {output is None}")
     # --- Recompose mssg
@@ -3189,7 +3190,7 @@ def fine_tune_moment_train_(
             self.mssg.print_error(f"Best epoch {epoch}")
             self.best_epoch = epoch
             self.best_loss  = epoch_loss_mean 
-            self.best_model_state = {k: v.clone().detach() for k, v in self.model.state_dict().items()}
+            self.best_model_state = {k: v.clone().detach().cpu() for k, v in self.model.state_dict().items()}
     progress_bar.close()
     # Get the best version of the model
     if save_best_or_last and self.best_model_state:

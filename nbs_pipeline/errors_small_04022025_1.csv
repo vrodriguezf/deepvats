@@ -1,1 +1,1 @@
-model_size,n_epochs,dataset_percent,masked_percent,n_windows,windows,error,window
+model_size,n_epochs,dataset_percent,masked_percent,n_windows,windows,error

@@ -3421,6 +3421,7 @@ def fine_tune_moment_train_mix_windows_(
         for batch in self.input.data.train_batches():
             i+=1
             window_size = batch.shape[2]
+            self.window_sizes.append(window_size)
             batch_masks = torch.ones((self.input.batch_size, window_size), device = device).long()
             loss  = self.fine_tune_moment_train_loop_step_(
                 batch            = batch,
@@ -3443,7 +3444,7 @@ def fine_tune_moment_train_mix_windows_(
                 self.optim.optimizer.step()
             if self.optim.lr.flag: self.optim.lr.scheduler.step()
             progress_bar.update(1)
-        self.mssg.print(f"Epoch losses: {epoch_losses}")
+        self.mssg.print_error(f"Epoch losses: {epoch_losses}")
         epoch_losses = np.array(epoch_losses)
         epoch_loss_mean = np.nanmean(epoch_losses)
         losses.append(epoch_loss_mean)
@@ -3533,6 +3534,7 @@ def fine_tune_moment_mix_windows(
         if register_errors:
             error_val = 1
             self.mssg.print_error(f"Registering error | {e}")
+            traceback.print_exc()
             error = {"window": self.input.data.window_sizes, "error": e}
             self.errors = pd.concat([self.errors, ])
             display(self.errors)

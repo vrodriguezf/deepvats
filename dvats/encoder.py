@@ -3713,7 +3713,7 @@ def fine_tune_moment_(
     self.eval_stats_pre = eval_results_pre
     self.eval_stats_post = eval_results_post
     self.mssg.final()
-    unique_values = list(set(self.window_sizes))
+    self.window_sizes = list(set(self.window_sizes))
     # Restore mssg
     self.mssg.function = func
     self.mssg.level -= 1

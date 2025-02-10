@@ -6,7 +6,7 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006531449574140424, 'mse': 0.08205330143435849, 'rmse': 0.00686924510320665, 'mae': 0.04949903729071549, 'smape': 0.154463787870586}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006760502422366699, 'mse': 0.08357956615516762, 'rmse': 0.007113819025871756, 'mae': 0.050020645411053964, 'smape': 0.15633805248757}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 1 of 7 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 2 of 7 | Loss backward | After loop step [0m
@@ -15,12 +15,12 @@
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 5 of 7 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 6 of 7 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([7, 1, 12]) | epoch 0 | train 7 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [6.59665820421651e-05, 5.412156679085456e-05, 4.558092405204661e-05, 4.8100933781825006e-05, 0.0007135846535675228, 0.0014778590993955731, 0.0013645922299474478][0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.006531449574140424 -> 0.0005385437127967764[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.641279080417007e-05, 5.5462423915741965e-05, 4.1306891944259405e-05, 6.298557855188847e-05, 0.0006385556189343333, 0.001511735375970602, 0.0013383892364799976][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.006760502422366699 -> 0.0005321211309429989[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006834944144429755, 'mse': 0.08373695789068246, 'rmse': 0.007193032092932946, 'mae': 0.05056543478141885, 'smape': 0.15681426119016192}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007116905082511948, 'mse': 0.08567465700022259, 'rmse': 0.007488476218925975, 'mae': 0.051425620982777476, 'smape': 0.15774344658817757}.[0m
 [1] [91m [ fine_tune ] best_epoch: 0[0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -31,7 +31,7 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006877885999529099, 'mse': 0.08407658827793339, 'rmse': 0.007235622932759136, 'mae': 0.05079655421605288, 'smape': 0.1568083781670628}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006841431543762155, 'mse': 0.08404499709406264, 'rmse': 0.007196732502031282, 'mae': 0.05011474306518135, 'smape': 0.15496270221089126}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 1 of 7 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 2 of 7 | Loss backward | After loop step [0m
@@ -40,12 +40,12 @@
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 5 of 7 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 6 of 7 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([7, 1, 12]) | epoch 0 | train 7 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [6.795004446757957e-05, 5.810961374663748e-05, 4.7761452151462436e-05, 5.6679662520764396e-05, 0.0008893429767340422, 0.0017156428657472134, 0.0010414322605356574][0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.006877885999529099 -> 0.0005538455537004795[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [6.735177885275334e-05, 5.996839900035411e-05, 4.722580706584267e-05, 5.3120125812711194e-05, 0.0006765180150978267, 0.001929266843944788, 0.0010319335851818323][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.006841431543762155 -> 0.0005521977935651583[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006780342808269779, 'mse': 0.08375906780337372, 'rmse': 0.00713118569005031, 'mae': 0.05005784505162357, 'smape': 0.15650766520350085}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007131734116228472, 'mse': 0.08578219804558854, 'rmse': 0.0075029316505052955, 'mae': 0.05132910225940637, 'smape': 0.15885009667584393}.[0m
 [1] [91m [ fine_tune ] best_epoch: 0[0m
 [1] [fine_tune --> ]
 [1] [ --> _set_encoder ]
@@ -56,7 +56,7 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00694309973550844, 'mse': 0.08470879552731284, 'rmse': 0.007304917281105, 'mae': 0.051241826951072725, 'smape': 0.15812900906246083}.[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007234146616610815, 'mse': 0.086436035389997, 'rmse': 0.0076168081256641745, 'mae': 0.051822654325668974, 'smape': 0.15985098027087108}.[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 1 of 7 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 2 of 7 | Loss backward | After loop step [0m
@@ -65,99 +65,8 @@
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 5 of 7 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 6 of 7 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([7, 1, 12]) | epoch 0 | train 7 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.078445196384564e-05, 4.836525840801187e-05, 5.041853364673443e-05, 5.656991925206967e-05, 0.0007867680978961289, 0.0016605420969426632, 0.0011420337250456214][0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.00694309973550844 -> 0.0005450688690221536[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [6.286946882028133e-05, 4.930370778311044e-05, 5.169976793695241e-05, 5.7391251175431535e-05, 0.0009552033734507859, 0.0016091730212792754, 0.0009775401558727026][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.007234146616610815 -> 0.000537597249474077[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007096489423929597, 'mse': 0.08546656016265627, 'rmse': 0.007470695050744247, 'mae': 0.0508816145545195, 'smape': 0.15718385171752491}.[0m
-[1] [91m [ fine_tune ] best_epoch: 0[0m
-[1] [fine_tune --> ]
-[1] [ --> _set_encoder ]
-[1]  [ _set_encoder ] About to exec _set_enc_input
-[1]  [ _set_encoder ] enc_input~0
-[1]  [ _set_encoder ] About to exec _set_optimizer
-[1] [_set_encoder --> ]
-[1] [ --> fine_tune ]
-[1]  [ fine_tune ] Use fine_tune_moment parameters
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0070567015991400694, 'mse': 0.08538268714129948, 'rmse': 0.007423551324736447, 'mae': 0.05057116671011221, 'smape': 0.15557898459439154}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 1 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 2 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 3 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 4 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 5 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 6 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([7, 1, 12]) | epoch 0 | train 7 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.553736213594675e-05, 5.9309881180524826e-05, 4.174396235612221e-05, 5.559786222875118e-05, 0.0010361741296947002, 0.0017956984229385853, 0.0010421737097203732][0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0070567015991400694 -> 0.0005866050471792862[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006579387914825929, 'mse': 0.08209192478942351, 'rmse': 0.006922692058936324, 'mae': 0.0499842301365142, 'smape': 0.15579188105453323}.[0m
-[1] [91m [ fine_tune ] best_epoch: 0[0m
-[1] [fine_tune --> ]
-[1] [ --> _set_encoder ]
-[1]  [ _set_encoder ] About to exec _set_enc_input
-[1]  [ _set_encoder ] enc_input~0
-[1]  [ _set_encoder ] About to exec _set_optimizer
-[1] [_set_encoder --> ]
-[1] [ --> fine_tune ]
-[1]  [ fine_tune ] Use fine_tune_moment parameters
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006721347370330477, 'mse': 0.08321909456279727, 'rmse': 0.00707001277315108, 'mae': 0.049838105747707126, 'smape': 0.15425562193798387}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 1 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 2 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 3 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 4 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 5 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 6 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([7, 1, 12]) | epoch 0 | train 7 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.985900447238237e-05, 5.067108941148035e-05, 4.566167262964882e-05, 5.429577504401095e-05, 0.0008164605242200196, 0.0016998063074424863, 0.0010829431703314185][0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.006721347370330477 -> 0.0005470996490787781[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006992801921114733, 'mse': 0.0849099166166913, 'rmse': 0.007360870168091056, 'mae': 0.05072519244733921, 'smape': 0.15607839082287445}.[0m
-[1] [91m [ fine_tune ] best_epoch: 0[0m
-[1] [fine_tune --> ]
-[1] [ --> _set_encoder ]
-[1]  [ _set_encoder ] About to exec _set_enc_input
-[1]  [ _set_encoder ] enc_input~0
-[1]  [ _set_encoder ] About to exec _set_optimizer
-[1] [_set_encoder --> ]
-[1] [ --> fine_tune ]
-[1]  [ fine_tune ] Use fine_tune_moment parameters
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0069693723125965334, 'mse': 0.08482290812828627, 'rmse': 0.007335196843947183, 'mae': 0.05125718028092187, 'smape': 0.15910590663983956}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 1 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 2 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 3 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 4 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 5 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 6 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([7, 1, 12]) | epoch 0 | train 7 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.543821993749589e-05, 5.6719629355939105e-05, 4.8862344556255266e-05, 5.959163900115527e-05, 0.0007756080012768507, 0.0019051743438467383, 0.0012577532324939966][0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0069693723125965334 -> 0.0005970210586383473[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 0[0m
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.00696166998022818, 'mse': 0.08470473717254046, 'rmse': 0.007322822414668107, 'mae': 0.051252173914089184, 'smape': 0.15879478492575883}.[0m
-[1] [91m [ fine_tune ] best_epoch: 0[0m
-[1] [fine_tune --> ]
-[1] [ --> _set_encoder ]
-[1]  [ _set_encoder ] About to exec _set_enc_input
-[1]  [ _set_encoder ] enc_input~0
-[1]  [ _set_encoder ] About to exec _set_optimizer
-[1] [_set_encoder --> ]
-[1] [ --> fine_tune ]
-[1]  [ fine_tune ] Use fine_tune_moment parameters
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.007084640183165902, 'mse': 0.08555705492440385, 'rmse': 0.007453671567356637, 'mae': 0.05056102088968123, 'smape': 0.15798091608132458}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*7 = 7[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 1 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 2 of 7 | Loss backward | After loop step [0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 12]) | epoch 0 | train 3 of 7 | Loss backward | After loop step [0m

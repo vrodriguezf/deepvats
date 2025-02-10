@@ -1349,7 +1349,8 @@ class WindowedDataset:
         training_percent  : float = 1.0,
         batch_size        : int = 8,
         device            : str = "cpu",
-        stride            : int = 1
+        stride            : int = 1,
+        allow_incomplete  : bool = True
     ):
         """
         Creates a random-size windowed dataset that yields batches dynamically in PyTorch tensors.
@@ -1392,8 +1393,11 @@ class WindowedDataset:
         available = size    
         current_idx = start_idx
         print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
-        print(f"batch * window = {self.batch_size} * {min(self.window_sizes)} = {self.batch_size * min(self.window_sizes)}")
-        while available >= self.batch_size * min(self.window_sizes):
+        min_available = min(self.window_sizes)
+        if not allow_incomplete:
+            print(f"batch * window = {self.batch_size} * {min(self.window_sizes)} = {self.batch_size * min(self.window_sizes)}")
+            min_available = self.batch_size * min(self.window_sizes)
+        while available >= min_available:
             print(f"available {available} | current {current_idx}")
             batch = []
             bs = 0  # Contador de elementos en el batch
@@ -1408,7 +1412,7 @@ class WindowedDataset:
                 available -= self.stride
                 bs += 1  # Aumentar el número de ventanas en el batch
                 if return_ids: batch_indices.append((current_idx, current_idx + window_size))
-            if bs == self.batch_size:  # Solo devolver batches completos
+            if bs == self.batch_size or allow_incomplete:  # Solo devolver batches completos
                 batch_tensor = torch.stack(batch)  # Convertir a tensor
                 batch_tensor = rearrange(batch, "b w f -> b f w")
                 if return_ids:

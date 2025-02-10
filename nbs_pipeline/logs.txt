@@ -6,5 +6,3 @@
 [1] [ --> fine_tune ]
 [1]  [ fine_tune ] Use fine_tune_moment parameters
 [1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
-[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0019128199288388713, 'mse': 0.04124930209636835, 'rmse': 0.0019128197965547317, 'mae': 0.025168383377604187, 'smape': 0.13018293171002743}.[0m
-[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 1*0 = 0[0m

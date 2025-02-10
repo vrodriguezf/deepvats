@@ -959,10 +959,10 @@ def moment_safe_forward_pass(
         self.mssg.print_error(f"Device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}")
         self.mssg.print_error(f"Device {device} | batch~{batch.shape} device: {batch.device}")
         traceback.print_exc()
-        if not continue_if_fail: raise ValueError(mssg)
+        if not continue_if_fail: raise ValueError(mssg)#No debería llegar aquí
     else: 
        self.mssg.print(f"Computation done | output is None? {output is None}")
-    # --- Recompose mssg
+    # --- Restore mssg
     self.mssg.final()
     self.mssg.level     -= 1
     self.mssg.function  = func
@@ -2103,7 +2103,7 @@ def windowed_dataset(
     if not mix_windows: mssg.print(f"Number of windows: {len(dss)}")
     mssg.final()
     mssg.level -= 1
-    return dss
+    return dss, window_sizes
 
 
 # %% ../nbs/encoder.ipynb 57
@@ -2294,7 +2294,13 @@ def _set_enc_input(
     mssg                            : ut.Mssg,
     # Encoder Input
     ## -- Using all parammeters
-    X                               : Optional [ Union [ List [ List [ List [ float ]]], List [ float ], pd.DataFrame ] ],
+    X                               : Optional [ 
+                                        Union [ 
+                                            List [ List [ List [ float ]]], 
+                                            List [ float ], 
+                                            pd.DataFrame 
+                                        ] 
+                                    ],
     stride                          : Optional [ int ]          = None,
     batch_size                      : Optional [ int ]          = None,
     n_windows                       : Optional [ int ]          = None,
@@ -2321,7 +2327,7 @@ def _set_enc_input(
     mssg.print(f"is none enc_input? {enc_input is None}")
     if enc_input is None:
         mssg.print(f"About to get the windows")
-        enc_input = windowed_dataset(
+        enc_input, window_sizes = windowed_dataset(
             X                       = X,
             stride                  = stride,
             window_sizes            = window_sizes,
@@ -2351,7 +2357,7 @@ def _set_enc_input(
     # Restore mssg
     mssg.function = func
     mssg.level -= 1
-    return enc_input
+    return enc_input, window_sizes
 
 # %% ../nbs/encoder.ipynb 64
 def _set_optimizer(
@@ -2456,7 +2462,25 @@ def _set_encoder(
         mssg.both = print_both
         mssg.initial(ut.funcname())
         mssg.print("About to exec _set_enc_input")
-        enc_input = _set_enc_input(mssg, X, stride, batch_size, n_windows, n_windows_percent, validation_percent, training_percent, window_mask_percent, window_sizes, n_window_sizes, window_sizes_offset, windows_min_distance, full_dataset, enc_input, mix_windows, cpu = cpu)
+        enc_input, window_sizes = _set_enc_input(
+            mssg                = mssg, 
+            X                   = X, 
+            stride              = stride, 
+            batch_size          = batch_size, 
+            n_windows           = n_windows, 
+            n_windows_percent   = n_windows_percent, 
+            validation_percent  = validation_percent, 
+            training_percent    = training_percent, 
+            window_mask_percent = window_mask_percent, 
+            window_sizes        = window_sizes, 
+            n_window_sizes      = n_window_sizes, 
+            window_sizes_offset = window_sizes_offset, 
+            windows_min_distance= windows_min_distance, 
+            full_dataset        = full_dataset,
+            enc_input           = enc_input, 
+            mix_windows         = mix_windows,
+            cpu                 = cpu
+        )
         mssg.print(f"enc_input~{enc_input.shape}")
         mssg.print("About to exec _set_optimizer")
         optim = _set_optimizer(mssg, optim, criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name, lr_scheduler_num_warmup_steps)
@@ -2489,6 +2513,9 @@ def _set_encoder(
             metrics_dict                = metrics_dict,
             scheduler_specific_kwargs   = scheduler_specific_kwargs
         )
+        if mix_windows:
+            enc.window_sizes = window_sizes
+
     enc.mssg.final(ut.funcname())
     return enc
 
@@ -3430,7 +3457,7 @@ def fine_tune_moment_train_mix_windows_(
             )
             # Execute optimizer and get loss
             try: 
-                self.mssg.print(f"fine_tune_moment_train | batch ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward | After loop step ")
+                self.mssg.print_error(f"fine_tune_moment_train (1) | batch ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward | After loop step ")
                 self.optim.optimizer.zero_grad()
                 if hasattr(loss, 'item'):
                     epoch_losses.append(loss.item())
@@ -3439,7 +3466,7 @@ def fine_tune_moment_train_mix_windows_(
                     epoch_losses.append(loss)
                 self.optim.optimizer.step()
             except Exception as e: 
-                self.mssg.print(f"fine_tune_moment_train | batch ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}")
+                self.mssg.print_error(f"fine_tune_moment_train (2) | batch ~ {batch.shape} | epoch {epoch} | train {i+epoch} of {num_training_steps} | Loss backward failed: {e}")
                 self.optim.optimizer.zero_grad()
                 self.optim.optimizer.step()
             if self.optim.lr.flag: self.optim.lr.scheduler.step()
@@ -3496,7 +3523,7 @@ def fine_tune_moment_mix_windows(
     
     # Go!
     try: 
-        self.window_sizes = set()
+        #self.window_sizes = set()
         # Pre-validation
         if eval_pre: 
             if self.cpu != "cpu" and self.time_flag:
@@ -3608,8 +3635,8 @@ def fine_tune_moment_(
         for i in range(self.input.size):
             window_size = self.input._data[i].shape[2]
             self.mssg.print_error(f"Processing wlen {window_size} | wlens {self.window_sizes} | i {i+1}/{self.input.size}")
+            self.window_sizes.add(window_size)
             self.ws = window_size
-            self.window_sizes.append(window_size)
             ( 
                 losses, 
                 eval_results_pre_, 
@@ -3654,7 +3681,7 @@ def fine_tune_moment_(
     if eval_post: t_evals.append(t_eval_2)
     #eval_pre = False
     if save_best_or_last:
-        self.mssg.print_error("best_epoch: ", self.best_epoch)
+        self.mssg.print_error(f"best_epoch: {self.best_epoch}")
         best_epochs.append(self.best_epoch)
     t_shot = sum(t_shots)
     t_eval = sum(t_evals)

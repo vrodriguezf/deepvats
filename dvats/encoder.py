@@ -3472,7 +3472,7 @@ def fine_tune_moment_train_mix_windows_(
                 self.optim.optimizer.step()
             if self.optim.lr.flag: self.optim.lr.scheduler.step()
             progress_bar.update(1)
-            if np.isnan(loss): 
+            if np.isnan(epoch_losses[-1]): 
                 raise ValueError("Loss is NaN")
         self.mssg.print_error(f"Epoch losses: {epoch_losses}")
         epoch_losses = np.array(epoch_losses)
@@ -3691,6 +3691,7 @@ def fine_tune_moment_(
     self.eval_stats_pre = eval_results_pre
     self.eval_stats_post = eval_results_post
     self.mssg.final()
+    unique_values = list(set(self.window_sizes))
     # Restore mssg
     self.mssg.function = func
     self.mssg.level -= 1

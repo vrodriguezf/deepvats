@@ -1361,7 +1361,8 @@ class WindowedDataset:
         self.training_percent   = training_percent
         self.batch_size         = batch_size
         self.device             = device  # 'cpu' o 'cuda'
-        self.stride             = 1
+        self.stride             = stride
+        self.allow_incomplete   = allow_incomplete
         # División del dataset en entrenamiento y validación
         self.split()
 
@@ -1392,13 +1393,13 @@ class WindowedDataset:
         """
         available = size    
         current_idx = start_idx
-        print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
+        #print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
         min_available = min(self.window_sizes)
-        if not allow_incomplete:
-            print(f"batch * window = {self.batch_size} * {min(self.window_sizes)} = {self.batch_size * min(self.window_sizes)}")
+        if not self.allow_incomplete:
+            #print(f"batch * window = {self.batch_size} * {min(self.window_sizes)} = {self.batch_size * min(self.window_sizes)}")
             min_available = self.batch_size * min(self.window_sizes)
         while available >= min_available:
-            print(f"available {available} | current {current_idx}")
+            #print(f"available {available} | current {current_idx}")
             batch = []
             bs = 0  # Contador de elementos en el batch
             window_size = np.random.choice(self.window_sizes)
@@ -1412,7 +1413,7 @@ class WindowedDataset:
                 available -= self.stride
                 bs += 1  # Aumentar el número de ventanas en el batch
                 if return_ids: batch_indices.append((current_idx, current_idx + window_size))
-            if bs == self.batch_size or allow_incomplete:  # Solo devolver batches completos
+            if bs == self.batch_size or self.allow_incomplete:  # Solo devolver batches completos
                 batch_tensor = torch.stack(batch)  # Convertir a tensor
                 batch_tensor = rearrange(batch, "b w f -> b f w")
                 if return_ids:
@@ -1422,11 +1423,11 @@ class WindowedDataset:
 
     def train_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns training batches dynamically as PyTorch tensors. """
-        print("Training batches")
+        #print("Training batches")
         return self.generate_batches(self.train_start, self.train_size, return_ids)
 
     def valid_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns validation batches dynamically as PyTorch tensors. """
-        print("Validation batches")
+        #print("Validation batches")
         return self.generate_batches(self.val_start, self.val_size, return_ids)
 

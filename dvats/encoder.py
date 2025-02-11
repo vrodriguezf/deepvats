@@ -312,7 +312,7 @@ class Encoder():
         self.window_sizes       = [] if self.window_sizes is None else self.window_sizes
         self.seed           , _ = ut._check_value(self.seed, None, "seed", int, True, True, False, self.mssg)
         self.original_cudnn_benchmark       = None
-        self.original.cudnn_deterministic   = None
+        self.original_cudnn_deterministic   = None
     @property
     def metrics_names(self):
         self._metrics_names = self.metrics_dict.keys() if self.metrics_dict else None

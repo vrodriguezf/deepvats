@@ -364,7 +364,7 @@ class Encoder():
         torch.backends.cudnn.deterministic  = True
         #torch.backends.cudnn.benchmark      = False
         #self.mssg.print_error(f"Changing benchmark to False")
-        self.mssg.print_error(f"Saving deterministic to True")
+        self.mssg.print_error(f"Changing deterministic to True")
     
     def _save_cuda_state_(self):
         self.original_cudnn_benchmark       = torch.backends.cudnn.benchmark

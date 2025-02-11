@@ -1383,10 +1383,9 @@ class WindowedDataset:
         #print(f"Training: {self.training_percent}*({dataset_size}-{self.val_size}) = {self.train_size}")
         if self.val_size <= 0 or self.train_size <= 0:
             raise ValueError("Invalid validation/training percentage")
-
-        # Índices iniciales de entrenamiento y validación
+        # Start indices for training and validation datasets
         self.train_start = 0
-        self.val_start = len(self.dataset) - self.val_size
+        self.val_start   = len(self.dataset) - self.val_size
 
     def generate_batches(self, start_idx: int, size: int, return_ids = False) -> Iterator[torch.Tensor]:
         """
@@ -1403,20 +1402,20 @@ class WindowedDataset:
         while available >= min_available:
             #print(f"available {available} | current {current_idx}")
             batch = []
-            bs = 0  # Contador de elementos en el batch
+            bs = 0  # Batch size
             window_size = np.random.choice(self.window_sizes)
             if return_ids: batch_indices = []
             while bs < self.batch_size and available >= window_size:
-                window = self.dataset[current_idx : current_idx + window_size]  # Extraer datos
+                window = self.dataset[current_idx : current_idx + window_size]
                 batch.append(window)
                 # Mover el índice
                 #current_idx += window_size
                 current_idx += self.stride
                 available -= self.stride
-                bs += 1  # Aumentar el número de ventanas en el batch
+                bs += 1  
                 if return_ids: batch_indices.append((current_idx, current_idx + window_size))
-            if bs == self.batch_size or self.allow_incomplete:  # Solo devolver batches completos
-                batch_tensor = torch.stack(batch)  # Convertir a tensor
+            if bs == self.batch_size or self.allow_incomplete:
+                batch_tensor = torch.stack(batch) # Convert to tensor
                 batch_tensor = rearrange(batch, "b w f -> b f w")
                 if return_ids:
                     yield batch_tensor, batch_indices

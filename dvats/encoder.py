@@ -284,8 +284,9 @@ class Encoder():
     best_epoch          : int               = -1
     best_loss           : int               = np.inf
     best_model_state                        = None
-    eval_indices_dict     : AttrDict        = None
+    eval_indices_dict   : AttrDict          = None
     ws                  : int               = None #Current window size
+    seed                : int               = None
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
         self.model              = self.set_model_(self.model)
@@ -307,6 +308,7 @@ class Encoder():
         self.time_flag      , _ = ut._check_value(self.time_flag, False, "time_flag", bool,  mssg = self.mssg)
         self.show_plot      , _ = ut._check_value(self.show_plot, False, "show_plot", bool, mssg = self.mssg)
         self.window_sizes       = [] if self.window_sizes is None else self.window_sizes
+        self.seed           , _ = ut._check_value(self.seed, None, "seed", int, True, True, False, self.mssg)
     @property
     def metrics_names(self):
         self._metrics_names = self.metrics_dict.keys() if self.metrics_dict else None
@@ -349,7 +351,13 @@ class Encoder():
             except:
                 self.fine_tune_ = None
         return self.model
-    
+    def _set_seed_(self, seed: int = 42):
+        self.seed = seed
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
     def get_splits_(self, n_sample: int = None):
         self.mssg.initial_(ut.funcname())
         #TODO: add checks for datatype to ensure the dataset is not already windowed
@@ -2886,7 +2894,10 @@ def fine_tune_moment_eval_step_(
         mask_sync           = self.mask_sync
     )
     # -- Model evaluation
+    self.model.eval()
+    self._set_seed_(27)
     device = batch.device
+    if self.cpu != "cpu": torch.cuda.synchronize()
     with torch.no_grad(), torch.cuda.device(device):
         self.mssg.print(f"Executing in device {device}")
         # Exec forward pass

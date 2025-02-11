@@ -1389,7 +1389,7 @@ class WindowedDataset:
         self.train_start = 0
         self.val_start   = len(self.dataset) - self.val_size
 
-    def get_rws (self, type = 'train'):
+    def get_rws (self, type = 'train', regenerate : bool = False):
         rws = []
         match type:
             case 'train':

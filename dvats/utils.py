@@ -1444,12 +1444,12 @@ class WindowedDataset:
     def train_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns training batches dynamically as PyTorch tensors. """
         #print("Training batches")
-        return self.generate_batches(self.train_start, self.train_size, return_ids, rws = self.train_rws)
+        return self.generate_batches(self.train_start, self.train_size, return_ids, 'train', False)
 
     def valid_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns validation batches dynamically as PyTorch tensors. """
         #print("Validation batches")
-        return self.generate_batches(self.val_start, self.val_size, return_ids, rws = self.valid_rws)
+        return self.generate_batches(self.val_start, self.val_size, return_ids, 'valis', False)
     def num_batches(self, type = 'train'):
         batches = 0
         match type:

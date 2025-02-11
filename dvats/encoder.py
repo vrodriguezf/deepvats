@@ -287,6 +287,8 @@ class Encoder():
     eval_indices_dict   : AttrDict          = None
     ws                  : int               = None #Current window size
     seed                : int               = None
+    original_cudnn_benchmark                = None
+    original_cudnn_deterministic            = None
     def __post_init__(self):
         self.model          , _ = ut._check_value(self.model, None, "model", [ MOMENTPipeline, Learner, moirai.MoiraiModule ], True, False, False, mssg = self.mssg)
         self.model              = self.set_model_(self.model)
@@ -309,6 +311,8 @@ class Encoder():
         self.show_plot      , _ = ut._check_value(self.show_plot, False, "show_plot", bool, mssg = self.mssg)
         self.window_sizes       = [] if self.window_sizes is None else self.window_sizes
         self.seed           , _ = ut._check_value(self.seed, None, "seed", int, True, True, False, self.mssg)
+        self.original_cudnn_benchmark       = None
+        self.original.cudnn_deterministic   = None
     @property
     def metrics_names(self):
         self._metrics_names = self.metrics_dict.keys() if self.metrics_dict else None
@@ -352,12 +356,28 @@ class Encoder():
                 self.fine_tune_ = None
         return self.model
     def _set_seed_(self, seed: int = 42):
+        self._save_cuda_state_()
         self.seed = seed
         np.random.seed(seed)
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic  = True
+        #torch.backends.cudnn.benchmark      = False
+        #self.mssg.print_error(f"Changing benchmark to False")
+        self.mssg.print_error(f"Saving deterministic to True")
+    
+    def _save_cuda_state_(self):
+        self.original_cudnn_benchmark       = torch.backends.cudnn.benchmark
+        self.original_cudnn_deterministic   = torch.backends.cudnn.deterministic
+        self.mssg.print_error(f"Saving benchmark {self.original_cudnn_benchmark}")
+        self.mssg.print_error(f"Saving deterministic {self.original_cudnn_deterministic}")
+
+    def _restore_cuda_(self):
+        if self.original_cudnn_benchmark is None or self.original_cudnn_deterministic:
+            raise ValueError("Remember to save cuda state using _save_cuda_state_ before trying to restore it.")
+        #torch.backends.cudnn.benchmark      = self.original_cudnn_benchmark
+        torch.backends.cudnn.deterministic  = self.original_cudnn_deterministic 
+
     def get_splits_(self, n_sample: int = None):
         self.mssg.initial_(ut.funcname())
         #TODO: add checks for datatype to ensure the dataset is not already windowed
@@ -2923,6 +2943,9 @@ def fine_tune_moment_eval_step_(
             smape_metric.add_batch(predictions=predictions, references = references)
         else:
             self.mssg.print("Output None or not successfull forward pass computation.")
+    
+    # Restore cuda
+    self._restore_cuda_()
     self.mssg.final()
     # Restore mssg
     self.mssg.level -= 1

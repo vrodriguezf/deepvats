@@ -2,7 +2,3 @@
 [1]  [ _set_encoder ] About to exec _set_enc_input
 [1]  [ _set_encoder ] enc_input~0
 [1]  [ _set_encoder ] About to exec _set_optimizer
-[1] [_set_encoder --> ]
-[1] [ --> fine_tune ]
-[1]  [ fine_tune ] Use fine_tune_moment parameters
-[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m

@@ -1100,7 +1100,7 @@ def find_dominant_window_sizes_list_single(
     
     mssg.print(f"Find and return valid window_sizes | ... 2 ... {idx}")
 
-    valid_window_sizes = [ s for s in valid_window_sizes if window_size >= min_window]
+    valid_window_sizes = [ s for s in valid_window_sizes if s >= min_window]
 
     # Ensure sizes separated at least at "min_distance" 
     sizes = select_separated_sizes(valid_window_sizes, min_distance, nsizes)

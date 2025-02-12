@@ -30094,3 +30094,7 @@ Index: [][0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 7 | train 128 of 170 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 7 | train 129 of 170 | Loss backward | After loop step [0m
 [1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 7 | train 130 of 170 | Loss backward | After loop step [0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1] [91m [ _set_enc_input ] is none enc_input? True[0m
+[1] [91m [ _set_enc_input ] About to get the windows[0m

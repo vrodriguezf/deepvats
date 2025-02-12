@@ -373,7 +373,7 @@ class Encoder():
         self.mssg.print_error(f"Saving deterministic {self.original_cudnn_deterministic}")
 
     def _restore_cuda_(self):
-        if self.original_cudnn_benchmark is None or self.original_cudnn_deterministic:
+        if self.original_cudnn_benchmark is None or self.original_cudnn_deterministic is None:
             raise ValueError("Remember to save cuda state using _save_cuda_state_ before trying to restore it.")
         #torch.backends.cudnn.benchmark      = self.original_cudnn_benchmark
         torch.backends.cudnn.deterministic  = self.original_cudnn_deterministic 
@@ -2099,6 +2099,7 @@ def windowed_dataset(
             nsizes          = n_window_sizes, 
             offset          = window_sizes_offset, 
             min_distance    = windows_min_distance,
+            min_window      = 8, # Avoid errors in Moment
             mssg            = mssg
         )
         mssg.level -= 1
@@ -2943,6 +2944,7 @@ def fine_tune_moment_eval_step_(
             mae_metric.add_batch(predictions=predictions, references = references)
             smape_metric.add_batch(predictions=predictions, references = references)
         else:
+            loss = np.nan
             self.mssg.print("Output None or not successfull forward pass computation.")
     
     # Restore cuda
@@ -3752,7 +3754,9 @@ def fine_tune_moment_(
     # Restore mssg
     self.mssg.function = func
     self.mssg.level -= 1
-    if register_errors: return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, best_epochs, self.errors
+    if register_errors: 
+        self.mssg.print_error(f"Errors detected: {self.errors}")
+        return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, best_epochs, self.errors
     return lossess, eval_results_pre, eval_results_post, t_shots, t_shot, t_evals, t_eval, self.model, self.window_sizes, best_epochs
 
 Encoder.fine_tune_moment_ = fine_tune_moment_

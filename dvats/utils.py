@@ -1046,6 +1046,7 @@ def find_dominant_window_sizes_list_single(
         nsizes       : int               = 1,
         offset       : float             = 0.05, 
         min_distance : int               = 1,    # Asegurar distancia mínima entre tamaños
+        min_window   : int               = 1,
         # Print options
         mssg         : Mssg              = Mssg()
     ) -> List[int]:
@@ -1098,6 +1099,8 @@ def find_dominant_window_sizes_list_single(
     ]
     
     mssg.print(f"Find and return valid window_sizes | ... 2 ... {idx}")
+
+    valid_window_sizes = [ s for s in valid_window_sizes if window_size >= min_window]
 
     # Ensure sizes separated at least at "min_distance" 
     sizes = select_separated_sizes(valid_window_sizes, min_distance, nsizes)
@@ -1186,6 +1189,7 @@ def find_dominant_window_sizes_list(
         nsizes          : int   = 1,
         offset          : float = 0.05, 
         min_distance    : int   = 1,
+        min_window      : int   = 1,
         mssg            : Mssg  = None,
         verbose         : int   = 0
     ) -> List [ int ]:
@@ -1197,7 +1201,7 @@ def find_dominant_window_sizes_list(
         func = mssg.function 
     mssg.initial_(f"Find_dominant_window_sizes_list")
     if len(X.shape) == 1: 
-        sizes = find_dominant_window_sizes_list_single(X,nsizes,offset, min_distance, mssg)
+        sizes = find_dominant_window_sizes_list_single(X,nsizes,offset, min_distance, min_window, mssg)
     else: 
         if ( isinstance(X, pd.DataFrame ) ): X = X.values
         mssg.print( f"X ~ {X.shape}")
@@ -1205,7 +1209,7 @@ def find_dominant_window_sizes_list(
         vars_sizes = []
         for var in range( X.shape[1] ):
             mssg.print( f"Get sizes for var {var}")
-            var_sizes = find_dominant_window_sizes_list_single(X[:, var], nsizes, offset, min_distance, mssg = mssg)
+            var_sizes = find_dominant_window_sizes_list_single(X[:, var], nsizes, offset, min_distance, min_window, mssg = mssg)
             vars_sizes.append(var_sizes)
             mssg.print(f"Get sizes for var {var} | {var_sizes}")
         mssg.level -= 1
@@ -1459,7 +1463,6 @@ class WindowedDataset:
         """ Returns validation batches dynamically as PyTorch tensors. """
         #print("Validation batches")
         return self.generate_batches(self.val_start, self.val_size, return_ids, 'valid', False)
-    
     
     def num_batches(self, type_ = 'train'):
         batches = 0

@@ -1407,7 +1407,7 @@ class WindowedDataset:
         Generates batches dynamically using PyTorch tensors.
         Yields batches with random window sizes.
         """
-        print(f"Generate {type_} batches ")
+        #print(f"Generate {type_} batches ")
         available = size    
         current_idx = start_idx
         #print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
@@ -1417,7 +1417,7 @@ class WindowedDataset:
             min_available = self.batch_size * min(self.window_sizes)
         nb = 0
         rws = self._get_rws(type_, regenerate)
-        print(f"Previous window sizes rws: {rws}")
+        #print(f"Previous window sizes rws: {rws}")
         
         compute_rws = ( len(rws) == 0 )
         while available >= min_available:
@@ -1427,7 +1427,7 @@ class WindowedDataset:
             if compute_rws:
                 window_size = np.random.choice(self.window_sizes)
                 rws.append(window_size)
-                print(f"Append {window_size}")
+                #print(f"Append {window_size}")
             else:
                 window_size = rws[nb]
                 nb += 1
@@ -1441,7 +1441,7 @@ class WindowedDataset:
                 available -= self.stride
                 bs += 1  
                 if return_ids: batch_indices.append((current_idx, current_idx + window_size))
-            print(f"Batch~{len(batch)} | bs {bs}")
+            #print(f"Batch~{len(batch)} | bs {bs}")
             if bs > 0  and (bs == self.batch_size or self.allow_incomplete):
                 batch_tensor = torch.stack(batch) # Convert to tensor
                 batch_tensor = rearrange(batch, "b w f -> b f w")
@@ -1452,12 +1452,12 @@ class WindowedDataset:
 
     def train_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns training batches dynamically as PyTorch tensors. """
-        print("Training batches")
+        #print("Training batches")
         return self.generate_batches(self.train_start, self.train_size, return_ids, 'train', False)
 
     def valid_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns validation batches dynamically as PyTorch tensors. """
-        print("Validation batches")
+        #print("Validation batches")
         return self.generate_batches(self.val_start, self.val_size, return_ids, 'valid', False)
     
     

@@ -957,6 +957,7 @@ def moment_safe_forward_pass(
     self.mssg.print(f"Device {device} | mask device~{mask.shape}: {mask.device if mask is not None else 'None'}")
     self.mssg.print(f"Device {device} | batch~{batch.shape} device: {batch.device}")
     # Compute the output and raise or not errors depending on the configuration for the training loop
+    output = None
     success = False
     try:
         #--- Añadidos comentarios para revisar el uso de CUDA (quitar el _error y aumentar verbose cuando se termine la depuración)

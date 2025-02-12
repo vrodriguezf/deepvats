@@ -4249,3 +4249,277 @@
 [1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
 [1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1] [91m [ _set_enc_input ] is none enc_input? True[0m
+[1] [91m [ _set_enc_input ] About to get the windows[0m
+[1] [91m [ _set_enc_input ] About to get the encoder input[0m
+[1]  [ _set_encoder ] enc_input~0
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.006313918872311821, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Num training steps: 10*8 = 80[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 0 | train 1 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 0 | train 2 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 0 | train 3 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 0 | train 4 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 0 | train 5 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 0 | train 6 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 0 | train 7 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 0 | train 8 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.201432890724391e-05, 6.24983076704666e-05, 5.548707486013882e-05, 0.0002638349251355976, 0.0015875714598223567, 0.0018917167326435447, 0.0010343814501538873, 0.00011030720634153113][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.006313918872311821 -> 0.0006347264356918458[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 0[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 1 | train 10 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 1 | train 11 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 1 | train 12 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 1 | train 13 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 1 | train 14 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 1 | train 15 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 1 | train 16 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 1 | train 17 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.707326585659757e-05, 5.0746213673846796e-05, 5.7907647715182975e-05, 0.0003089538950007409, 0.0017708514351397753, 0.0018735091434791684, 0.0010317056439816952, 0.0001201921550091356][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 2 | train 19 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 2 | train 20 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 2 | train 21 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 2 | train 22 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 2 | train 23 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 2 | train 24 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 2 | train 25 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 2 | train 26 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [6.262469105422497e-05, 5.897286973777227e-05, 5.8997080486733466e-05, 0.0002145957259926945, 0.0016870510298758745, 0.0020193541422486305, 0.0009650962892919779, 0.0001142375185736455][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 3 | train 28 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 3 | train 29 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 3 | train 30 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 3 | train 31 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 3 | train 32 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 3 | train 33 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 3 | train 34 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 3 | train 35 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.37059090170078e-05, 5.433657133835368e-05, 5.4662395996274427e-05, 0.00024944014148786664, 0.002008231356739998, 0.001909178216010332, 0.0009554257849231362, 0.0001215581942233257][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 4 | train 37 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 4 | train 38 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 4 | train 39 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 4 | train 40 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 4 | train 41 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 4 | train 42 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 4 | train 43 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 4 | train 44 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [8.147221524268389e-05, 5.11244434164837e-05, 5.424239134299569e-05, 0.0002065633307211101, 0.0016014464199543, 0.0019923276267945766, 0.0009553261916153133, 0.00011185890616616234][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best Loss 0.0006347264356918458 -> 0.0006317951906567032[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch 4[0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 5 | train 46 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 5 | train 47 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 5 | train 48 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 5 | train 49 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 5 | train 50 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 5 | train 51 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 5 | train 52 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 5 | train 53 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.451661076629534e-05, 5.713336940971203e-05, 5.1056864322163165e-05, 0.00024148146621882915, 0.0017347220564261079, 0.0021565225906670094, 0.000942754908464849, 0.00011127459583804011][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 6 | train 55 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 6 | train 56 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 6 | train 57 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 6 | train 58 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 6 | train 59 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 6 | train 60 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 6 | train 61 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 6 | train 62 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [6.625906098634005e-05, 6.019172724336386e-05, 5.895464710192755e-05, 0.0002395015035290271, 0.0017597298137843609, 0.001997017301619053, 0.0009318171069025993, 0.00011624323815340176][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 7 | train 64 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 7 | train 65 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 7 | train 66 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 7 | train 67 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 7 | train 68 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 7 | train 69 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 7 | train 70 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 7 | train 71 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [6.630712596233934e-05, 5.770970892626792e-05, 5.6443630455760285e-05, 0.00026088423328474164, 0.0017715273424983025, 0.0021436763927340508, 0.001136798644438386, 0.00010917273903032765][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 8 | train 73 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 8 | train 74 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 8 | train 75 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 8 | train 76 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 8 | train 77 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 8 | train 78 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 8 | train 79 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 8 | train 80 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [7.952766463859007e-05, 5.7358625781489536e-05, 5.6506702094338834e-05, 0.0002706199884414673, 0.0017853189492598176, 0.0020140190608799458, 0.0010485160164535046, 0.00011491726036183536][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 9 | train 82 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 13]) | epoch 9 | train 83 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 9 | train 84 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 9 | train 85 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 17]) | epoch 9 | train 86 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 16]) | epoch 9 | train 87 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([8, 1, 10]) | epoch 9 | train 88 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] fine_tune_moment_train (1) | batch ~ torch.Size([3, 1, 8]) | epoch 9 | train 89 of 80 | Loss backward | After loop step [0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Epoch losses: [6.827621109550819e-05, 5.166594564798288e-05, 5.488367241923697e-05, 0.0002902155392803252, 0.0018253906164318323, 0.0020486274734139442, 0.0010464544175192714, 0.00011185567564098164][0m
+[1] [91m [ fine_tune_moment_train_mix_windows_ ] Best epoch: 4[0m
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Eval results: {'loss': 0.0063879136612419694, 'mse': nan, 'rmse': nan, 'mae': nan, 'smape': nan}.[0m
+[1] [91m [ fine_tune ] best_epoch: 4[0m
+[1] [fine_tune --> ]
+[1] [ --> _set_encoder ]
+[1]  [ _set_encoder ] About to exec _set_enc_input
+[1] [91m [ _set_enc_input ] is none enc_input? True[0m
+[1] [91m [ _set_enc_input ] About to get the windows[0m
+[1] [91m [ _set_enc_input ] About to get the encoder input[0m
+[1]  [ _set_encoder ] enc_input~0
+[1]  [ _set_encoder ] About to exec _set_optimizer
+[1] [_set_encoder --> ]
+[1] [ --> fine_tune ]
+[1]  [ fine_tune ] Use fine_tune_moment parameters
+[1] [91m [ fine_tune_moment_mix_windows ] COMPUTING FINE TUNE MOMENT EVAL[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving benchmark False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Saving deterministic False[0m
+[1] [91m [ fine_tune_moment_mix_windows ] Changing deterministic to True[0m
+[1] [91m [ moment_safe_forward_pass ] Error computing safe moment forward pass.[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | input_mask~torch.Size([8, 4]) device: cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | mask device~torch.Size([8, 4]): cuda:1[0m
+[1] [91m [ moment_safe_forward_pass ] Device 1 | batch~torch.Size([8, 1, 4]) device: cuda:1[0m

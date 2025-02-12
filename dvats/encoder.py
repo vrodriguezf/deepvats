@@ -358,7 +358,7 @@ class Encoder():
     def _set_seed_(self, seed: int = 42):
         self._save_cuda_state_()
         self.seed = seed
-        np.random.seed(seed)
+        #np.random.seed(seed) # Comentado para ver si el problema viene de ahí..
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic  = True
@@ -2352,9 +2352,9 @@ def _set_enc_input(
     mssg.initial_(func_name = ut.funcname())
     # Go!
     enc_input, _ = ut._check_value(enc_input, None, "enc_input", EncoderInput, True, False, False)
-    mssg.print(f"is none enc_input? {enc_input is None}")
+    mssg.print_error(f"is none enc_input? {enc_input is None}")
     if enc_input is None:
-        mssg.print(f"About to get the windows")
+        mssg.print_error(f"About to get the windows")
         enc_input, window_sizes = windowed_dataset(
             X                       = X,
             stride                  = stride,
@@ -2369,7 +2369,7 @@ def _set_enc_input(
             cpu                     = cpu,
             mssg                    = mssg
         )
-        mssg.print(f"About to get the encoder input", func_name = ut.funcname())
+        mssg.print_error(f"About to get the encoder input", func_name = ut.funcname())
         enc_input = EncoderInput(
             _data               = enc_input, 
             stride              = stride,
@@ -4532,7 +4532,7 @@ def fine_tune_moirai_(
 
 Encoder.fine_tune_moirai_ = fine_tune_moirai_
 
-# %% ../nbs/encoder.ipynb 101
+# %% ../nbs/encoder.ipynb 100
 def fine_tune(
     # Optional parameters
     ## Encoder Input

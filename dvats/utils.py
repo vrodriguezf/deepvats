@@ -1352,6 +1352,7 @@ class WindowedDataset:
         stride            : int = 1,
         allow_incomplete  : bool = True
     ):
+        print("Initialize Windowed Dataset")
         """
         Creates a random-size windowed dataset that yields batches dynamically in PyTorch tensors.
         """
@@ -1389,21 +1390,24 @@ class WindowedDataset:
         self.train_start = 0
         self.val_start   = len(self.dataset) - self.val_size
 
-    def get_rws (self, type = 'train', regenerate : bool = False):
-        rws = []
-        match type:
+    def _get_rws (self, type_ = 'train', regenerate : bool = False):
+        rws = None
+        match type_:
             case 'train':
-                rws = [] if regenerate else self.train_rws
+                self.train_rws = [] if regenerate else self.train_rws
+                rws = self.train_rws
             case 'valid':
-                rws = [] if regenerate else self.valid_rws
+                self.valid_rws = [] if regenerate else self.valid_rws
+                rws = self.valid_rws
             case _:
                 raise ValueError("Invalid type for WindowedDataset type")
         return rws
-    def generate_batches(self, start_idx: int, size: int, return_ids = False, type = 'train', regenerate = False) -> Iterator[torch.Tensor]:
+    def generate_batches(self, start_idx: int, size: int, return_ids = False, type_ = 'train', regenerate = False) -> Iterator[torch.Tensor]:
         """
         Generates batches dynamically using PyTorch tensors.
         Yields batches with random window sizes.
         """
+        print(f"Generate {type_} batches ")
         available = size    
         current_idx = start_idx
         #print(f"available {available} | current {current_idx} | window_sizes {self.window_sizes}")
@@ -1412,7 +1416,9 @@ class WindowedDataset:
             #print(f"batch * window = {self.batch_size} * {min(self.window_sizes)} = {self.batch_size * min(self.window_sizes)}")
             min_available = self.batch_size * min(self.window_sizes)
         nb = 0
-        rws = self.get_rws(type, regenerate)
+        rws = self._get_rws(type_, regenerate)
+        print(f"Previous window sizes rws: {rws}")
+        
         compute_rws = ( len(rws) == 0 )
         while available >= min_available:
             #print(f"available {available} | current {current_idx}")
@@ -1420,6 +1426,8 @@ class WindowedDataset:
             bs = 0  # Batch size
             if compute_rws:
                 window_size = np.random.choice(self.window_sizes)
+                rws.append(window_size)
+                print(f"Append {window_size}")
             else:
                 window_size = rws[nb]
                 nb += 1
@@ -1433,7 +1441,8 @@ class WindowedDataset:
                 available -= self.stride
                 bs += 1  
                 if return_ids: batch_indices.append((current_idx, current_idx + window_size))
-            if bs == self.batch_size or self.allow_incomplete:
+            print(f"Batch~{len(batch)} | bs {bs}")
+            if bs > 0  and (bs == self.batch_size or self.allow_incomplete):
                 batch_tensor = torch.stack(batch) # Convert to tensor
                 batch_tensor = rearrange(batch, "b w f -> b f w")
                 if return_ids:
@@ -1443,16 +1452,18 @@ class WindowedDataset:
 
     def train_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns training batches dynamically as PyTorch tensors. """
-        #print("Training batches")
+        print("Training batches")
         return self.generate_batches(self.train_start, self.train_size, return_ids, 'train', False)
 
     def valid_batches(self, return_ids = False) -> Iterator[torch.Tensor]:
         """ Returns validation batches dynamically as PyTorch tensors. """
-        #print("Validation batches")
-        return self.generate_batches(self.val_start, self.val_size, return_ids, 'valis', False)
-    def num_batches(self, type = 'train'):
+        print("Validation batches")
+        return self.generate_batches(self.val_start, self.val_size, return_ids, 'valid', False)
+    
+    
+    def num_batches(self, type_ = 'train'):
         batches = 0
-        match type:
+        match type_:
             case 'train':
                 if (self.train_size > 0):
                     batches = self.train_size

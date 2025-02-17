@@ -358,12 +358,15 @@ class Encoder():
     def _set_seed_(self, seed: int = 42):
         self._save_cuda_state_()
         self.seed = seed
-        #np.random.seed(seed) # Comentado para ver si el problema viene de ahí..
+        # Ensure same seed
+        np.random.seed(seed)
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
+        # Ensure determinism in each function
         torch.backends.cudnn.deterministic  = True
-        #torch.backends.cudnn.benchmark      = False
-        #self.mssg.print_error(f"Changing benchmark to False")
+        # Ensure the same function is allways used
+        torch.backends.cudnn.benchmark      = False
+        self.mssg.print_error(f"Changing benchmark to False")
         self.mssg.print_error(f"Changing deterministic to True")
     
     def _save_cuda_state_(self):
@@ -375,7 +378,7 @@ class Encoder():
     def _restore_cuda_(self):
         if self.original_cudnn_benchmark is None or self.original_cudnn_deterministic is None:
             raise ValueError("Remember to save cuda state using _save_cuda_state_ before trying to restore it.")
-        #torch.backends.cudnn.benchmark      = self.original_cudnn_benchmark
+        torch.backends.cudnn.benchmark      = self.original_cudnn_benchmark
         torch.backends.cudnn.deterministic  = self.original_cudnn_deterministic 
 
     def get_splits_(self, n_sample: int = None):
@@ -2113,6 +2116,12 @@ def windowed_dataset(
             device              = "cpu" if cpu else torch.cuda.current_device(),
             stride              = stride
         )
+        # This line is just for avoiding problems with randomness, ensuring that the windows has already been generated
+        dss_train = dss.num_batches('train')
+        dss_valid = dss.num_batches('valid')
+        mssg.print(f"Train size: {dss_train}")
+        mssg.print(f"Valid size: {dss_valid}")
+        
     if isinstance(X, list):
         mssg.print("X is a list. Converting to dataFrame")
         X = np.array(X)
@@ -2148,7 +2157,8 @@ def setup_scheduler(
     num_training_steps = num_epochs * len(dl_train) if num_training_steps is None else num_training_steps
     if not self.optim.lr.num_warmup_steps:
         lr_scheduler_num_warmup_steps = lr_scheduler_perc_warmup_steps*num_training_steps
-    lr_scheduler_max_lr = 5 - 10 *self.optim.lr.lr if lr_scheduler_max_lr is None else lr_scheduler_max_lr
+    if lr_scheduler_max_lr is None:
+        lr_scheduler_max_lr = 5 - 10 *self.optim.lr.lr
     if self.optim.lr.flag:
         match self.optim.lr.name:
             case "OneCycleLR": 
@@ -2398,7 +2408,8 @@ def _set_optimizer(
     lr                              : float         = 5e-5, #1e-4, 
     lr_scheduler_flag               : bool          = False, 
     lr_scheduler_name               : str           = "linear",
-    lr_scheduler_num_warmup_steps   : int           = None
+    lr_scheduler_num_warmup_steps   : int           = None,
+    lr_scheduler_max_lr             : int           = None
 ):
     # Setup mssg
     func = mssg.function
@@ -2417,6 +2428,7 @@ def _set_optimizer(
                             num_warmup_steps= lr_scheduler_num_warmup_steps
             ),
         )
+        optim.lr.max_lr = lr_scheduler_max_lr
     mssg.final()
     # Restore mssg 
     mssg.function = func 
@@ -2450,6 +2462,7 @@ def _set_encoder(
     lr_scheduler_flag               : Optional [ bool ]             = False, 
     lr_scheduler_name               : Optional [ str ]              = "linear",
     lr_scheduler_num_warmup_steps   : Optional [ int ]              = None,
+    lr_scheduler_max_lr             : Optional [ int ]              = None,
     # Mssg
     ## -- Using all parameters
     verbose                         : Optional[ int ]               = 0, 
@@ -2513,7 +2526,7 @@ def _set_encoder(
         )
         mssg.print(f"enc_input~{enc_input.shape}")
         mssg.print("About to exec _set_optimizer")
-        optim = _set_optimizer(mssg, optim, criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name, lr_scheduler_num_warmup_steps)
+        optim = _set_optimizer(mssg, optim, criterion, optimizer, lr, lr_scheduler_flag, lr_scheduler_name, lr_scheduler_num_warmup_steps, lr_scheduler_max_lr)
         
         if metrics_dict is None and (
                 metrics and metrics_names and metrics_args and 
@@ -3447,7 +3460,9 @@ def fine_tune_moment_train_mix_windows_(
     self                : Encoder,
     use_moment_masks    : Optional[bool]    = True,
     save_best_or_last   : Optional[bool]    = True,
-    loss_pre            : Optional[float]   = None
+    loss_pre            : Optional[float]   = None,
+    lr_scheduler_max_lr : Optional[int]     = None,
+    lr_scheduler_num_warmup_steps : Optional [ int ] =  None
 ):
     # Setup mssg
     self.mssg.level += 1
@@ -3471,7 +3486,8 @@ def fine_tune_moment_train_mix_windows_(
     if self.optim.lr.flag:
         if not self.optim.lr.num_warmup_steps:
             lr_scheduler_num_warmup_steps = 0.02*num_training_steps 
-        lr_scheduler_max_lr = 5-10*self.optim.lr.lr if lr_scheduler_max_lr is None else lr_scheduler_max_lr
+        if lr_scheduler_max_lr is None:
+            lr_scheduler_max_lr = 5-10*self.optim.lr.lr
         match self.optim.lr.name:
             case "OneCycleLR":
                 self.optim.lr.scheduler = torch.optim.lr_scheduler.OneCycleLR(
@@ -3562,7 +3578,9 @@ def fine_tune_moment_mix_windows(
     sample_id           : int  = 0,
     use_moment_masks    : bool = False,
     register_errors     : bool = True,
-    save_best_or_last   : bool = True #If true, save best else save last
+    save_best_or_last   : bool = True, #If true, save best else save last
+    lr_scheduler_max_lr : int  = None,
+    lr_scheduler_num_warmup_steps : int = None
 ):
     # Setup mssg 
     self.mssg.level += 1
@@ -3599,7 +3617,7 @@ def fine_tune_moment_mix_windows(
                 torch.cuda.synchronize()
             if self.time_flag: timer.start()
             loss_pre = None if not eval_pre else eval_results_pre["loss"]
-            losses, self.model = self.fine_tune_moment_train_mix_windows_(use_moment_masks, save_best_or_last, loss_pre = loss_pre)
+            losses, self.model = self.fine_tune_moment_train_mix_windows_(use_moment_masks, save_best_or_last, loss_pre = loss_pre, lr_scheduler_max_lr = lr_scheduler_max_lr, lr_scheduler_num_warmup_steps = lr_scheduler_num_warmup_steps)
             if self.cpu != "cpu" and self.time_flag:
                 torch.cuda.synchronize()
             if self.time_flag: 
@@ -3647,7 +3665,9 @@ def fine_tune_moment_(
     use_moment_masks    : bool = None,
     register_errors     : bool = True,
     save_best_or_last   : bool = True, #If true, save best else save last
-    mix_windows         : bool = True
+    mix_windows         : bool = True,
+    lr_scheduler_max_lr : int  = None,
+    lr_scheduler_num_warmup_steps : int = None
 ):   
     # Setup mmsg & use_moment_masks
     func = self.mssg.function 
@@ -3690,7 +3710,9 @@ def fine_tune_moment_(
             shot                = shot, 
             use_moment_masks    = use_moment_masks, 
             register_errors     = register_errors, 
-            save_best_or_last   = save_best_or_last
+            save_best_or_last   = save_best_or_last,
+            lr_scheduler_max_lr = lr_scheduler_max_lr,
+            lr_scheduler_num_warmup_steps = lr_scheduler_num_warmup_steps
         )
     else:
         # Evaluate the model for each window in the windowed dataset
@@ -4566,6 +4588,7 @@ def fine_tune(
     lr_scheduler_flag               : Optional [ bool ]             = False, 
     lr_scheduler_name               : Optional [ str ]              = "linear",
     lr_scheduler_num_warmup_steps   : Optional [ int ]              = None,
+    lr_scheduler_max_lr             : Optional [int]                = None,
     # Mssg
     ## -- Using all parameters
     verbose                         : Optional[ int ]               = 0, 
@@ -4630,6 +4653,7 @@ def fine_tune(
         lr_scheduler_flag               = lr_scheduler_flag,
         lr_scheduler_name               = lr_scheduler_name,
         lr_scheduler_num_warmup_steps   = lr_scheduler_num_warmup_steps,
+        lr_scheduler_max_lr             = lr_scheduler_max_lr,
         verbose                         = verbose,
         print_to_path                   = print_to_path,
         print_both                      = print_both,
@@ -4659,7 +4683,7 @@ def fine_tune(
         case "fine_tune_moment_":
             enc.mssg.print("Use fine_tune_moment parameters")
             result = enc.fine_tune_(
-                eval_pre, eval_post, shot, time_flag, use_moment_masks, register_errors, save_best_or_last, mix_windows
+                eval_pre, eval_post, shot, time_flag, use_moment_masks, register_errors, save_best_or_last, mix_windows, lr_scheduler_max_lr, lr_scheduler_num_warmup_steps
             )
         case "fine_tune_mvp_":
             enc.mssg.print("Use fine_tune_mvp parameters")

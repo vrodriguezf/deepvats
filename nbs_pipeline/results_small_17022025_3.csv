@@ -1,0 +1,1 @@
+model_size,n_epochs,dataset_percent,masked_percent,n_windows,time,first_train_loss,first_mse,first_rmse,first_mae,first_smape,last_train_loss,last_mse,last_rmse,last_mae,last_smape

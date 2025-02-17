@@ -1,0 +1,7 @@
+model_size,n_epochs,dataset_percent,masked_percent,n_windows,windows,error,window
+small,20,0.15,0.25,1,Unknown,Non registered error,Unknown
+small,20,0.15,0.25,2,Unknown,Non registered error,Unknown
+small,20,0.15,0.25,4,Unknown,Non registered error,Unknown
+small,20,0.15,0.25,6,Unknown,Non registered error,Unknown
+small,20,0.15,0.25,8,Unknown,Non registered error,Unknown
+small,20,0.15,0.25,10,Unknown,Non registered error,Unknown

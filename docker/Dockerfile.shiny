@@ -1,0 +1,93 @@
+#############################
+#       SHINY-SERVER        #
+#     VOLUME DOCKERFILE     #
+#############################
+# Set up the shiny server   #
+# for using deepVATS App    #
+#############################
+FROM misantamaria/dvats-rstudio:rocker-ml4.2
+SHELL [ "/bin/bash", "--login", "-c" ]
+
+# Add r-studio server user
+ARG USER=user \
+    UID=1000 \
+    GID=1000
+
+ENV USER=$USER \
+    UID=$UID \
+    GID=$GID
+
+# Paths
+ENV HOME=/home/$USER \
+    ENV_PREFIX=$HOME/env \
+    APP=$HOME/app
+
+# Ensure files and packages
+COPY --chown=app:app docker/entrypoint-rstudio.sh /usr/local/bin
+COPY --chown=app:app r_shiny_app $APP
+
+# Create groups and users
+RUN addgroup --gid $GID $USER \
+    && addgroup --system app \
+    && addgroup --system shared \
+    && adduser --disabled-password \
+       --gecos "Non-root user" \
+       --uid $UID \
+       --gid $GID \
+       --home $HOME \
+       $USER \
+    && adduser --system --ingroup app app \
+    && usermod -aG shared $USER \
+    && usermod -aG shared app
+    
+# Agregar usuarios al grupo sudo después de crearlos
+RUN adduser $USER sudo \
+    && usermod -aG sudo app \
+    && echo $USER "ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER \
+    && echo "app ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/app \
+    && chmod 0440 /etc/sudoers.d/$USER \
+    && chmod 0440 /etc/sudoers.d/app
+
+ARG LOG_DIR=/var/log/shiny-server
+ENV LOG_DIR=${LOG_DIR} \
+    LOG_FILE=${LOG_DIR}/app.logs
+COPY --chown=app:app srv/shinylog $LOG_DIR
+
+# Fix ownership and permissions for the home directory
+RUN chown -R $USER:$USER $HOME \
+    && chmod -R 775 $HOME \
+    && chown -R app:app $HOME \
+    && chmod -R 775 $HOME
+
+# Ensure the log directory and file exist with correct permissions
+RUN mkdir -p $LOG_DIR \
+    && touch $LOG_FILE \
+    && chown -R app:app $LOG_DIR \
+    && chmod -R 775 $LOG_DIR
+
+RUN R -e "install.packages('semantic.dashboard', repos='http://cran.r-project.org')"\
+    && R -e "install.packages('randomcoloR', repos='http://cran.r-project.org')"
+
+### Run server
+ARG SHINY_PORT
+ENV SHINY_PORT=${SHINY_PORT}
+
+RUN chown -R app:app $APP
+RUN chown -R app:app $LOG_DIR
+RUN touch $LOG_FILE
+RUN chown -R app:app $LOG_DIR
+
+RUN [ -f ${LOG_DIR} ] && echo "${LOG_DIR} is a file" || echo "${LOG_DIR} is a directory"
+
+#RUN ls -la $LOG_DIR && sleep 3
+ARG SHINY_PORT
+ENV SHINY_PORT=$SHINY_PORT
+EXPOSE ${SHINY_PORT}
+EXPOSE 3838
+
+COPY  --chown=app:app docker/entrypoint-shiny.sh /usr/local/bin/entrypoint-shiny.sh
+RUN chmod u+x /usr/local/bin/entrypoint-shiny.sh 
+USER app
+RUN touch $LOG_FILE
+RUN ls -la $LOG_DIR && sleep 3
+CMD ["/usr/local/bin/entrypoint-shiny.sh"]

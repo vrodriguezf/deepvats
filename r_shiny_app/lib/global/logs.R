@@ -103,7 +103,7 @@ log_print   <- local({
     log_header    = LOG_HEADER,
     debug_level   = DEBUG_LEVEL,
     debug_group   = 'generic',
-    add_header    = FALSE, ### RESTAURAR A TRUE. ESTÁ A FALSE PARA FACILITARME LA DEPURACIÓN AHORA
+    add_header    = TRUE,
     max_chars     = MAX_CHARS
   ) {
       debug_group_id = DEBUG_GROUPS[[debug_group]]

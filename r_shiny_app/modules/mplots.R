@@ -146,7 +146,7 @@ matrix_profile_dygraph <- function(id, data){
 }
 
 tsA_data_plot <- function(id, data){
-  #TODO: usando como "plantilla" ts_plot_dygraph aquí hay que pintar la parte visible de tsA marcando como "ventana" la correspondiente del MPlot (COLUMNA)
+  #TODO: usando como "plantilla" ts_plot_dygraph aqui hay que pintar la parte visible de tsA marcando como "ventana" la correspondiente del MPlot (COLUMNA)
   ns <- NS(id)
   dygraphOutput(data) %>% dyOptions(
     stepPlot = TRUE,
@@ -155,7 +155,7 @@ tsA_data_plot <- function(id, data){
 }
 
 tsB_data_plot <- function(id, data){
-  #TODO: usando como "plantilla" ts_plot_dygraph aquí hay que pintar la parte visible de tsA marcando como "ventana" la correspondiente del MPlot (FILA)
+  #TODO: usando como "plantilla" ts_plot_dygraph aqui hay que pintar la parte visible de tsA marcando como "ventana" la correspondiente del MPlot (FILA)
   ns <- NS(id)
   dygraphOutput(sim_matrix$data) %>% dyOptions(
     stepPlot = TRUE,

@@ -51,7 +51,7 @@ select_datasetServer <- function(
             choices = encs_names
         )
         
-        ### TODO: Ver cómo poner bien esta ñapa para que no se actualizen los gráficos antes que el stride
+        ### TODO: Ver como poner bien esta nhapa para que no se actualizen los graficos antes que el stride
         updateSliderInput(session, "stride", value = 0)
         shinyjs::enable("get_tsdf")
         ################
@@ -93,14 +93,14 @@ load_datasetActionDebug <-function(input, output, session){
 }
 
 load_datasetAction <- function(input, output, session){
-    #En esta función hay que meter el código de ángel para cargar datasets & embeddings
-    #Estructurar en funciones según se vaya utilizando para poder asegurar una correcta
-    #ejecución y depuración en caso de bloqueos de reactividades.
+    #En esta funcion hay que meter el codigo de angel para cargar datasets & embeddings
+    #Estructurar en funciones segun se vaya utilizando para poder asegurar una correcta
+    #ejecucion y depuracion en caso de bloqueos de reactividades.
 }
 
 load_datasetServer <- function(id) {
     #Lo que sean funciones de cargar & descargar, en lib/load.R 
-    #Lo que sean llamadas básicas, usar load_dataset_action / load_embeddings_action
+    #Lo que sean llamadas basicas, usar load_dataset_action / load_embeddings_action
     moduleServer(
         id, 
         function(input, output, session){

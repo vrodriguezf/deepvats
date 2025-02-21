@@ -1,13 +1,13 @@
 # Dependencies
-source("./dependencies.R")
+source("./dependencies.R", encoding = "utf-8")
 ## -- Un comment for printing shiny logs
 #options(shiny.trace = TRUE, shiny.loglevel = "DEBUG")
 #options(shiny.error = browser, shiny.sanitize.errors = FALSE, shiny.fullstacktrace = TRUE)
 
 # Logs handling and configuration
-source("./lib/global/wandb.R")
-source("./lib/global/logs.R")
-source("./lib/global/plots.R")
+source("./lib/global/wandb.R", encoding = "utf-8")
+source("./lib/global/logs.R", encoding = "utf-8")
+source("./lib/global/plots.R", encoding = "utf-8")
 ##########
 # CONFIG #
 ##########

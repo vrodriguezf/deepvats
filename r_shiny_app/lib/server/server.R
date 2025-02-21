@@ -1,5 +1,5 @@
-source("./lib/server/preprocessing.R")
-source("./lib/server/utils.R")
+source("./lib/server/preprocessing.R", encoding = "utf-8")
+source("./lib/server/utils.R", encoding = "utf-8")
 # Function for parallel timeindex conversion
 parallel_posfix <- function(df) {
     chunk_size = 100000

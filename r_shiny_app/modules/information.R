@@ -11,6 +11,6 @@ info_tabUI <- function(id) {
     )
 }
 
+# Revisar si es necesario annadir codigo o se puede traer poco a poco de server
 info_tab <- function(input, output, session) {
-    #--- Revisar si es necesario añadir código o se puede traer poco a poco de server ---#
 }

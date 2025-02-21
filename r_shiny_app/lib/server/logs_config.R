@@ -25,7 +25,7 @@
 # - Use the returned logging functions (`lps`, `lpe`, `lp`) within reactive contexts, 
 #   and pass additional arguments (`...`) to accommodate custom behaviours.
 
-source("~/app/lib/global/logs.R")
+source("~/app/lib/global/logs.R", encoding = "utf-8")
 
 # Operators
 `%||%` <- function(a, b) {

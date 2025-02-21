@@ -8,12 +8,12 @@
 #
 ###########
 #TODO: Separar la aplicación en módulos y limpiar el código. 
-source("./lib/server/logs.R")
-source("./lib/server/plots.R")
-source("./lib/server/server.R")
-source("./modules/parameters.R")
-source("./modules/mplots.R")
-source("./lib/server/logs_config.R")
+source("./lib/server/logs.R", encoding = "utf-8")
+source("./lib/server/plots.R", encoding = "utf-8")
+source("./lib/server/server.R", encoding = "utf-8")
+source("./modules/parameters.R", encoding = "utf-8")
+source("./modules/mplots.R", encoding = "utf-8")
+source("./lib/server/logs_config.R", encoding = "utf-8")
 
 shinyServer(function(input, output, session) {
     options(shiny.verbose = TRUE)
@@ -295,7 +295,7 @@ shinyServer(function(input, output, session) {
             log_print(
                 paste0(
                     "observeEvent input_encoder | update wlen | Update slider input ",
-                    "ws: (", wmin, ", ", wmax, " )",
+                    "ws: (", wmin, ", ", wmax, ")",
                     " |  wlen: ", wlen 
                 ),  debug_group = 'button')
             
@@ -2316,9 +2316,29 @@ shinyServer(function(input, output, session) {
         ts_plt
     })
 
+    process_prjs_object <- reactive({
+        log_print("--> process_prjs_object", debug_group = 'debug')
+        on.exit({log_print("process_prjs_object-->", debug_group = 'debug');})
+        prjs <- prj_object()
+        #log_print(head(prjs), debug_group = 'debug')
+        # Get current rownames 
+        paste0("process_prjs_object | Rownames pre [", paste(rownames(prjs), collapse = ', '), "]")
+        rn <- rownames(prjs)
+        missing_names <- which(is.na(rn) | rn == "")
+        # Assign a name to each missing position
+        rn [missing_names] <- paste0("dim_", missing_names-1)
+        paste0("process_prjs_object | rn [", paste(rn, collapse = ', '), "]")
+        # Reassign names to dataframe 
+        rownames(prjs) <-rn
+        paste0("process_prjs_object | Rownames after [", paste(rownames(prjs), collapse = ', '), "]")
+        #log_print(head(prjs), debug_group = 'debug')
+        prjs
+    })
+
     embedding_ids <- reactive({
         bp_indices <- NULL
         if (length(prj_object()>0)){
+            prjs <- process_prjs_object()
             log_print("--> embedding idx", debug_group = 'debug')
             on.exit({log_print("embedding idx -->", debug_group = 'debug');})
             # Building projections selected points object
@@ -2336,8 +2356,8 @@ shinyServer(function(input, output, session) {
                 pull(index)                             %>% 
                 as.integer
         }
-        # Returns NULL if no point have been selected within the projections plot
-        # Returns the indixes of the points selected within the projections plot
+        # Returns NULL if no point have been computed in projections
+        # Returns the indexes of the points selected within the projections plot
         bp_indices
     })
 

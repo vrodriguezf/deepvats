@@ -67,8 +67,8 @@ rotate_script <- HTML("
     transform: rotate(-90deg);
     transform-origin: left top 0;
     position: absolute;
-    left: -300px; /* Ajusta este valor para posicionar la gráfica rotada */
-    top: 50px; /* Ajusta este valor para posicionar la gráfica rotada */
+    left: -300px; /* Set this value to position the rotated graph. */
+    top: 50px; /* Set this value to position the rotated graph. */
   }
 ")
 

@@ -1,9 +1,9 @@
-source("./lib/ui/ui.R")
-source("./lib/global/global.R")
-source("./modules/information.R")
-source("./modules/mplots.R")
-source("./modules/embeddings.R")
-source("./modules/parameters.R")
+source("./lib/ui/ui.R", encoding = "utf-8")
+source("./lib/global/global.R", encoding = "utf-8")
+source("./modules/information.R", encoding = "utf-8")
+source("./modules/mplots.R", encoding = "utf-8")
+source("./modules/embeddings.R", encoding = "utf-8")
+source("./modules/parameters.R", encoding = "utf-8")
 #
 # This is the user-interface definition of a Shiny web application. You can
 # run the application by clicking 'Run App' above.

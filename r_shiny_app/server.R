@@ -2317,18 +2317,27 @@ shinyServer(function(input, output, session) {
     })
 
     embedding_ids <- reactive({
-        req(length(prj_object()>0))
-        log_print("--> embedding idx", debug_group = 'debug')
-        on.exit({log_print("embedding idx -->", debug_group = 'debug');})
-        bp <- brushedPoints(
-            prj_object(), 
-                input$projections_brush, 
+        bp_indices <- NULL
+        if (length(prj_object()>0)){
+            log_print("--> embedding idx", debug_group = 'debug')
+            on.exit({log_print("embedding idx -->", debug_group = 'debug');})
+            # Building projections selected points object
+            bp <- brushedPoints(
+                prj_object(), #Projections
+                input$projections_brush, #Selected points
                 allRows = TRUE
             ) 
-        bp_indices <- bp %>% rownames_to_column("index")   %>% 
+            # Check rownames for debugging errors. Comment when fixed (the 'if' was added to avoid this error)
+            log_print("embedding_idx | ROWNAMES | ", debug_group = 'debug')
+            paste0("embedding_idx | ROWNAMES | [", paste(rownames(bp), collapse = ', '), "]")
+            # Get the indexes of the points within the projections point list
+            bp_indices <- bp %>% rownames_to_column("index") %>% 
                 dplyr::filter(selected_ == TRUE)        %>% 
                 pull(index)                             %>% 
                 as.integer
+        }
+        # Returns NULL if no point have been selected within the projections plot
+        # Returns the indixes of the points selected within the projections plot
         bp_indices
     })
 

@@ -1566,12 +1566,15 @@ shinyServer(function(input, output, session) {
             X                               = df,
             enc_learn                       = enc(),
             stride                          = as.integer(1),
-            batch_size                      = as.integer(input$ft_batch_size),
-            cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
+            #batch_size                      = as.integer(input$ft_batch_size),
+            batch_size                      = as.integer(dataset_logged_by$config$batch_size)
+            #cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
+            cpu                             = FALSE,
             to_numpy                        = FALSE,
             verbose                         = as.integer(8),
             time_flag                       = TRUE,
-            n_windows_percent               = as.numeric(input$ft_window_percent),
+            n_windows_percent               = NULL,
+            #n_windows_percent               = as.numeric(input$ft_window_percent),
             window_mask_percent             = as.numeric(input$ft_mask_window_percent),
             training_percent                = as.numeric(input$ft_training_percent),
             validation_percent              = as.numeric(input$ft_validation_percent),
@@ -1579,7 +1582,6 @@ shinyServer(function(input, output, session) {
             shot                            = TRUE,
             eval_pre                        = TRUE,
             eval_post                       = TRUE,
-            #criterion                       = NULL, #torch$nn$MSELoss,
             #optimizer                       = NULL, #torch$optim$AdamW,
             #lr                              = as.numeric(0.00005),
             lr                              = as.numeric(0.001),
@@ -1603,7 +1605,7 @@ shinyServer(function(input, output, session) {
             use_wandb                       = dataset_logged_by$config$dataset_logged_by,
             norm_by_sample                  = dataset_logged_by$config$norm_by_sample,
             norm_use_single_batch           = dataset_logged_by$config$norm_use_single_batch,
-            show_plot                       = FALSE,
+            show_plot                       = TRUE, #FALSE
             metrics                         = c(
                 dvats_encoder$EvalMSE,
                 dvats_encoder$EvalRMSE,
@@ -1614,13 +1616,13 @@ shinyServer(function(input, output, session) {
                 #dvats$encoder$EvalMAE, 
                 #dvats$encoder$EvalSMAPE
             ),
-            metrics_args = c(list(squared = FALSE), list(squared = TRUE), list(), list()),
-            metrics_names = c("mse","rmse", "mae", "smape"),
-            criterion = torch$nn$MSELoss,
-            mix_windows = TRUE,
-            register_errors = TRUE,
-            save_best_or_last = TRUE,
-            force_gpu_id = as.integer(GPU_ID)
+            metrics_args        = c(list(squared = FALSE), list(squared = TRUE), list(), list()),
+            metrics_names       = c("mse","rmse", "mae", "smape"),
+            criterion           = torch$nn$MSELoss,
+            mix_windows         = TRUE,
+            register_errors     = FALSE, #TRUE,
+            save_best_or_last   = TRUE,
+            force_gpu_id        = as.integer(GPU_ID)
         )
 
         for (key in names(fine_tune_kwargs)) {

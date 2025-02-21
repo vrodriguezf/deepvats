@@ -1562,115 +1562,112 @@ shinyServer(function(input, output, session) {
 
         dataset_logged_by <- enc_ar()$logged_by()
 
-        
-        if (grepl("moment", input$encoder, ignore.case = TRUE)) {
-            fine_tune_kwargs <- list(
-                X                               = df,
-                enc_learn                       = enc(),
-                stride                          = as.integer(1),
-                batch_size                      = as.integer(input$ft_batch_size),
-                cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
-                to_numpy                        = FALSE,
-                verbose                         = as.integer(8),
-                time_flag                       = TRUE,
-                n_windows_percent               = as.numeric(input$ft_window_percent),
-                window_mask_percent             = as.numeric(input$ft_mask_window_percent),
-                training_percent                = as.numeric(input$ft_training_percent),
-                validation_percent              = as.numeric(input$ft_validation_percent),
-                num_epochs                      = as.integer(input$ft_num_epochs),
-                shot                            = TRUE,
-                eval_pre                        = TRUE,
-                eval_post                       = TRUE,
-                #criterion                       = NULL, #torch$nn$MSELoss,
-                #optimizer                       = NULL, #torch$optim$AdamW,
-                #lr                              = as.numeric(0.00005),
-                lr                              = as.numeric(0.001),
-                lr_scheduler_flag               = TRUE, #FALSE, 
-                #lr_scheduler_name               = "OneCycleLR",
-                lr_scheduler_name               = "cosine_with_restarts",
-                lr_scheduler_num_warmup_steps   = 100,
-                window_sizes                    = list(as.integer(input$wlen)),
-                n_window_sizes                  = as.integer(input$ft_num_windows),
-                window_sizes_offset             = as.numeric(0.05),
-                windows_min_distance            = as.integer(input$ft_min_windows_distance),
-                full_dataset                    = input$ft_datset_option == "full_dataset",
-                print_to_path                   = FALSE, #TRUE,
-                print_path                      = "~/data/logs.txt",
-                print_mode                      = "a",
-                use_moment_masks                = TRUE,
-                mask_stateful                   = ("ft_mask_stateful" %in% input$masking_options),
-                mask_future                     = ("ft_mask_future" %in% input$masking_options),
-                mask_sync                       = ("ft_sync" %in% input$masking_options),
-                analysis_mode                   = dataset_logged_by$config$analysis_mode,
-                use_wandb                       = dataset_logged_by$config$dataset_logged_by,
-                norm_by_sample                  = dataset_logged_by$config$norm_by_sample,
-                norm_use_single_batch           = dataset_logged_by$config$norm_use_single_batch,
-                show_plot                       = FALSE,
-                metrics                         = c(
-                    dvats_encoder$EvalMSE,
-                    dvats_encoder$EvalRMSE,
-                    dvats_encoder$EvalMAE,
-                    dvats_encoder$EvalSMAPE
-                    #dvats$encoder$EvalMSE, 
-                    #dvats$encoder$EvalRMSE, 
-                    #dvats$encoder$EvalMAE, 
-                    #dvats$encoder$EvalSMAPE
-                ),
-                metrics_args = c(list(squared = FALSE), list(squared = TRUE), list(), list()),
-                metrics_names = c("mse","rmse", "mae", "smape"),
-                criterion = torch$nn$MSELoss,
-                mix_windows = TRUE,
-                register_errors = TRUE,
-                save_best_or_last = TRUE,
-                force_gpu_id = as.integer(GPU_ID)
-            )
+        fine_tune_kwargs <- list(
+            X                               = df,
+            enc_learn                       = enc(),
+            stride                          = as.integer(1),
+            batch_size                      = as.integer(input$ft_batch_size),
+            cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
+            to_numpy                        = FALSE,
+            verbose                         = as.integer(8),
+            time_flag                       = TRUE,
+            n_windows_percent               = as.numeric(input$ft_window_percent),
+            window_mask_percent             = as.numeric(input$ft_mask_window_percent),
+            training_percent                = as.numeric(input$ft_training_percent),
+            validation_percent              = as.numeric(input$ft_validation_percent),
+            num_epochs                      = as.integer(input$ft_num_epochs),
+            shot                            = TRUE,
+            eval_pre                        = TRUE,
+            eval_post                       = TRUE,
+            #criterion                       = NULL, #torch$nn$MSELoss,
+            #optimizer                       = NULL, #torch$optim$AdamW,
+            #lr                              = as.numeric(0.00005),
+            lr                              = as.numeric(0.001),
+            lr_scheduler_flag               = TRUE, #FALSE, 
+            #lr_scheduler_name               = "OneCycleLR",
+            lr_scheduler_name               = "cosine_with_restarts",
+            lr_scheduler_num_warmup_steps   = 100,
+            window_sizes                    = list(as.integer(input$wlen)),
+            n_window_sizes                  = as.integer(input$ft_num_windows),
+            window_sizes_offset             = as.numeric(0.05),
+            windows_min_distance            = as.integer(input$ft_min_windows_distance),
+            full_dataset                    = input$ft_datset_option == "full_dataset",
+            print_to_path                   = FALSE, #TRUE,
+            print_path                      = "~/data/logs.txt",
+            print_mode                      = "a",
+            use_moment_masks                = TRUE,
+            mask_stateful                   = ("ft_mask_stateful" %in% input$masking_options),
+            mask_future                     = ("ft_mask_future" %in% input$masking_options),
+            mask_sync                       = ("ft_sync" %in% input$masking_options),
+            analysis_mode                   = dataset_logged_by$config$analysis_mode,
+            use_wandb                       = dataset_logged_by$config$dataset_logged_by,
+            norm_by_sample                  = dataset_logged_by$config$norm_by_sample,
+            norm_use_single_batch           = dataset_logged_by$config$norm_use_single_batch,
+            show_plot                       = FALSE,
+            metrics                         = c(
+                dvats_encoder$EvalMSE,
+                dvats_encoder$EvalRMSE,
+                dvats_encoder$EvalMAE,
+                dvats_encoder$EvalSMAPE
+                #dvats$encoder$EvalMSE, 
+                #dvats$encoder$EvalRMSE, 
+                #dvats$encoder$EvalMAE, 
+                #dvats$encoder$EvalSMAPE
+            ),
+            metrics_args = c(list(squared = FALSE), list(squared = TRUE), list(), list()),
+            metrics_names = c("mse","rmse", "mae", "smape"),
+            criterion = torch$nn$MSELoss,
+            mix_windows = TRUE,
+            register_errors = TRUE,
+            save_best_or_last = TRUE,
+            force_gpu_id = as.integer(GPU_ID)
+        )
 
-            for (key in names(fine_tune_kwargs)) {
-                value <- fine_tune_kwargs[[key]]
-                if (is.numeric(value) && any(is.na(value))) {
-                    log_print(paste0("Fine tune kwargs | NaN detected in:", key, "\n"), debug_group = 'debug')
-                } else {
-                    log_print(paste0("Fine tune kwargs | ", key, ": ", fine_tune_kwargs[[key]], "\n"), debug_group = 'debug')
-                }
+        for (key in names(fine_tune_kwargs)) {
+            value <- fine_tune_kwargs[[key]]
+            if (is.numeric(value) && any(is.na(value))) {
+                log_print(paste0("Fine tune kwargs | NaN detected in:", key, "\n"), debug_group = 'debug')
+            } else {
+                log_print(paste0("Fine tune kwargs | ", key, ": ", fine_tune_kwargs[[key]], "\n"), debug_group = 'debug')
             }
-
-            showModal(modalDialog(
-                title = "Processing...",
-                "Please wait while the model is fine tuned.",
-                uiOutput("dummyLoad") %>% shinycssloaders::withSpinner(
-                    #type = 2,
-                    #color = "#0275D8",
-                    #color.background =  "#FFFFFF"
-                ),  
-                easyClose = FALSE,
-                footer = NULL
-            ))
-            # Ejecutar la operación de fine-tuning
-            t_init <- Sys.time()
-            #result <- do.call(dvats$fine_tune_moment_, fine_tune_kwargs)
-            result <- do.call(dvats$fine_tune, fine_tune_kwargs)
-            t_end <- Sys.time()
-            eval_results_pre <- result[[2]]
-            eval_results_post <- result[[3]]
-            t_shots <- result[[4]]
-            t_shot <- result[[5]]
-            t_evals <- result[[6]]
-            t_eval <- result[[7]]
-            enc(result[[8]])
-            diff = t_end - t_init
-            diff_secs = diff
-            diff_mins = diff / 60
-            log_print(paste0("Fine tune: ", diff_secs, " s | approx ", diff_mins, "min" ), debug_group = 'time')
-            log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ), debug_group = 'time')
-            log_print(paste0("Fine tune Python total shot time: ", t_shot, "s" ), debug_group = 'time')
-            log_print(paste0("Fine tune Python single eval steps time: ", t_shots, "s" ), debug_group = 'time')
-            log_print(paste0("Fine tune Python total eval time: ", t_shot, "s" ), debug_group = 'time')
-            log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ), debug_group = 'time')
-            log_print(paste0("Fine tune eval results pre-tune: ", eval_results_pre, "s" ), debug_group = 'time')
-            log_print(paste0("Fine tune eval results post-tune: ", eval_results_post, "s" ), debug_group = 'time')
-            update_play_fine_tune_button()
-            removeModal()
         }
+
+        showModal(modalDialog(
+            title = "Processing...",
+            "Please wait while the model is fine tuned.",
+            uiOutput("dummyLoad") %>% shinycssloaders::withSpinner(
+                #type = 2,
+                #color = "#0275D8",
+                #color.background =  "#FFFFFF"
+            ),  
+            easyClose = FALSE,
+            footer = NULL
+        ))
+        # Ejecutar la operación de fine-tuning
+        t_init <- Sys.time()
+        #result <- do.call(dvats$fine_tune_moment_, fine_tune_kwargs)
+        result <- do.call(dvats$fine_tune, fine_tune_kwargs)
+        t_end <- Sys.time()
+        eval_results_pre <- result[[2]]
+        eval_results_post <- result[[3]]
+        t_shots <- result[[4]]
+        t_shot <- result[[5]]
+        t_evals <- result[[6]]
+        t_eval <- result[[7]]
+        enc(result[[8]])
+        diff = t_end - t_init
+        diff_secs = diff
+        diff_mins = diff / 60
+        log_print(paste0("Fine tune: ", diff_secs, " s | approx ", diff_mins, "min" ), debug_group = 'time')
+        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ), debug_group = 'time')
+        log_print(paste0("Fine tune Python total shot time: ", t_shot, "s" ), debug_group = 'time')
+        log_print(paste0("Fine tune Python single eval steps time: ", t_shots, "s" ), debug_group = 'time')
+        log_print(paste0("Fine tune Python total eval time: ", t_shot, "s" ), debug_group = 'time')
+        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ), debug_group = 'time')
+        log_print(paste0("Fine tune eval results pre-tune: ", eval_results_pre, "s" ), debug_group = 'time')
+        log_print(paste0("Fine tune eval results post-tune: ", eval_results_post, "s" ), debug_group = 'time')
+        update_play_fine_tune_button()
+        removeModal()
     })
   
     observe({

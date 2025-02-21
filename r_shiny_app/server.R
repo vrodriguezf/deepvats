@@ -1781,7 +1781,7 @@ shinyServer(function(input, output, session) {
             umap_kwargs = dict(
                 random_state    = as.integer(input$prj_random_state), 
                 n_neighbors     = input$prj_n_neighbors, 
-                min_dist        = input$prj_min_dist
+                min_dist        = input$prj_min_dist,
                 n_components    = as.integer(input$pca_n_components)
             )
         )

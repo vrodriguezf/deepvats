@@ -1567,7 +1567,7 @@ shinyServer(function(input, output, session) {
             enc_learn                       = enc(),
             stride                          = as.integer(1),
             #batch_size                      = as.integer(input$ft_batch_size),
-            batch_size                      = as.integer(dataset_logged_by$config$batch_size)
+            batch_size                      = as.integer(dataset_logged_by$config$batch_size),
             #cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
             cpu                             = FALSE,
             to_numpy                        = FALSE,
@@ -1618,7 +1618,7 @@ shinyServer(function(input, output, session) {
             ),
             metrics_args        = c(list(squared = FALSE), list(squared = TRUE), list(), list()),
             metrics_names       = c("mse","rmse", "mae", "smape"),
-            criterion           = torch$nn$MSELoss,
+            criterion           = torch$nn$MSELoss(),
             mix_windows         = TRUE,
             register_errors     = FALSE, #TRUE,
             save_best_or_last   = TRUE,

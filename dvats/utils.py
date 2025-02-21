@@ -1108,7 +1108,14 @@ def find_dominant_window_sizes_list_single(
     # If no valid window sizes are found, return the first from sorted list
     if not sizes:
         mssg.print(f"Find and return valid window_sizes | ... 2a ... {nsizes}")
-        sizes = sorted_window_sizes[0][:nsizes]
+        try:
+            sizes = sorted_window_sizes[0][:nsizes]
+        except Exception as e:
+            print(f"Failed getting {nsizes} sizes from {sorted_window_sizes[0]}, trying directly in sorted_window_sizes | Error: {e}.")
+            try:
+                sizes = sorted_window_sizes[:nsizes]
+            except Exception as e: 
+                print(f"Failed getting {nsizes} sizes from {sorted_window_sizes} | error: {e}")
     else:
         mssg.print(f"Find and return valid window_sizes | ... 2b ... {nsizes}")
     mssg.level -= 1
@@ -1445,7 +1452,7 @@ class WindowedDataset:
                 available -= self.stride
                 bs += 1  
                 if return_ids: batch_indices.append((current_idx, current_idx + window_size))
-            #print(f"Batch~{len(batch)} | bs {bs}")
+            #print(f"Batch~{len(batch)} | bs {bs}")f
             if bs > 0  and (bs == self.batch_size or self.allow_incomplete):
                 batch_tensor = torch.stack(batch) # Convert to tensor
                 batch_tensor = rearrange(batch, "b w f -> b f w")

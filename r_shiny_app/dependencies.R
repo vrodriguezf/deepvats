@@ -46,10 +46,9 @@ ft <- reticulate::import("pyarrow.feather")
 
 #options(shiny.trace = TRUE)
 if(torch$cuda$is_available()){
+  GPU_ID <- 1
   print(paste0("CUDA AVAILABLE. Num devices: ", torch$cuda$device_count()))
-  #torch$cuda$set_device(as.integer(0))
-  torch$cuda$set_device(as.integer(1))
-  #torch$cuda$set_device(as.integer(2))
+  torch$cuda$set_device(as.integer(GPU_ID))
   #print(torch$cuda$memory_summary())
   print(Sys.getenv("PYTORCH_CUDA_ALLOC_CONF"))
 } else {
@@ -57,14 +56,15 @@ if(torch$cuda$is_available()){
 }
 
 # Python dependencies
-tsai_data = reticulate::import("tsai.data.all")
-wandb = reticulate::import("wandb")
-pd = reticulate::import("pandas")
-hdbscan = reticulate::import("hdbscan")
-np = reticulate::import("numpy")
-dvats = reticulate::import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
-mplots = reticulate::import_from_path("dvats.mplots", path=paste0(Sys.getenv("HOME")))
-utils = reticulate::import_from_path("dvats.utils", path = paste0(Sys.getenv("HOME")))
+tsai_data     = reticulate::import("tsai.data.all")
+wandb         = reticulate::import("wandb")
+pd            = reticulate::import("pandas")
+hdbscan       = reticulate::import("hdbscan")
+np            = reticulate::import("numpy")
+dvats         = reticulate::import_from_path("dvats.all", path=paste0(Sys.getenv("HOME")))
+mplots        = reticulate::import_from_path("dvats.mplots", path=paste0(Sys.getenv("HOME")))
+utils         = reticulate::import_from_path("dvats.utils", path = paste0(Sys.getenv("HOME")))
+dvats_encoder = reticulate::import_from_path("dvats.encoder", path = paste0(Sys.getenv("HOME")))
 #print("--> py_config ")
 #print(reticulate::py_config())
 #print("py_config -->")

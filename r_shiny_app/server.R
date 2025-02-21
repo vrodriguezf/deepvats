@@ -1570,8 +1570,8 @@ shinyServer(function(input, output, session) {
                 stride                          = as.integer(1),
                 batch_size                      = as.integer(input$ft_batch_size),
                 cpu                             = ifelse(input$cpu_flag == "CPU", TRUE, FALSE),
-                to_numpy                        = TRUE,
-                verbose                         = as.integer(1),
+                to_numpy                        = FALSE,
+                verbose                         = as.integer(8),
                 time_flag                       = TRUE,
                 n_windows_percent               = as.numeric(input$ft_window_percent),
                 window_mask_percent             = as.numeric(input$ft_mask_window_percent),
@@ -1585,18 +1585,19 @@ shinyServer(function(input, output, session) {
                 #optimizer                       = NULL, #torch$optim$AdamW,
                 #lr                              = as.numeric(0.00005),
                 lr                              = as.numeric(0.001),
-                lr_scheduler_flag               = FALSE, 
-                lr_scheduler_name               = "OneCycleLR",
-                lr_scheduler_num_warmup_steps   = NULL,
+                lr_scheduler_flag               = TRUE, #FALSE, 
+                #lr_scheduler_name               = "OneCycleLR",
+                lr_scheduler_name               = "cosine_with_restarts",
+                lr_scheduler_num_warmup_steps   = 100,
                 window_sizes                    = list(as.integer(input$wlen)),
                 n_window_sizes                  = as.integer(input$ft_num_windows),
                 window_sizes_offset             = as.numeric(0.05),
                 windows_min_distance            = as.integer(input$ft_min_windows_distance),
-                full_dataset                    = (input$ft_datset_option == "full_dataset"),
-                print_to_path                   = TRUE,
+                full_dataset                    = input$ft_datset_option == "full_dataset",
+                print_to_path                   = FALSE, #TRUE,
                 print_path                      = "~/data/logs.txt",
-                print_mode                      = "w",
-                use_moment_masks                = FALSE,
+                print_mode                      = "a",
+                use_moment_masks                = TRUE,
                 mask_stateful                   = ("ft_mask_stateful" %in% input$masking_options),
                 mask_future                     = ("ft_mask_future" %in% input$masking_options),
                 mask_sync                       = ("ft_sync" %in% input$masking_options),
@@ -1606,13 +1607,22 @@ shinyServer(function(input, output, session) {
                 norm_use_single_batch           = dataset_logged_by$config$norm_use_single_batch,
                 show_plot                       = FALSE,
                 metrics                         = c(
-                    dvats$encoder$EvalMSE, 
-                    dvats$encoder$EvalRMSE, 
-                    dvats$encoder$EvalMAE, 
-                    dvats$encoder$EvalSMAPE
+                    dvats_encoder$EvalMSE,
+                    dvats_encoder$EvalRMSE,
+                    dvats_encoder$EvalMAE,
+                    dvats_encoder$EvalSMAPE
+                    #dvats$encoder$EvalMSE, 
+                    #dvats$encoder$EvalRMSE, 
+                    #dvats$encoder$EvalMAE, 
+                    #dvats$encoder$EvalSMAPE
                 ),
                 metrics_args = c(list(squared = FALSE), list(squared = TRUE), list(), list()),
                 metrics_names = c("mse","rmse", "mae", "smape"),
+                criterion = torch$nn$MSELoss,
+                mix_windows = TRUE,
+                register_errors = TRUE,
+                save_best_or_last = TRUE,
+                force_gpu_id = as.integer(GPU_ID)
             )
 
             for (key in names(fine_tune_kwargs)) {
@@ -1637,7 +1647,8 @@ shinyServer(function(input, output, session) {
             ))
             # Ejecutar la operación de fine-tuning
             t_init <- Sys.time()
-            result <- do.call(dvats$fine_tune_moment_, fine_tune_kwargs)
+            #result <- do.call(dvats$fine_tune_moment_, fine_tune_kwargs)
+            result <- do.call(dvats$fine_tune, fine_tune_kwargs)
             t_end <- Sys.time()
             eval_results_pre <- result[[2]]
             eval_results_post <- result[[3]]
@@ -1672,9 +1683,10 @@ shinyServer(function(input, output, session) {
 
     umap_kwargs <- reactive({
         dict(
-            random_state = as.integer(input$prj_random_state), 
-            n_neighbors = input$prj_n_neighbors,
-            min_dist = input$prj_min_dist
+            random_state    = as.integer(input$prj_random_state), 
+            n_neighbors     = input$prj_n_neighbors,
+            min_dist        = input$prj_min_dist,
+            n_components    = as.integer(input$pca_n_components)
         )
     })
 
@@ -1767,9 +1779,10 @@ shinyServer(function(input, output, session) {
             verbose     = as.integer(1),
             pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
             umap_kwargs = dict(
-                random_state= as.integer(input$prj_random_state), 
-                n_neighbors = input$prj_n_neighbors, 
-                min_dist    = input$prj_min_dist
+                random_state    = as.integer(input$prj_random_state), 
+                n_neighbors     = input$prj_n_neighbors, 
+                min_dist        = input$prj_min_dist
+                n_components    = as.integer(input$pca_n_components)
             )
         )
         res

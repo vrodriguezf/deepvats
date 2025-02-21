@@ -2628,7 +2628,7 @@ def moment_compute_loss(
     # Compute loss
     self.mssg.print(f"Criterion: {self.optim.criterion}")
     # Ensure sizes
-    min_len = min(predictions.shape[2], references.shape[2])
+    min_len     = min(predictions.shape[2], references.shape[2])
     references  = references[:,:,:min_len]
     predictions = predictions[:,:,:min_len]
     ####
@@ -4629,8 +4629,12 @@ def fine_tune(
     scheduler_specific_kwargs       : AttrDict                      = None,
     register_errors                 : bool                          = True,
     save_best_or_last               : bool                          = True, #If true, save best else save last
-    mix_windows                     : bool                          = True
+    mix_windows                     : bool                          = True,
+    force_gpu_id                    : int                           = None
 ): 
+    if not(force_gpu_id is None): 
+        torch.cuda.set_device(force_gpu_id)
+        
     enc = _set_encoder(
         X                               = X,
         stride                          = stride,

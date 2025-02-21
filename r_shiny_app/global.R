@@ -32,9 +32,9 @@ DEFAULT_VALUES = list(
 WANDB_ENTITY  = Sys.getenv("WANDB_ENTITY")
 WANDB_PROJECT = Sys.getenv("WANDB_PROJECT")
 
-##############################################
+###################################
 # RETRIEVE WANDB RUNS & ARTIFACTS #
-##############################################
+###################################
 
 api <- wandb$Api()
 encs_l_path <- path.expand("~/data/r_shiny_app_logs/encs_l.pickle")

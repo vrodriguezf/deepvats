@@ -8505,3 +8505,384 @@ Error in eval(ei, envir) :
   FileNotFoundError: Couldn't find a module script at /home/macu/app/mse/mse.py. Module 'mse' doesn't exist on the Hugging Face Hub either.
 Calls: <Anonymous> ... import_from_path_immediate -> import -> py_module_import
 Execution halted
+DEBUG: Writing to /var/log/shiny-server/app.logs
+About to open the app
+> shiny::runApp('/home/macu/app', host='0.0.0.0', port=3838)
+Loading required package: shiny
+Warning in shiny::runApp("/home/macu/app", host = "0.0.0.0", port = 3838) :
+  Shiny Server v0.3.4 or later is required; please upgrade!
+
+Attaching package: ‘shinyjs’
+
+The following object is masked from ‘package:shiny’:
+
+    runExample
+
+The following objects are masked from ‘package:methods’:
+
+    removeClass, show
+
+
+Attaching package: ‘shinyWidgets’
+
+The following object is masked from ‘package:shinyjs’:
+
+    alert
+
+
+Attaching package: ‘jsonlite’
+
+The following object is masked from ‘package:purrr’:
+
+    flatten
+
+The following object is masked from ‘package:shiny’:
+
+    validate
+
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:purrr’:
+
+    transpose
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘arrow’
+
+The following objects are masked from ‘package:feather’:
+
+    read_feather, write_feather
+
+The following object is masked from ‘package:utils’:
+
+    timestamp
+
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################
+
+Attaching package: ‘xts’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+The following objects are masked from ‘package:data.table’:
+
+    first, last
+
+
+Attaching package: ‘semantic.dashboard’
+
+The following objects are masked from ‘package:shiny’:
+
+    column, icon
+
+The following object is masked from ‘package:graphics’:
+
+    box
+
+/usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
+  torch.utils._pytree._register_pytree_node(
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+Oct2PyError: Octave evaluation error:
+error: graphics_toolkit: fltk toolkit is not available
+error: called from:
+    graphics_toolkit at line 84, column 5
+Octave is not ready. Please check the configuration
+
+Listening on http://0.0.0.0:3838
+DEBUG: Writing to /var/log/shiny-server/app.logs
+About to open the app
+> shiny::runApp('/home/macu/app', host='0.0.0.0', port=3838)
+Loading required package: shiny
+Warning in shiny::runApp("/home/macu/app", host = "0.0.0.0", port = 3838) :
+  Shiny Server v0.3.4 or later is required; please upgrade!
+
+Attaching package: ‘shinyjs’
+
+The following object is masked from ‘package:shiny’:
+
+    runExample
+
+The following objects are masked from ‘package:methods’:
+
+    removeClass, show
+
+
+Attaching package: ‘shinyWidgets’
+
+The following object is masked from ‘package:shinyjs’:
+
+    alert
+
+
+Attaching package: ‘jsonlite’
+
+The following object is masked from ‘package:purrr’:
+
+    flatten
+
+The following object is masked from ‘package:shiny’:
+
+    validate
+
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:purrr’:
+
+    transpose
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘arrow’
+
+The following objects are masked from ‘package:feather’:
+
+    read_feather, write_feather
+
+The following object is masked from ‘package:utils’:
+
+    timestamp
+
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################
+
+Attaching package: ‘xts’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+The following objects are masked from ‘package:data.table’:
+
+    first, last
+
+
+Attaching package: ‘semantic.dashboard’
+
+The following objects are masked from ‘package:shiny’:
+
+    column, icon
+
+The following object is masked from ‘package:graphics’:
+
+    box
+
+/usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
+  torch.utils._pytree._register_pytree_node(
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+Oct2PyError: Octave evaluation error:
+error: graphics_toolkit: fltk toolkit is not available
+error: called from:
+    graphics_toolkit at line 84, column 5
+Octave is not ready. Please check the configuration
+
+Listening on http://0.0.0.0:3838
+DEBUG: Writing to /var/log/shiny-server/app.logs
+About to open the app
+> shiny::runApp('/home/macu/app', host='0.0.0.0', port=3838)
+Loading required package: shiny
+Warning in shiny::runApp("/home/macu/app", host = "0.0.0.0", port = 3838) :
+  Shiny Server v0.3.4 or later is required; please upgrade!
+
+Attaching package: ‘shinyjs’
+
+The following object is masked from ‘package:shiny’:
+
+    runExample
+
+The following objects are masked from ‘package:methods’:
+
+    removeClass, show
+
+
+Attaching package: ‘shinyWidgets’
+
+The following object is masked from ‘package:shinyjs’:
+
+    alert
+
+
+Attaching package: ‘jsonlite’
+
+The following object is masked from ‘package:purrr’:
+
+    flatten
+
+The following object is masked from ‘package:shiny’:
+
+    validate
+
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:purrr’:
+
+    transpose
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘arrow’
+
+The following objects are masked from ‘package:feather’:
+
+    read_feather, write_feather
+
+The following object is masked from ‘package:utils’:
+
+    timestamp
+
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################
+
+Attaching package: ‘xts’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+The following objects are masked from ‘package:data.table’:
+
+    first, last
+
+
+Attaching package: ‘semantic.dashboard’
+
+The following objects are masked from ‘package:shiny’:
+
+    column, icon
+
+The following object is masked from ‘package:graphics’:
+
+    box
+
+/usr/local/share/miniconda3/envs/env/lib/python3.10/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
+  torch.utils._pytree._register_pytree_node(
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+[1] "CUDA AVAILABLE. Num devices: 2"
+[1] ""
+
+ 15:42:54.953 [1] 15:42:54.953 [1] Downloading w&b Artifacts
+ Oct2PyError: Octave evaluation error:
+error: graphics_toolkit: fltk toolkit is not available
+error: called from:
+    graphics_toolkit at line 84, column 5
+Octave is not ready. Please check the configuration
+[1] "Downloaded"
+
+Listening on http://0.0.0.0:3838

@@ -123,9 +123,9 @@ original_data_plot <- function(id){
   ns <- NS(id)
   fluidRow(
     column(12,
-      dygraphOutput("ts_plot_dygraph") %>% withSpinner(),
-      plotOutput("windows_plot"),
-      uiOutput("windows_text")
+      dygraphOutput("ts_plot_dygraph", width = "100%", height = "400px") %>% withSpinner(),
+      plotOutput("windows_plot", width="100%", height = "200px"),
+      uiOutput("windows_text", width="100%", height="400px")
     )
   )
 }
@@ -176,7 +176,9 @@ embeddings_tabUI <- function(id) {
         column(3)
       ),
       fluidRow(
-        uiOutput("projections_plot_ui")
+        column(11, 
+          uiOutput("projections_plot_ui")
+        )
       )
     ),
     fluidRow(h3("Original data")),

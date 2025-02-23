@@ -136,14 +136,14 @@ shinyUI(fluidPage(
               ),
             textInput("ft_batch_size", "Batch Size", value = 32),
             textOutput("ft_batch_size_value"),
-            textInput("ft_mask_window_percent", "Percentage of windows/dataset to use for the training", value = 0.75), # mask
-            textInput("ft_window_percent", "masked windows percent", value = 0.75), # mask
+            textInput("ft_mask_window_percent", "Percentage of windows/dataset to use for the training", value = 0.15), # mask
+            textInput("ft_window_percent", "masked windows percent", value = 0.25), # mask
             textOutput("ft_window_percent_value"),
             textInput("ft_training_percent", "Training windows percent", value = 0.1),
             textInput("ft_validation_percent", "Validation windows percent", value = 0.3),
-            textInput("ft_num_epochs", "Number of epochs", value = 10),
+            textInput("ft_num_epochs", "Number of epochs", value = 17),
             textInput("ft_min_windows_distance", "Minimum distance between windows sizes", value = 5),
-            textInput("ft_num_windows", "Number of windows", value = 3),
+            textInput("ft_num_windows", "Number of windows", value = 1),
             verbatimTextOutput("ft_output"),
             selectInput("ft_dataset_option", "Choose how to use the dataset in fine-tuning", 
             choices = list(
@@ -185,7 +185,7 @@ shinyUI(fluidPage(
       sliderInput("wlen", "Select window size", min = 0, max = 0, value =0 , step = 1),
       textOutput("proposed_wlen"),
       numericInput("wlen_text", "Enter window size", value = 0, min = 0, max = 1000000, step = 1),
-      sliderInput("stride", "Select stride", min = 0, max = 0, value = 0, step = 1),
+      sliderInput("stride", "Select stride", min = 0, max = 0, value = 1, step = 1),
       conditionalPanel(
         condition = "input.encoder.indexOf('moirai') != -1",
         selectInput(

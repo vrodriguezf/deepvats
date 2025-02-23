@@ -1,3 +1,5 @@
+# GLOBAL VARIATES
+GPU_ID <- 0
 # R dependencies
 library(shiny)
 library(shinyjs)
@@ -46,7 +48,6 @@ ft <- reticulate::import("pyarrow.feather")
 
 #options(shiny.trace = TRUE)
 if(torch$cuda$is_available()){
-  GPU_ID <- 1
   print(paste0("CUDA AVAILABLE. Num devices: ", torch$cuda$device_count()))
   torch$cuda$set_device(as.integer(GPU_ID))
   #print(torch$cuda$memory_summary())

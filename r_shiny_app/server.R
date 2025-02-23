@@ -1680,22 +1680,6 @@ shinyServer(function(input, output, session) {
         flag
     })
 
-    umap_kwargs <- reactive({
-        dict(
-            random_state    = as.integer(input$prj_random_state), 
-            n_neighbors     = input$prj_n_neighbors,
-            min_dist        = input$prj_min_dist,
-            n_components    = as.integer(input$pca_n_components)
-        )
-    })
-
-    pca_kwargs <- reactive({
-        dict(
-            random_state = as.integer(input$pca_random_state),
-            n_components = as.integer(input$pca_n_components)
-        )
-    })
-
     embs_complete_cases_comp <- function(){
         c(lps, lpe, lp) %<-% setup_log_print('ecc')
         lps()
@@ -1772,16 +1756,20 @@ shinyServer(function(input, output, session) {
         )
         log_print("--> prjs_pca_umap", debug_group = 'main')
         on.exit({log_print("prjs_pca_umap -->", debug_group = 'main')})
+        embs <- embs_complete_cases()
         res <- dvats$get_PCA_UMAP_prjs(
-            input_data  = embs_complete_cases(), 
+            input_data  = embs, 
             cpu         = cpu_flag(), 
             verbose     = as.integer(1),
-            pca_kwargs  = dict(random_state= as.integer(input$prj_random_state)),
+            pca_kwargs  = dict(
+                random_state = as.integer(input$prj_random_state),
+                n_components = as.integer(input$pca_n_components)
+            ),
             umap_kwargs = dict(
                 random_state    = as.integer(input$prj_random_state), 
                 n_neighbors     = input$prj_n_neighbors, 
-                min_dist        = input$prj_min_dist,
-                n_components    = as.integer(input$pca_n_components)
+                min_dist        = input$prj_min_dist, 
+                n_components    = as.integer(2)
             )
         )
         res
@@ -2185,7 +2173,8 @@ shinyServer(function(input, output, session) {
                 colour_palette <- c("#8B0000", "#00008B")
             } else if (num_labels <= 9) {
                 # Tres o más clusters pero menos de 9, usa la paleta Set1 de colores distintivos
-                colour_palette <- brewer.pal(num_labels, "Set1")
+                #colour_palette <- brewer.pal(num_labels, "Set1")
+                colour_palette <- brewer.pal(num_labels, "Dark2")
             } else {
                 # Más de 9 clusters, usa colores aleatorios vibrantes
                 colour_palette <- distinctColorPalette(num_labels)
@@ -2298,7 +2287,7 @@ shinyServer(function(input, output, session) {
         log_print(paste0("ts_plot_base | tail tsdf: ", tail(tsdf_xts)), debug_group = 'tmi')
         ts_plt = dygraph(
                 tsdf_xts,
-                width="100%", height = "400px"
+                width="1100px", height = "400px"
             ) %>%
                 dyRangeSelector(c(start_date, end_date)) %>% 
                 dyHighlight(hideOnMouseOut = TRUE) %>%
@@ -2322,12 +2311,18 @@ shinyServer(function(input, output, session) {
         prjs <- prj_object()
         #log_print(head(prjs), debug_group = 'debug')
         # Get current rownames 
-        paste0("process_prjs_object | Rownames pre [", paste(rownames(prjs), collapse = ', '), "]")
+        log_print(
+            paste0("process_prjs_object | Rownames pre [", paste(rownames(prjs), collapse = ', '), "]"),
+            debug_group = 'debug'
+        )
         rn <- rownames(prjs)
         missing_names <- which(is.na(rn) | rn == "")
         # Assign a name to each missing position
         rn [missing_names] <- paste0("dim_", missing_names-1)
-        paste0("process_prjs_object | rn [", paste(rn, collapse = ', '), "]")
+        log_print(
+            paste0("process_prjs_object | rn [", paste(rn, collapse = ', '), "]"),
+            debug_group = 'debug'
+        )
         # Reassign names to dataframe 
         rownames(prjs) <-rn
         paste0("process_prjs_object | Rownames after [", paste(rownames(prjs), collapse = ', '), "]")
@@ -2336,14 +2331,16 @@ shinyServer(function(input, output, session) {
     })
 
     embedding_ids <- reactive({
+        log_print("--> embedding idx", debug_group = 'debug')
         bp_indices <- NULL
+        log_print(paste0("length: ", length(prj_object())))
         if (length(prj_object()>0)){
-            prjs <- process_prjs_object()
-            log_print("--> embedding idx", debug_group = 'debug')
+            #prjs <- process_prjs_object()
+            prjs <- prj_object()
             on.exit({log_print("embedding idx -->", debug_group = 'debug');})
             # Building projections selected points object
             bp <- brushedPoints(
-                prj_object(), #Projections
+                prjs, #Projections
                 input$projections_brush, #Selected points
                 allRows = TRUE
             ) 
@@ -2432,7 +2429,7 @@ shinyServer(function(input, output, session) {
         # Calculate windows if conditions are met (if embedding_idxs is !=0, that means at least 1 point is selected)
         log_print("ts_plot | Before if", debug_group = 'debug')
         if (
-                ! is.null(embedding_ids()) 
+                ! is.null(embedding_ids())
             &&  (length(embedding_ids())!=0) 
             &&  isTRUE(input$plot_windows)
         ) {
@@ -2661,14 +2658,17 @@ shinyServer(function(input, output, session) {
             geom_point(
                 shape = 21, 
                 alpha = config_style$point_alpha, 
-                size = config_style$point_size
+                size = config_style$point_size,
+                stroke = 2
             ) + 
             scale_shape(solid = FALSE) +
             guides() + 
-            scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "NA")) +
-            coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE) +
+            scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "black")) + #black -> NA puesto como black para el paper para ganar nitidez en los puntos
+            #coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE) +
+            coord_fixed(ratio = 1, xlim = ranges$x, ylim = ranges$y, expand = TRUE, clip = "on") + # Añadido para asegurar la relación de aspecto
             theme_void() + 
-            theme(legend.position = "none")
+            theme(legend.position = "none") 
+            
         return(plt)
     }
 

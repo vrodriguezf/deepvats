@@ -2665,7 +2665,7 @@ shinyServer(function(input, output, session) {
             guides() + 
             scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "black")) + #black -> NA puesto como black para el paper para ganar nitidez en los puntos
             #coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = TRUE) +
-            coord_fixed(ratio = 1, xlim = ranges$x, ylim = ranges$y, expand = TRUE, clip = "on") + # Añadido para asegurar la relación de aspecto
+            coord_fixed(ratio = as.numeric(input$pp_ratio), xlim = ranges$x, ylim = ranges$y, expand = TRUE, clip = "on") + # Añadido para asegurar la relación de aspecto
             theme_void() + 
             theme(legend.position = "none") 
             

@@ -5,7 +5,9 @@
 ###############
 
 # -- Embeddings aesthetics -- #
-
+ratio_text <- function(id){
+  textInput("pp_ratio", "Set ratio:", value = 1)
+}
 path_line_selector <- function(id){
   sliderInput(
     "path_line_size", 
@@ -63,6 +65,7 @@ embeddings_aesthetics <- function(id){
       numericInput("embedding_plot_height", label = "Height",value =400),
       hr(),
       tags$b("Configure aestethics"),
+      ratio_text("ratio_text"),
       path_line_selector("path_line_selector"),
       path_alpha_selector("path_alpha_selector"),
       point_alpha_selector("point_alpha_selector"),

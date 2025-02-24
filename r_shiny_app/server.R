@@ -153,11 +153,11 @@ shinyServer(function(input, output, session) {
     sections_count          <- reactiveVal(0)
     sections_size           <- reactiveVal(0)
     random_state_min        <- reactiveVal(0)
-    random_state_max        <- reactiveVal(0)
+    random_state_max        <- reactiveVal(2000)
     pca_random_state_min    <- reactiveVal(0)
-    pca_random_state_max    <- reactiveVal(0)
+    pca_random_state_max    <- reactiveVal(2000)
     tsne_random_state_min   <- reactiveVal(0)
-    tsne_random_state_max   <- reactiveVal(0)
+    tsne_random_state_max   <- reactiveVal(2000)
     # ts_plot    
     #################################
     #  OBSERVERS & OBSERVERS EVENTS #

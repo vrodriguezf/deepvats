@@ -510,7 +510,7 @@ shinyServer(function(input, output, session) {
         if (input$pca_random_state != input$pca_random_state_text) {
             pca_random_state_min(min(input$pca_random_state, pca_random_state_min()))
             pca_random_state_max(max(input$pca_random_state_text, pca_random_state_max()))
-            updateSliderInput(session, "prjs_random_state", 
+            updateSliderInput(session, "pca_random_state", 
                 min = pca_random_state_min(), 
                 max = pca_random_state_max(), 
                 value = input$pca_random_state_text
@@ -1656,18 +1656,25 @@ shinyServer(function(input, output, session) {
         t_shot <- result[[5]]
         t_evals <- result[[6]]
         t_eval <- result[[7]]
+        
+        # --- Aquí se está modificando el mmodelo para cambiarlo por el fine-tuneado
         enc(result[[8]])
+
         diff = t_end - t_init
         diff_secs = diff
         diff_mins = diff / 60
-        log_print(paste0("Fine tune: ", diff_secs, " s | approx ", diff_mins, "min" ), debug_group = 'time')
-        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ), debug_group = 'time')
-        log_print(paste0("Fine tune Python total shot time: ", t_shot, "s" ), debug_group = 'time')
-        log_print(paste0("Fine tune Python single eval steps time: ", t_shots, "s" ), debug_group = 'time')
-        log_print(paste0("Fine tune Python total eval time: ", t_shot, "s" ), debug_group = 'time')
-        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ), debug_group = 'time')
-        log_print(paste0("Fine tune eval results pre-tune: ", eval_results_pre, "s" ), debug_group = 'time')
-        log_print(paste0("Fine tune eval results post-tune: ", eval_results_post, "s" ), debug_group = 'time')
+        log_print(paste0("Fine tune: ", diff_secs, " s | approx ", diff_mins, "min" ), debug_group = 'force')
+        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ), debug_group = 'force')
+        log_print(paste0("Fine tune Python total shot time: ", t_shot, "s" ), debug_group = 'force')
+        log_print(paste0("Fine tune Python single eval steps time: ", t_shots, "s" ), debug_group = 'force')
+        log_print(paste0("Fine tune Python total eval time: ", t_shot, "s" ), debug_group = 'force')
+        log_print(paste0("Fine tune Python single shots time: ", t_shots, "s" ), debug_group = 'force')
+        log_print(paste0("Fine tune eval results pre-tune: ", eval_results_pre, "s" ), debug_group = 'force')
+        log_print(paste0("Fine tune eval results post-tune: ", eval_results_post, "s" ), debug_group = 'force')
+        
+        log_to_file(paste0("Fine tune eval results pre-tune: ", eval_results_pre, "s" ), TRUE, LOG_PATH)
+        log_to_file(paste0("Fine tune eval results post-tune: ", eval_results_post, "s" ), TRUE, LOG_PATH)
+        
         update_play_fine_tune_button()
         removeModal()
     })
@@ -1762,7 +1769,7 @@ shinyServer(function(input, output, session) {
             cpu         = cpu_flag(), 
             verbose     = as.integer(1),
             pca_kwargs  = dict(
-                random_state = as.integer(input$prj_random_state),
+                random_state = as.integer(input$pca_random_state),
                 n_components = as.integer(input$pca_n_components)
             ),
             umap_kwargs = dict(
@@ -3005,6 +3012,10 @@ shinyServer(function(input, output, session) {
 
     output$proposed_wlen <- renderText({
         paste0("Proposed window sizes: [", paste(proposed_wlen(), collapse = ', '), "]")
+    })
+
+    output$log_path <- renderText({
+        paste0("Log path: ", LOG_PATH)
     })
 
 })

@@ -15,7 +15,7 @@ id_file <- file.path(data_path, header, "execution_id")
 
 ### Debug variables
 DEBUG_LEVEL <- 15 # Logged Group >= DEBUG_LEVEL
-FILE_FLAG   <- FALSE
+FILE_FLAG   <- TRUE
 LOG_PATH    <- ""
 LOG_HEADER  <- ""
 DEBUG_GROUPS<- list (
@@ -120,7 +120,7 @@ log_print   <- local({
           )
           formated_mssg <- message_split(formated_mssg, max_chars)
           cat(
-            paste(formated_mssg, collapse = paste0("\n ",time, " [", MESSAGE_ID, "] ")), 
+            paste(formated_mssg, collapse = paste0("\n ", time, " [", MESSAGE_ID, "] ")), 
             collapse = ''
           )
           log_to_file(formated_mssg, file_flag, file_path)

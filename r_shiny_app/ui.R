@@ -35,6 +35,7 @@ shinyUI(fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
+      textOutput("log_path"),
       load_datasetUI("load_dataset1"),
       checkboxInput("preprocess_dataset", "Preprocess Dataset", value = FALSE),
       conditionalPanel(

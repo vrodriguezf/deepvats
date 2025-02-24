@@ -1674,8 +1674,10 @@ shinyServer(function(input, output, session) {
         
         log_to_file(paste0("Fine tune eval results pre-tune: ", eval_results_pre, "s" ), TRUE, LOG_PATH)
         log_to_file(paste0("Fine tune eval results post-tune: ", eval_results_post, "s" ), TRUE, LOG_PATH)
-        
         update_play_fine_tune_button()
+        allow_update_embs(FALSE)
+        enc(NULL)
+        enable_disable_embs()
         removeModal()
     })
   
